@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Turma 205</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#000; --bg1:#0A0A0A; --bg2:#121212; --bg3:#1A1A1A; --bg4:#222; --bg5:#2C2C2C;
+  --line:rgba(255,255,255,.055); --line2:rgba(255,255,255,.09); --line3:rgba(255,255,255,.15);
+  --t1:#EEEEEE; --t2:#888; --t3:#484848; --t4:#2A2A2A;
+  --gold:#E8B84B; --goldl:#F2D080; --goldbg:rgba(232,184,75,.07); --goldbd:rgba(232,184,75,.16);
+  --green:#34D399; --greenbg:rgba(52,211,153,.07); --greenbd:rgba(52,211,153,.16);
+  --red:#F87171; --redbg:rgba(248,113,113,.07); --redbd:rgba(248,113,113,.16);
+  --amber:#FBBF24; --amberbg:rgba(251,191,36,.07); --amberbd:rgba(251,191,36,.16);
+  --violet:#A78BFA; --violetbg:rgba(167,139,250,.07); --violetbd:rgba(167,139,250,.16);
+  --r:12px; --rsm:8px; --rlg:16px;
+  --ff:'Plus Jakarta Sans',sans-serif; --ffm:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{font-family:var(--ff);background:var(--bg0);color:var(--t1);min-height:100dvh;display:flex;justify-content:center}
+input,button,select{font-family:inherit}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+.shell{width:100%;max-width:480px;min-height:100dvh;display:flex;flex-direction:column}
+
+/* ── FIXED TOP ── */
+.top-fixed{
+  position:fixed;top:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;z-index:100;
+  background:var(--bg0);border-bottom:1px solid var(--line);
+}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:52px 18px 12px}
+.topbar-title{font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--t3)}
+.topbar-btn{
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg3);border:1px solid var(--line2);border-radius:var(--rsm);
+  cursor:pointer;transition:background .15s,border-color .15s;
+}
+.topbar-btn:hover{background:var(--bg4);border-color:var(--line3)}
+.topbar-btn svg{width:17px;height:17px;stroke:var(--t2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+.student-row{display:flex;align-items:center;gap:14px;padding:0 18px 12px;cursor:pointer}
+.student-avatar{width:42px;height:42px;background:var(--bg3);border:1px solid var(--line2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.student-avatar svg{width:19px;height:19px;stroke:var(--t3);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.student-info{flex:1;min-width:0}
+.student-name{font-size:15px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.student-meta{font-size:12px;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.student-turma{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end}
+.turma-label{font-size:9px;color:var(--t4);text-transform:uppercase;letter-spacing:1px}
+.turma-value{font-family:var(--ffm);font-size:17px;font-weight:700;color:var(--gold);line-height:1.2}
+.student-edit-hint{font-size:10px;color:var(--t4);margin-top:2px}
+
+.tabs-strip{display:flex;gap:2px;padding:0 18px 12px;overflow-x:auto;scrollbar-width:none}
+.tabs-strip::-webkit-scrollbar{display:none}
+.tab-btn{flex:0 0 auto;padding:7px 13px;border:1px solid transparent;background:var(--bg2);font-size:12px;font-weight:600;color:var(--t3);border-radius:var(--rsm);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tab-btn:hover{background:var(--bg3);color:var(--t2)}
+.tab-btn.active{background:var(--goldbg);color:var(--gold);border-color:var(--goldbd);font-weight:700}
+
+/* ── CONTENT ── */
+.scroll-content{flex:1;padding:14px 18px 100px}
+
+/* ── NOTICE ── */
+.notice{background:var(--bg2);border:1px solid var(--amberbd);border-left:3px solid var(--amber);border-radius:var(--rsm);padding:12px 14px;margin-bottom:14px}
+.notice-title{font-size:12px;font-weight:700;color:var(--amber);margin-bottom:3px}
+.notice-body{font-size:11.5px;color:var(--t3);line-height:1.6}
+
+/* ═══════════════════════════════
+   SUBJECT ACCORDION
+═══════════════════════════════ */
+.subj-list{display:flex;flex-direction:column;gap:6px}
+.subj-item{
+  background:var(--bg1);border:1px solid var(--line);
+  border-left:3px solid var(--accent-color,var(--line2));
+  border-radius:var(--r);overflow:hidden;transition:border-color .2s
+}
+.subj-item.open{border-color:var(--line2)}
+.subj-header{display:flex;align-items:center;gap:12px;padding:13px 14px;cursor:pointer;user-select:none;transition:background .15s}
+.subj-header:hover{background:rgba(255,255,255,.012)}
+.subj-label{flex:1}
+.subj-name{font-size:13.5px;font-weight:600;color:var(--t1);line-height:1.3}
+.subj-count{font-size:11px;color:var(--t3);margin-top:2px}
+.subj-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+/* grade pill */
+.grade-tag{font-family:var(--ffm);font-size:14px;font-weight:600;padding:4px 10px;border-radius:6px;transition:all .25s}
+.grade-tag.pending{background:var(--bg3);color:var(--t3)}
+.grade-tag.pass{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd)}
+.grade-tag.warn{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
+.grade-tag.fail{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
+
+.chevron{width:18px;height:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.chevron svg{width:16px;height:16px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.subj-item.open .chevron{transform:rotate(180deg)}
+
+.subj-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.22,1,.36,1)}
+.subj-item.open .subj-body{grid-template-rows:1fr}
+.subj-body-inner{overflow:hidden}
+.subj-body-pad{padding:0 14px 14px;border-top:1px solid var(--line)}
+
+/* ── eval items ── */
+.eval-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+
+.eval-item{
+  background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm);
+  overflow:hidden;transition:border-color .15s;animation:fadeIn .18s ease both
+}
+.eval-item:hover{border-color:var(--line2)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* top row: index + name + remove */
+.eval-top{
+  display:flex;align-items:center;gap:0;
+  border-bottom:1px solid var(--line);
+}
+.eval-idx{
+  font-family:var(--ffm);font-size:10px;font-weight:700;color:var(--t4);
+  padding:10px 10px 10px 12px;flex-shrink:0;
+}
+.eval-name-input{
+  flex:1;background:transparent;border:none;border-right:1px solid var(--line);
+  padding:10px 10px;font-size:13px;font-weight:500;color:var(--t1);outline:none;
+  transition:background .15s;min-width:0;
+}
+.eval-name-input::placeholder{color:var(--t4)}
+.eval-name-input:focus{background:rgba(232,184,75,.03)}
+.eval-rm-btn{
+  width:40px;height:40px;background:transparent;border:none;color:var(--t4);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s
+}
+.eval-rm-btn:hover{background:var(--redbg);color:var(--red)}
+.eval-rm-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+
+/* bottom row: score inputs + result */
+.eval-bottom{
+  display:flex;align-items:center;gap:0;padding:0;
+}
+.eval-score-group{
+  display:flex;align-items:center;gap:0;flex:1;
+}
+.eval-score-inp{
+  flex:1;background:transparent;border:none;border-right:1px solid var(--line);
+  padding:10px 12px;font-family:var(--ffm);font-size:15px;font-weight:600;
+  text-align:center;color:var(--t1);outline:none;transition:background .15s;
+}
+.eval-score-inp::placeholder{color:var(--t4);font-size:13px;font-weight:400}
+.eval-score-inp:focus{background:rgba(232,184,75,.03)}
+.eval-sep-label{
+  padding:0 10px;font-size:11px;font-weight:600;color:var(--t4);
+  border-right:1px solid var(--line);white-space:nowrap;height:100%;
+  display:flex;align-items:center;
+}
+.eval-pts-label{
+  font-size:10px;font-weight:600;color:var(--t4);padding:0 10px;
+  white-space:nowrap;
+}
+.eval-result-badge{
+  margin-left:auto;padding:0 12px;
+  font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--gold);
+  border-left:1px solid var(--line);
+  display:flex;align-items:center;height:100%;white-space:nowrap;
+}
+
+.add-eval-btn{
+  width:100%;padding:10px;background:transparent;border:1px dashed var(--bg5);
+  border-radius:var(--rsm);font-size:12px;font-weight:600;color:var(--t3);
+  cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px
+}
+.add-eval-btn:hover{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+.add-eval-btn:disabled{opacity:.35;cursor:not-allowed;pointer-events:none}
+.add-eval-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+
+/* capacity bar */
+.eval-capacity{margin-bottom:8px;padding:8px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm)}
+.eval-capacity-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.eval-capacity-label{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.8px}
+.eval-capacity-nums{font-family:var(--ffm);font-size:11px;font-weight:700;color:var(--t3)}
+.eval-capacity-nums span{color:var(--t2)}
+.eval-cap-bar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.eval-cap-fill{height:100%;border-radius:2px;transition:width .3s cubic-bezier(.22,1,.36,1),background .3s}
+
+/* ── subject footer ── */
+.subj-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--bg2);border-top:1px solid var(--line)
+}
+.subj-footer-label{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:1px}
+.subj-footer-val{
+  display:flex;align-items:baseline;gap:4px;
+}
+.sfv-num{font-family:var(--ffm);font-size:16px;font-weight:700;color:var(--t2);transition:color .25s}
+.sfv-denom{font-family:var(--ffm);font-size:11px;color:var(--t4)}
+.sfv-num.pass{color:var(--green)} .sfv-num.warn{color:var(--amber)} .sfv-num.fail{color:var(--red)}
+.sfv-num.pending{color:var(--t4);font-size:11px;font-weight:500;font-family:var(--ff)}
+
+/* ═══════════════════════════════
+   RESULTADO
+═══════════════════════════════ */
+.res-hero{background:linear-gradient(135deg,var(--bg1) 0%,rgba(232,184,75,.04) 100%);border:1px solid var(--line2);border-radius:var(--rlg);padding:20px;margin-bottom:16px}
+.res-hero-title{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px}
+.res-hero-formula{font-family:var(--ffm);font-size:11px;color:var(--t3);margin-bottom:18px}
+.res-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.res-stat{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm);padding:12px 8px;text-align:center}
+.res-stat .label{font-size:10px;color:var(--t4);font-weight:500;margin-bottom:4px}
+.res-stat .value{font-family:var(--ffm);font-size:24px;font-weight:700}
+.res-stat .sub{font-size:10px;color:var(--t4);margin-top:2px}
+.res-avg{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.res-avg-left .label{font-size:11px;color:var(--t3);font-weight:500;margin-bottom:6px}
+.res-avg-num{font-family:var(--ffm);font-size:40px;font-weight:700;line-height:1;transition:color .3s}
+.res-avg-badge{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;display:inline-block;margin-top:6px}
+.res-avg-badge.pass{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd)}
+.res-avg-badge.fail{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
+.res-avg-badge.warn{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
+.res-avg-badge.pending{background:var(--bg3);color:var(--t3)}
+.section-label{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:2px;margin:16px 0 10px}
+.res-row{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px;transition:border-color .15s}
+.res-row:hover{border-color:var(--line2)}
+.res-row-accent{width:3px;height:32px;border-radius:2px;flex-shrink:0;background:var(--accent-color,var(--line2))}
+.res-row-info{flex:1;min-width:0}
+.res-row-name{font-size:13px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{font-family:var(--ffm);font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;background:var(--bg3);color:var(--t3)}
+.pbar{height:2px;background:var(--bg4);border-radius:1px;margin-top:6px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:1px;transition:width .7s cubic-bezier(.22,1,.36,1)}
+.res-row-final{text-align:right;flex-shrink:0}
+.res-row-num{font-family:var(--ffm);font-size:22px;font-weight:700;display:block;transition:color .25s}
+.res-row-status{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.res-row.pass .res-row-num,.res-row.pass .res-row-status{color:var(--green)}
+.res-row.fail .res-row-num,.res-row.fail .res-row-status{color:var(--red)}
+.res-row.warn .res-row-num,.res-row.warn .res-row-status{color:var(--amber)}
+.res-row.pending .res-row-num,.res-row.pending .res-row-status{color:var(--t4)}
+
+.res-highlights{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.res-highlight-card{background:var(--bg1);border:1px solid var(--line2);border-radius:var(--r);padding:13px 14px}
+.rh-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.rh-subj{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rh-val{font-family:var(--ffm);font-size:28px;font-weight:700;line-height:1}
+.risk-row{background:var(--bg1);border:1px solid var(--line);border-left:3px solid var(--accent-color,var(--line2));border-radius:var(--r);padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:12px}
+.risk-accent{width:3px;height:28px;border-radius:2px;flex-shrink:0;background:var(--accent-color,var(--line2))}
+.risk-info{flex:1;min-width:0}
+.risk-name{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.risk-chips{display:flex;gap:4px;flex-wrap:wrap}
+.risk-right{text-align:right;flex-shrink:0}
+.risk-current{font-family:var(--ffm);font-size:22px;font-weight:700;line-height:1}
+.risk-gap{font-size:10px;font-weight:600;color:var(--t4);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+
+/* ═══════════════════════════════
+   RESUMO — enhanced
+═══════════════════════════════ */
+.resumo-hero{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.resumo-mini-stat{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r);padding:12px 8px;text-align:center}
+.resumo-mini-stat .rv{font-family:var(--ffm);font-size:22px;font-weight:700}
+.resumo-mini-stat .rl{font-size:10px;color:var(--t4);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.resumo-row-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.resumo-row-accent{width:3px;height:24px;border-radius:2px;flex-shrink:0}
+.resumo-row-name{font-size:13px;font-weight:600;color:var(--t1);flex:1}
+.resumo-row-grid{display:grid;grid-template-columns:repeat(4,1fr)}
+.resumo-cell{padding:10px 8px;text-align:center;border-right:1px solid var(--line)}
+.resumo-cell:last-child{border-right:none;background:rgba(255,255,255,.01)}
+.resumo-cell .cl{font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.resumo-cell .cv{font-family:var(--ffm);font-size:18px;font-weight:700}
+.resumo-cell .cv.pass{color:var(--green)}.resumo-cell .cv.warn{color:var(--amber)}
+.resumo-cell .cv.fail{color:var(--red)}.resumo-cell .cv.pending{color:var(--t4)}
+
+/* ═══════════════════════════════
+   HORÁRIOS
+═══════════════════════════════ */
+.live-banner{border-radius:var(--r);padding:16px 18px;margin-bottom:14px;position:relative;overflow:hidden}
+.live-banner.in-class{background:var(--bg2);border:1px solid var(--greenbd);border-left:3px solid var(--green)}
+.live-banner.between{background:var(--bg2);border:1px solid var(--line2);border-left:3px solid var(--t4)}
+.live-banner.break-time{background:var(--bg2);border:1px solid var(--amberbd);border-left:3px solid var(--amber)}
+.live-banner.no-class{background:var(--bg2);border:1px solid var(--line);border-left:3px solid var(--t4)}
+.lb-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.lb-tag .dot{width:6px;height:6px;border-radius:50%;animation:blink 1.4s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.live-banner.in-class .lb-tag{color:var(--green)} .live-banner.in-class .lb-tag .dot{background:var(--green)}
+.live-banner.between .lb-tag{color:var(--t3)} .live-banner.between .lb-tag .dot{background:var(--t3);animation:none}
+.live-banner.break-time .lb-tag{color:var(--amber)} .live-banner.break-time .lb-tag .dot{background:var(--amber)}
+.live-banner.no-class .lb-tag{color:var(--t3)} .live-banner.no-class .lb-tag .dot{background:var(--t3);animation:none}
+.lb-main{font-size:17px;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:6px}
+.lb-main span{color:var(--gold)}
+.lb-sub{font-size:12px;color:var(--t3);line-height:1.5}
+.lb-sub strong{color:var(--t2);font-weight:600}
+.lb-timer{position:absolute;top:16px;right:18px;font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--t1);line-height:1}
+.lb-timer-label{font-size:9px;font-weight:600;color:var(--t3);text-align:right;text-transform:uppercase;letter-spacing:1px;margin-top:3px;position:absolute;right:18px;top:46px}
+.lb-progress{margin-top:12px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
+.lb-progress-fill{height:100%;border-radius:1px;background:var(--green);transition:width 1s linear}
+.live-banner.break-time .lb-progress-fill{background:var(--amber)}
+
+.day-selector{display:flex;gap:4px;margin-bottom:14px}
+.day-btn{flex:1;padding:9px 4px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm);font-size:11px;font-weight:600;color:var(--t3);cursor:pointer;transition:all .15s;text-align:center}
+.day-btn:hover{background:var(--bg3);color:var(--t2)}
+.day-btn.active{background:var(--goldbg);color:var(--gold);border-color:var(--goldbd);font-weight:700}
+.day-btn.today:not(.active){border-color:var(--line3);color:var(--t2)}
+.day-btn .day-name{display:block;font-size:11px}
+.day-btn .day-short{display:block;font-size:9px;margin-top:1px;opacity:.7}
+
+.schedule-list{display:flex;flex-direction:column;gap:5px}
+.sched-item{
+  background:var(--bg1);border:1px solid var(--line);
+  border-left:3px solid var(--accent-color,var(--t4));
+  border-radius:var(--r);padding:12px 14px;
+  display:flex;align-items:center;gap:14px;transition:border-color .15s
+}
+.sched-item.current{background:var(--bg2);border-color:var(--greenbd);border-left-color:var(--green);box-shadow:0 0 0 1px var(--greenbd)}
+.sched-item.past{opacity:.4}
+.sched-time{flex-shrink:0;text-align:right;min-width:46px}
+.sched-time .start{font-family:var(--ffm);font-size:14px;font-weight:600;color:var(--t1);display:block}
+.sched-time .end{font-family:var(--ffm);font-size:11px;color:var(--t3);margin-top:1px}
+.sched-divider{width:1px;height:32px;background:var(--line2);flex-shrink:0}
+.sched-info{flex:1;min-width:0}
+.sched-num{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.sched-subj{font-size:14px;font-weight:700;color:var(--t1);line-height:1.3}
+.sched-prof{font-size:12px;color:var(--t3);margin-top:2px}
+.sched-now-badge{flex-shrink:0;background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd);border-radius:20px;font-size:9px;font-weight:700;padding:3px 8px;text-transform:uppercase;letter-spacing:.8px}
+.sched-break{display:flex;align-items:center;gap:12px;padding:8px 14px;background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm)}
+.sched-break-line{flex:1;height:1px;background:var(--line2)}
+.sched-break-txt{font-size:11px;font-weight:600;color:var(--amber);letter-spacing:1px;white-space:nowrap}
+.sched-break.current{border-color:var(--amberbd)}
+
+/* ═══════════════════════════════
+   PROVAS (EXAM SCHEDULER)
+═══════════════════════════════ */
+/* stats strip */
+.provas-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.provas-stat{background:var(--bg1);border:1px solid var(--line);border-radius:var(--r);padding:12px 10px;text-align:center}
+.provas-stat .ps-val{font-family:var(--ffm);font-size:24px;font-weight:700;line-height:1}
+.provas-stat .ps-lbl{font-size:10px;color:var(--t4);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+
+/* add exam form */
+.add-exam-card{
+  background:linear-gradient(135deg,var(--bg1) 0%,rgba(232,184,75,.03) 100%);border:1px solid var(--line2);border-radius:var(--rlg);
+  padding:18px;margin-bottom:16px;
+}
+.add-exam-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.add-exam-title svg{width:16px;height:16px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-grid.full{grid-template-columns:1fr}
+.field-wrap label{display:block;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.field-wrap select,
+.field-wrap input[type=date],
+.field-wrap input[type=number],
+.field-wrap input[type=text]{
+  width:100%;padding:10px 12px;background:var(--bg3);border:1px solid var(--line2);
+  border-radius:var(--rsm);font-size:13px;font-weight:500;color:var(--t1);outline:none;
+  transition:all .15s;color-scheme:dark;
+}
+.field-wrap select option{background:var(--bg3);color:var(--t1)}
+.field-wrap select:focus,
+.field-wrap input:focus{border-color:var(--gold);background:rgba(232,184,75,.03);box-shadow:0 0 0 3px rgba(232,184,75,.07)}
+.field-wrap input::placeholder{color:var(--t4)}
+.add-exam-btn{
+  width:100%;padding:11px;background:var(--gold);color:#060606;
+  border:none;border-radius:var(--rsm);font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .18s;letter-spacing:.3px;margin-top:4px;
+}
+.add-exam-btn:hover{background:var(--goldl);transform:translateY(-1px)}
+.add-exam-btn:active{transform:translateY(0)}
+
+/* exam list */
+.exam-list{display:flex;flex-direction:column;gap:6px}
+.exam-item{
+  background:var(--bg1);border:1px solid var(--line);
+  border-left:3px solid var(--accent-color,var(--t4));
+  border-radius:var(--r);padding:13px 14px;
+  display:flex;align-items:center;gap:12px;
+  transition:border-color .15s;
+  animation:fadeIn .2s ease both;
+}
+.exam-item:hover{border-color:var(--line2)}
+.exam-item.done{opacity:.5;border-left-color:var(--t4)!important}
+.exam-item.soon{border-color:var(--amberbd);border-left-color:var(--amber)}
+.exam-item.today-exam{border-color:var(--redbd);border-left-color:var(--red);background:var(--redbg)}
+
+.exam-info{flex:1;min-width:0}
+.exam-subj{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px}
+.exam-title-txt{font-size:12px;color:var(--t3);margin-bottom:5px;font-style:italic}
+.exam-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.exam-date-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--t3);background:var(--bg3);padding:3px 7px;border-radius:4px}
+.exam-date-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.exam-date-chip span{font-family:var(--ffm);font-size:11px;font-weight:600;color:var(--t2)}
+.exam-valor-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:3px 7px;border-radius:4px}
+
+.exam-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.exam-days-badge{
+  font-family:var(--ffm);font-size:12px;font-weight:700;
+  padding:4px 9px;border-radius:6px;white-space:nowrap;
+}
+.exam-days-badge.done-badge{background:var(--bg3);color:var(--t4);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.exam-days-badge.soon-badge{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
+.exam-days-badge.today-badge{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
+.exam-days-badge.future-badge{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd)}
+.exam-rm-btn{
+  width:22px;height:22px;background:transparent;border:none;border-radius:50%;
+  color:var(--t4);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s
+}
+.exam-rm-btn:hover{background:var(--redbg);color:var(--red)}
+.exam-rm-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+
+.exam-empty{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;line-height:1.8}
+.exam-empty strong{display:block;font-size:16px;font-weight:700;color:var(--t4);margin-bottom:6px}
+
+/* ═══════════════════════════════
+   BOTTOM NAV (5 items)
+═══════════════════════════════ */
+.nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;z-index:100;
+  background:rgba(0,0,0,.97);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--line2);
+  display:flex;padding:8px 4px calc(8px + env(safe-area-inset-bottom));gap:0;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 2px;background:none;border:none;cursor:pointer;
+  border-radius:var(--rsm);transition:background .15s;position:relative;
+}
+.nav-btn:hover{background:var(--bg2)}
+.nav-btn svg{width:19px;height:19px;stroke:var(--t4);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;transition:stroke .18s}
+.nav-btn span{font-size:9.5px;font-weight:600;color:var(--t4);transition:color .18s;letter-spacing:.1px}
+.nav-btn.active svg{stroke:var(--gold)}
+.nav-btn.active span{color:var(--gold)}
+.nav-btn.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:18px;height:2px;background:var(--gold);border-radius:0 0 3px 3px}
+/* exam badge */
+.nav-badge{
+  position:absolute;top:4px;right:calc(50% - 14px);
+  width:14px;height:14px;background:var(--red);border-radius:50%;
+  font-size:8px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;
+}
+
+/* ═══════════════════════════════
+   MODAL
+═══════════════════════════════ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:500;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--bg1);border:1px solid var(--line2);border-bottom:none;border-radius:20px 20px 0 0;padding:24px 22px calc(28px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .32s cubic-bezier(.22,1,.36,1)}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-handle{width:32px;height:3px;background:var(--bg5);border-radius:2px;margin:0 auto 22px}
+.modal-title{font-size:18px;font-weight:700;color:var(--t1);margin-bottom:20px}
+.field-group{margin-bottom:14px}
+.field-label{display:block;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.field-input{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--line2);border-radius:var(--rsm);font-size:15px;font-weight:500;color:var(--t1);outline:none;transition:all .15s}
+.field-input::placeholder{color:var(--t4)}
+.field-input:focus{border-color:var(--gold);background:rgba(232,184,75,.03);box-shadow:0 0 0 3px rgba(232,184,75,.07)}
+.modal-save-btn{width:100%;padding:14px;background:var(--gold);color:#060606;border:none;border-radius:var(--rsm);font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing:.3px;transition:all .18s;box-shadow:0 4px 20px rgba(232,184,75,.18)}
+.modal-save-btn:hover{background:var(--goldl);transform:translateY(-1px)}
+.modal-save-btn:active{transform:translateY(0)}
+
+/* misc */
+.page-anim{animation:pageAnim .28s cubic-bezier(.22,1,.36,1) both}
+@keyframes pageAnim{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.empty-eval{padding:14px 0 8px;text-align:center;font-size:12px;color:var(--t4);font-style:italic}
+
+/* ═══════════════════════════════
+   SUBJECT DETAIL SHEET
+═══════════════════════════════ */
+.subj-sheet-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  z-index:500;align-items:flex-end;justify-content:center;
+}
+.subj-sheet-overlay.open{display:flex}
+.subj-sheet{
+  background:var(--bg1);border:1px solid var(--line2);border-bottom:none;
+  border-radius:20px 20px 0 0;padding:0;
+  width:100%;max-width:480px;
+  max-height:88dvh;display:flex;flex-direction:column;
+  animation:slideUp .32s cubic-bezier(.22,1,.36,1);
+}
+.subj-sheet-handle-row{padding:14px 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.subj-sheet-handle{width:32px;height:3px;background:var(--bg5);border-radius:2px}
+.subj-sheet-head{padding:14px 20px 16px;flex-shrink:0;border-bottom:1px solid var(--line)}
+.subj-sheet-color-bar{width:36px;height:4px;border-radius:2px;margin-bottom:10px}
+.subj-sheet-title{font-size:20px;font-weight:800;color:var(--t1);line-height:1.2;margin-bottom:4px}
+.subj-sheet-prof{font-size:13px;color:var(--t3);display:flex;align-items:center;gap:5px}
+.subj-sheet-prof svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.subj-sheet-body{overflow-y:auto;padding:16px 20px calc(20px + env(safe-area-inset-bottom));flex:1}
+
+.ss-section{margin-bottom:20px}
+.ss-label{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+
+/* grade row in sheet */
+.ss-grades{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px}
+.ss-grade-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:10px 6px;text-align:center}
+.ss-grade-card.highlight{border-color:var(--line2)}
+.ss-grade-label{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.ss-grade-val{font-family:var(--ffm);font-size:20px;font-weight:700;line-height:1}
+.ss-grade-val.pass{color:var(--green)}.ss-grade-val.warn{color:var(--amber)}.ss-grade-val.fail{color:var(--red)}.ss-grade-val.pending{color:var(--t4);font-size:14px}
+
+/* progress toward passing */
+.ss-progress-wrap{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-bottom:8px}
+.ss-progress-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.ss-progress-label{font-size:12px;font-weight:600;color:var(--t2)}
+.ss-progress-pct{font-family:var(--ffm);font-size:12px;font-weight:700;color:var(--t3)}
+.ss-pbar{height:5px;background:var(--bg4);border-radius:3px;overflow:hidden}
+.ss-pbar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.22,1,.36,1)}
+.ss-need-txt{font-size:11px;color:var(--t4);margin-top:6px}
+.ss-need-txt strong{color:var(--amber)}
+
+/* week schedule */
+.ss-week{display:flex;flex-direction:column;gap:5px}
+.ss-week-item{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm);padding:9px 12px;display:flex;align-items:center;gap:10px}
+.ss-week-day{font-size:11px;font-weight:700;color:var(--t3);min-width:28px;flex-shrink:0}
+.ss-week-period{font-size:12px;font-weight:600;color:var(--t1);flex:1}
+.ss-week-time{font-family:var(--ffm);font-size:11px;color:var(--t4)}
+
+/* upcoming provas in sheet */
+.ss-prova-item{background:var(--bg2);border:1px solid var(--line);border-radius:var(--rsm);padding:10px 12px;margin-bottom:5px;display:flex;align-items:center;gap:10px}
+.ss-prova-info{flex:1}
+.ss-prova-title{font-size:13px;font-weight:600;color:var(--t1)}
+.ss-prova-date{font-size:11px;color:var(--t3);margin-top:2px;font-family:var(--ffm)}
+.ss-prova-badge{font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;flex-shrink:0}
+
+/* stats row */
+.ss-stat-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ss-stat-card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:11px 12px}
+.ss-stat-val{font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--t1);line-height:1;margin-bottom:3px}
+.ss-stat-lbl{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px}
+
+/* clickable sched-item */
+.sched-item{cursor:pointer}
+.sched-item:active{background:rgba(255,255,255,.04)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="top-fixed" id="top-fixed">
+    <div class="topbar">
+      <div class="topbar-btn" onclick="openModal()">
+        <svg viewBox="0 0 24 24"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="16" y2="12"/><line x1="4" y1="17" x2="12" y2="17"/></svg>
+      </div>
+      <div class="topbar-title" id="topbar-title">Aproveitamento</div>
+      <div class="topbar-btn" id="home-btn">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+    </div>
+
+    <div class="student-row" onclick="openModal()">
+      <div class="student-avatar">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <div class="student-info">
+        <div class="student-name" id="d-name">Toque para configurar</div>
+        <div class="student-meta" id="d-school">Juvenal Miller · Ensino Médio</div>
+      </div>
+      <div class="student-turma">
+        <div class="turma-label">Turma</div>
+        <div class="turma-value" id="d-turma">205</div>
+        <div class="student-edit-hint">editar</div>
+      </div>
+    </div>
+
+    <div class="tabs-strip" id="tabs-strip">
+      <button class="tab-btn active" data-tab="1T"      onclick="switchTab('1T',this)">1° Trimestre</button>
+      <button class="tab-btn"        data-tab="1T-EAC"  onclick="switchTab('1T-EAC',this)">EAC 1°</button>
+      <button class="tab-btn"        data-tab="2T"      onclick="switchTab('2T',this)">2° Trimestre</button>
+      <button class="tab-btn"        data-tab="2T-EAC"  onclick="switchTab('2T-EAC',this)">EAC 2°</button>
+      <button class="tab-btn"        data-tab="3T"      onclick="switchTab('3T',this)">3° Trimestre</button>
+      <button class="tab-btn"        data-tab="3T-EAC"  onclick="switchTab('3T-EAC',this)">EAC 3°</button>
+      <button class="tab-btn"        data-tab="resultado" onclick="switchTab('resultado',this)">Resultado</button>
+    </div>
+  </div>
+
+  <div class="scroll-content" id="scroll-content"></div>
+
+  <nav class="nav">
+    <button class="nav-btn active" id="n-notas" onclick="setPage('notas')">
+      <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/></svg>
+      <span>Notas</span>
+    </button>
+    <button class="nav-btn" id="n-horarios" onclick="setPage('horarios')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span>Horários</span>
+    </button>
+    <button class="nav-btn" id="n-provas" onclick="setPage('provas')">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Provas</span>
+    </button>
+    <button class="nav-btn" id="n-resumo" onclick="setPage('resumo')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Resumo</span>
+    </button>
+    <button class="nav-btn" id="n-resultado" onclick="setPage('resultado')">
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Resultado</span>
+    </button>
+  </nav>
+</div>
+
+<!-- MODAL student -->
+<div class="modal-overlay" id="modal-overlay" onclick="modalOvClick(event)">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Dados do Aluno</div>
+    <div class="field-group"><label class="field-label">Nome completo</label><input class="field-input" id="m-nome" type="text" placeholder="Digite seu nome..."/></div>
+    <div class="field-group"><label class="field-label">Escola / Instituição</label><input class="field-input" id="m-escola" type="text" placeholder="Nome da escola..."/></div>
+    <div class="field-group"><label class="field-label">Turma / Sala</label><input class="field-input" id="m-turma" type="text" placeholder="Ex: 205, 3A..."/></div>
+    <button class="modal-save-btn" onclick="saveStudent()">Salvar</button>
+  </div>
+</div>
+
+<!-- SUBJECT DETAIL SHEET -->
+<div class="subj-sheet-overlay" id="subj-sheet-overlay" onclick="closeSubjSheet(event)">
+  <div class="subj-sheet" id="subj-sheet">
+    <div class="subj-sheet-handle-row"><div class="subj-sheet-handle"></div></div>
+    <div class="subj-sheet-head">
+      <div class="subj-sheet-color-bar" id="ss-color-bar"></div>
+      <div class="subj-sheet-title" id="ss-title">—</div>
+      <div class="subj-sheet-prof" id="ss-prof">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="ss-prof-name">—</span>
+      </div>
+    </div>
+    <div class="subj-sheet-body" id="ss-body"></div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════
+   SCHEDULE DATA
+══════════════════════════════════════════ */
+const PERIODS=[
+  {n:'1ª aula',s:[13,30],e:[14,20]},
+  {n:'2ª aula',s:[14,20],e:[15,10]},
+  {n:'3ª aula',s:[15,10],e:[15,50]},
+  {n:'recreio',s:[15,50],e:[16,5],break:true},
+  {n:'4ª aula',s:[16,5],e:[16,50]},
+  {n:'5ª aula',s:[16,50],e:[17,40]},
+  {n:'6ª aula',s:[17,40],e:[18,30]},
+];
+const SCHED={
+  1:[{subj:'Biologia',prof:'Iara'},{subj:'Física',prof:'Pedro'},{subj:'Biologia',prof:'Iara'},{subj:'Educação Financeira',prof:'Simone'},{subj:'Educação Física',prof:'Leani'},{subj:'Língua Espanhola',prof:'Jorge'}],
+  2:[{subj:'Língua Portuguesa',prof:'André'},{subj:'História',prof:'Felipe'},{subj:'Literatura',prof:'André'},{subj:'Química',prof:'Jaque'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Física',prof:'Pedro'}],
+  3:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Química',prof:'Jaque'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Sociologia',prof:'Felipe'}],
+  4:[{subj:'Geografia',prof:'Thiago'},{subj:'Educação Física',prof:'Leani'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Matemática',prof:'Veridiana'},{subj:'Artes Integradas',prof:'Max'},{subj:'Língua Portuguesa',prof:'André'}],
+  5:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Escrita Criativa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Língua Inglesa',prof:'Giovana'},{subj:'Ensino Religioso',prof:'Deise'}],
+};
+const SUBJ_COLORS={'Biologia':'#34D399','Física':'#60A5FA','Educação Financeira':'#E8B84B','Educação Física':'#4ADE80','Língua Espanhola':'#FCA5A5','Língua Portuguesa':'#6EE7B7','Literatura':'#6EE7B7','História':'#FCD34D','Química':'#F472B6','Proj. Integrador Mat.':'#818CF8','Matemática':'#A78BFA','Sociologia':'#86EFAC','Geografia':'#67E8F9','Artes Integradas':'#FB923C','Escrita Criativa':'#F9A8D4','Língua Inglesa':'#93C5FD','Ensino Religioso':'#C4B5FD'};
+const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+/* ══════════════════════════════════════════
+   GRADES DATA
+══════════════════════════════════════════ */
+const SUBJECTS=[
+  {id:'edu_fin',name:'Educação Financeira',color:'#E8B84B'},
+  {id:'mat',    name:'Matemática',         color:'#A78BFA'},
+  {id:'bio',    name:'Biologia',           color:'#34D399'},
+  {id:'fis',    name:'Física',             color:'#60A5FA'},
+  {id:'qui',    name:'Química',            color:'#F472B6'},
+  {id:'artes',  name:'Artes Integradas',   color:'#FB923C'},
+  {id:'ed_fis', name:'Educação Física',    color:'#4ADE80'},
+  {id:'esc_cri',name:'Escrita Criativa',   color:'#F9A8D4'},
+  {id:'esp',    name:'Língua Espanhola',   color:'#FCA5A5'},
+  {id:'ing',    name:'Língua Inglesa',     color:'#93C5FD'},
+  {id:'port',   name:'Língua Portuguesa',  color:'#6EE7B7'},
+  {id:'rel',    name:'Ensino Religioso',   color:'#C4B5FD'},
+  {id:'geo',    name:'Geografia',          color:'#67E8F9'},
+  {id:'hist',   name:'História',           color:'#FCD34D'},
+  {id:'soc',    name:'Sociologia',         color:'#86EFAC'},
+  {id:'proj',   name:'Proj. Integrador Mat.',color:'#818CF8'},
+];
+const ALL_TABS=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC','resultado'];
+
+/* state */
+let G={};
+SUBJECTS.forEach(s=>{G[s.id]={};ALL_TABS.forEach(t=>G[s.id][t]=[]);});
+let curTab='1T', curPage='notas', openAcc={};
+let stu={nome:'',escola:'Juvenal Miller',turma:'205'};
+const todayDow=new Date().getDay();
+let schedDay=(todayDow>=1&&todayDow<=5)?todayDow:4;
+
+/* exams: {id,subj,title,examDate,valor} — persisted to localStorage */
+let exams=[];
+function saveExams(){try{localStorage.setItem('t205_exams',JSON.stringify(exams));}catch(e){}}
+function loadExams(){try{const d=localStorage.getItem('t205_exams');if(d)exams=JSON.parse(d);}catch(e){}}
+
+/* grades persist */
+function saveGrades(){try{localStorage.setItem('t205_grades',JSON.stringify(G));}catch(e){}}
+function loadGrades(){
+  try{
+    const d=localStorage.getItem('t205_grades');
+    if(!d)return;
+    const saved=JSON.parse(d);
+    // merge: only copy tabs that exist in G structure
+    SUBJECTS.forEach(s=>{
+      if(saved[s.id]){
+        ALL_TABS.forEach(t=>{
+          if(Array.isArray(saved[s.id][t]))G[s.id][t]=saved[s.id][t];
+        });
+      }
+    });
+  }catch(e){}
+}
+
+/* student persist */
+function saveStudentLS(){try{localStorage.setItem('t205_stu',JSON.stringify(stu));}catch(e){}}
+function loadStudentLS(){try{const d=localStorage.getItem('t205_stu');if(d){stu=JSON.parse(d);applyStudent();}}catch(e){}}
+function applyStudent(){
+  document.getElementById('d-name').textContent=stu.nome||'Toque para configurar';
+  document.getElementById('d-school').textContent=stu.escola||'Escola';
+  document.getElementById('d-turma').textContent=stu.turma||'—';
+}
+
+/* ══════════════════════════════════════════
+   MATH — FIXED
+   tabScore = SUM of "got" values (direct sum, no normalization)
+   max possible is always 10 in the Brazilian school system
+══════════════════════════════════════════ */
+const nf=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:n};
+
+function tabScore(sid,tab){
+  const rows=G[sid][tab];
+  if(!rows.length)return null;
+  let total=0,hasAny=false;
+  rows.forEach(r=>{
+    const gv=nf(r.got);
+    if(gv!==null){total+=gv;hasAny=true;}
+  });
+  return hasAny?total:null;
+}
+
+function trimGrade(sid,tr){
+  const n=tabScore(sid,tr), e=tabScore(sid,tr+'-EAC');
+  if(n===null&&e===null)return null;
+  if(n===null)return e; if(e===null)return n;
+  return Math.max(n,e);
+}
+
+function finalGrade(sid){
+  const t1=trimGrade(sid,'1T'),t2=trimGrade(sid,'2T'),t3=trimGrade(sid,'3T');
+  if(t1===null||t2===null||t3===null)return null;
+  return(t1*3+t2*3+t3*4)/10;
+}
+
+const fmt=n=>n===null?'—':Number(n).toFixed(1);
+const st=n=>n===null?'pending':n>=6?'pass':n>=5?'warn':'fail';
+const SL={pass:'Aprovado',fail:'Reprovado',warn:'Em Risco',pending:'Pendente'};
+const SC=s=>s==='pass'?'#34D399':s==='fail'?'#F87171':s==='warn'?'#FBBF24':'#2A2A2A';
+
+/* ══════════════════════════════════════════
+   LAYOUT SYNC
+══════════════════════════════════════════ */
+function syncLayout(){
+  const h=document.getElementById('top-fixed').getBoundingClientRect().height;
+  document.getElementById('scroll-content').style.paddingTop=(h+14)+'px';
+}
+
+/* ══════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════ */
+function render(){
+  const el=document.getElementById('scroll-content');
+  if(curPage==='horarios'){renderHorarios(el);return;}
+  if(curPage==='provas'){renderProvas(el);return;}
+  if(curPage==='resumo'){renderResumo(el);return;}
+  if(curPage==='resultado'){renderResultado(el);return;}
+  renderNotasTab(el);
+}
+
+/* ═══════════════════════════════
+   NOTAS TAB
+═══════════════════════════════ */
+function renderNotasTab(el){
+  const isEAC=curTab.includes('EAC');
+  const base=isEAC?curTab.replace('-EAC',''):null;
+  let h='';
+  if(isEAC)h+=`<div class="notice"><div class="notice-title">Avaliação Complementar — EAC</div><div class="notice-body">Insira as notas da recuperação. O sistema usa a maior nota entre o trimestre e o EAC.</div></div>`;
+
+  h+='<div class="subj-list">';
+  SUBJECTS.forEach(s=>{
+    const score=tabScore(s.id,curTab);
+    let disp,stat;
+    if(isEAC){
+      const norm=tabScore(s.id,base);
+      const best=(score===null&&norm===null)?null:score===null?norm:norm===null?score:Math.max(score,norm);
+      disp=best;stat=st(best);
+    }else{disp=score;stat=st(score);}
+
+    const pill=stat==='pending'?'—':fmt(disp);
+    const rows=G[s.id][curTab];
+    const isOpen=!!openAcc[s.id+'_'+curTab];
+    const cnt=rows.length;
+    const countTxt=cnt===0?'Nenhuma avaliação':cnt===1?'1 avaliação':`${cnt} avaliações`;
+
+    // build eval rows
+    let evHtml=rows.length?rows.map((r,i)=>{
+      const gotFmt=r.got!==''&&r.got!==null&&r.got!==undefined?nf(r.got):null;
+      const totFmt=r.total!==''&&r.total!==null&&r.total!==undefined?nf(r.total):null;
+      const dispStr=gotFmt!==null?(totFmt!==null&&totFmt>0?`${fmt(gotFmt)} / ${fmt(totFmt)}`:`${fmt(gotFmt)} pts`):'—';
+      // max for this total input = 10 - sum of other totals
+      const otherTotal=rows.reduce((acc,rr,j)=>j===i?acc:acc+(nf(rr.total)||0),0);
+      const maxThisTotal=Math.max(0,parseFloat((10-otherTotal).toFixed(2)));
+      const maxThisGot=totFmt!==null?totFmt:10;
+      return `<div class="eval-item">
+        <div class="eval-top">
+          <span class="eval-idx">${String(i+1).padStart(2,'0')}</span>
+          <input class="eval-name-input" type="text" placeholder="Nome da avaliação (ex: Prova Bimestral)..."
+            value="${escHtml(r.name||'')}"
+            oninput="updF('${s.id}','${curTab}',${i},'name',this.value)">
+          <button class="eval-rm-btn" onclick="rmEv('${s.id}','${curTab}',${i})" title="Remover">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="eval-bottom">
+          <div class="eval-score-group">
+            <input id="ig-${s.id}-${curTab}-${i}" class="eval-score-inp" type="number" step="0.1" min="0" max="${maxThisGot}" placeholder="Nota"
+              value="${r.got}" oninput="updF('${s.id}','${curTab}',${i},'got',this.value)">
+            <span class="eval-sep-label">de</span>
+            <input id="it-${s.id}-${curTab}-${i}" class="eval-score-inp" type="number" step="0.1" min="0" max="${maxThisTotal}" placeholder="Máx"
+              value="${r.total}" oninput="updF('${s.id}','${curTab}',${i},'total',this.value)">
+            <span class="eval-pts-label">pts</span>
+          </div>
+          <div class="eval-result-badge">${dispStr}</div>
+        </div>
+      </div>`;
+    }).join(''):`<div class="empty-eval">Nenhuma avaliação adicionada</div>`;
+
+    // capacity bar
+    const allocated=rows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
+    const allocRound=parseFloat(allocated.toFixed(2));
+    const capPct=Math.min((allocRound/10)*100,100);
+    const capColor=allocRound>=10?'var(--green)':allocRound>=7?'var(--amber)':'var(--gold)';
+    const capRemaining=parseFloat((10-allocRound).toFixed(2));
+    const canAdd=allocRound<10;
+    const capHtml=rows.length?`<div class="eval-capacity" id="cap-${s.id}-${curTab}">
+      <div class="eval-capacity-top">
+        <span class="eval-capacity-label">Pontos alocados</span>
+        <span class="eval-capacity-nums"><span>${allocRound.toFixed(1)}</span> / 10 pts${canAdd?` · ${capRemaining.toFixed(1)} disponíveis`:' · completo'}</span>
+      </div>
+      <div class="eval-cap-bar"><div class="eval-cap-fill" style="width:${capPct}%;background:${capColor}"></div></div>
+    </div>`:'';
+
+    const flab=isEAC?`Melhor (${base} vs EAC)`:`Total — ${curTab}`;
+    const fval=stat==='pending'
+      ?`<div class="subj-footer-val"><span class="sfv-num pending">Pendente</span></div>`
+      :`<div class="subj-footer-val"><span class="sfv-num ${stat}">${fmt(disp)}</span><span class="sfv-denom">/ 10</span></div>`;
+
+    h+=`<div class="subj-item${isOpen?' open':''}" id="si-${s.id}" style="--accent-color:${s.color}">
+      <div class="subj-header" onclick="toggleAcc('${s.id}')">
+        <div class="subj-label"><div class="subj-name">${s.name}</div><div class="subj-count">${countTxt}</div></div>
+        <div class="subj-right">
+          <span class="grade-tag ${stat}">${pill}</span>
+          <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      </div>
+      <div class="subj-body"><div class="subj-body-inner"><div class="subj-body-pad">
+        <div class="eval-list">${evHtml}</div>
+        ${capHtml}
+        <button class="add-eval-btn"${!canAdd?' disabled':''} onclick="addEv('${s.id}','${curTab}')">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          ${canAdd?'Adicionar avaliação':'Limite de 10 pts atingido'}
+        </button>
+      </div></div></div>
+      <div class="subj-footer"><span class="subj-footer-label">${flab}</span>${fval}</div>
+    </div>`;
+  });
+  h+='</div>';
+  el.innerHTML=`<div class="page-anim">${h}</div>`;
+}
+
+/* ═══════════════════════════════
+   RESULTADO
+═══════════════════════════════ */
+function renderResultado(el){
+  let pass=0,fail=0,warn=0,pend=0,sum=0,cnt=0;
+  const subjScores=[];
+  SUBJECTS.forEach(s=>{
+    const g=finalGrade(s.id),s2=st(g);
+    if(s2!=='pending'){sum+=g;cnt++;}
+    if(s2==='pass')pass++;
+    else if(s2==='fail')fail++;
+    else if(s2==='warn')warn++;
+    else pend++;
+    subjScores.push({s,g,s2});
+  });
+  const avg=cnt>0?sum/cnt:null,avgSt=st(avg);
+
+  // analytics
+  const scored=subjScores.filter(x=>x.g!==null);
+  const best=scored.length?scored.reduce((a,b)=>b.g>a.g?b:a):null;
+  const worst=scored.length?scored.reduce((a,b)=>b.g<a.g?b:a):null;
+  const atRisk=subjScores.filter(x=>x.s2==='warn'||x.s2==='fail');
+
+  // gap to pass for at-risk subjects
+  const gapHtml=atRisk.length?`<div class="section-label">Em risco — o que falta para passar</div>`+atRisk.map(x=>{
+    const gap=Math.max(0,6-x.g).toFixed(1);
+    const t1=trimGrade(x.s.id,'1T'),t2=trimGrade(x.s.id,'2T'),t3=trimGrade(x.s.id,'3T');
+    return `<div class="risk-row" style="--accent-color:${x.s.color}">
+      <div class="risk-accent"></div>
+      <div class="risk-info">
+        <div class="risk-name">${x.s.name}</div>
+        <div class="risk-chips"><span class="chip">1°T ${fmt(t1)}</span><span class="chip">2°T ${fmt(t2)}</span><span class="chip">3°T ${fmt(t3)}</span></div>
+      </div>
+      <div class="risk-right">
+        <div class="risk-current" style="color:${SC(x.s2)}">${fmt(x.g)}</div>
+        <div class="risk-gap">faltam ${gap}</div>
+      </div>
+    </div>`;
+  }).join(''):'';
+
+  let h=`<div class="res-hero">
+    <div class="res-hero-title">Fórmula de aprovação</div>
+    <div class="res-hero-formula">( 1°T × 3 + 2°T × 3 + 3°T × 4 ) ÷ 10 &nbsp;≥&nbsp; 6.0</div>
+    <div class="res-stats">
+      <div class="res-stat"><div class="label">Aprovadas</div><div class="value" style="color:#34D399">${pass}</div><div class="sub">matérias</div></div>
+      <div class="res-stat"><div class="label">Em Risco</div><div class="value" style="color:#FBBF24">${warn}</div><div class="sub">matérias</div></div>
+      <div class="res-stat"><div class="label">Reprovadas</div><div class="value" style="color:#F87171">${fail}</div><div class="sub">matérias</div></div>
+    </div>
+    <div class="res-avg">
+      <div class="res-avg-left"><div class="label">Média Geral</div><div class="res-avg-badge ${avgSt}">${SL[avgSt]}</div></div>
+      <div class="res-avg-num" style="color:${SC(avgSt)}">${fmt(avg)}</div>
+    </div>
+  </div>`;
+
+  // highlights
+  if(best||worst){
+    h+=`<div class="res-highlights">`;
+    if(best)h+=`<div class="res-highlight-card" style="border-color:var(--greenbd)">
+      <div class="rh-label" style="color:var(--green)">↑ Melhor matéria</div>
+      <div class="rh-subj">${best.s.name}</div>
+      <div class="rh-val" style="color:var(--green)">${fmt(best.g)}</div>
+    </div>`;
+    if(worst&&worst!==best)h+=`<div class="res-highlight-card" style="border-color:var(--redbd)">
+      <div class="rh-label" style="color:var(--red)">↓ Precisa de atenção</div>
+      <div class="rh-subj">${worst.s.name}</div>
+      <div class="rh-val" style="color:var(--red)">${fmt(worst.g)}</div>
+    </div>`;
+    h+=`</div>`;
+  }
+
+  h+=gapHtml;
+
+  h+=`<div class="section-label">Todas as matérias</div>`;
+  subjScores.forEach(({s,g,s2},i)=>{
+    const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T');
+    const pct=g!==null?Math.min(g/10*100,100):0;
+    h+=`<div class="res-row ${s2}" style="animation-delay:${i*.025}s;--accent-color:${s.color}">
+      <div class="res-row-accent"></div>
+      <div class="res-row-info">
+        <div class="res-row-name">${s.name}</div>
+        <div class="chips"><span class="chip">1°T ${fmt(t1)}</span><span class="chip">2°T ${fmt(t2)}</span><span class="chip">3°T ${fmt(t3)}</span></div>
+        <div class="pbar"><div class="pbar-fill" style="width:${pct}%;background:${SC(s2)}"></div></div>
+      </div>
+      <div class="res-row-final"><span class="res-row-num">${fmt(g)}</span><span class="res-row-status">${SL[s2]}</span></div>
+    </div>`;
+  });
+  el.innerHTML=`<div class="page-anim">${h}</div>`;
+}
+
+/* ═══════════════════════════════
+   RESUMO
+═══════════════════════════════ */
+function renderResumo(el){
+  // compute stats
+  let passCount=0,failCount=0,warnCount=0,pendCount=0,sumAll=0,cntAll=0;
+  SUBJECTS.forEach(s=>{
+    const g=finalGrade(s.id),ss=st(g);
+    if(ss==='pass')passCount++;
+    else if(ss==='fail')failCount++;
+    else if(ss==='warn')warnCount++;
+    else pendCount++;
+    if(ss!=='pending'){sumAll+=g;cntAll++;}
+  });
+  const avgAll=cntAll>0?sumAll/cntAll:null;
+  const heroHtml=`<div class="resumo-hero">
+    <div class="resumo-mini-stat"><div class="rv" style="color:var(--green)">${passCount}</div><div class="rl">Aprovadas</div></div>
+    <div class="resumo-mini-stat"><div class="rv" style="color:var(--amber)">${warnCount}</div><div class="rl">Em risco</div></div>
+    <div class="resumo-mini-stat"><div class="rv" style="color:${avgAll!==null?SC(st(avgAll)):'var(--t4)'}">${fmt(avgAll)}</div><div class="rl">Média geral</div></div>
+  </div>`;
+
+  let h=heroHtml+'<div class="section-label">Visão geral por matéria</div>';
+  SUBJECTS.forEach((s,i)=>{
+    const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
+    const ss=st(g);
+    // trend arrows
+    const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'';
+    const trendTxt=t1!==null&&t2!==null&&t3!==null?`<span style="color:var(--t4);font-size:10px;margin-left:4px">${tr(t1,t2)}${tr(t2,t3)}</span>`:'';
+    const cells=[['1°T',t1],['2°T',t2],['3°T',t3],['Final',g]].map(([l,v])=>`<div class="resumo-cell"><div class="cl">${l}</div><div class="cv ${st(v)}">${fmt(v)}</div></div>`).join('');
+    h+=`<div class="resumo-row" style="animation-delay:${i*.025}s"><div class="resumo-row-head"><div class="resumo-row-accent" style="background:${s.color}"></div><div class="resumo-row-name">${s.name}${trendTxt}</div><span class="chip" style="margin-left:auto;background:${ss==='pass'?'var(--greenbg)':ss==='warn'?'var(--amberbg)':ss==='fail'?'var(--redbg)':'var(--bg3)'};color:${SC(ss)};border:1px solid ${ss==='pass'?'var(--greenbd)':ss==='warn'?'var(--amberbd)':ss==='fail'?'var(--redbd)':'var(--line)'}">${SL[ss]}</span></div><div class="resumo-row-grid">${cells}</div></div>`;
+  });
+  el.innerHTML=`<div class="page-anim">${h}</div>`;
+}
+
+/* ═══════════════════════════════
+   HORÁRIOS
+═══════════════════════════════ */
+function toMins(hm){return hm[0]*60+hm[1];}
+function fmtHM(hm){return String(hm[0]).padStart(2,'0')+':'+String(hm[1]).padStart(2,'0');}
+function nowMins(){const d=new Date();return d.getHours()*60+d.getMinutes()+d.getSeconds()/60;}
+function fmtCountdown(m){
+  const mi=Math.floor(m),s=Math.floor((m-mi)*60);
+  if(mi>=60){const h=Math.floor(mi/60),r=mi%60;return h+'h'+String(r).padStart(2,'0')+'m';}
+  return mi+'m '+String(s).padStart(2,'0')+'s';
+}
+function getSchedStatus(){
+  const now=nowMins();const dow=new Date().getDay();
+  if(dow<1||dow>5)return{type:'weekend'};
+  const dd=SCHED[dow];
+  let ci=0;
+  for(let pi=0;pi<PERIODS.length;pi++){
+    const p=PERIODS[pi];const ps=toMins(p.s),pe=toMins(p.e);
+    if(p.break){
+      if(now>=ps&&now<pe){const next=dd[ci];return{type:'break',remaining:pe-now,next};}
+      continue;
+    }
+    if(now>=ps&&now<pe){
+      let next=null;let ni=ci+1;
+      while(ni<dd.length){if(dd[ni]){next=dd[ni];break;}ni++;}
+      return{type:'in-class',cls:dd[ci],period:p,remaining:pe-now,duration:pe-ps,elapsed:now-ps,next};
+    }
+    ci++;
+  }
+  // before first
+  const fp=PERIODS[0];const fs=toMins(fp.s);
+  if(now<fs)return{type:'before',first:dd[0],remaining:fs-now};
+  return{type:'after'};
+}
+
+function renderHorarios(el){
+  const s2=getSchedStatus();
+  let banner='';
+  if(s2.type==='in-class'){
+    const pct=Math.min((s2.elapsed/s2.duration)*100,100).toFixed(1);
+    const nextTxt=s2.next?`Próxima: <strong>${s2.next.subj}</strong> com ${s2.next.prof}`:'Última aula do dia';
+    banner=`<div class="live-banner in-class"><div class="lb-tag"><div class="dot"></div>Em aula</div><div class="lb-main">Na aula de <span>${s2.cls.subj}</span></div><div class="lb-sub">${nextTxt}</div><div class="lb-timer" id="lb-timer">${fmtCountdown(s2.remaining)}</div><div class="lb-timer-label">restante</div><div class="lb-progress"><div class="lb-progress-fill" id="lb-pbar" style="width:${pct}%"></div></div></div>`;
+  }else if(s2.type==='break'){
+    banner=`<div class="live-banner break-time"><div class="lb-tag"><div class="dot"></div>Recreio</div><div class="lb-main">Intervalo em andamento</div><div class="lb-sub">Próxima: <strong>${s2.next.subj}</strong> com ${s2.next.prof}</div><div class="lb-timer" id="lb-timer">${fmtCountdown(s2.remaining)}</div><div class="lb-timer-label">restante</div><div class="lb-progress"><div class="lb-progress-fill" id="lb-pbar" style="width:${(s2.remaining/15*100).toFixed(1)}%"></div></div></div>`;
+  }else if(s2.type==='between'||s2.type==='before'){
+    const lbl=s2.type==='before'?s2.first:s2.next;
+    banner=`<div class="live-banner between"><div class="lb-tag"><div class="dot"></div>Entre aulas</div><div class="lb-main">Próxima: <span>${lbl.subj}</span></div><div class="lb-sub">Prof. <strong>${lbl.prof}</strong></div><div class="lb-timer" id="lb-timer">${fmtCountdown(s2.remaining)}</div><div class="lb-timer-label">para iniciar</div></div>`;
+  }else if(s2.type==='after'){
+    banner=`<div class="live-banner no-class"><div class="lb-tag"><div class="dot"></div>Encerrado</div><div class="lb-main">Aulas encerradas hoje</div><div class="lb-sub">Até amanhã!</div></div>`;
+  }else{
+    banner=`<div class="live-banner no-class"><div class="lb-tag"><div class="dot"></div>Final de semana</div><div class="lb-main">Sem aulas hoje</div><div class="lb-sub">Aproveite o descanso 🎉</div></div>`;
+  }
+
+  let daySel='<div class="day-selector">';
+  [1,2,3,4,5].forEach(d=>{
+    const isToday=d===todayDow,isActive=d===schedDay;
+    daySel+=`<div class="day-btn${isActive?' active':''}${isToday&&!isActive?' today':''}" onclick="setSchedDay(${d})"><span class="day-name">${DAY_NAMES[d]}</span>${isToday?'<span class="day-short">hoje</span>':''}</div>`;
+  });
+  daySel+='</div>';
+
+  const dd=SCHED[schedDay];const now=nowMins();const isTd=schedDay===todayDow;
+  let list='<div class="schedule-list">';
+  let ci=0;
+  PERIODS.forEach((p,pi)=>{
+    const ps=toMins(p.s),pe=toMins(p.e);
+    const isCur=isTd&&now>=ps&&now<pe;const isPast=isTd&&now>=pe;
+    if(p.break){list+=`<div class="sched-break${isCur?' current':''}"><div class="sched-break-line"></div><div class="sched-break-txt">${fmtHM(p.s)} — RECREIO</div><div class="sched-break-line"></div></div>`;return;}
+    const cls=dd[ci];const color=SUBJ_COLORS[cls.subj]||'#505050';
+    const safeSubj=cls.subj.replace(/'/g,"\\'");const safeProf=cls.prof.replace(/'/g,"\\'");const safeCol=color.replace(/'/g,"\\'");
+    list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}" style="--accent-color:${color}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
+      <div class="sched-time"><span class="start">${fmtHM(p.s)}</span><span class="end">${fmtHM(p.e)}</span></div>
+      <div class="sched-divider"></div>
+      <div class="sched-info"><div class="sched-num">${p.n}</div><div class="sched-subj">${cls.subj}</div><div class="sched-prof">${cls.prof}</div></div>
+      ${isCur?'<div class="sched-now-badge">Agora</div>':''}
+    </div>`;
+    ci++;
+  });
+  list+='</div>';
+  el.innerHTML=`<div class="page-anim">${banner}${daySel}${list}</div>`;
+}
+
+/* ═══════════════════════════════
+   PROVAS PAGE
+═══════════════════════════════ */
+function todayStr(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function fmtDateBR(str){
+  if(!str)return'—';const p=str.split('-');return`${p[2]}/${p[1]}/${p[0]}`;
+}
+function daysDiff(dateStr){
+  const today=new Date();today.setHours(0,0,0,0);
+  const d=new Date(dateStr+'T00:00:00');return Math.round((d-today)/(1000*60*60*24));
+}
+
+function renderProvas(el){
+  const td=todayStr();
+
+  // stats
+  const upcoming=exams.filter(e=>daysDiff(e.examDate)>=0).length;
+  const done=exams.filter(e=>daysDiff(e.examDate)<0).length;
+  const soon=exams.filter(e=>{const d=daysDiff(e.examDate);return d>=0&&d<=7;}).length;
+  const totalValor=exams.reduce((a,e)=>a+(parseFloat(e.valor)||0),0);
+
+  let statsHtml='';
+  if(exams.length>0){
+    statsHtml=`<div class="provas-stats">
+      <div class="provas-stat"><div class="ps-val" style="color:var(--green)">${upcoming}</div><div class="ps-lbl">Próximas</div></div>
+      <div class="provas-stat"><div class="ps-val" style="color:var(--amber)">${soon}</div><div class="ps-lbl">Esta semana</div></div>
+      <div class="provas-stat"><div class="ps-val" style="color:var(--t3)">${done}</div><div class="ps-lbl">Feitas</div></div>
+    </div>`;
+  }
+
+  // subject options
+  const opts=SUBJECTS.map(s=>`<option value="${s.name}">${s.name}</option>`).join('');
+
+  const formHtml=`<div class="add-exam-card">
+    <div class="add-exam-title">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Nova Prova
+    </div>
+    <div class="form-grid full">
+      <div class="field-wrap"><label>Matéria</label>
+        <select id="ex-subj"><option value="">Selecione a matéria...</option>${opts}</select>
+      </div>
+    </div>
+    <div class="form-grid full">
+      <div class="field-wrap"><label>Título da prova</label>
+        <input type="text" id="ex-title" placeholder="Ex: Prova Bimestral, Recuperação..."/>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field-wrap"><label>Data da prova</label><input type="date" id="ex-date"/></div>
+      <div class="field-wrap"><label>Valor (pontos)</label><input type="number" id="ex-valor" min="0" step="0.5" placeholder="Ex: 10"/></div>
+    </div>
+    <button class="add-exam-btn" onclick="addExam()">+ Adicionar Prova</button>
+  </div>`;
+
+  // exam list sorted by exam date
+  const sorted=[...exams].sort((a,b)=>a.examDate.localeCompare(b.examDate));
+  let listHtml='';
+  if(sorted.length===0){
+    listHtml=`<div class="exam-empty"><strong>Nenhuma prova marcada</strong>Use o formulário acima para marcar suas próximas provas.</div>`;
+  }else{
+    // split upcoming vs done
+    const upcomingExams=sorted.filter(e=>daysDiff(e.examDate)>=0);
+    const doneExams=sorted.filter(e=>daysDiff(e.examDate)<0).reverse();
+
+    const buildItem=(e)=>{
+      const diff=daysDiff(e.examDate);
+      const isPast=diff<0;
+      const isToday=diff===0;
+      const isSoon=diff>0&&diff<=3;
+      let badgeCls,badgeTxt,itemCls;
+      if(isPast){badgeCls='done-badge';badgeTxt='Prova já feita';itemCls='done';}
+      else if(isToday){badgeCls='today-badge';badgeTxt='HOJE';itemCls='today-exam';}
+      else if(isSoon){badgeCls='soon-badge';badgeTxt=`em ${diff}d`;itemCls='soon';}
+      else{badgeCls='future-badge';badgeTxt=`em ${diff}d`;itemCls='';}
+      const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'#505050';
+      const valorHtml=e.valor?`<span class="exam-valor-chip">⬡ ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
+      const titleHtml=e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:'';
+      return `<div class="exam-item ${itemCls}" style="--accent-color:${color}">
+        <div class="exam-info">
+          <div class="exam-subj">${escHtml(e.subj)}</div>
+          ${titleHtml}
+          <div class="exam-meta-row">
+            <div class="exam-date-chip">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>${fmtDateBR(e.examDate)}</span>
+            </div>
+            ${valorHtml}
+          </div>
+        </div>
+        <div class="exam-right">
+          <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
+          <button class="exam-rm-btn" onclick="rmExam('${e.id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>`;
+    };
+
+    listHtml='';
+    if(upcomingExams.length>0){
+      listHtml+=`<div class="section-label">Próximas provas</div><div class="exam-list">`;
+      upcomingExams.forEach(e=>{listHtml+=buildItem(e);});
+      listHtml+='</div>';
+    }
+    if(doneExams.length>0){
+      listHtml+=`<div class="section-label">Provas realizadas</div><div class="exam-list">`;
+      doneExams.forEach(e=>{listHtml+=buildItem(e);});
+      listHtml+='</div>';
+    }
+  }
+
+  el.innerHTML=`<div class="page-anim">${statsHtml}${formHtml}${listHtml}</div>`;
+  updateExamBadge();
+}
+
+function addExam(){
+  const subj=document.getElementById('ex-subj').value;
+  const examDate=document.getElementById('ex-date').value;
+  const title=document.getElementById('ex-title').value.trim();
+  const valor=document.getElementById('ex-valor').value;
+  if(!subj||!examDate){alert('Selecione a matéria e a data da prova.');return;}
+  const id='ex_'+Date.now();
+  exams.push({id,subj,examDate,title,valor});
+  saveExams();
+  render();syncLayout();
+}
+
+function rmExam(id){
+  exams=exams.filter(e=>e.id!==id);
+  saveExams();render();syncLayout();
+}
+
+function updateExamBadge(){
+  const td=todayStr();
+  const urgent=exams.filter(e=>daysDiff(e.examDate)>=0&&daysDiff(e.examDate)<=3).length;
+  const btn=document.getElementById('n-provas');
+  const existing=btn.querySelector('.nav-badge');
+  if(urgent>0){
+    if(!existing){const b=document.createElement('div');b.className='nav-badge';b.textContent=urgent;btn.appendChild(b);}
+    else existing.textContent=urgent;
+  }else if(existing){existing.remove();}
+}
+
+/* ═══════════════════════════════
+   ACCORDION / EVAL ACTIONS
+═══════════════════════════════ */
+function toggleAcc(sid){
+  const key=sid+'_'+curTab;
+  openAcc[key]=!openAcc[key];
+  const el=document.getElementById('si-'+sid);
+  if(el)el.classList.toggle('open',openAcc[key]);
+}
+function addEv(sid,tab){
+  openAcc[sid+'_'+tab]=true;
+  G[sid][tab].push({name:'',got:'',total:''});
+  saveGrades();render();syncLayout();
+}
+function rmEv(sid,tab,i){
+  G[sid][tab].splice(i,1);saveGrades();render();syncLayout();
+}
+function updF(sid,tab,i,field,val){
+  const rows=G[sid][tab];
+
+  if(field==='total'){
+    // sum of other rows' totals
+    const otherSum=rows.reduce((acc,r,j)=>j===i?acc:acc+(nf(r.total)||0),0);
+    const maxAllowed=parseFloat((10-otherSum).toFixed(2));
+    let num=nf(val);
+    if(num!==null){
+      if(num<0)num=0;
+      if(num>maxAllowed)num=maxAllowed;
+      rows[i][field]=String(parseFloat(num.toFixed(2)));
+      // update the input DOM to reflect the cap
+      const inp=document.getElementById(`it-${sid}-${tab}-${i}`);
+      if(inp&&inp!==document.activeElement)inp.value=rows[i][field];
+      else if(inp&&num!==nf(val))inp.value=rows[i][field];
+      // also cap got if it now exceeds total
+      const gNum=nf(rows[i].got);
+      if(gNum!==null&&gNum>num){
+        rows[i].got=String(parseFloat(num.toFixed(2)));
+        const ginp=document.getElementById(`ig-${sid}-${tab}-${i}`);
+        if(ginp)ginp.value=rows[i].got;
+      }
+    }else{
+      rows[i][field]=val;
+    }
+  }else if(field==='got'){
+    let num=nf(val);
+    if(num!==null){
+      if(num<0)num=0;
+      const tNum=nf(rows[i].total);
+      if(tNum!==null&&num>tNum){
+        num=tNum;
+        rows[i][field]=String(parseFloat(num.toFixed(2)));
+        const inp=document.getElementById(`ig-${sid}-${tab}-${i}`);
+        if(inp)inp.value=rows[i][field];
+      }else{
+        rows[i][field]=val;
+      }
+    }else{
+      rows[i][field]=val;
+    }
+  }else{
+    rows[i][field]=val;
+  }
+
+  saveGrades();
+  updateCardDisplay(sid,tab);
+}
+
+function updateCardDisplay(sid,tab){
+  const isEAC=tab.includes('EAC');
+  const base=isEAC?tab.replace('-EAC',''):null;
+  const score=tabScore(sid,tab);
+  let disp,stat;
+  if(isEAC){const norm=tabScore(sid,base);const best=(score===null&&norm===null)?null:score===null?norm:norm===null?score:Math.max(score,norm);disp=best;stat=st(best);}
+  else{disp=score;stat=st(score);}
+  const card=document.getElementById('si-'+sid);if(!card)return;
+  const pill=card.querySelector('.grade-tag');
+  if(pill){pill.className='grade-tag '+stat;pill.textContent=stat==='pending'?'—':fmt(disp);}
+  const fvn=card.querySelector('.sfv-num');
+  const fvd=card.querySelector('.sfv-denom');
+  if(fvn){fvn.className='sfv-num '+(stat==='pending'?'pending':stat);fvn.textContent=stat==='pending'?'Pendente':fmt(disp);}
+  if(fvd)fvd.textContent=stat==='pending'?'':'/ 10';
+
+  // update individual eval badges + max attributes
+  const rows=G[sid][tab];
+  const badges=card.querySelectorAll('.eval-result-badge');
+  badges.forEach((b,i)=>{
+    if(i>=rows.length)return;
+    const r=rows[i];
+    const gv=nf(r.got),tv=nf(r.total);
+    b.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)} / ${fmt(tv)}`:`${fmt(gv)} pts`):'—';
+    // update max attribute on got input
+    const ginp=document.getElementById(`ig-${sid}-${tab}-${i}`);
+    if(ginp&&tv!==null)ginp.max=tv;
+    // update max attribute on total input
+    const otherSum=rows.reduce((acc,rr,j)=>j===i?acc:acc+(nf(rr.total)||0),0);
+    const tinp=document.getElementById(`it-${sid}-${tab}-${i}`);
+    if(tinp)tinp.max=parseFloat((10-otherSum).toFixed(2));
+  });
+
+  // update capacity bar
+  const allocated=rows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
+  const allocRound=parseFloat(allocated.toFixed(2));
+  const capEl=document.getElementById(`cap-${sid}-${tab}`);
+  if(capEl){
+    const capPct=Math.min((allocRound/10)*100,100);
+    const capColor=allocRound>=10?'var(--green)':allocRound>=7?'var(--amber)':'var(--gold)';
+    const capRemaining=parseFloat((10-allocRound).toFixed(2));
+    const canAdd=allocRound<10;
+    capEl.querySelector('.eval-cap-fill').style.width=capPct+'%';
+    capEl.querySelector('.eval-cap-fill').style.background=capColor;
+    capEl.querySelector('.eval-capacity-nums').innerHTML=`<span>${allocRound.toFixed(1)}</span> / 10 pts${canAdd?` · ${capRemaining.toFixed(1)} disponíveis`:' · completo'}`;
+  }
+
+  // update add button state
+  const addBtn=card.querySelector('.add-eval-btn');
+  if(addBtn){
+    const canAdd=allocRound<10;
+    addBtn.disabled=!canAdd;
+    addBtn.innerHTML=canAdd
+      ?`<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Adicionar avaliação`
+      :`<svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round"><polyline points="20 6 9 17 4 12"/></svg>Limite de 10 pts atingido`;
+  }
+}
+
+/* ─── NAVIGATION ─── */
+function switchTab(tab,btn){
+  curTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(tab==='resultado'){curPage='resultado';setNavActive('resultado');document.getElementById('tabs-strip').style.display='none';}
+  else{curPage='notas';setNavActive('notas');document.getElementById('tabs-strip').style.display='';}
+  render();syncLayout();
+}
+
+function setPage(page){
+  curPage=page;setNavActive(page);
+  const ts=document.getElementById('tabs-strip');
+  const tt=document.getElementById('topbar-title');
+  if(page==='notas'){
+    ts.style.display='';
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    const fb=document.querySelector('.tab-btn[data-tab="1T"]');
+    if(fb){fb.classList.add('active');curTab='1T';}
+    tt.textContent='Aproveitamento';
+  }else{
+    ts.style.display='none';
+    const lbls={horarios:'Horários — Turma 205',provas:'Agenda de Provas',resumo:'Resumo Geral',resultado:'Resultado Final'};
+    tt.textContent=lbls[page]||'Aproveitamento';
+  }
+  render();syncLayout();
+}
+
+function setNavActive(p){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',resultado:'n-resultado'};
+  const el=document.getElementById(m[p]||'n-notas');
+  if(el)el.classList.add('active');
+}
+
+function setSchedDay(d){schedDay=d;render();syncLayout();}
+document.getElementById('home-btn').onclick=()=>setPage('notas');
+
+/* ─── MODAL ─── */
+function openModal(){
+  document.getElementById('m-nome').value=stu.nome;
+  document.getElementById('m-escola').value=stu.escola;
+  document.getElementById('m-turma').value=stu.turma;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function modalOvClick(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');}
+function saveStudent(){
+  stu.nome=document.getElementById('m-nome').value.trim()||'Aluno';
+  stu.escola=document.getElementById('m-escola').value.trim()||'Escola';
+  stu.turma=document.getElementById('m-turma').value.trim()||'205';
+  applyStudent();saveStudentLS();
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+/* ─── TIMER ─── */
+function tickTimer(){
+  if(curPage!=='horarios')return;
+  const s2=getSchedStatus();
+  const te=document.getElementById('lb-timer');
+  const pb=document.getElementById('lb-pbar');
+  if(!te)return;
+  if(s2.type==='in-class'){
+    te.textContent=fmtCountdown(s2.remaining);
+    if(pb)pb.style.width=Math.min((s2.elapsed/s2.duration)*100,100).toFixed(2)+'%';
+  }else if(s2.type==='break'){
+    te.textContent=fmtCountdown(s2.remaining);
+    if(pb)pb.style.width=Math.max(0,(s2.remaining/15)*100).toFixed(2)+'%';
+  }else if(s2.type==='between'||s2.type==='before'){
+    te.textContent=fmtCountdown(s2.remaining);
+  }
+}
+
+let _lastMin=-1;
+function checkSchedRefresh(){
+  if(curPage!=='horarios')return;
+  const m=Math.floor(nowMins());
+  if(m!==_lastMin){_lastMin=m;render();}
+}
+
+function closeSubjSheet(e){
+  if(!e||e.target===document.getElementById('subj-sheet-overlay'))
+    document.getElementById('subj-sheet-overlay').classList.remove('open');
+}
+
+function openSubjSheet(subjName, prof, color){
+  // find SUBJECTS entry
+  const subj=SUBJECTS.find(s=>s.name===subjName)||{id:null,name:subjName,color};
+  const sid=subj.id;
+
+  // grades
+  const t1=sid?trimGrade(sid,'1T'):null;
+  const t2=sid?trimGrade(sid,'2T'):null;
+  const t3=sid?trimGrade(sid,'3T'):null;
+  const final=sid?finalGrade(sid):null;
+
+  // count weekly appearances per day + total
+  const weekSlots=[];
+  let totalPerWeek=0;
+  [1,2,3,4,5].forEach(day=>{
+    const dd=SCHED[day];
+    let ci=0;
+    PERIODS.forEach(p=>{
+      if(p.break)return;
+      if(dd[ci]&&dd[ci].subj===subjName){
+        weekSlots.push({day,period:p.n,s:p.s,e:p.e});
+        totalPerWeek++;
+      }
+      ci++;
+    });
+  });
+
+  // total aulas per trimester (approx weeks × per week, assuming ~13 weeks per trimestre)
+  const aulasPerTrim=totalPerWeek*13;
+  // total horas (50min per aula)
+  const totalHorasAno=Math.round(totalPerWeek*39*50/60);
+
+  // upcoming provas for this subject
+  const subjProvas=exams.filter(e=>e.subj===subjName).sort((a,b)=>a.examDate.localeCompare(b.examDate));
+  const upcoming=subjProvas.filter(e=>daysDiff(e.examDate)>=0);
+  const done=subjProvas.filter(e=>daysDiff(e.examDate)<0);
+
+  // progress toward 6.0 for final
+  const progressPct=final!==null?Math.min((final/6)*100,100):0;
+  const finalSt=st(final);
+
+  // evaluations count
+  let evalCount=0;
+  if(sid){ALL_TABS.forEach(t=>{if(!t.includes('resultado'))evalCount+=G[sid][t].length;});}
+
+  // header
+  document.getElementById('ss-color-bar').style.background=subj.color||color;
+  document.getElementById('ss-title').textContent=subjName;
+  document.getElementById('ss-prof-name').textContent=`Prof. ${prof}`;
+
+  // build body
+  let html='';
+
+  // ── Notas por trimestre
+  html+=`<div class="ss-section">
+    <div class="ss-label">Notas por trimestre</div>
+    <div class="ss-grades">
+      <div class="ss-grade-card"><div class="ss-grade-label">1°T</div><div class="ss-grade-val ${st(t1)}">${fmt(t1)}</div></div>
+      <div class="ss-grade-card"><div class="ss-grade-label">2°T</div><div class="ss-grade-val ${st(t2)}">${fmt(t2)}</div></div>
+      <div class="ss-grade-card"><div class="ss-grade-label">3°T</div><div class="ss-grade-val ${st(t3)}">${fmt(t3)}</div></div>
+      <div class="ss-grade-card highlight"><div class="ss-grade-label">Final</div><div class="ss-grade-val ${finalSt}">${fmt(final)}</div></div>
+    </div>`;
+
+  // Progress bar toward 6.0
+  if(final!==null){
+    const need=Math.max(0,6-final).toFixed(1);
+    const barColor=finalSt==='pass'?'var(--green)':finalSt==='warn'?'var(--amber)':'var(--red)';
+    html+=`<div class="ss-progress-wrap">
+      <div class="ss-progress-top">
+        <span class="ss-progress-label">${finalSt==='pass'?'✓ Aprovado nesta matéria':'Progresso para aprovação'}</span>
+        <span class="ss-progress-pct">${fmt(final)} / 6.0</span>
+      </div>
+      <div class="ss-pbar"><div class="ss-pbar-fill" style="width:${progressPct}%;background:${barColor}"></div></div>
+      ${finalSt!=='pass'?`<div class="ss-need-txt">Faltam <strong>${need} pontos</strong> para atingir a média mínima</div>`:`<div class="ss-need-txt" style="color:var(--green)">Média mínima atingida 🎉</div>`}
+    </div>`;
+  }
+  html+='</div>';
+
+  // ── Estatísticas semanais
+  html+=`<div class="ss-section">
+    <div class="ss-label">Presença semanal</div>
+    <div class="ss-stat-row" style="margin-bottom:10px">
+      <div class="ss-stat-card">
+        <div class="ss-stat-val" style="color:${subj.color||color}">${totalPerWeek}</div>
+        <div class="ss-stat-lbl">aulas por semana</div>
+      </div>
+      <div class="ss-stat-card">
+        <div class="ss-stat-val">${totalHorasAno}h</div>
+        <div class="ss-stat-lbl">carga anual aprox.</div>
+      </div>
+    </div>`;
+
+  // Which days/periods
+  if(weekSlots.length){
+    html+='<div class="ss-week">';
+    weekSlots.forEach(sl=>{
+      html+=`<div class="ss-week-item">
+        <span class="ss-week-day">${DAY_NAMES[sl.day]}</span>
+        <span class="ss-week-period">${sl.period}</span>
+        <span class="ss-week-time">${fmtHM(sl.s)} – ${fmtHM(sl.e)}</span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+
+  // ── Avaliações registradas
+  if(sid){
+    html+=`<div class="ss-section">
+      <div class="ss-label">Avaliações registradas</div>
+      <div class="ss-stat-row">
+        <div class="ss-stat-card">
+          <div class="ss-stat-val">${evalCount}</div>
+          <div class="ss-stat-lbl">avaliações no total</div>
+        </div>
+        <div class="ss-stat-card">
+          <div class="ss-stat-val" style="color:${subj.color||color}">${aulasPerTrim}</div>
+          <div class="ss-stat-lbl">aulas por trimestre</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ── Provas agendadas
+  if(subjProvas.length){
+    html+=`<div class="ss-section"><div class="ss-label">Provas agendadas</div>`;
+    upcoming.forEach(e=>{
+      const diff=daysDiff(e.examDate);
+      const cls=diff===0?'today-badge':diff<=3?'soon-badge':'future-badge';
+      const txt=diff===0?'HOJE':`em ${diff}d`;
+      html+=`<div class="ss-prova-item">
+        <div class="ss-prova-info">
+          <div class="ss-prova-title">${escHtml(e.title||'Prova')}</div>
+          <div class="ss-prova-date">${fmtDateBR(e.examDate)}${e.valor?' · '+parseFloat(e.valor).toFixed(1)+' pts':''}</div>
+        </div>
+        <span class="ss-prova-badge exam-days-badge ${cls}">${txt}</span>
+      </div>`;
+    });
+    done.forEach(e=>{
+      html+=`<div class="ss-prova-item" style="opacity:.5">
+        <div class="ss-prova-info">
+          <div class="ss-prova-title">${escHtml(e.title||'Prova')}</div>
+          <div class="ss-prova-date">${fmtDateBR(e.examDate)}${e.valor?' · '+parseFloat(e.valor).toFixed(1)+' pts':''}</div>
+        </div>
+        <span class="ss-prova-badge exam-days-badge done-badge">Feita</span>
+      </div>`;
+    });
+    html+='</div>';
+  }else{
+    html+=`<div class="ss-section"><div class="ss-label">Provas agendadas</div><div style="font-size:12px;color:var(--t4);padding:4px 0">Nenhuma prova marcada para esta matéria.</div></div>`;
+  }
+
+  document.getElementById('ss-body').innerHTML=html;
+  document.getElementById('subj-sheet-overlay').classList.add('open');
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── INIT ─── */
+window.addEventListener('load',()=>{
+  loadStudentLS();
+  loadGrades();
+  loadExams();
+  syncLayout();
+  render();
+  updateExamBadge();
+});
+window.addEventListener('resize',syncLayout);
+new ResizeObserver(syncLayout).observe(document.getElementById('top-fixed'));
+setInterval(tickTimer,1000);
+setInterval(checkSchedRefresh,10000);
+</script>
+</body>
+</html>
