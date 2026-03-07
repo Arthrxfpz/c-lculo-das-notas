@@ -3741,8 +3741,8 @@ function openNoteEditor(noteId){
   document.getElementById('note-editor-overlay').classList.add('open');
   setTimeout(()=>updateToolbarState(),50);
   setTimeout(()=>{
-    if(!note.title)document.getElementById('note-title-inp').focus();
-    else{const c=document.getElementById('note-content-inp');if(c){c.focus();const r=document.createRange();r.selectNodeContents(c);r.collapse(false);const s=window.getSelection();s.removeAllRanges();s.addRange(r);}}
+    // auto-focus desativado (evita teclado mobile)
+    // cursor posicionado sem abrir teclado
   },380);
 }
 
