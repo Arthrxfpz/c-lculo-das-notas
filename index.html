@@ -1797,6 +1797,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   }
   .note-editor-overlay.collapsed,
   .wx-overlay.collapsed,
+  .notif-overlay.collapsed,
   .confirm-overlay.collapsed,
   .subj-sheet-overlay.collapsed,
   .exam-sheet-overlay.collapsed { left:22px; }
@@ -1804,6 +1805,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
   /* overlays offset sidebar */
   .wx-overlay,
+  .notif-overlay,
   .confirm-overlay,
   .subj-sheet-overlay,
   .exam-sheet-overlay { left:264px; }
@@ -1859,6 +1861,229 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .provas-form-centered {
   max-width:520px;
   margin:0 auto;
+}
+
+/* ═══════════════════════════════
+   NOTIFICATION BELL BUTTON (on exam item)
+═══════════════════════════════ */
+.exam-notif-btn {
+  width:32px;height:32px;
+  background:transparent;border:1.5px solid var(--line2);
+  border-radius:50%;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .18s var(--ease-ios);
+  color:var(--t4);
+}
+.exam-notif-btn svg {
+  width:14px;height:14px;stroke:currentColor;fill:none;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .18s;
+}
+.exam-notif-btn:active { transform:scale(.88); }
+.exam-notif-btn.active {
+  background:var(--violetbg);border-color:var(--violetbd);color:var(--violet);
+}
+.exam-notif-btn.active svg { fill:var(--violet);stroke:var(--violet); }
+[data-theme="light"] .exam-notif-btn.active {
+  background:var(--violetbg);border-color:var(--violetbd);color:var(--violet);
+}
+
+/* ═══════════════════════════════
+   NOTIFICATION POPUP OVERLAY
+═══════════════════════════════ */
+.notif-overlay {
+  position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .28s var(--ease-ios);
+}
+.notif-overlay.open { opacity:1;pointer-events:all; }
+.notif-box {
+  width:100%;max-width:480px;
+  background:var(--bg1);
+  border-radius:22px 22px 0 0;
+  border-top:1px solid var(--line2);
+  padding-bottom:env(safe-area-inset-bottom);
+  transform:translateY(100%);
+  transition:transform .34s var(--ease-sheet);
+  overflow:hidden;
+  box-shadow:0 -8px 40px rgba(0,0,0,.22);
+}
+.notif-overlay.open .notif-box { transform:translateY(0); }
+
+.notif-handle-row { display:flex;justify-content:center;padding:10px 0 4px; }
+.notif-handle { width:36px;height:4px;background:var(--bg4);border-radius:2px; }
+
+.notif-header {
+  display:flex;align-items:center;gap:12px;
+  padding:14px 20px 12px;
+  border-bottom:1px solid var(--line3);
+}
+.notif-header-icon {
+  width:40px;height:40px;border-radius:12px;
+  background:var(--violetbg);border:1px solid var(--violetbd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.notif-header-info { flex:1;min-width:0; }
+.notif-header-title { font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-0.3px; }
+.notif-header-sub { font-size:12px;color:var(--t3);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+.notif-close-btn {
+  width:30px;height:30px;background:var(--bg3);border:none;border-radius:50%;
+  color:var(--t3);font-size:18px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .15s;
+}
+.notif-close-btn:active { background:var(--bg4); }
+
+.notif-body { padding:16px 20px 6px; }
+
+.notif-hint {
+  font-size:13px;color:var(--t2);line-height:1.55;
+  background:var(--violetbg);border:1px solid var(--violetbd);
+  border-radius:12px;padding:11px 14px;margin-bottom:16px;
+  display:flex;align-items:flex-start;gap:8px;
+}
+.notif-hint-icon { font-size:16px;flex-shrink:0;margin-top:1px; }
+
+.notif-field-group { margin-bottom:14px; }
+.notif-field-label {
+  display:block;font-size:10px;font-weight:700;color:var(--t4);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;
+}
+.notif-field-input {
+  width:100%;padding:12px 14px;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:12px;
+  font-size:15px;font-weight:500;color:var(--t1);outline:none;
+  font-family:var(--ff);color-scheme:var(--cs);
+  transition:border-color .2s var(--ease-ios),box-shadow .2s;
+}
+.notif-field-input:focus {
+  border-color:var(--violet);
+  box-shadow:0 0 0 3px rgba(191,90,242,.18);
+}
+
+.notif-presets { display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px; }
+.notif-preset-btn {
+  flex:1;min-width:80px;padding:9px 10px;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:10px;
+  font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;
+  transition:all .15s var(--ease-ios);white-space:nowrap;
+}
+.notif-preset-btn:active { transform:scale(.94); }
+.notif-preset-btn:hover { background:var(--bg3);border-color:var(--line); }
+.notif-preset-btn.selected { background:var(--violetbg);border-color:var(--violetbd);color:var(--violet); }
+
+.notif-error {
+  font-size:12px;font-weight:600;color:var(--red);
+  background:var(--redbg);border:1px solid var(--redbd);
+  border-radius:10px;padding:9px 12px;
+  display:none;margin-bottom:12px;
+}
+.notif-error.show { display:block; }
+
+.notif-existing {
+  font-size:12px;color:var(--violet);
+  background:var(--violetbg);border:1px solid var(--violetbd);
+  border-radius:10px;padding:9px 12px;margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+}
+.notif-existing svg { width:14px;height:14px;stroke:var(--violet);fill:none;stroke-width:2;flex-shrink:0; }
+
+.notif-actions {
+  display:flex;gap:10px;padding:6px 20px 20px;
+}
+.notif-cancel-btn {
+  flex:0 0 auto;padding:14px 22px;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:14px;
+  font-size:15px;font-weight:600;color:var(--t2);cursor:pointer;
+  transition:background .15s;
+}
+.notif-cancel-btn:active { background:var(--bg3); }
+.notif-save-btn {
+  flex:1;padding:14px 20px;
+  background:var(--violet);border:none;border-radius:14px;
+  font-size:15px;font-weight:700;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:opacity .15s,transform .1s;
+  box-shadow:0 4px 16px rgba(191,90,242,.32);
+}
+.notif-save-btn svg { width:16px;height:16px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round; }
+.notif-save-btn:active { opacity:.85;transform:scale(.97); }
+.notif-save-btn:disabled { opacity:.45;cursor:not-allowed;transform:none; }
+.notif-remove-btn {
+  flex:1;padding:14px 20px;
+  background:var(--redbg);border:1.5px solid var(--redbd);border-radius:14px;
+  font-size:14px;font-weight:700;color:var(--red);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:opacity .15s;
+}
+.notif-remove-btn:active { opacity:.75; }
+
+/* ── permission status banners ── */
+.notif-perm-banner {
+  border-radius:13px;padding:12px 14px;margin-bottom:14px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.notif-perm-banner.granted {
+  background:var(--greenbg);border:1px solid var(--greenbd);
+}
+.notif-perm-banner.denied {
+  background:var(--redbg);border:1px solid var(--redbd);
+}
+.notif-perm-banner.unsupported {
+  background:var(--amberbg);border:1px solid var(--amberbd);
+}
+.notif-perm-banner.default {
+  background:var(--goldbg);border:1px solid var(--goldbd);
+}
+.notif-perm-icon { font-size:18px;flex-shrink:0;line-height:1; }
+.notif-perm-body { flex:1;min-width:0; }
+.notif-perm-title {
+  font-size:13px;font-weight:700;margin-bottom:3px;
+}
+.notif-perm-banner.granted .notif-perm-title { color:var(--green); }
+.notif-perm-banner.denied  .notif-perm-title { color:var(--red); }
+.notif-perm-banner.unsupported .notif-perm-title { color:var(--amber); }
+.notif-perm-banner.default .notif-perm-title { color:var(--gold); }
+.notif-perm-desc {
+  font-size:12px;color:var(--t2);line-height:1.55;
+}
+.notif-perm-enable-btn {
+  margin-top:10px;width:100%;
+  padding:11px 16px;border-radius:11px;border:none;
+  background:var(--violet);color:#fff;
+  font-size:13px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  transition:opacity .15s,transform .1s;
+  box-shadow:0 3px 12px rgba(191,90,242,.3);
+}
+.notif-perm-enable-btn:active { opacity:.82;transform:scale(.97); }
+.notif-perm-enable-btn svg { width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2.2;flex-shrink:0; }
+.notif-perm-steps {
+  margin-top:8px;font-size:11px;color:var(--t2);
+  line-height:1.7;padding-left:2px;
+}
+.notif-perm-steps strong { color:var(--t1);font-weight:600; }
+/* when denied, hide the form fields */
+.notif-perm-blocked .notif-fields-wrap { display:none !important; }
+.notif-perm-blocked #notif-presets { display:none !important; }
+
+@media (min-width:768px){
+  .notif-overlay { align-items:center;justify-content:center; }
+  .notif-box {
+    border-radius:22px;border:1px solid var(--line2);
+    max-width:440px;width:calc(100% - 48px);
+    animation:cfPop .3s var(--ease-spring);
+    box-shadow:0 32px 96px rgba(0,0,0,.36);
+    transform:none !important;
+    padding-bottom:0;
+  }
+  .notif-overlay.open .notif-box { transform:none !important; }
+  .notif-handle-row { display:none; }
 }
 
 /* ─────────────────────────────────────────────────────
@@ -2189,6 +2414,60 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
       <button class="confirm-cancel" id="confirm-cancel">Cancelar</button>
       <div class="confirm-vdiv"></div>
       <button class="confirm-ok" id="confirm-ok">Apagar</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION SCHEDULE POPUP -->
+<div class="notif-overlay" id="notif-overlay" onclick="if(event.target===this)closeNotifPopup()">
+  <div class="notif-box">
+    <div class="notif-handle-row"><div class="notif-handle"></div></div>
+    <div class="notif-header">
+      <div class="notif-header-icon">🔔</div>
+      <div class="notif-header-info">
+        <div class="notif-header-title">Lembrete de Estudo</div>
+        <div class="notif-header-sub" id="notif-header-sub">Defina quando quer ser lembrado</div>
+      </div>
+      <button class="notif-close-btn" onclick="closeNotifPopup()">
+        <svg viewBox="0 0 24 24" style="width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="notif-body">
+      <!-- permission status banner (filled by JS) -->
+      <div id="notif-perm-banner"></div>
+
+      <div class="notif-hint" id="notif-study-hint">
+        <span class="notif-hint-icon">📚</span>
+        <span>Escolha quando quer receber um lembrete no navegador para estudar para esta prova.</span>
+      </div>
+      <div class="notif-existing" id="notif-existing" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span id="notif-existing-txt">Lembrete agendado</span>
+      </div>
+      <div id="notif-fields" class="notif-fields-wrap">
+        <div class="notif-field-group">
+          <label class="notif-field-label">Data do lembrete</label>
+          <input type="date" id="notif-date" class="notif-field-input" onchange="onNotifDateChange()">
+        </div>
+        <div class="notif-field-group">
+          <label class="notif-field-label">Horário</label>
+          <input type="time" id="notif-time" class="notif-field-input" value="19:00">
+        </div>
+        <div class="notif-presets" id="notif-presets">
+          <button class="notif-preset-btn" onclick="setNotifPreset(1,this)">1 dia antes</button>
+          <button class="notif-preset-btn" onclick="setNotifPreset(2,this)">2 dias antes</button>
+          <button class="notif-preset-btn" onclick="setNotifPreset(3,this)">3 dias antes</button>
+          <button class="notif-preset-btn" onclick="setNotifPreset(7,this)">1 semana antes</button>
+        </div>
+      </div>
+      <div class="notif-error" id="notif-error"></div>
+    </div>
+    <div class="notif-actions" id="notif-actions">
+      <button class="notif-cancel-btn" onclick="closeNotifPopup()">Cancelar</button>
+      <button class="notif-save-btn" id="notif-save-btn" onclick="saveNotifSchedule()">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        Agendar lembrete
+      </button>
     </div>
   </div>
 </div>
@@ -3156,6 +3435,8 @@ function renderProvas(el){
       const timeHtml=e.examTime?`<span class="exam-time-chip">\ud83d\udd50 ${escHtml(e.examTime)}</span>`:'';
       const titleHtml=e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:'';
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
+      const notifScheduled=getExamNotif(e.id);
+      const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--violet)" stroke="var(--violet)"/>':''}</svg></button>`;
       return`<div class="exam-item ${itemCls}" style="--accent-color:${color}" ${clickAttr}>
         <div class="exam-info">
           <div class="exam-subj">${escHtml(e.subj)}</div>${titleHtml}
@@ -3166,6 +3447,7 @@ function renderProvas(el){
         </div>
         <div class="exam-right">
           <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
+          ${bellBtn}
           <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>`;
@@ -3306,7 +3588,379 @@ function addExam(){
 
 function rmExam(id){
   exams=exams.filter(e=>e.id!==id);
+  // remove any scheduled notification for this exam
+  removeExamNotif(id);
   saveExams();render(null);syncLayout();
+}
+
+/* ═══════════════════════════════
+   NOTIFICATION SYSTEM
+═══════════════════════════════ */
+let _notifCurrentExamId=null;
+
+/* ── storage helpers ── */
+function _loadNotifs(){
+  try{return JSON.parse(localStorage.getItem('t205_notifs')||'[]');}catch(e){return[];}
+}
+function _saveNotifs(arr){
+  try{localStorage.setItem('t205_notifs',JSON.stringify(arr));}catch(e){}
+}
+function getExamNotif(examId){
+  return _loadNotifs().find(n=>n.examId===examId&&!n.fired)||null;
+}
+function removeExamNotif(examId){
+  _saveNotifs(_loadNotifs().filter(n=>n.examId!==examId));
+}
+
+/* ── permission helpers ── */
+function _notifSupported(){
+  return typeof Notification !== 'undefined';
+}
+function _notifPerm(){
+  if(!_notifSupported()) return 'unsupported';
+  return Notification.permission; // 'granted' | 'denied' | 'default'
+}
+
+/* Requests permission — must be called synchronously from a user gesture handler */
+function _doRequestPermission(onResult){
+  if(!_notifSupported()){onResult('unsupported');return;}
+  if(Notification.permission==='granted'){onResult('granted');return;}
+  if(Notification.permission==='denied'){onResult('denied');return;}
+  // 'default' → ask
+  const p=Notification.requestPermission();
+  // Handle both Promise-based (modern) and callback-based (old Safari) APIs
+  if(p && typeof p.then==='function'){
+    p.then(result=>onResult(result)).catch(()=>onResult('denied'));
+  }else{
+    // old callback style already resolved synchronously above in some edge cases
+    onResult(Notification.permission);
+  }
+}
+
+/* ── permission banner renderer ── */
+function _renderPermBanner(){
+  const el=document.getElementById('notif-perm-banner');
+  const body=document.getElementById('notif-body-wrap')||document.querySelector('.notif-body');
+  const fieldsEl=document.getElementById('notif-fields');
+  const actionsEl=document.getElementById('notif-actions');
+  const hintEl=document.getElementById('notif-study-hint');
+  if(!el)return;
+
+  const perm=_notifPerm();
+
+  if(perm==='granted'){
+    // Clean: just a small green badge, don't hide anything
+    el.innerHTML=`<div class="notif-perm-banner granted">
+      <span class="notif-perm-icon">✅</span>
+      <div class="notif-perm-body">
+        <div class="notif-perm-title">Notificações ativadas</div>
+        <div class="notif-perm-desc">Você vai receber o lembrete mesmo com o site em segundo plano.</div>
+      </div>
+    </div>`;
+    if(fieldsEl)fieldsEl.style.display='';
+    if(hintEl)hintEl.style.display='';
+    return;
+  }
+
+  if(perm==='default'){
+    // Warn: will ask on save
+    el.innerHTML=`<div class="notif-perm-banner default">
+      <span class="notif-perm-icon">🔔</span>
+      <div class="notif-perm-body">
+        <div class="notif-perm-title">Permissão será solicitada</div>
+        <div class="notif-perm-desc">Ao agendar, o navegador vai pedir permissão para enviar notificações. Clique em <strong>Permitir</strong> quando aparecer.</div>
+      </div>
+    </div>`;
+    if(fieldsEl)fieldsEl.style.display='';
+    if(hintEl)hintEl.style.display='';
+    return;
+  }
+
+  if(perm==='denied'){
+    // Blocked: hide form, show how-to-fix
+    const ua=navigator.userAgent;
+    const isChrome=/Chrome/.test(ua)&&!/Edg|OPR/.test(ua);
+    const isFirefox=/Firefox/.test(ua);
+    const isEdge=/Edg/.test(ua);
+    const isSafari=/Safari/.test(ua)&&!/Chrome/.test(ua);
+    let steps='';
+    if(isChrome)
+      steps=`<div class="notif-perm-steps">
+        1. Clique no <strong>🔒 cadeado</strong> na barra de endereço<br>
+        2. Ao lado de <strong>Notificações</strong>, mude para <strong>Permitir</strong><br>
+        3. Recarregue a página
+      </div>`;
+    else if(isFirefox)
+      steps=`<div class="notif-perm-steps">
+        1. Clique no <strong>escudo</strong> ou <strong>ícone de informação</strong> na barra<br>
+        2. Em <strong>Permissões → Enviar notificações</strong>, clique em <strong>Permitir</strong><br>
+        3. Recarregue a página
+      </div>`;
+    else if(isEdge)
+      steps=`<div class="notif-perm-steps">
+        1. Clique no <strong>🔒 cadeado</strong> na barra de endereço<br>
+        2. Em <strong>Permissões do site → Notificações</strong>, clique em <strong>Permitir</strong><br>
+        3. Recarregue a página
+      </div>`;
+    else if(isSafari)
+      steps=`<div class="notif-perm-steps">
+        1. Abra <strong>Safari → Configurações → Sites</strong><br>
+        2. Em <strong>Notificações</strong>, encontre este site e mude para <strong>Permitir</strong><br>
+        3. Recarregue a página
+      </div>`;
+    else
+      steps=`<div class="notif-perm-steps">
+        Acesse as configurações do seu navegador, encontre as permissões deste site e ative <strong>Notificações</strong>. Depois recarregue a página.
+      </div>`;
+
+    el.innerHTML=`<div class="notif-perm-banner denied">
+      <span class="notif-perm-icon">🚫</span>
+      <div class="notif-perm-body">
+        <div class="notif-perm-title">Notificações bloqueadas</div>
+        <div class="notif-perm-desc">Você bloqueou as notificações anteriormente. Para reativar:</div>
+        ${steps}
+      </div>
+    </div>`;
+    // hide form and save button when blocked
+    if(fieldsEl)fieldsEl.style.display='none';
+    if(hintEl)hintEl.style.display='none';
+    if(actionsEl)actionsEl.innerHTML=`
+      <button class="notif-cancel-btn" onclick="closeNotifPopup()">Fechar</button>`;
+    return;
+  }
+
+  if(perm==='unsupported'){
+    el.innerHTML=`<div class="notif-perm-banner unsupported">
+      <span class="notif-perm-icon">⚠️</span>
+      <div class="notif-perm-body">
+        <div class="notif-perm-title">Notificações não suportadas</div>
+        <div class="notif-perm-desc">Seu navegador não suporta notificações em segundo plano. Tente usar Chrome, Firefox ou Edge.</div>
+      </div>
+    </div>`;
+    if(fieldsEl)fieldsEl.style.display='none';
+    if(hintEl)hintEl.style.display='none';
+    if(actionsEl)actionsEl.innerHTML=`
+      <button class="notif-cancel-btn" onclick="closeNotifPopup()">Fechar</button>`;
+    return;
+  }
+}
+
+function openNotifPopup(examId){
+  const exam=exams.find(e=>e.id===examId);
+  if(!exam)return;
+  _notifCurrentExamId=examId;
+
+  const sub=document.getElementById('notif-header-sub');
+  if(sub)sub.textContent=`${exam.subj}${exam.title?' · '+exam.title:''} — ${fmtDateBR(exam.examDate)}`;
+
+  // date constraints
+  const today=todayStr();
+  const dateInp=document.getElementById('notif-date');
+  const timeInp=document.getElementById('notif-time');
+  if(dateInp){dateInp.min=today;dateInp.max=exam.examDate;}
+
+  // clear error
+  const errEl=document.getElementById('notif-error');
+  if(errEl){errEl.textContent='';errEl.classList.remove('show');}
+  document.querySelectorAll('.notif-preset-btn').forEach(b=>b.classList.remove('selected'));
+
+  // render permission banner FIRST
+  _renderPermBanner();
+
+  // only populate form fields if permission is not blocked/unsupported
+  const perm=_notifPerm();
+  if(perm!=='denied'&&perm!=='unsupported'){
+    const existing=getExamNotif(examId);
+    const existingEl=document.getElementById('notif-existing');
+    const actionsEl=document.getElementById('notif-actions');
+
+    if(existing){
+      const dt=new Date(existing.scheduledFor);
+      const fmtDt=dt.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'2-digit'});
+      const tim=dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      if(existingEl){existingEl.style.display='flex';document.getElementById('notif-existing-txt').textContent=`Lembrete: ${fmtDt} às ${tim}`;}
+      const parts=existing.scheduledFor.split('T');
+      if(dateInp)dateInp.value=parts[0];
+      if(timeInp)timeInp.value=parts[1]?parts[1].substring(0,5):'19:00';
+      if(actionsEl)actionsEl.innerHTML=`
+        <button class="notif-remove-btn" onclick="removeNotifAndClose()">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+          Remover
+        </button>
+        <button class="notif-save-btn" id="notif-save-btn" onclick="saveNotifSchedule()">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          Atualizar
+        </button>`;
+    }else{
+      if(existingEl)existingEl.style.display='none';
+      const examDt=new Date(exam.examDate+'T00:00:00');
+      const oneDayBefore=new Date(examDt);oneDayBefore.setDate(oneDayBefore.getDate()-1);
+      const todayDt=new Date(today+'T00:00:00');
+      const defaultDate=oneDayBefore>=todayDt?oneDayBefore.toISOString().split('T')[0]:today;
+      if(dateInp)dateInp.value=defaultDate;
+      if(timeInp)timeInp.value='19:00';
+      if(actionsEl)actionsEl.innerHTML=`
+        <button class="notif-cancel-btn" onclick="closeNotifPopup()">Cancelar</button>
+        <button class="notif-save-btn" id="notif-save-btn" onclick="saveNotifSchedule()">
+          <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          Agendar lembrete
+        </button>`;
+    }
+    _updatePresetVisibility(exam.examDate);
+  }
+
+  document.getElementById('notif-overlay').classList.add('open');
+}
+
+function _updatePresetVisibility(examDate){
+  const examDt=new Date(examDate+'T00:00:00');
+  const todayDt=new Date();todayDt.setHours(0,0,0,0);
+  const diffDays=Math.round((examDt-todayDt)/(1000*60*60*24));
+  document.querySelectorAll('.notif-preset-btn').forEach(btn=>{
+    const days=parseInt(btn.textContent);
+    if(!isNaN(days))btn.style.display=diffDays>days?'':'none';
+  });
+}
+
+function onNotifDateChange(){
+  const errEl=document.getElementById('notif-error');
+  if(errEl){errEl.textContent='';errEl.classList.remove('show');}
+  document.querySelectorAll('.notif-preset-btn').forEach(b=>b.classList.remove('selected'));
+}
+
+function setNotifPreset(daysBefore,btn){
+  const exam=exams.find(e=>e.id===_notifCurrentExamId);
+  if(!exam)return;
+  const examDt=new Date(exam.examDate+'T00:00:00');
+  const target=new Date(examDt);target.setDate(target.getDate()-daysBefore);
+  const today=new Date();today.setHours(0,0,0,0);
+  if(target<today)target.setTime(today.getTime());
+  const dateInp=document.getElementById('notif-date');
+  if(dateInp)dateInp.value=target.toISOString().split('T')[0];
+  document.querySelectorAll('.notif-preset-btn').forEach(b=>b.classList.remove('selected'));
+  if(btn)btn.classList.add('selected');
+  const errEl=document.getElementById('notif-error');
+  if(errEl){errEl.textContent='';errEl.classList.remove('show');}
+}
+
+function closeNotifPopup(){
+  const ov=document.getElementById('notif-overlay');
+  if(ov)ov.classList.remove('open');
+  _notifCurrentExamId=null;
+}
+
+function removeNotifAndClose(){
+  if(_notifCurrentExamId)removeExamNotif(_notifCurrentExamId);
+  closeNotifPopup();
+  render(null);
+}
+
+function saveNotifSchedule(){
+  // ⚠️  requestPermission MUST be called synchronously from the click handler
+  // Do it first, before ANY other logic, to maintain user-gesture trust
+  _doRequestPermission(function(perm){
+    const examId=_notifCurrentExamId;
+    const exam=exams.find(e=>e.id===examId);
+    const errEl=document.getElementById('notif-error');
+    function showErr(msg){if(errEl){errEl.textContent=msg;errEl.classList.add('show');}}
+
+    if(!exam){closeNotifPopup();return;}
+
+    if(perm==='unsupported'){
+      _renderPermBanner();
+      return;
+    }
+    if(perm!=='granted'){
+      // permission was denied in the dialog or was already denied
+      _renderPermBanner(); // re-render to show blocked state + instructions
+      return;
+    }
+
+    // Re-render banner to show green checkmark now that we have permission
+    _renderPermBanner();
+
+    const dateVal=document.getElementById('notif-date')?.value;
+    const timeVal=document.getElementById('notif-time')?.value||'19:00';
+
+    if(!dateVal){showErr('Selecione uma data para o lembrete.');return;}
+
+    const scheduledFor=dateVal+'T'+timeVal+':00';
+    const scheduledDt=new Date(scheduledFor);
+    const examDt=new Date(exam.examDate+'T23:59:59');
+    const nowDt=new Date();
+
+    if(scheduledDt>examDt){
+      showErr('O lembrete não pode ser depois da data da prova!');return;
+    }
+    if(scheduledDt<=nowDt){
+      showErr('O horário escolhido já passou. Selecione um momento no futuro.');return;
+    }
+
+    // save
+    const notifs=_loadNotifs().filter(n=>n.examId!==examId);
+    notifs.push({examId,scheduledFor:dateVal+'T'+timeVal,examDate:exam.examDate,subj:exam.subj,title:exam.title||'',fired:false});
+    _saveNotifs(notifs);
+    _scheduleInMemoryNotif({examId,scheduledFor:dateVal+'T'+timeVal,subj:exam.subj,title:exam.title||''});
+
+    closeNotifPopup();
+    render(null);
+    _showNotifToast('🔔 Lembrete agendado para '+new Date(scheduledFor).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' às '+timeVal+'!');
+  });
+}
+
+let _notifTimeouts={};
+function _scheduleInMemoryNotif(n){
+  if(_notifTimeouts[n.examId])clearTimeout(_notifTimeouts[n.examId]);
+  const ms=new Date(n.scheduledFor)-Date.now();
+  if(ms>0&&ms<=48*60*60*1000){
+    _notifTimeouts[n.examId]=setTimeout(()=>_fireNotif(n),ms);
+  }
+}
+
+function _fireNotif(n){
+  try{
+    if(!_notifSupported()||Notification.permission!=='granted')return;
+    const body=`${n.subj}${n.title?' — '+n.title:''}\nProva no dia ${fmtDateBR(n.examDate)}`;
+    new Notification('📚 Hora de estudar!',{body,tag:'exam-'+n.examId,requireInteraction:false});
+    const arr=_loadNotifs();
+    const idx=arr.findIndex(x=>x.examId===n.examId);
+    if(idx>=0){arr[idx].fired=true;_saveNotifs(arr);}
+  }catch(e){console.warn('Notification failed',e);}
+}
+
+function checkPendingNotifs(){
+  if(!_notifSupported()||Notification.permission!=='granted')return;
+  const now=Date.now();
+  const arr=_loadNotifs();
+  let changed=false;
+  arr.forEach(n=>{
+    if(!n.fired){
+      const scheduledMs=new Date(n.scheduledFor).getTime();
+      if(scheduledMs<=now){_fireNotif(n);n.fired=true;changed=true;}
+      else _scheduleInMemoryNotif(n);
+    }
+  });
+  if(changed)_saveNotifs(arr);
+}
+
+function _showNotifToast(msg){
+  let t=document.getElementById('notif-mini-toast');
+  if(!t){
+    t=document.createElement('div');t.id='notif-mini-toast';
+    Object.assign(t.style,{
+      position:'fixed',bottom:'calc(90px + env(safe-area-inset-bottom))',
+      left:'50%',transform:'translateX(-50%)',
+      background:'var(--bg1)',border:'1px solid var(--violetbd)',
+      color:'var(--t1)',fontSize:'13px',fontWeight:'600',
+      padding:'10px 18px',borderRadius:'22px',zIndex:'9999',
+      boxShadow:'0 4px 20px rgba(0,0,0,.22)',
+      transition:'opacity .3s',pointerEvents:'none',
+      whiteSpace:'nowrap',letterSpacing:'-0.1px'
+    });
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;t.style.opacity='1';
+  clearTimeout(t._to);t._to=setTimeout(()=>{t.style.opacity='0';},3200);
 }
 
 function updateExamBadge(){
@@ -4558,6 +5212,7 @@ function toggleSidebar(){
   const toggleIcon = document.querySelector('.sb-toggle-icon');
   const noteEditor = document.getElementById('note-editor-overlay');
   const wxOverlay = document.getElementById('wx-overlay');
+  const notifOverlay = document.getElementById('notif-overlay');
   const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay'];
   const toastEl = document.getElementById('exam-toast');
 
@@ -4568,6 +5223,7 @@ function toggleSidebar(){
     topFixed.classList.add('collapsed');
     if(noteEditor) noteEditor.classList.add('collapsed');
     if(wxOverlay) wxOverlay.classList.add('collapsed');
+    if(notifOverlay) notifOverlay.classList.add('collapsed');
     overlays.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('collapsed'); });
     if(toastEl) toastEl.classList.add('collapsed');
     if(hamburger){ hamburger.classList.add('visible'); hamburger.style.display='flex'; }
@@ -4578,6 +5234,7 @@ function toggleSidebar(){
     topFixed.classList.remove('collapsed');
     if(noteEditor) noteEditor.classList.remove('collapsed');
     if(wxOverlay) wxOverlay.classList.remove('collapsed');
+    if(notifOverlay) notifOverlay.classList.remove('collapsed');
     overlays.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('collapsed'); });
     if(toastEl) toastEl.classList.remove('collapsed');
     if(hamburger){ hamburger.classList.remove('visible'); hamburger.style.display='none'; }
@@ -4598,6 +5255,8 @@ window.addEventListener('load',()=>{
   fetchWeather(true);
   render(null);
   updateExamBadge();
+  // check pending notifications on load
+  checkPendingNotifs();
   // toast de prova amanhã
   setTimeout(checkExamToasts, 1200);
   // fecha o subject picker ao clicar fora
@@ -4613,6 +5272,7 @@ window.addEventListener('load',()=>{
 });
 setInterval(updateGreeting,60000);
 setInterval(checkExamToasts,60000);
+setInterval(checkPendingNotifs,60000);
 window.addEventListener('resize',syncLayout);
 new ResizeObserver(syncLayout).observe(document.getElementById('top-fixed'));
 setInterval(tickTimer,1000);
