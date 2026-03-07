@@ -2537,10 +2537,10 @@ function renderHorarios(el){
   PERIODS.forEach((p,pi)=>{
     const ps=toMins(p.s),pe=toMins(p.e);
     const isCur=isTd&&now>=ps&&now<pe;const isPast=isTd&&now>=pe;
-    if(p.break){list+=`<div class="sched-break${isCur?' current':''}"><div class="sched-break-line"></div><div class="sched-break-txt">${fmtHM(p.s)} — RECREIO</div><div class="sched-break-line"></div></div>`;return;}
+    if(p.break){list+=`<div class="sched-break${isCur?' current':''}" data-ps="${ps}" data-pe="${pe}"><div class="sched-break-line"></div><div class="sched-break-txt">${fmtHM(p.s)} — RECREIO</div><div class="sched-break-line"></div></div>`;return;}
     const cls=dd[ci];const color=SUBJ_COLORS[cls.subj]||'#505050';
     const safeSubj=cls.subj.replace(/'/g,"\\'");const safeProf=cls.prof.replace(/'/g,"\\'");const safeCol=color.replace(/'/g,"\\'");
-    list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}" style="--accent-color:${color}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
+    list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}" data-ps="${ps}" data-pe="${pe}" style="--accent-color:${color}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
       <div class="sched-time"><span class="start">${fmtHM(p.s)}</span><span class="end">${fmtHM(p.e)}</span></div>
       <div class="sched-divider"></div>
       <div class="sched-info"><div class="sched-num">${p.n}</div><div class="sched-subj">${cls.subj}</div><div class="sched-prof">${cls.prof}</div></div>
@@ -3328,6 +3328,30 @@ function tickTimer(){
       }else if(s2.type==='between'||s2.type==='before'){
         te.textContent=fmtCountdown(s2.remaining);
       }
+    }
+    /* ── real-time past/current class update ── */
+    if(schedDay===todayDow){
+      const now=nowMins();
+      document.querySelectorAll('.sched-item[data-ps]').forEach(el=>{
+        const ps=parseFloat(el.dataset.ps);
+        const pe=parseFloat(el.dataset.pe);
+        const isCur=now>=ps&&now<pe;
+        const isPast=now>=pe;
+        el.classList.toggle('current',isCur);
+        el.classList.toggle('past',isPast);
+        // badge "Agora" inside item
+        let badge=el.querySelector('.sched-now-badge');
+        if(isCur&&!badge){
+          badge=document.createElement('div');
+          badge.className='sched-now-badge';badge.id='sched-now-badge';
+          badge.textContent='Agora';el.appendChild(badge);
+        }else if(!isCur&&badge){badge.remove();}
+      });
+      document.querySelectorAll('.sched-break[data-ps]').forEach(el=>{
+        const ps=parseFloat(el.dataset.ps);
+        const pe=parseFloat(el.dataset.pe);
+        el.classList.toggle('current',now>=ps&&now<pe);
+      });
     }
   }
 
