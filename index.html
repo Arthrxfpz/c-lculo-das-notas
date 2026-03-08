@@ -670,20 +670,49 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--bg1);border:1px solid var(--line2);border-radius:22px;
   padding:0;margin-bottom:16px;overflow:hidden;
   box-shadow:0 2px 14px rgba(0,0,0,.07);
+  transition:box-shadow .22s var(--ease-ios);
 }
 [data-theme="dark"] .add-exam-card{box-shadow:0 2px 20px rgba(0,0,0,.28)}
 .aec-header{
   display:flex;align-items:center;gap:12px;
-  padding:18px 20px 16px;border-bottom:1px solid var(--line3);
+  padding:16px 18px;
+  cursor:pointer;user-select:none;
+  transition:background .12s var(--ease-ios);
 }
+.aec-header:active{background:var(--bg2)}
+.add-exam-card.open .aec-header{border-bottom:1px solid var(--line3)}
 .aec-header-icon{
   width:38px;height:38px;border-radius:12px;background:var(--goldbg);border:1px solid var(--goldbd);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:background .2s,border-color .2s;
 }
-.aec-header-icon svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.aec-header-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-0.3px}
-.aec-header-sub{font-size:11px;color:var(--t4);margin-top:1px}
-.aec-body{padding:16px 20px}
+.add-exam-card.open .aec-header-icon{background:var(--gold);border-color:var(--gold)}
+.aec-header-icon svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.add-exam-card.open .aec-header-icon svg{stroke:#000}
+.aec-header-title{font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-0.3px}
+.aec-header-sub{font-size:11px;color:var(--t4);margin-top:1px;transition:opacity .2s}
+.add-exam-card.open .aec-header-sub{opacity:0;height:0;overflow:hidden;margin:0}
+.aec-header-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.aec-header-badge{
+  font-size:11px;font-weight:700;color:var(--gold);
+  background:var(--goldbg);border:1px solid var(--goldbd);
+  padding:4px 10px;border-radius:20px;
+  transition:opacity .2s;
+}
+.add-exam-card.open .aec-header-badge{opacity:0;pointer-events:none}
+.aec-chevron{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--bg2);border:1px solid var(--line3);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:transform .32s var(--ease-ios),background .2s;
+}
+.aec-chevron svg{width:13px;height:13px;stroke:var(--t3);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.add-exam-card.open .aec-chevron{transform:rotate(180deg);background:var(--bg3)}
+/* body collapse via grid trick */
+.aec-body-wrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .36s var(--ease-ios)}
+.add-exam-card.open .aec-body-wrap{grid-template-rows:1fr}
+.aec-body-inner{overflow:hidden}
+.aec-body{padding:16px 20px 20px}
 /* step rows */
 .aec-step{margin-bottom:14px}
 .aec-step-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
@@ -707,6 +736,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .add-exam-btn:active{opacity:.75;transform:scale(.97)}
 .add-exam-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+/* banner de duplicidade inline */
+.aec-dup-banner{
+  display:none;
+  align-items:center;gap:10px;
+  background:var(--amberbg);border:1px solid var(--amberbd);
+  border-radius:13px;padding:11px 14px;margin-bottom:12px;
+  animation:fadeIn .22s var(--ease-ios);
+}
+.aec-dup-banner.show{display:flex}
+.aec-dup-banner-icon{font-size:18px;flex-shrink:0;line-height:1}
+.aec-dup-banner-text{flex:1;font-size:12px;font-weight:600;color:var(--amber);line-height:1.45}
 /* keep old field-wrap for slot/date sections */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .form-grid.full{grid-template-columns:1fr}
@@ -2389,8 +2429,25 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="et-title" id="et-title">Falta 1 dia para a prova!</div>
     <div class="et-sub" id="et-sub"></div>
   </div>
-  <button class="et-dismiss-btn" id="et-dismiss-btn" onclick="event.stopPropagation();dismissToastForever()">Não lembrar mais</button>
+  <button class="et-dismiss-btn" id="et-dismiss-btn" onclick="event.stopPropagation();openToastDismissConfirm()">Não lembrar mais</button>
   <div class="et-progress"><div class="et-progress-fill" id="et-progress-fill"></div></div>
+</div>
+
+<!-- CONFIRM: não lembrar mais do aviso de prova -->
+<div class="confirm-overlay" id="toast-dismiss-overlay" onclick="if(event.target===this)closeToastDismissConfirm()">
+  <div class="confirm-box">
+    <div class="confirm-icon warn">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </div>
+    <div class="confirm-title">Desativar aviso?</div>
+    <div class="confirm-msg">Você não vai mais receber o lembrete de "1 dia antes" para essa prova. Outros avisos continuam normais.</div>
+    <div class="confirm-divider"></div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" onclick="closeToastDismissConfirm()">Cancelar</button>
+      <div class="confirm-vdiv"></div>
+      <button class="confirm-ok" style="color:var(--amber)" onclick="confirmToastDismissForever()">Desativar</button>
+    </div>
+  </div>
 </div>
 
   <div class="top-fixed" id="top-fixed">
@@ -3630,50 +3687,64 @@ function renderProvas(el){
   const subjPickerOptions=SUBJECTS.map(s=>{const safeName=s.name.replace(/'/g,"\\'");return`<div class="subj-picker-option" data-name="${s.name.replace(/"/g,'&quot;')}" onclick="pickSubj('${safeName}','${s.color}')"><span class="subj-picker-opt-dot" style="background:${s.color}"></span><span class="subj-picker-opt-name">${escHtml(s.name)}</span><svg class="subj-picker-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;}).join('');
   const minDate=todayStr();
 
-  const formHtml=`<div class="add-exam-card">
-    <div class="aec-header">
+  const formHtml=`<div class="add-exam-card" id="add-exam-card">
+    <div class="aec-header" onclick="toggleExamForm()">
       <div class="aec-header-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </div>
       <div>
         <div class="aec-header-title">Nova Prova</div>
-        <div class="aec-header-sub">Adicione uma prova ao calendário</div>
+        <div class="aec-header-sub">Toque para adicionar ao calendário</div>
+      </div>
+      <div class="aec-header-right">
+        <div class="aec-header-badge">+ Adicionar</div>
+        <div class="aec-chevron">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
       </div>
     </div>
-    <div class="aec-body">
-      <div class="aec-step">
-        <div class="aec-step-lbl"><span>1</span>Matéria</div>
-        <div class="subj-picker-wrap">
-          <button class="subj-picker-btn" id="ex-subj-btn" type="button" onclick="toggleSubjPicker()">
-            <span class="subj-picker-dot" id="ex-subj-dot"></span>
-            <span class="subj-picker-label placeholder" id="ex-subj-label">Selecione a matéria...</span>
-            <svg class="subj-picker-btn-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    <div class="aec-body-wrap">
+      <div class="aec-body-inner">
+        <div class="aec-body">
+          <div class="aec-step">
+            <div class="aec-step-lbl"><span>1</span>Matéria</div>
+            <div class="subj-picker-wrap">
+              <button class="subj-picker-btn" id="ex-subj-btn" type="button" onclick="toggleSubjPicker()">
+                <span class="subj-picker-dot" id="ex-subj-dot"></span>
+                <span class="subj-picker-label placeholder" id="ex-subj-label">Selecione a matéria...</span>
+                <svg class="subj-picker-btn-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="subj-picker-list" id="ex-subj-list" style="display:none">${subjPickerOptions}</div>
+            </div>
+            <input type="hidden" id="ex-subj">
+          </div>
+          <div class="aec-step">
+            <div class="aec-step-lbl"><span>2</span>Título <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <input class="aec-input" type="text" id="ex-title" placeholder="Título da prova">
+          </div>
+          <div id="ex-slot-wrap" style="display:none">
+            <div class="aec-step-lbl" style="margin-top:0;margin-bottom:7px"><span>3</span>Dia da aula</div>
+            <div class="slot-option-grid" id="ex-slot-grid"></div>
+          </div>
+          <div id="ex-date-wrap" style="display:none;margin-top:14px"></div>
+          <div class="aec-step" style="margin-top:14px">
+            <div class="aec-step-lbl"><span>4</span>Valor em pontos <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <input class="aec-input" type="number" id="ex-valor" min="0" step="0.5" placeholder="Pontos">
+          </div>
+          <div class="aec-step" style="margin-top:14px">
+            <div class="aec-step-lbl"><span>5</span>Conteúdo da prova <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <textarea class="aec-input" id="ex-conteudo" rows="3" placeholder="Conteúdo da prova" style="resize:none;line-height:1.55;min-height:80px"></textarea>
+          </div>
+          <div class="aec-dup-banner" id="aec-dup-banner">
+            <span class="aec-dup-banner-icon">⚠️</span>
+            <span class="aec-dup-banner-text" id="aec-dup-banner-text">Já existe uma prova dessa matéria nesse dia e horário.</span>
+          </div>
+          <button class="add-exam-btn" onclick="addExam()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Adicionar Prova
           </button>
-          <div class="subj-picker-list" id="ex-subj-list" style="display:none">${subjPickerOptions}</div>
         </div>
-        <input type="hidden" id="ex-subj">
       </div>
-      <div class="aec-step">
-        <div class="aec-step-lbl"><span>2</span>Título <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
-        <input class="aec-input" type="text" id="ex-title" placeholder="Título da prova">
-      </div>
-      <div id="ex-slot-wrap" style="display:none">
-        <div class="aec-step-lbl" style="margin-top:0;margin-bottom:7px"><span>3</span>Dia da aula</div>
-        <div class="slot-option-grid" id="ex-slot-grid"></div>
-      </div>
-      <div id="ex-date-wrap" style="display:none;margin-top:14px"></div>
-      <div class="aec-step" style="margin-top:14px">
-        <div class="aec-step-lbl"><span>4</span>Valor em pontos <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
-        <input class="aec-input" type="number" id="ex-valor" min="0" step="0.5" placeholder="Pontos">
-      </div>
-      <div class="aec-step" style="margin-top:14px">
-        <div class="aec-step-lbl"><span>5</span>Conteúdo da prova <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
-        <textarea class="aec-input" id="ex-conteudo" rows="3" placeholder="Conteúdo da prova" style="resize:none;line-height:1.55;min-height:80px"></textarea>
-      </div>
-      <button class="add-exam-btn" onclick="addExam()">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Adicionar Prova
-      </button>
     </div>
   </div>`;
 
@@ -3835,19 +3906,51 @@ function closeExamSheet(e){
 
 function addExam(){
   const subj=document.getElementById('ex-subj').value;
-  const examDate=document.getElementById('ex-date').value;
+  const examDate=document.getElementById('ex-date')?.value||'';
   const title=document.getElementById('ex-title').value.trim();
   const valor=document.getElementById('ex-valor').value;
   const conteudo=(document.getElementById('ex-conteudo')?.value||'').trim();
-  if(!subj){alert('Selecione uma matéria.');return;}
-  if(!examDate){alert('Selecione a data da prova.');return;}
+  const dupBanner=document.getElementById('aec-dup-banner');
+  const dupText=document.getElementById('aec-dup-banner-text');
+
+  // helper: esconde banner
+  function hideDup(){if(dupBanner)dupBanner.classList.remove('show');}
+  // helper: mostra banner com mensagem
+  function showDup(msg){
+    if(!dupBanner||!dupText)return;
+    dupText.textContent=msg;
+    dupBanner.classList.add('show');
+    dupBanner.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+
+  hideDup();
+  if(!subj){showDup('Selecione uma matéria antes de continuar.');return;}
+  if(!examDate){showDup('Selecione a data da prova antes de continuar.');return;}
   const today=new Date();today.setHours(0,0,0,0);
   const sel=new Date(examDate+'T00:00:00');
-  if(sel<today){alert('Não é possível adicionar uma prova em data passada.');return;}
+  if(sel<today){showDup('Não é possível adicionar uma prova em data passada.');return;}
+
   const examTime=window._exSlotTime||null;
+
+  // ── Verificação de duplicata ──
+  const dup=exams.find(e=>{
+    if(e.subj!==subj||e.examDate!==examDate)return false;
+    // se ambos têm horário definido: compara horário; se algum não tem, basta mesma data+matéria
+    if(examTime&&e.examTime)return e.examTime===examTime;
+    return true;
+  });
+  if(dup){
+    const msg=examTime
+      ?`Já existe uma prova de ${subj} marcada para esse dia nesse horário (${examTime}).`
+      :`Já existe uma prova de ${subj} marcada para ${examDate.split('-').reverse().join('/')}. Escolha outro dia ou horário.`;
+    showDup(msg);
+    return;
+  }
+
   const id='ex_'+Date.now();
   exams.push({id,subj,examDate,title,valor,examTime,conteudo});
   window._exSlotDow=null;window._exSlotTime=null;
+  hideDup();
   saveExams();
   render(null);syncLayout();
 }
@@ -5332,6 +5435,25 @@ function dismissToastForever(){
   dismissToast();
 }
 
+function openToastDismissConfirm(){
+  // pausa o auto-dismiss enquanto o confirm está aberto
+  clearTimeout(_toastDismissTimer);
+  const fill=document.getElementById('et-progress-fill');
+  if(fill){fill.style.transition='none';fill.style.width=fill.style.width;}
+  const ov=document.getElementById('toast-dismiss-overlay');
+  if(ov)ov.classList.add('open');
+}
+
+function closeToastDismissConfirm(){
+  const ov=document.getElementById('toast-dismiss-overlay');
+  if(ov)ov.classList.remove('open');
+}
+
+function confirmToastDismissForever(){
+  closeToastDismissConfirm();
+  dismissToastForever();
+}
+
 function checkExamToasts(){
   const tomorrow=exams.filter(e=>daysDiff(e.examDate)===1);
   if(!tomorrow.length)return;
@@ -5690,7 +5812,7 @@ function toggleSidebar(){
   const noteEditor = document.getElementById('note-editor-overlay');
   const wxOverlay = document.getElementById('wx-overlay');
   const notifOverlay = document.getElementById('notif-overlay');
-  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay'];
+  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay'];
   const toastEl = document.getElementById('exam-toast');
 
   const hamburger = document.getElementById('topbar-hamburger');
@@ -5760,6 +5882,12 @@ function wxHourScroll(dir){
   const strip=document.getElementById('wx-hour-strip');
   if(!strip)return;
   strip.scrollBy({left:dir*220,behavior:'smooth'});
+}
+
+function toggleExamForm(){
+  const card=document.getElementById('add-exam-card');
+  if(!card)return;
+  card.classList.toggle('open');
 }
 </script>
 </body>
