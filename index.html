@@ -78,6 +78,7 @@ body{font-family:var(--ff);background:var(--bg0);color:var(--t1);min-height:100d
 [data-theme="light"] body{background:#EDEDF2}
 
 input,button,select{font-family:inherit;letter-spacing:inherit}
+input:focus,button:focus,select:focus,textarea:focus{outline:none!important;box-shadow:none!important}
 /* iOS press feedback — toque rápido com scale */
 button:active:not(:disabled){transform:scale(.96);transition:transform .08s var(--ease-ios)}
 input[type=number]{-moz-appearance:textfield}
@@ -296,87 +297,118 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--bg2);
 }
 
-/* ── eval items — redesign como cards individuais ── */
-.eval-list{
-  display:flex;flex-direction:column;gap:8px;
-  margin:4px 0 10px;
-}
+/* ── eval items ── */
+.eval-list{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}
 
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
+/* card base */
 .eval-item{
-  background:var(--bg1);
-  border-radius:14px;
-  overflow:hidden;
+  background:var(--bg1);border-radius:14px;overflow:hidden;
   border:1px solid var(--line2);
-  animation:fadeIn .22s var(--ease-ios) both;
-  box-shadow:0 1px 8px rgba(0,0,0,.06);
+  animation:fadeIn .2s var(--ease-ios) both;
 }
-[data-theme="dark"] .eval-item{
-  box-shadow:0 1px 10px rgba(0,0,0,.22);
-}
+[data-theme="dark"] .eval-item{box-shadow:0 1px 10px rgba(0,0,0,.18)}
 
-/* row superior: nome + botão remover */
-.eval-head{
-  display:flex;align-items:center;
+/* ── linha de cima: nome + ações ── */
+.eval-head{display:flex;align-items:center;padding:0 0 0 16px;min-height:46px}
+
+/* nome — texto estático por padrão */
+.eval-name-text{
+  flex:1;min-width:0;
+  font-size:14px;font-weight:600;color:var(--t1);letter-spacing:-0.2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  padding:13px 0;pointer-events:none;user-select:none;
 }
-.eval-name-input{
-  flex:1;background:transparent;border:none;
-  padding:13px 4px 13px 16px;
-  font-size:14px;font-weight:600;color:var(--t1);outline:none;
-  min-width:0;letter-spacing:-0.2px;
+.eval-name-text.ph{color:var(--t3);font-style:italic;font-weight:400}
+
+/* input nome — oculto até editar */
+.eval-name-inp{
+  flex:1;min-width:0;display:none;
+  background:transparent;border:none;outline:none;-webkit-appearance:none;
+  font-size:14px;font-weight:600;color:var(--t1);letter-spacing:-0.2px;
+  padding:13px 0;font-family:inherit;
 }
-.eval-name-input::placeholder{color:var(--t3);font-style:italic;font-weight:400}
-.eval-rm-btn{
-  width:44px;height:44px;background:transparent;border:none;
-  color:var(--t4);cursor:pointer;
+.eval-name-inp::placeholder{color:var(--t3);font-style:italic;font-weight:400}
+
+/* botão lápis */
+.eval-edit-btn{
+  flex-shrink:0;width:38px;min-height:46px;
+  background:transparent;border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;transition:color .15s;
+  color:var(--t4);transition:color .15s;
 }
-.eval-rm-btn:active{color:var(--red)}
-.eval-rm-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+.eval-edit-btn:active{color:var(--blue)}
+.eval-edit-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.eval-edit-btn .ic-check{display:none}
 
-/* row inferior: nota + max + badge resultado */
+/* botão lixo */
+.eval-rm-btn{
+  flex-shrink:0;width:38px;min-height:46px;
+  background:transparent;border:none;border-left:1px solid var(--line3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--t4);transition:color .15s,background .15s;
+}
+.eval-rm-btn:active{color:var(--red);background:var(--redbg)}
+.eval-rm-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+
+/* ── linha de baixo: nota / máx / resultado ── */
 .eval-scores{
   display:flex;align-items:stretch;
   border-top:1px solid var(--line3);
-  background:var(--bg0);
-  border-radius:0 0 14px 14px;
+  background:var(--bg0);border-radius:0 0 14px 14px;
 }
 [data-theme="light"] .eval-scores{background:var(--bg2)}
 
-.eval-score-cell{
-  flex:1;display:flex;flex-direction:column;
-  padding:12px 16px 14px;
-  gap:5px;
+.eval-sc-cell{
+  flex:1;display:flex;flex-direction:column;gap:3px;
+  padding:10px 14px 12px;
 }
-.eval-score-cell+.eval-score-cell{border-left:1px solid var(--line3)}
+.eval-sc-cell+.eval-sc-cell{border-left:1px solid var(--line3)}
 
-.eval-score-lbl{
-  font-size:10px;font-weight:700;color:var(--t4);
-  text-transform:uppercase;letter-spacing:0.8px;
-}
-.eval-score-inp{
-  background:transparent;border:none;
-  font-family:var(--ffm);font-size:26px;font-weight:700;
-  color:var(--t1);outline:none;
-  width:100%;padding:0;letter-spacing:-0.8px;
-  line-height:1;
-}
-.eval-score-inp:focus{color:var(--blue)}
-.eval-score-inp::placeholder{color:var(--t4);font-size:20px;font-weight:400;font-family:var(--ff);letter-spacing:0}
+.eval-sc-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px}
 
-/* badge resultado — terceira célula */
-.eval-result-cell{
-  display:flex;flex-direction:column;
-  align-items:flex-end;justify-content:center;
-  padding:12px 16px;
+/* valor estático */
+.eval-sc-text{
+  font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--t1);
+  letter-spacing:-0.6px;line-height:1;pointer-events:none;user-select:none;
+}
+.eval-sc-text.ph{color:var(--t4);font-size:18px;font-weight:400;font-family:var(--ff)}
+
+/* input de nota — oculto até editar */
+.eval-sc-inp{
+  display:none;
+  background:transparent;border:none;outline:none;-webkit-appearance:none;
+  font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--t1);
+  letter-spacing:-0.6px;line-height:1;padding:0;width:100%;
+}
+.eval-sc-inp::placeholder{color:var(--t4);font-size:18px;font-weight:400;font-family:var(--ff);letter-spacing:0}
+
+/* célula resultado */
+.eval-res-cell{
+  flex-shrink:0;min-width:72px;
+  display:flex;flex-direction:column;gap:3px;
+  padding:10px 14px 12px;
   border-left:1px solid var(--line3);
-  flex-shrink:0;min-width:78px;
   background:var(--goldbg);
+  align-items:flex-start;
 }
-.eval-result-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:5px}
-.eval-result-val{font-family:var(--ffm);font-size:18px;font-weight:700;color:var(--gold);letter-spacing:-0.4px}
+.eval-res-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px}
+.eval-res-val{font-family:var(--ffm);font-size:16px;font-weight:700;color:var(--gold);letter-spacing:-0.3px;line-height:1}
+
+/* ── modo edição ── */
+.eval-item.editing .eval-name-text{display:none}
+.eval-item.editing .eval-name-inp{display:block}
+.eval-item.editing .eval-edit-btn .ic-pencil{display:none}
+.eval-item.editing .eval-edit-btn .ic-check{display:inline}
+.eval-item.editing .eval-sc-text{display:none}
+.eval-item.editing .eval-sc-inp{display:block}
+
+/* cabeçalho da lista */
+.eval-list-header{display:flex;align-items:center;padding:0 4px 5px 2px}
+.elh-name{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px;flex:1}
+.elh-scores{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px;padding-right:4px}
+.empty-eval{font-size:13px;color:var(--t4);text-align:center;padding:18px 0;font-style:italic}
 
 /* botão adicionar avaliação */
 .add-eval-btn{
@@ -4205,7 +4237,7 @@ function renderNotasTab(el){
         <div class="eval-list" id="el-${s.id}-${curTab}">${evHtml}</div>
         <button class="add-eval-btn" id="ab-${s.id}-${curTab}"${!canAdd?' disabled':''} onclick="addEv('${s.id}','${curTab}')">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          ${canAdd?'Adicionar avaliação':'Avaliações: máx 10 pts'}
+          <span class="add-eval-lbl">${canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)'}</span>
         </button>
       </div></div></div>
       <div class="subj-footer"><span class="subj-footer-label">${flab}</span>${fval}</div>
@@ -5562,6 +5594,33 @@ function updateExamBadge(){
 /* ═══════════════════════════════
    ACCORDION / EVAL ACTIONS
 ═══════════════════════════════ */
+function toggleEditEval(sid,tab,i){
+  const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
+  if(!item)return;
+  if(item.classList.contains('editing')){
+    doneEditEval(sid,tab,i);
+  }else{
+    item.classList.add('editing');
+    const inp=document.getElementById(`eni-${sid}-${tab}-${i}`);
+    if(inp){inp.focus();try{inp.select();}catch(e){}}
+  }
+}
+function doneEditEval(sid,tab,i){
+  const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
+  if(!item)return;
+  item.classList.remove('editing');
+  const r=G[sid][tab][i];
+  // sync name span
+  const nt=document.getElementById(`ent-${sid}-${tab}-${i}`);
+  if(nt){nt.textContent=r.name||'sem nome';nt.className='eval-name-text'+(r.name?'':' ph');}
+  // sync score spans
+  const gotV=nf(r.got),totV=nf(r.total);
+  const gs=document.getElementById(`egt-${sid}-${tab}-${i}`);
+  if(gs){gs.textContent=gotV!==null?fmt(gotV):'—';gs.className='eval-sc-text'+(gotV===null?' ph':'');}
+  const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
+  if(ts){ts.textContent=totV!==null?fmt(totV):'—';ts.className='eval-sc-text'+(totV===null?' ph':'');}
+}
+
 function toggleAcc(sid){
   const key=sid+'_'+curTab;
   openAcc[key]=!openAcc[key];
@@ -5581,29 +5640,40 @@ function _buildOneEvalHtml(sid,tab,i){
   const otherSum=rows.reduce((acc,rr,j)=>j===i?acc:acc+(nf(rr.total)||0),0);
   const maxTot=parseFloat((10-otherSum).toFixed(2));
   const maxGot=totV!==null?totV:10;
-  return `<div class="eval-item">
+  const gotTxt=gotV!==null?fmt(gotV):'—';
+  const totTxt=totV!==null?fmt(totV):'—';
+  return `<div class="eval-item" id="ei-${sid}-${tab}-${i}">
     <div class="eval-head">
-      <input class="eval-name-input" type="text" placeholder="Nome (ex: Prova Bimestral)"
+      <span class="eval-name-text${r.name?'':' ph'}" id="ent-${sid}-${tab}-${i}">${escHtml(r.name||'sem nome')}</span>
+      <input class="eval-name-inp" id="eni-${sid}-${tab}-${i}" type="text" placeholder="Nome da avaliação"
         value="${escHtml(r.name||'')}"
         oninput="updF('${sid}','${tab}',${i},'name',this.value)">
-      <button class="eval-rm-btn" onclick="rmEv('${sid}','${tab}',${i})" title="Remover avaliação">
+      <button class="eval-edit-btn" onclick="toggleEditEval('${sid}','${tab}',${i})" title="Editar">
+        <svg class="ic-pencil" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+        <svg class="ic-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <button class="eval-rm-btn" onclick="rmEv('${sid}','${tab}',${i})" title="Remover">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </button>
     </div>
     <div class="eval-scores">
-      <div class="eval-score-cell">
-        <span class="eval-score-lbl">Obtida</span>
-        <input id="ig-${sid}-${tab}-${i}" class="eval-score-inp" type="number" step="0.1" min="0" max="${maxGot}" placeholder="0.0"
-          value="${r.got}" oninput="updF('${sid}','${tab}',${i},'got',this.value)">
+      <div class="eval-sc-cell">
+        <span class="eval-sc-lbl">Obtida</span>
+        <span class="eval-sc-text${gotV===null?' ph':''}" id="egt-${sid}-${tab}-${i}">${gotTxt}</span>
+        <input class="eval-sc-inp" id="ig-${sid}-${tab}-${i}" type="number" step="0.1" min="0" max="${maxGot}"
+          placeholder="0.0" value="${r.got}" inputmode="decimal"
+          oninput="updF('${sid}','${tab}',${i},'got',this.value)">
       </div>
-      <div class="eval-score-cell">
-        <span class="eval-score-lbl">Valor máx</span>
-        <input id="it-${sid}-${tab}-${i}" class="eval-score-inp" type="number" step="0.1" min="0" max="${maxTot}" placeholder="0.0"
-          value="${r.total}" oninput="updF('${sid}','${tab}',${i},'total',this.value)">
+      <div class="eval-sc-cell">
+        <span class="eval-sc-lbl">Valor máx</span>
+        <span class="eval-sc-text${totV===null?' ph':''}" id="ett-${sid}-${tab}-${i}">${totTxt}</span>
+        <input class="eval-sc-inp" id="it-${sid}-${tab}-${i}" type="number" step="0.1" min="0" max="${maxTot}"
+          placeholder="${maxTot}" value="${r.total}" inputmode="decimal"
+          oninput="updF('${sid}','${tab}',${i},'total',this.value)">
       </div>
-      <div class="eval-result-cell">
-        <span class="eval-result-lbl">Resultado</span>
-        <span class="eval-result-val" id="erb-${sid}-${tab}-${i}">${resVal}</span>
+      <div class="eval-res-cell">
+        <span class="eval-res-lbl">Resultado</span>
+        <span class="eval-res-val" id="erb-${sid}-${tab}-${i}">${resVal}</span>
       </div>
     </div>
   </div>`;
@@ -5626,7 +5696,11 @@ function _refreshEvList(sid,tab){
   const allocated=rows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
   const canAdd=parseFloat(allocated.toFixed(2))<10;
   const btn=document.getElementById(`ab-${sid}-${tab}`);
-  if(btn){btn.disabled=!canAdd;btn.childNodes[1].textContent=canAdd?' Adicionar avaliação':' Avaliações: máx 10 pts';}
+  if(btn){
+    btn.disabled=!canAdd;
+    const lbl=btn.querySelector('span.add-eval-lbl');
+    if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)';
+  }
   updateCardDisplay(sid,tab);
 }
 
@@ -5635,6 +5709,9 @@ function addEv(sid,tab){
   G[sid][tab].push({name:'',got:'',total:''});
   saveGrades();
   _refreshEvList(sid,tab);
+  // auto-open edit mode on the new item
+  const newIdx=G[sid][tab].length-1;
+  setTimeout(()=>toggleEditEval(sid,tab,newIdx),50);
 }
 function rmEv(sid,tab,i){
   G[sid][tab].splice(i,1);
@@ -5688,7 +5765,18 @@ function updF(sid,tab,i,field,val){
   }
 
   saveGrades();
+  // sync display spans live while typing in edit mode
+  if(field==='name'){
+    const txt=document.getElementById(`ent-${sid}-${tab}-${i}`);
+    if(txt){txt.textContent=val||'sem nome';txt.className='eval-name-text'+(val?'':' ph');}
+  }
   updateCardDisplay(sid,tab);
+  // auto-fechar quando nome + obtida + máx estiverem preenchidos
+  const rr=G[sid][tab][i];
+  if(rr.name&&rr.name.trim()&&nf(rr.got)!==null&&nf(rr.total)!==null){
+    const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
+    if(item&&item.classList.contains('editing'))doneEditEval(sid,tab,i);
+  }
 }
 
 function updateCardDisplay(sid,tab){
@@ -5714,16 +5802,30 @@ function updateCardDisplay(sid,tab){
   const rows=G[sid][tab];
   rows.forEach((r,i)=>{
     const gv=nf(r.got),tv=nf(r.total);
+    // result pill
     const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
-    if(badge){
-      badge.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)}/${fmt(tv)}`:fmt(gv)):'—';
-    }
+    if(badge){badge.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)}/${fmt(tv)}`:fmt(gv)):'—';}
+    // static text spans (shown when not editing)
+    const gs=document.getElementById(`egt-${sid}-${tab}-${i}`);
+    if(gs){gs.textContent=gv!==null?fmt(gv):'—';gs.className='eval-sc-text'+(gv===null?' ph':'');}
+    const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
+    if(ts){ts.textContent=tv!==null?fmt(tv):'—';ts.className='eval-sc-text'+(tv===null?' ph':'');}
+    // cap inputs
     const ginp=document.getElementById(`ig-${sid}-${tab}-${i}`);
     if(ginp&&tv!==null)ginp.max=tv;
     const otherSum=rows.reduce((acc,rr,j)=>j===i?acc:acc+(nf(rr.total)||0),0);
     const tinp=document.getElementById(`it-${sid}-${tab}-${i}`);
     if(tinp)tinp.max=parseFloat((10-otherSum).toFixed(2));
   });
+  // atualiza botão adicionar com base no peso total alocado
+  const allocated=parseFloat(rows.reduce((acc,r)=>acc+(nf(r.total)||0),0).toFixed(2));
+  const canAdd=allocated<10;
+  const addBtn=document.getElementById(`ab-${sid}-${tab}`);
+  if(addBtn){
+    addBtn.disabled=!canAdd;
+    const lbl=addBtn.querySelector('span.add-eval-lbl');
+    if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)';
+  }
 }
 
 /* ─── NAVIGATION ─── */
