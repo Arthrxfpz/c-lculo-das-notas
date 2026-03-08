@@ -1244,6 +1244,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .et-progress-fill{height:100%;border-radius:0 0 20px 20px;width:100%;
   transition:width linear;}
 
+/* botão "não lembrar mais" */
+.et-dismiss-btn{
+  position:absolute;top:10px;right:12px;
+  display:flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:600;color:var(--t4);
+  background:var(--bg3);border:1px solid var(--line2);
+  border-radius:20px;padding:4px 9px;cursor:pointer;
+  transition:color .15s,background .15s;
+  white-space:nowrap;
+}
+.et-dismiss-btn:hover{color:var(--t2);background:var(--bg4)}
+.et-dismiss-btn:active{opacity:.6}
+
 /* ═══════════════════════════════
    BLOCO DE NOTAS — SISTEMA DE CORES
    Cores definidas em CSS para evitar resolução inline de var()
@@ -1538,10 +1551,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--bg1);border-top:0.5px solid var(--line2);
   border-radius:28px 28px 0 0;
   width:100%;max-width:480px;
+  max-height:92dvh;
   padding:0 0 calc(28px + env(safe-area-inset-bottom));
   animation:slideUp .4s var(--ease-sheet);
-  overflow:hidden;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
 }
+.wx-sheet::-webkit-scrollbar{display:none}
 .wx-handle-row{padding:12px 0 0;display:flex;justify-content:center}
 .wx-handle{width:36px;height:4px;background:var(--bg5);border-radius:4px;opacity:.5}
 .wx-hero{padding:22px 22px 18px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line3)}
@@ -1572,6 +1589,64 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .wx-day-min{color:var(--t4);font-weight:400}
 .wx-updated{text-align:center;font-size:10px;color:var(--t4);padding:10px 0 0}
 .wx-error{padding:24px;text-align:center;font-size:13px;color:var(--t3)}
+
+/* ── HOURLY FORECAST STRIP ── */
+.wx-section-title{
+  font-size:11px;font-weight:700;color:var(--t4);
+  text-transform:uppercase;letter-spacing:.8px;
+  padding:14px 18px 8px;
+  display:flex;align-items:center;gap:6px;
+}
+.wx-section-title::before{content:"";display:block;width:3px;height:12px;border-radius:2px;background:var(--gold);flex-shrink:0}
+.wx-hourly-wrap{
+  position:relative;
+  padding:0 0 14px;
+  border-bottom:1px solid var(--line3);
+}
+.wx-hourly-wrap::after{
+  content:"";position:absolute;top:0;right:0;
+  width:40px;height:calc(100% - 14px);
+  background:linear-gradient(to right,transparent,var(--bg1));
+  pointer-events:none;z-index:1;
+}
+.wx-hour-strip{
+  display:flex;gap:8px;
+  overflow-x:auto;scrollbar-width:none;
+  padding:0 18px 4px;
+  -webkit-overflow-scrolling:touch;
+  scroll-behavior:smooth;
+}
+.wx-hour-strip::-webkit-scrollbar{display:none}
+.wx-hour-item{
+  flex:0 0 auto;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:var(--bg2);border:1px solid var(--line3);
+  border-radius:14px;padding:10px 10px 8px;
+  min-width:62px;text-align:center;
+  transition:background .15s;
+}
+.wx-hour-item.now{
+  background:rgba(255,214,10,.1);border-color:var(--goldbd);
+}
+.wx-hour-lbl{font-size:10px;font-weight:700;color:var(--t4);letter-spacing:.2px}
+.wx-hour-item.now .wx-hour-lbl{color:var(--gold);font-weight:800}
+.wx-hour-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+.wx-hour-temp{font-family:var(--ffm);font-size:14px;font-weight:700;color:var(--t1);letter-spacing:-.3px}
+.wx-hour-prob{font-size:10px;font-weight:600;color:var(--blue)}
+.wx-card-icon svg{width:22px;height:22px;display:block;margin:0 auto;}
+/* Arrow nav — inline com o título, só desktop */
+.wx-hour-nav{display:none;align-items:center;gap:4px;margin-left:auto}
+.wx-hour-nav-btn{
+  width:26px;height:26px;border-radius:8px;
+  background:var(--bg2);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;padding:0;
+  transition:background .15s var(--ease-ios),opacity .12s;
+}
+.wx-hour-nav-btn svg{width:13px;height:13px;stroke:var(--t2);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.wx-hour-nav-btn:hover{background:var(--bg3)}
+.wx-hour-nav-btn:active{opacity:.6}
+@media(min-width:768px){.wx-hour-nav{display:flex}}
 
 /* ══════════════════════════════════════════════════════════
    DESKTOP LAYOUT  ≥ 768px — Redesign Premium
@@ -2314,6 +2389,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     <div class="et-title" id="et-title">Falta 1 dia para a prova!</div>
     <div class="et-sub" id="et-sub"></div>
   </div>
+  <button class="et-dismiss-btn" id="et-dismiss-btn" onclick="event.stopPropagation();dismissToastForever()">Não lembrar mais</button>
   <div class="et-progress"><div class="et-progress-fill" id="et-progress-fill"></div></div>
 </div>
 
@@ -5189,8 +5265,21 @@ function loadTheme(){
 let _toastTimer=null;
 let _toastDismissTimer=null;
 let _shownToastIds=new Set();
+let _currentToastExamId=null;
+
+// IDs de toasts que o usuário pediu para não ver mais (persistido no localStorage)
+let _permanentlyDismissedToasts=(()=>{
+  try{const v=localStorage.getItem('t205_dismissed_toasts');return new Set(v?JSON.parse(v):[]);}
+  catch(e){return new Set();}
+})();
+
+function _saveDismissedToasts(){
+  try{localStorage.setItem('t205_dismissed_toasts',JSON.stringify([..._permanentlyDismissedToasts]));}
+  catch(e){}
+}
 
 function showExamToast(exam){
+  _currentToastExamId=exam.id;
   const color=SUBJECTS.find(s=>s.name===exam.subj)?.color||SUBJ_COLORS[exam.subj]||'var(--red)';
   const toast=document.getElementById('exam-toast');
   const title=document.getElementById('et-title');
@@ -5235,12 +5324,20 @@ function dismissToast(){
   setTimeout(()=>toast.classList.remove('hide'),400);
 }
 
+function dismissToastForever(){
+  if(_currentToastExamId!=null){
+    _permanentlyDismissedToasts.add(_currentToastExamId);
+    _saveDismissedToasts();
+  }
+  dismissToast();
+}
+
 function checkExamToasts(){
   const tomorrow=exams.filter(e=>daysDiff(e.examDate)===1);
   if(!tomorrow.length)return;
-  // mostra o mais urgente (primeiro na ordem) que ainda não foi mostrado nesta sessão
+  // mostra o mais urgente que ainda não foi mostrado nesta sessão e não foi dispensado permanentemente
   for(const e of tomorrow){
-    if(!_shownToastIds.has(e.id)){
+    if(!_shownToastIds.has(e.id)&&!_permanentlyDismissedToasts.has(e.id)){
       _shownToastIds.add(e.id);
       showExamToast(e);
       break;
@@ -5384,7 +5481,7 @@ async function fetchWeather(force){
   const now=Date.now();
   if(!force&&_wxData&&(now-_wxLastFetch)<5*60*1000)return _wxData;
   try{
-    const url='https://api.open-meteo.com/v1/forecast?latitude=-32.035&longitude=-52.099&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,relativehumidity_2m,precipitation,surface_pressure,visibility&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=5';
+    const url='https://api.open-meteo.com/v1/forecast?latitude=-32.035&longitude=-52.099&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,relativehumidity_2m,precipitation,surface_pressure,visibility&hourly=temperature_2m,weathercode,precipitation_probability,windspeed_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=5';
     const r=await fetch(url);
     if(!r.ok)throw new Error('HTTP '+r.status);
     const d=await r.json();
@@ -5490,6 +5587,37 @@ function _renderWeatherPopup(d){
   const isNightNow=_isNight();
   const skyLabel=isNightNow?'☽ Noite':'☼ Dia';
 
+  // ── Hourly forecast — somente as horas de hoje até 23:00 ──
+  let hourlyHtml='';
+  if(d.hourly&&d.hourly.time){
+    const ht=d.hourly.time;
+    const htemp=d.hourly.temperature_2m;
+    const hwc=d.hourly.weathercode;
+    const hprob=d.hourly.precipitation_probability;
+    const nowH=now.getHours();
+    const todayStr=now.toDateString();
+    let startIdx=-1;
+    for(let i=0;i<ht.length;i++){
+      const hDate=new Date(ht[i]);
+      if(hDate.toDateString()===todayStr&&hDate.getHours()>=nowH){
+        if(startIdx===-1)startIdx=i;
+        const hh=hDate.getHours();
+        const isNow=(i===startIdx);
+        const lbl=isNow?'Agora':(hh<10?'0'+hh:hh)+'h';
+        const isNightH=(hh<6||hh>=20);
+        const hi=_wxIconHtml(hwc[i],isNightH,26);
+        const tp=Math.round(htemp[i]);
+        const prob=hprob?hprob[i]:null;
+        hourlyHtml+=`<div class="wx-hour-item${isNow?' now':''}">
+          <span class="wx-hour-lbl">${lbl}</span>
+          <div class="wx-hour-icon">${hi}</div>
+          <span class="wx-hour-temp">${tp}°</span>
+          ${prob!=null&&prob>0?`<span class="wx-hour-prob">💧${prob}%</span>`:'<span class="wx-hour-prob" style="opacity:0">—</span>'}
+        </div>`;
+      }
+    }
+  }
+
   body.innerHTML=`
     <div class="wx-hero">
       <div class="wx-hero-icon">${iconSvg}</div>
@@ -5506,40 +5634,44 @@ function _renderWeatherPopup(d){
     </div>
     <div class="wx-grid">
       <div class="wx-card">
-        <div class="wx-card-icon">💧</div>
+        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></div>
         <div class="wx-card-val">${c.relativehumidity_2m}%</div>
         <div class="wx-card-lbl">Umidade</div>
       </div>
       <div class="wx-card">
-        <div class="wx-card-icon">💨</div>
+        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></svg></div>
         <div class="wx-card-val">${Math.round(c.windspeed_10m)}</div>
         <div class="wx-card-lbl">Vento km/h</div>
       </div>
       <div class="wx-card">
-        <div class="wx-card-icon">🌧️</div>
+        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 17.58A5 5 0 0 0 18 8h-1.26A8 8 0 1 0 4 16.25"/><line x1="8" y1="16" x2="8" y2="21"/><line x1="8" y1="21" x2="12" y2="19"/><line x1="12" y1="14" x2="12" y2="19"/></svg></div>
         <div class="wx-card-val">${c.precipitation!=null?c.precipitation.toFixed(1)+'mm':'—'}</div>
         <div class="wx-card-lbl">Chuva agora</div>
       </div>
       <div class="wx-card">
-        <div class="wx-card-icon">🌡️</div>
+        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg></div>
         <div class="wx-card-val">${pressureVal?pressureVal+' hPa':'—'}</div>
         <div class="wx-card-lbl">Pressão</div>
       </div>
       <div class="wx-card">
-        <div class="wx-card-icon">☀️</div>
+        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="${uvColor}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg></div>
         <div class="wx-card-val" style="color:${uvColor}">${uvVal}${uvLabel?`<span style="font-size:9px;font-weight:600;color:${uvColor};display:block;margin-top:1px">${uvLabel}</span>`:''}</div>
         <div class="wx-card-lbl">Índice UV</div>
       </div>
       <div class="wx-card">
-        <div class="wx-card-icon">👁️</div>
+        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
         <div class="wx-card-val">${visVal!=null?visVal+' km':'—'}</div>
         <div class="wx-card-lbl">Visibilidade</div>
       </div>
     </div>
-    ${forecastHtml?`<div class="wx-forecast">
-      <div class="wx-forecast-title">Próximos dias</div>
-      ${forecastHtml}
-    </div>`:''}
+    ${hourlyHtml?`<div class="wx-section-title">Previsão por hora — Hoje
+      <div class="wx-hour-nav">
+        <button class="wx-hour-nav-btn" onclick="wxHourScroll(-1)" aria-label="Anterior"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button class="wx-hour-nav-btn" onclick="wxHourScroll(1)" aria-label="Próximo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+    </div>
+    <div class="wx-hourly-wrap"><div class="wx-hour-strip" id="wx-hour-strip">${hourlyHtml}</div></div>`:''}
+    ${forecastHtml?`<div class="wx-section-title">Próximos dias</div><div class="wx-forecast" style="padding-top:0">${forecastHtml}</div>`:''}
     <div class="wx-updated">Atualizado às ${timeStr} · ${skyLabel} · Open-Meteo</div>
   `;
 }
@@ -5623,6 +5755,12 @@ new ResizeObserver(syncLayout).observe(document.getElementById('top-fixed'));
 setInterval(tickTimer,1000);
 setInterval(checkSchedRefresh,10000);
 setInterval(()=>fetchWeather(false),5*60*1000);
+
+function wxHourScroll(dir){
+  const strip=document.getElementById('wx-hour-strip');
+  if(!strip)return;
+  strip.scrollBy({left:dir*220,behavior:'smooth'});
+}
 </script>
 </body>
 </html>
