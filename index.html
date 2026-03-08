@@ -5771,9 +5771,10 @@ function updF(sid,tab,i,field,val){
     if(txt){txt.textContent=val||'sem nome';txt.className='eval-name-text'+(val?'':' ph');}
   }
   updateCardDisplay(sid,tab);
-  // auto-fechar quando nome + obtida + máx estiverem preenchidos
+  // auto-fechar quando obtida + máx estiverem preenchidos E o nome já estiver ok
+  // (não dispara enquanto o usuário ainda está digitando no campo nome)
   const rr=G[sid][tab][i];
-  if(rr.name&&rr.name.trim()&&nf(rr.got)!==null&&nf(rr.total)!==null){
+  if(field!=='name'&&rr.name&&rr.name.trim()&&nf(rr.got)!==null&&nf(rr.total)!==null){
     const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
     if(item&&item.classList.contains('editing'))doneEditEval(sid,tab,i);
   }
