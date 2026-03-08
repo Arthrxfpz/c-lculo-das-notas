@@ -2215,6 +2215,92 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   }
 }
 
+
+/* ─── Exam topic chips on list ─── */
+.exam-topics-row{
+  display:flex;flex-wrap:wrap;gap:5px;
+  margin-top:8px;
+}
+.exam-topic-chip{
+  font-size:11px;font-weight:600;color:var(--t2);
+  background:var(--bg2);border:1px solid var(--line2);
+  border-radius:20px;padding:3px 9px;
+  letter-spacing:-0.1px;line-height:1.4;
+}
+.exam-item.today-exam .exam-topic-chip{
+  background:var(--redbg);border-color:var(--redbd);color:var(--red);
+}
+.exam-item.soon .exam-topic-chip{
+  background:var(--amberbg);border-color:var(--amberbd);color:var(--amber);
+}
+
+/* ─── Exam detail conteudo ─── */
+.edc-conteudo{
+  background:var(--bg2);border:1px solid var(--line2);border-radius:16px;
+  overflow:hidden;margin-top:0;
+}
+.edc-conteudo-header{
+  display:flex;align-items:center;gap:7px;
+  padding:13px 16px 11px;
+  border-bottom:1px solid var(--line3);
+  font-size:10px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.8px;
+}
+.edc-conteudo-header svg{
+  width:13px;height:13px;stroke:var(--t3);fill:none;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;
+}
+.edc-topic-list{
+  list-style:none;margin:0;padding:8px 12px 12px;
+  display:flex;flex-direction:column;gap:5px;
+}
+.edc-topic-item{
+  display:flex;align-items:flex-start;gap:10px;
+  background:var(--bg1);border:1px solid var(--line3);
+  border-radius:11px;padding:10px 12px;
+  animation:fadeIn .22s var(--ease-ios) both;
+}
+.edc-topic-num{
+  flex-shrink:0;width:20px;height:20px;
+  background:var(--bg3);border-radius:6px;
+  font-size:10px;font-weight:700;color:var(--t3);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ffm);margin-top:1px;
+}
+.edc-topic-text{
+  font-size:13px;font-weight:500;color:var(--t1);
+  line-height:1.5;flex:1;
+}
+
+/* ─── Custom date slot picker ─── */
+.custom-slot-section{margin-top:12px}
+.custom-slot-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.custom-slot-grid{display:flex;flex-direction:column;gap:6px}
+.custom-slot-btn{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 14px;background:var(--bg3);
+  border:1.5px solid var(--line2);border-radius:11px;
+  cursor:pointer;transition:all .16s var(--ease-ios);text-align:left;width:100%;font-family:var(--ff);
+}
+.custom-slot-btn:active{transform:scale(.97)}
+.custom-slot-btn.selected{background:var(--goldbg);border-color:var(--goldbd)}
+.custom-slot-period{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;min-width:52px}
+.custom-slot-time{font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--t1);flex:1}
+.custom-slot-check{width:18px;height:18px;border-radius:50%;background:var(--gold);display:none;align-items:center;justify-content:center;flex-shrink:0}
+.custom-slot-check svg{width:10px;height:10px;stroke:#000;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.custom-slot-btn.selected .custom-slot-check{display:flex}
+
+/* ─── Prova hoje badge no horário ─── */
+.sched-exam-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;border-radius:20px;
+  background:var(--redbg);border:1px solid var(--redbd);
+  font-size:10px;font-weight:700;color:var(--red);
+  letter-spacing:.2px;margin-top:4px;
+}
+.sched-exam-badge svg{width:10px;height:10px;stroke:var(--red);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+.sched-item.has-exam{border-color:var(--redbd)!important;border-left-color:var(--red)!important}
 </style>
 <body>
 <div class="shell">
@@ -3084,10 +3170,12 @@ function renderHorarios(el){
     if(p.break){list+=`<div class="sched-break${isCur?' current':''}" data-ps="${ps}" data-pe="${pe}"><div class="sched-break-line"></div><div class="sched-break-txt">${fmtHM(p.s)} — RECREIO</div><div class="sched-break-line"></div></div>`;return;}
     const cls=dd[ci];const color=SUBJ_COLORS[cls.subj]||'#505050';
     const safeSubj=cls.subj.replace(/'/g,"\\'");const safeProf=cls.prof.replace(/'/g,"\\'");const safeCol=color.replace(/'/g,"\\'");
-    list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}" data-ps="${ps}" data-pe="${pe}" style="--accent-color:${color}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
+    const hasExamToday=isTd&&exams.some(e=>e.examDate===todayStr()&&e.subj===cls.subj);
+    const examBadge=hasExamToday?`<span class="sched-exam-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Prova hoje</span>`:'';
+    list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}${hasExamToday?' has-exam':''}" data-ps="${ps}" data-pe="${pe}" style="--accent-color:${color}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
       <div class="sched-time"><span class="start">${fmtHM(p.s)}</span><span class="end">${fmtHM(p.e)}</span></div>
       <div class="sched-divider"></div>
-      <div class="sched-info"><div class="sched-num">${p.n}</div><div class="sched-subj">${cls.subj}</div><div class="sched-prof">${cls.prof}</div></div>
+      <div class="sched-info"><div class="sched-num">${p.n}</div><div class="sched-subj">${cls.subj}</div>${examBadge}<div class="sched-prof">${cls.prof}</div></div>
       ${isCur?'<div class="sched-now-badge">Agora</div>':''}
     </div>`;
     ci++;
@@ -3270,7 +3358,7 @@ function populateDateStrip(dow,validDows){
   </div>
   <div class="date-strip-wrap"><div class="date-strip" id="ex-date-strip">${cardsHtml}</div></div>
 </div>
-<div class="custom-date-reveal" id="ex-custom-reveal">${chipSection}<input type="date" id="ex-date-custom-inp" min="${todayStr()}" style="width:100%;padding:12px 14px;background:var(--bg3);border:1.5px solid var(--line2);border-radius:var(--rsm);font-size:15px;color:var(--t1);outline:none;color-scheme:var(--cs);transition:box-shadow .2s var(--ease-ios)" onchange="onCustomDateChange()"><div class="custom-date-hint" id="ex-custom-hint"></div></div><input type="hidden" id="ex-date">`;
+<div class="custom-date-reveal" id="ex-custom-reveal">${chipSection}<input type="date" id="ex-date-custom-inp" min="${todayStr()}" style="width:100%;padding:12px 14px;background:var(--bg3);border:1.5px solid var(--line2);border-radius:var(--rsm);font-size:15px;color:var(--t1);outline:none;color-scheme:var(--cs);transition:box-shadow .2s var(--ease-ios)" onchange="onCustomDateChange()"><div class="custom-date-hint" id="ex-custom-hint"></div><div class="custom-slot-section" id="ex-custom-slot-section" style="display:none"></div></div><input type="hidden" id="ex-date">`;
   wrap.style.display='';
 }
 
@@ -3310,6 +3398,9 @@ function toggleCustomDate(){
     if(inp){inp.value='';inp.style.boxShadow='';}
     const hint=document.getElementById('ex-custom-hint');
     if(hint)hint.textContent='';
+    const slotSec=document.getElementById('ex-custom-slot-section');
+    if(slotSec){slotSec.style.display='none';slotSec.innerHTML='';}
+    window._exSlotTime=null;
   }
 }
 
@@ -3325,26 +3416,70 @@ function onCustomDateChange(){
   const sel=new Date(val+'T00:00:00');
   if(sel<today){
     inp.style.boxShadow='0 0 0 3px rgba(255,69,58,.35)';
-    if(hint){hint.textContent='\u274C Data no passado — escolha uma data futura';hint.style.color='var(--red)';}
+    if(hint){hint.textContent='Data no passado — escolha uma data futura';hint.style.color='var(--red)';}
     if(hidden)hidden.value='';
-    // desmarca chips
     document.querySelectorAll('#ex-valid-days-row .valid-day-chip').forEach(b=>b.classList.remove('hit'));
+    const slotSec=document.getElementById('ex-custom-slot-section');
+    if(slotSec)slotSec.style.display='none';
+    window._exSlotTime=null;
     return;
   }
   const vd=window._exValidDows||[];
   const selDow=sel.getDay();
-  // destaca o chip do dia selecionado, se houver
   document.querySelectorAll('#ex-valid-days-row .valid-day-chip').forEach(b=>{
     b.classList.toggle('hit',parseInt(b.dataset.dow)===selDow);
   });
-  if(vd.length>0&&!vd.includes(selDow)){
+  const hasClass=vd.length===0||vd.includes(selDow);
+  if(!hasClass){
     inp.style.boxShadow='0 0 0 3px rgba(255,159,10,.35)';
-    if(hint){hint.textContent='\u26A0\uFE0F Este dia não tem aula — mas pode continuar';hint.style.color='var(--amber)';}
+    if(hint){hint.textContent='Este dia nao tem aula — mas pode continuar';hint.style.color='var(--amber)';}
+    const slotSec=document.getElementById('ex-custom-slot-section');
+    if(slotSec)slotSec.style.display='none';
+    window._exSlotTime=null;
   }else{
     inp.style.boxShadow='0 0 0 3px rgba(48,209,88,.35)';
-    if(hint){hint.textContent=`\u2713 ${PT_WEEKDAYS[selDow]}, ${fmtDateBR(val)}`;hint.style.color='var(--green)';}
+    if(hint){hint.textContent=`${PT_WEEKDAYS[selDow]}, ${fmtDateBR(val)}`;hint.style.color='var(--green)';}
+    const subjName=document.getElementById('ex-subj')?.value||'';
+    _renderCustomSlotPicker(subjName,selDow);
   }
   if(hidden)hidden.value=val;
+}
+
+function _renderCustomSlotPicker(subjName, dow){
+  const sec=document.getElementById('ex-custom-slot-section');
+  if(!sec)return;
+  const slots=[];
+  const dd=SCHED[dow];
+  if(!dd){sec.style.display='none';return;}
+  let ci=0;
+  PERIODS.forEach(p=>{
+    if(p.break){return;}
+    if(dd[ci]&&dd[ci].subj===subjName)
+      slots.push({period:p.n,s:p.s,e:p.e});
+    ci++;
+  });
+  if(slots.length===0){sec.style.display='none';window._exSlotTime=null;return;}
+  let html=`<div class="custom-slot-label"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--t3);fill:none;stroke-width:2.5;stroke-linecap:round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Horário da prova neste dia</div><div class="custom-slot-grid">`;
+  slots.forEach((sl,i)=>{
+    const timeStr=fmtHM(sl.s)+' \u2013 '+fmtHM(sl.e);
+    html+=`<button class="custom-slot-btn${i===0?' selected':''}" type="button" onclick="_pickCustomSlot(this,'${timeStr}')">
+      <span class="custom-slot-period">${sl.period}</span>
+      <span class="custom-slot-time">${timeStr}</span>
+      <span class="custom-slot-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+    </button>`;
+  });
+  html+='</div>';
+  sec.innerHTML=html;
+  sec.style.display='';
+  // auto-select first
+  const firstTime=fmtHM(slots[0].s)+' \u2013 '+fmtHM(slots[0].e);
+  window._exSlotTime=firstTime;
+}
+
+function _pickCustomSlot(btn, timeStr){
+  document.querySelectorAll('#ex-custom-slot-section .custom-slot-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._exSlotTime=timeStr;
 }
 
 function quickFillDay(dow,chipBtn){
@@ -3492,6 +3627,7 @@ function renderProvas(el){
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
       const notifScheduled=getExamNotif(e.id);
       const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--violet)" stroke="var(--violet)"/>':''}</svg></button>`;
+      const conteudoHtml=(!isPast&&e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
       return`<div class="exam-item ${itemCls}" style="--accent-color:${color}" ${clickAttr}>
         <div class="exam-info">
           <div class="exam-subj">${escHtml(e.subj)}</div>${titleHtml}
@@ -3499,6 +3635,7 @@ function renderProvas(el){
             <div class="exam-date-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>${fmtDateBR(e.examDate)}</span></div>
             ${valorHtml}${timeHtml}
           </div>
+          ${conteudoHtml}
         </div>
         <div class="exam-right">
           <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
@@ -3600,14 +3737,12 @@ function openExamDetail(examId){
         <span style="font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;background:${urgBg};color:${cdColor}">${urgLabel}</span>
       </div>
     </div>
-    ${e.conteudo?`<div class="exam-detail-card" style="margin-top:12px">
-      <div style="padding:14px 16px">
-        <div style="font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-          <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Conteúdo da Prova
-        </div>
-        <div style="font-size:13px;color:var(--t2);line-height:1.65;white-space:pre-wrap">${escHtml(e.conteudo)}</div>
+    ${e.conteudo?`<div class="edc-conteudo">
+      <div class="edc-conteudo-header">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Conteúdo da Prova
       </div>
+      <ul class="edc-topic-list">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map((t,i)=>`<li class="edc-topic-item" style="animation-delay:${i*0.04}s"><span class="edc-topic-num">${i+1}</span><span class="edc-topic-text">${escHtml(t)}</span></li>`).join('')}</ul>
     </div>`:''}
   `;
 
