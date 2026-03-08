@@ -135,18 +135,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .topbar-greeting:active{opacity:.6}
 .topbar-greeting-line{
-  font-size:11px;font-weight:500;color:var(--t3);
-  letter-spacing:-0.1px;line-height:1.2;
+  font-size:17px;font-weight:700;color:var(--t1);
+  letter-spacing:-0.45px;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .topbar-greeting-name{
-  font-size:16px;font-weight:700;color:var(--t1);
-  letter-spacing:-0.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  line-height:1.3;
+  font-size:11px;font-weight:500;color:var(--t3);
+  letter-spacing:-0.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  line-height:1.3;margin-top:1px;
 }
 .topbar-meta{
-  font-size:11px;color:var(--t3);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  letter-spacing:-0.1px;
+  display:none;
 }
 .topbar-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
 .topbar-btn{
@@ -2425,6 +2424,991 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .sched-exam-badge svg{width:10px;height:10px;stroke:var(--red);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
 .sched-item.has-exam{border-color:var(--redbd)!important;border-left-color:var(--red)!important}
+
+/* ═══════════════════════════════════════════════════════════
+   ✦ REDESIGN iOS 17/18 — Refinamento Premium
+   Aplicado sobre os estilos existentes com seletores mais específicos
+═══════════════════════════════════════════════════════════ */
+
+/* ── Variáveis extras ── */
+:root {
+  --shadow-card: 0 1px 3px rgba(0,0,0,.04), 0 4px 14px rgba(0,0,0,.06);
+  --shadow-card-hover: 0 4px 8px rgba(0,0,0,.05), 0 12px 32px rgba(0,0,0,.1);
+  --shadow-gold: 0 2px 12px rgba(255,214,10,.3);
+  --blur-glass: saturate(200%) blur(28px);
+  --r-xl: 22px; --r-lg: 18px; --r-md: 14px; --r-sm: 10px;
+}
+[data-theme="dark"] {
+  --shadow-card: 0 1px 3px rgba(0,0,0,.2), 0 4px 20px rgba(0,0,0,.35);
+  --shadow-card-hover: 0 6px 12px rgba(0,0,0,.3), 0 20px 50px rgba(0,0,0,.5);
+}
+
+/* ── Backgrounds melhorados ── */
+[data-theme="dark"] body {
+  background: #000000;
+}
+[data-theme="light"] body {
+  background: #F0F0F5;
+}
+
+/* ── Top Bar — glass mais sofisticado ── */
+.top-fixed {
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border-bottom: 0.5px solid var(--line3);
+}
+[data-theme="dark"] .top-fixed {
+  background: rgba(10,10,12,.82);
+}
+[data-theme="light"] .top-fixed {
+  background: rgba(242,242,247,.9);
+}
+
+/* ── Topbar Avatar — mais refinado ── */
+.topbar-avatar {
+  width: 34px; height: 34px;
+  background: var(--bg2);
+  border-radius: 50%;
+  border: 1.5px solid var(--line2);
+  box-shadow: 0 1px 6px rgba(0,0,0,.12);
+  transition: all .2s var(--ease-ios);
+}
+.topbar-avatar:active { opacity: .5; transform: scale(.9); }
+
+/* ── Topbar Buttons — pill style ── */
+.topbar-btn {
+  height: 32px; border-radius: 16px;
+  padding: 0 12px;
+  min-width: 42px;
+  border: 1.5px solid var(--goldbd);
+  background: var(--goldbg);
+  box-shadow: 0 1px 8px rgba(255,214,10,.15);
+  transition: all .2s var(--ease-ios);
+}
+.topbar-btn:active { transform: scale(.9); opacity: .7; }
+
+.theme-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line2);
+  background: var(--bg2);
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+
+/* ── Weather pill ── */
+.weather-btn {
+  padding: 5px 11px;
+  border-radius: 22px;
+  border: 1.5px solid var(--line2);
+  background: var(--bg2);
+  box-shadow: 0 1px 6px rgba(0,0,0,.06);
+  transition: all .2s var(--ease-ios);
+}
+.weather-btn:active { transform: scale(.93); opacity: .7; }
+
+/* ══════════════════════════════════════
+   TABS STRIP — Segmented control iOS
+══════════════════════════════════════ */
+.tabs-strip {
+  padding: 0 16px 14px;
+  gap: 6px;
+}
+.tab-btn {
+  font-size: 13px; font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--bg2);
+  border: 1.5px solid var(--line2);
+  color: var(--t2);
+  transition: all .22s var(--ease-ios);
+  letter-spacing: -.15px;
+}
+.tab-btn.active {
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: var(--shadow-gold);
+  letter-spacing: -.2px;
+}
+.tab-btn:active:not(.active) {
+  background: var(--bg3);
+  transform: scale(.94);
+}
+
+/* ══════════════════════════════════════
+   CARDS — Radius e sombra unificados
+══════════════════════════════════════ */
+.subj-item {
+  border-radius: var(--r-xl);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+  transition: all .24s var(--ease-ios);
+}
+[data-theme="dark"] .subj-item {
+  background: #1A1A1E;
+}
+.subj-item.open {
+  border-color: rgba(255,214,10,.22);
+  box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 8px 28px rgba(0,0,0,.12), 0 0 0 1px rgba(255,214,10,.08);
+}
+[data-theme="dark"] .subj-item.open {
+  box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 8px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(255,214,10,.1);
+}
+
+.subj-header {
+  padding: 16px 18px 15px;
+  gap: 14px;
+}
+.subj-name { font-size: 15px; font-weight: 700; letter-spacing: -.35px; }
+.subj-count { font-size: 11.5px; margin-top: 2px; letter-spacing: -.1px; }
+
+/* ── Grade Tag — mais premium ── */
+.grade-tag {
+  font-size: 13.5px; font-weight: 700;
+  padding: 5px 13px; border-radius: 20px;
+  min-width: 56px;
+  letter-spacing: -.3px;
+  border-width: 1.5px;
+}
+
+/* ── Chevron ── */
+.chevron {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--bg2);
+  border: 1.5px solid var(--line3);
+}
+.chevron svg { width: 13px; height: 13px; stroke-width: 2.8; }
+
+/* ── Eval items ── */
+.eval-item {
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line2);
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+[data-theme="dark"] .eval-item {
+  background: #1E1E22;
+  box-shadow: 0 1px 8px rgba(0,0,0,.25);
+}
+
+/* ── Grade inputs ── */
+.grade-input {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line2);
+  background: var(--bg2);
+  transition: all .18s var(--ease-ios);
+}
+.grade-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(10,132,255,.18);
+  background: var(--bg1);
+}
+
+/* ══════════════════════════════════════
+   BOTTOM NAV — iOS Tab Bar
+══════════════════════════════════════ */
+.nav {
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border-top: 0.5px solid var(--line2);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  gap: 0;
+}
+[data-theme="dark"] .nav {
+  background: rgba(10,10,12,.85);
+}
+[data-theme="light"] .nav {
+  background: rgba(242,242,247,.92);
+}
+
+.nav-btn {
+  padding: 6px 4px 4px;
+  gap: 3px;
+  border-radius: 12px;
+  position: relative;
+  transition: opacity .18s, transform .18s var(--ease-spring);
+}
+.nav-btn:active { opacity: .5; transform: scale(.88); }
+.nav-btn svg {
+  width: 22px; height: 22px;
+  stroke-width: 1.7;
+  transition: stroke .22s var(--ease-ios), transform .3s var(--ease-spring);
+}
+.nav-btn span {
+  font-size: 9.5px; font-weight: 500;
+  letter-spacing: .1px;
+  transition: color .22s var(--ease-ios), font-weight .22s;
+}
+.nav-btn.active svg { stroke: var(--gold); transform: scale(1.1) translateY(-1px); }
+.nav-btn.active span { color: var(--gold); font-weight: 700; }
+
+/* badge mais refinado */
+.nav-badge {
+  min-width: 15px; height: 15px; padding: 0 4px;
+  font-size: 8.5px; font-weight: 800;
+  border-radius: 8px;
+  border: 1.5px solid var(--bg0);
+  box-shadow: 0 1px 4px rgba(255,69,58,.4);
+}
+
+/* ══════════════════════════════════════
+   RESUMO BANNER — mais polido
+══════════════════════════════════════ */
+.resumo-banner {
+  border-radius: var(--r-xl);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  position: relative;
+}
+[data-theme="dark"] .resumo-banner {
+  background: #1A1A1E;
+}
+.resumo-banner-avg {
+  font-size: 56px; font-weight: 700;
+  letter-spacing: -3.5px; line-height: 1;
+}
+.resumo-banner-badge {
+  font-size: 12px; font-weight: 700;
+  padding: 5px 14px; border-radius: 20px;
+  border-width: 1.5px;
+}
+.resumo-stat-pill {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line3);
+  padding: 10px 6px;
+}
+
+/* ── Resumo subject cards ── */
+.resumo-subj-card {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .resumo-subj-card {
+  background: #1A1A1E;
+}
+.resumo-subj-num { font-size: 25px; letter-spacing: -.5px; }
+
+/* ══════════════════════════════════════
+   RESULT ROWS
+══════════════════════════════════════ */
+.res-row {
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+  padding: 13px 16px;
+}
+[data-theme="dark"] .res-row {
+  background: #1A1A1E;
+}
+.res-row-num { font-size: 22px; letter-spacing: -.5px; }
+
+/* ══════════════════════════════════════
+   SCHEDULE ITEMS
+══════════════════════════════════════ */
+.sched-item {
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line2);
+  border-left-width: 3.5px;
+  box-shadow: var(--shadow-card);
+  padding: 13px 16px;
+}
+[data-theme="dark"] .sched-item {
+  background: #1A1A1E;
+}
+
+/* ── Live banner ── */
+.live-banner {
+  border-radius: var(--r-xl);
+  border-left-width: 4px;
+  box-shadow: var(--shadow-card);
+}
+
+/* ══════════════════════════════════════
+   PROVAS
+══════════════════════════════════════ */
+.provas-stat {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .provas-stat {
+  background: #1A1A1E;
+}
+
+.add-exam-card {
+  border-radius: var(--r-xl);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .add-exam-card {
+  background: #1A1A1E;
+}
+
+.exam-item {
+  border-radius: var(--r-md);
+  border: 1.5px solid var(--line2) !important;
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .exam-item {
+  background: #1A1A1E;
+}
+
+/* next exam hero */
+.next-exam-hero {
+  border-radius: var(--r-xl);
+  border: 1.5px solid var(--line2);
+  border-left-width: 4px;
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .next-exam-hero {
+  background: #1A1A1E;
+}
+
+/* ps2-card */
+.ps2-card {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .ps2-card {
+  background: #1A1A1E;
+}
+
+/* ══════════════════════════════════════
+   MODAL / SHEETS — handles e headers
+══════════════════════════════════════ */
+.modal-box, .subj-sheet, .exam-sheet, .wx-sheet, .notif-box {
+  border-top: none;
+  border-radius: 28px 28px 0 0;
+}
+[data-theme="dark"] .modal-box,
+[data-theme="dark"] .subj-sheet,
+[data-theme="dark"] .exam-sheet,
+[data-theme="dark"] .wx-sheet,
+[data-theme="dark"] .notif-box {
+  background: #1C1C1E;
+  border-top: 0.5px solid rgba(84,84,88,.5);
+}
+
+.modal-handle,
+.subj-sheet-handle,
+.exam-sheet-handle,
+.wx-handle,
+.notif-handle {
+  width: 34px; height: 4px;
+  border-radius: 2px;
+  background: var(--bg4);
+  opacity: .45;
+}
+
+.modal-title {
+  font-size: 20px; font-weight: 700;
+  letter-spacing: -.45px;
+}
+
+.field-input {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line2);
+  padding: 13px 16px;
+  font-size: 16px;
+  background: var(--bg2);
+  transition: all .2s var(--ease-ios);
+}
+.field-input:focus {
+  background: var(--bg1);
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3.5px rgba(10,132,255,.18);
+}
+
+.modal-save-btn {
+  border-radius: var(--r-md);
+  font-size: 17px; font-weight: 600;
+  padding: 15px;
+  background: var(--blue);
+  box-shadow: 0 4px 16px rgba(10,132,255,.3);
+  letter-spacing: -.3px;
+  transition: opacity .18s, transform .1s var(--ease-ios);
+}
+.modal-save-btn:active { opacity: .8; transform: scale(.98); }
+
+/* ══════════════════════════════════════
+   AEC INPUT / INPUTS GERAIS
+══════════════════════════════════════ */
+.aec-input {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line2);
+  background: var(--bg2);
+  padding: 13px 15px;
+}
+.aec-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(10,132,255,.18);
+  background: var(--bg1);
+}
+
+/* ══════════════════════════════════════
+   NOTES / BLOCO
+══════════════════════════════════════ */
+.bloco-card {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  border-left-width: 3px;
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .bloco-card {
+  background: #1A1A1E;
+}
+
+.bloco-new-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  box-shadow: var(--shadow-gold);
+  transition: transform .2s var(--ease-spring), opacity .15s;
+}
+.bloco-new-btn:active { transform: scale(.86); opacity: .8; }
+
+.bloco-search {
+  border-radius: 22px;
+  border: 1.5px solid var(--line2);
+  background: var(--bg2);
+  padding: 10px 14px 10px 36px;
+}
+.bloco-search:focus {
+  background: var(--bg1);
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(10,132,255,.18);
+}
+
+/* ══════════════════════════════════════
+   CONFIRM POPUP
+══════════════════════════════════════ */
+.confirm-box {
+  border-radius: 22px;
+  border: 1.5px solid var(--line2);
+  box-shadow: 0 32px 96px rgba(0,0,0,.4);
+}
+[data-theme="dark"] .confirm-box {
+  background: #1C1C1E;
+}
+.confirm-title { font-size: 17px; font-weight: 700; letter-spacing: -.35px; }
+.confirm-msg { font-size: 14px; line-height: 1.5; color: var(--t2); }
+.confirm-icon {
+  width: 50px; height: 50px;
+  border-radius: 14px;
+  margin: 22px auto 12px;
+}
+.confirm-actions button {
+  font-size: 17px; font-weight: 600;
+  padding: 16px 12px;
+  letter-spacing: -.2px;
+}
+
+/* ══════════════════════════════════════
+   EXAM COUNTDOWN (SHEET)
+══════════════════════════════════════ */
+.exam-cd-section {
+  background: var(--bg2);
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+}
+.exam-cd-cell {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line2);
+}
+[data-theme="dark"] .exam-cd-cell {
+  background: #1A1A1E;
+}
+.exam-cd-val {
+  font-size: 28px; letter-spacing: -1.5px;
+}
+
+/* ══════════════════════════════════════
+   WEATHER SHEET
+══════════════════════════════════════ */
+.wx-card {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line3);
+  box-shadow: 0 1px 4px rgba(0,0,0,.04);
+}
+[data-theme="dark"] .wx-card {
+  background: #1E1E22;
+}
+
+.wx-hour-item {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line3);
+}
+.wx-hour-item.now {
+  border-color: var(--goldbd);
+  background: rgba(255,214,10,.09);
+}
+
+/* ══════════════════════════════════════
+   SECTION LABELS — mais refinado
+══════════════════════════════════════ */
+.section-label {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: .7px;
+  color: var(--t4);
+  margin: 20px 0 8px;
+  padding-left: 2px;
+}
+
+.res-trend-row {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .res-trend-row {
+  background: #1A1A1E;
+}
+
+/* ══════════════════════════════════════
+   TOAST — refinado
+══════════════════════════════════════ */
+.exam-toast {
+  border-radius: 18px;
+  border: 1.5px solid var(--line2);
+  box-shadow: 0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.12);
+}
+[data-theme="dark"] .exam-toast {
+  background: #1C1C1E;
+}
+
+/* ── Day buttons ── */
+.day-btn {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line2);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 9px 2px;
+  transition: all .2s var(--ease-ios);
+}
+.day-btn.active {
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: var(--shadow-gold);
+}
+.day-btn:active { transform: scale(.94); }
+
+/* ── Filter chips ── */
+.pf-chip {
+  border-radius: 20px;
+  border: 1.5px solid var(--line2);
+  padding: 7px 14px;
+  font-size: 12px;
+  transition: all .18s var(--ease-ios);
+}
+.pf-chip.active {
+  background: var(--gold);
+  color: #000;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 2px 10px rgba(255,214,10,.3);
+}
+
+/* ── Res highlight cards ── */
+.res-highlight-card {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="dark"] .res-highlight-card {
+  background: #1A1A1E;
+}
+.rh-val { font-size: 28px; letter-spacing: -1px; }
+
+/* ── Risk card ── */
+.res-risk-card {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--redbd);
+}
+.risk-row {
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--line2);
+}
+
+/* ── Notice block ── */
+.notice {
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--amberbd);
+}
+
+/* ══════════════════════════════════════
+   DESKTOP SIDEBAR — refinado
+══════════════════════════════════════ */
+@media (min-width:768px) {
+  [data-theme="dark"] .nav {
+    background: #0E0E10;
+    border-right: 1px solid rgba(255,255,255,.05);
+    box-shadow: 1px 0 0 rgba(255,255,255,.04), 4px 0 24px rgba(0,0,0,.5);
+  }
+  [data-theme="light"] .nav {
+    background: #FFFFFF;
+    border-right: 1px solid rgba(0,0,0,.07);
+    box-shadow: 4px 0 20px rgba(0,0,0,.06);
+  }
+
+  .nav-btn {
+    border-radius: var(--r-sm);
+    margin: 1px 10px;
+    padding: 9px 14px;
+    gap: 12px;
+    transition: all .18s var(--ease-ios);
+  }
+  .nav-btn.active {
+    background: var(--goldbg);
+    border-color: var(--goldbd);
+    box-shadow: 0 1px 8px rgba(255,214,10,.12);
+  }
+  .nav-btn:hover:not(.active) {
+    background: var(--bg2);
+    border-color: var(--line3) !important;
+  }
+  .nav-btn span { font-size: 13px; font-weight: 500; letter-spacing: -.2px; }
+  .nav-btn.active span { color: var(--gold); font-weight: 700; }
+  .nav-btn svg { width: 18px; height: 18px; stroke-width: 1.7; }
+
+  .sb-logo {
+    border-radius: var(--r-sm);
+    box-shadow: 0 1px 10px rgba(255,214,10,.2);
+  }
+
+  /* Hover lift on desktop cards */
+  .subj-item:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-card-hover) !important;
+    border-color: rgba(255,214,10,.18) !important;
+  }
+  .resumo-subj-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: var(--shadow-card-hover) !important;
+  }
+  .res-row:hover { background: var(--bg2) !important; }
+  .exam-item:hover { background: var(--bg2) !important; }
+}
+
+/* ══════════════════════════════════════
+   MICRO-INTERAÇÕES extras
+══════════════════════════════════════ */
+button:active:not(:disabled) {
+  transform: scale(.96);
+  transition: transform .07s var(--ease-ios);
+}
+
+/* Smooth color transitions globais */
+.subj-item, .resumo-subj-card, .res-row, .bloco-card,
+.provas-stat, .ps2-card, .sched-item, .add-exam-card, .exam-item {
+  transition: background .2s var(--ease-ios), border-color .2s var(--ease-ios),
+              box-shadow .2s var(--ease-ios), transform .18s var(--ease-ios) !important;
+}
+
+/* ── Grade tags mais precisos ── */
+.grade-tag.pass { box-shadow: 0 1px 6px rgba(48,209,88,.18); }
+.grade-tag.warn { box-shadow: 0 1px 6px rgba(255,159,10,.18); }
+.grade-tag.fail { box-shadow: 0 1px 6px rgba(255,69,58,.18); }
+
+/* ── Inputs iOS native ── */
+input, textarea, select {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ══════════════════════════════════════
+   PAGE SLIDE padding ajustado
+══════════════════════════════════════ */
+.page-slide {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* ══════════════════════════════════════
+   ACESSIBILIDADE / SCROLL
+══════════════════════════════════════ */
+:focus-visible {
+  outline: 3px solid rgba(10,132,255,.6);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROFILE MODAL — Personalização expandida
+═══════════════════════════════════════════════════════════ */
+
+/* Modal box — scrollável para o perfil maior */
+.profile-box {
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  max-height: 92dvh;
+  scrollbar-width: none;
+}
+.profile-box::-webkit-scrollbar { display: none; }
+
+/* ── Hero do perfil ── */
+.prof-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 0 2px;
+}
+.prof-avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.prof-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,.2);
+  transition: background .3s var(--ease-ios), box-shadow .3s;
+  position: relative; overflow: hidden;
+  border: 3px solid rgba(255,255,255,.12);
+}
+[data-theme="light"] .prof-avatar {
+  border-color: rgba(0,0,0,.08);
+}
+.prof-avatar-initials {
+  font-size: 26px; font-weight: 800;
+  color: #000;
+  letter-spacing: -1px;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,.15);
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.prof-avatar-emoji {
+  font-size: 36px;
+  line-height: 1;
+  pointer-events: none;
+}
+.prof-avatar-edit-btn {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--bg1);
+  border: 2px solid var(--bg0);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  transition: transform .18s var(--ease-spring), background .15s;
+}
+.prof-avatar-edit-btn:active { transform: scale(.85); }
+.prof-avatar-edit-btn svg {
+  width: 12px; height: 12px;
+  stroke: var(--t2); fill: none;
+  stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+}
+.prof-hero-info { flex: 1; min-width: 0; }
+.prof-hero-name {
+  font-size: 20px; font-weight: 700;
+  color: var(--t1);
+  letter-spacing: -.5px;
+  line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+.prof-hero-sub {
+  font-size: 13px; color: var(--t3);
+  letter-spacing: -.1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ── Avatar Picker ── */
+.prof-avatar-picker {
+  background: var(--bg2);
+  border: 1.5px solid var(--line2);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 20px;
+  animation: fadeIn .2s var(--ease-ios);
+}
+.prof-picker-label {
+  font-size: 10px; font-weight: 700;
+  color: var(--t4);
+  text-transform: uppercase; letter-spacing: .8px;
+  margin-bottom: 10px;
+}
+.prof-color-row {
+  display: flex; gap: 10px; flex-wrap: wrap;
+}
+.prof-color-dot {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  cursor: pointer;
+  transition: transform .18s var(--ease-spring), outline-color .15s, border-color .15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+.prof-color-dot:active { transform: scale(.82); }
+.prof-color-dot.active {
+  outline-color: var(--t1);
+  border-color: rgba(255,255,255,.3);
+  transform: scale(1.08);
+}
+[data-theme="light"] .prof-color-dot.active {
+  border-color: rgba(0,0,0,.15);
+}
+
+
+/* ── Section label ── */
+.prof-section-label {
+  font-size: 11px; font-weight: 700;
+  color: var(--t4);
+  text-transform: uppercase; letter-spacing: .8px;
+  margin: 4px 0 10px 2px;
+}
+
+/* ── 2-col row ── */
+.prof-row-2col {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+}
+
+/* ── Select ── */
+.field-select {
+  cursor: pointer;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23636366' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  color-scheme: var(--cs);
+}
+
+/* ── Meta input ── */
+.prof-meta-wrap {
+  position: relative;
+  display: flex; align-items: center;
+}
+.prof-meta-input {
+  padding-right: 36px !important;
+  width: 100%;
+}
+.prof-meta-unit {
+  position: absolute; right: 13px;
+  font-size: 12px; font-weight: 700; color: var(--t3);
+  pointer-events: none; letter-spacing: -.2px;
+}
+
+/* ── Accent color grid ── */
+.prof-accent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.prof-accent-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px;
+  background: var(--bg2);
+  border: 1.5px solid var(--line2);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all .2s var(--ease-ios);
+  font-family: var(--ff);
+}
+.prof-accent-btn:active { transform: scale(.93); opacity: .7; }
+.prof-accent-btn.active {
+  border-color: var(--line);
+  background: var(--bg3);
+  box-shadow: 0 2px 10px rgba(0,0,0,.1);
+}
+[data-theme="dark"] .prof-accent-btn.active {
+  box-shadow: 0 2px 12px rgba(0,0,0,.3);
+}
+.prof-accent-swatch {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 1px 6px rgba(0,0,0,.2);
+}
+.prof-accent-name {
+  font-size: 12px; font-weight: 600;
+  color: var(--t2); letter-spacing: -.15px;
+  flex: 1; text-align: left;
+}
+.prof-accent-btn.active .prof-accent-name {
+  color: var(--t1); font-weight: 700;
+}
+
+/* ── Accent check icon ── */
+.prof-accent-check {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--t1);
+  display: none; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.prof-accent-btn.active .prof-accent-check {
+  display: flex;
+}
+.prof-accent-check svg {
+  width: 9px; height: 9px;
+  stroke: var(--bg0); fill: none;
+  stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
+}
+
+/* ── Desktop modal centered ── */
+@media (min-width:768px) {
+  .profile-box {
+    border-radius: 22px;
+    max-width: 460px;
+    width: calc(100% - 48px);
+    margin: auto;
+    animation: cfPop .3s var(--ease-spring);
+    border-top: none;
+    border: 1px solid var(--line2);
+    box-shadow: 0 32px 96px rgba(0,0,0,.36);
+    max-height: 88dvh;
+  }
+}
+
+/* ── CSS accent variables injected dynamically ── */
+[data-accent="blue"] {
+  --gold: #0A84FF; --goldl: #409CFF;
+  --goldbg: rgba(10,132,255,.1); --goldbd: rgba(10,132,255,.28);
+  --shadow-gold: 0 2px 12px rgba(10,132,255,.3);
+}
+[data-accent="green"] {
+  --gold: #30D158; --goldl: #34C759;
+  --goldbg: rgba(48,209,88,.1); --goldbd: rgba(48,209,88,.28);
+  --shadow-gold: 0 2px 12px rgba(48,209,88,.3);
+}
+[data-accent="violet"] {
+  --gold: #BF5AF2; --goldl: #D070FF;
+  --goldbg: rgba(191,90,242,.1); --goldbd: rgba(191,90,242,.28);
+  --shadow-gold: 0 2px 12px rgba(191,90,242,.3);
+}
+[data-accent="red"] {
+  --gold: #FF453A; --goldl: #FF6961;
+  --goldbg: rgba(255,69,58,.1); --goldbd: rgba(255,69,58,.28);
+  --shadow-gold: 0 2px 12px rgba(255,69,58,.3);
+}
+[data-accent="orange"] {
+  --gold: #FF9F0A; --goldl: #FFB340;
+  --goldbg: rgba(255,159,10,.1); --goldbd: rgba(255,159,10,.28);
+  --shadow-gold: 0 2px 12px rgba(255,159,10,.3);
+}
+[data-accent="gold"] {
+  --gold: #FFD60A; --goldl: #FFE234;
+  --goldbg: rgba(255,214,10,.1); --goldbd: rgba(255,214,10,.28);
+  --shadow-gold: 0 2px 12px rgba(255,214,10,.3);
+}
+/* Light mode accent overrides */
+[data-theme="light"][data-accent="blue"] { --gold:#007AFF; --goldl:#0051C3; --goldbg:rgba(0,122,255,.08); --goldbd:rgba(0,122,255,.22); }
+[data-theme="light"][data-accent="green"] { --gold:#1C7C36; --goldl:#0A5C22; --goldbg:rgba(28,124,54,.07); --goldbd:rgba(28,124,54,.22); }
+[data-theme="light"][data-accent="violet"] { --gold:#7519A8; --goldl:#5A0087; --goldbg:rgba(117,25,168,.07); --goldbd:rgba(117,25,168,.3); }
+[data-theme="light"][data-accent="red"] { --gold:#C5000F; --goldl:#9B0000; --goldbg:rgba(197,0,15,.06); --goldbd:rgba(197,0,15,.22); }
+[data-theme="light"][data-accent="orange"] { --gold:#A85200; --goldl:#7A3A00; --goldbg:rgba(168,82,0,.07); --goldbd:rgba(168,82,0,.22); }
+[data-theme="light"][data-accent="gold"] { --gold:#B07D00; --goldl:#8A6000; --goldbg:rgba(176,125,0,.08); --goldbd:rgba(176,125,0,.22); }
+
 </style>
 <body>
 <div class="shell">
@@ -2469,9 +3453,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
       <div class="topbar-greeting" onclick="openModal()">
-        <div class="topbar-greeting-line" id="greeting-line">Carregando...</div>
-        <div class="topbar-greeting-name" id="greeting-name">Turma 205</div>
-        <div class="topbar-meta" id="d-school">Juvenal Miller · Ensino Médio</div>
+        <div class="topbar-greeting-line" id="greeting-line">👋 Olá!</div>
+        <div class="topbar-greeting-name" id="greeting-name">Toque para configurar seu perfil</div>
+        <div class="topbar-meta" id="d-school"></div>
       </div>
       <div class="topbar-actions">
         <div class="weather-btn" id="wx-btn" onclick="openWeatherPopup()" title="Previsão do tempo">
@@ -2486,7 +3470,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </div>
         <div class="topbar-btn" id="d-turma-btn" onclick="openModal()">
-          <span id="d-turma" style="font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--gold);letter-spacing:-0.3px">205</span>
+          <span id="d-turma" style="font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--gold);letter-spacing:-0.3px">—</span>
         </div>
       </div>
     </div>
@@ -2513,7 +3497,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
         </div>
         <div class="sb-brand-text">
           <div class="sb-brand-name" id="sb-name">Turma 205</div>
-          <div class="sb-brand-sub" id="sb-sub">Juvenal Miller</div>
+          <div class="sb-brand-sub" id="sb-sub"></div>
         </div>
       </div>
       <button class="sb-toggle-btn" id="sb-toggle-btn" onclick="toggleSidebar()" title="Minimizar menu">
@@ -2637,15 +3621,125 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
           async src="//gc.zgo.at/count.js"></script>
 </div>
 
-<!-- MODAL student -->
+<!-- MODAL student — Perfil Expandido -->
 <div class="modal-overlay" id="modal-overlay" onclick="modalOvClick(event)">
-  <div class="modal-box">
+  <div class="modal-box profile-box">
     <div class="modal-handle"></div>
-    <div class="modal-title">Dados do Aluno</div>
-    <div class="field-group"><label class="field-label">Nome completo</label><input class="field-input" id="m-nome" type="text" placeholder="Digite seu nome..."/></div>
-    <div class="field-group"><label class="field-label">Escola / Instituição</label><input class="field-input" id="m-escola" type="text" placeholder="Nome da escola..."/></div>
-    <div class="field-group"><label class="field-label">Turma / Sala</label><input class="field-input" id="m-turma" type="text" placeholder="Ex: 205, 3A..."/></div>
-    <button class="modal-save-btn" onclick="saveStudent()">Salvar</button>
+
+    <!-- FIRST VISIT HINT -->
+    <div id="prof-first-visit-hint" style="display:none;align-items:center;gap:10px;background:var(--goldbg);border:1px solid var(--goldbd);border-radius:12px;padding:12px 14px;margin-bottom:4px">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span style="font-size:13px;font-weight:500;color:var(--gold);line-height:1.4">Primeira vez? Preencha seu perfil para personalizar o app.</span>
+    </div>
+
+    <!-- AVATAR HERO -->
+    <div class="prof-hero">
+      <div class="prof-avatar-wrap">
+        <div class="prof-avatar" id="prof-avatar-display">
+          <span class="prof-avatar-initials" id="prof-avatar-initials">?</span>
+          <span class="prof-avatar-emoji" id="prof-avatar-emoji" style="display:none"></span>
+        </div>
+        <button class="prof-avatar-edit-btn" onclick="toggleAvatarPicker()">
+          <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+      </div>
+      <div class="prof-hero-info">
+        <div class="prof-hero-name" id="prof-hero-name">Seu nome</div>
+        <div class="prof-hero-sub" id="prof-hero-sub">Escola · Turma</div>
+      </div>
+    </div>
+
+    <!-- AVATAR PICKER (colapsável) -->
+    <div class="prof-avatar-picker" id="prof-avatar-picker" style="display:none">
+      <!-- Cores -->
+      <div class="prof-picker-label">Cor do avatar</div>
+      <div class="prof-color-row" id="prof-color-row">
+        <button class="prof-color-dot" data-color="#FFD60A" style="background:#FFD60A" onclick="setAvatarColor('#FFD60A',this)" title="Amarelo"></button>
+        <button class="prof-color-dot" data-color="#0A84FF" style="background:#0A84FF" onclick="setAvatarColor('#0A84FF',this)" title="Azul"></button>
+        <button class="prof-color-dot" data-color="#30D158" style="background:#30D158" onclick="setAvatarColor('#30D158',this)" title="Verde"></button>
+        <button class="prof-color-dot" data-color="#BF5AF2" style="background:#BF5AF2" onclick="setAvatarColor('#BF5AF2',this)" title="Roxo"></button>
+        <button class="prof-color-dot" data-color="#FF453A" style="background:#FF453A" onclick="setAvatarColor('#FF453A',this)" title="Vermelho"></button>
+        <button class="prof-color-dot" data-color="#FF9F0A" style="background:#FF9F0A" onclick="setAvatarColor('#FF9F0A',this)" title="Laranja"></button>
+        <button class="prof-color-dot" data-color="#5AC8FA" style="background:#5AC8FA" onclick="setAvatarColor('#5AC8FA',this)" title="Ciano"></button>
+        <button class="prof-color-dot" data-color="#FF375F" style="background:#FF375F" onclick="setAvatarColor('#FF375F',this)" title="Rosa"></button>
+      </div>
+
+    </div>
+
+    <!-- SEÇÃO: Informações -->
+    <div class="prof-section-label">Informações</div>
+    <div class="field-group"><label class="field-label">Nome completo</label><input class="field-input" id="m-nome" type="text" placeholder="Digite seu nome..." oninput="updateProfileHero()"/></div>
+    <div class="field-group"><label class="field-label">Escola / Instituição</label><input class="field-input" id="m-escola" type="text" placeholder="Nome da escola..." oninput="updateProfileHero()"/></div>
+
+    <div class="prof-row-2col">
+      <div class="field-group"><label class="field-label">Turma / Sala</label><input class="field-input" id="m-turma" type="text" placeholder="Ex: 205"/></div>
+      <div class="field-group">
+        <label class="field-label">Série</label>
+        <select class="field-input field-select" id="m-serie">
+          <option value="1">1° Ano</option>
+          <option value="2">2° Ano</option>
+          <option value="3" selected>3° Ano</option>
+          <option value="ef9">9° Ano (EF)</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="prof-row-2col">
+      <div class="field-group">
+        <label class="field-label">Turno</label>
+        <select class="field-input field-select" id="m-turno">
+          <option value="manhã">Manhã</option>
+          <option value="tarde">Tarde</option>
+          <option value="noite">Noite</option>
+          <option value="integral">Integral</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Meta de média</label>
+        <div class="prof-meta-wrap">
+          <input class="field-input prof-meta-input" id="m-meta" type="number" min="1" max="10" step="0.5" placeholder="6,0"/>
+          <span class="prof-meta-unit">/10</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: Cor do app -->
+    <div class="prof-section-label">Cor do aplicativo</div>
+    <div class="prof-accent-grid" id="prof-accent-grid">
+      <button class="prof-accent-btn" data-key="gold" onclick="setAccent('gold',this)">
+        <span class="prof-accent-swatch" style="background:#FFD60A"></span>
+        <span class="prof-accent-name">Dourado</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>
+      <button class="prof-accent-btn" data-key="blue" onclick="setAccent('blue',this)">
+        <span class="prof-accent-swatch" style="background:#0A84FF"></span>
+        <span class="prof-accent-name">Azul</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>
+      <button class="prof-accent-btn" data-key="green" onclick="setAccent('green',this)">
+        <span class="prof-accent-swatch" style="background:#30D158"></span>
+        <span class="prof-accent-name">Verde</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>
+      <button class="prof-accent-btn" data-key="violet" onclick="setAccent('violet',this)">
+        <span class="prof-accent-swatch" style="background:#BF5AF2"></span>
+        <span class="prof-accent-name">Roxo</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>
+      <button class="prof-accent-btn" data-key="red" onclick="setAccent('red',this)">
+        <span class="prof-accent-swatch" style="background:#FF453A"></span>
+        <span class="prof-accent-name">Vermelho</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>
+      <button class="prof-accent-btn" data-key="orange" onclick="setAccent('orange',this)">
+        <span class="prof-accent-swatch" style="background:#FF9F0A"></span>
+        <span class="prof-accent-name">Laranja</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>
+    </div>
+
+    <button class="modal-save-btn" onclick="saveStudent()">Salvar perfil</button>
   </div>
 </div>
 
@@ -2799,7 +3893,8 @@ const ALL_TABS=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC','resultado'];
 let G={};
 SUBJECTS.forEach(s=>{G[s.id]={};ALL_TABS.forEach(t=>G[s.id][t]=[]);});
 let curTab='1T', curPage='notas', openAcc={};
-let stu={nome:'',escola:'Juvenal Miller',turma:'205'};
+let stu={nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'gold'};
+let _isFirstVisit=false;
 const todayDow=new Date().getDay();
 let schedDay=(todayDow>=1&&todayDow<=5)?todayDow:1;
 
@@ -2828,7 +3923,7 @@ function loadGrades(){
 
 /* student persist */
 function saveStudentLS(){try{localStorage.setItem('t205_stu',JSON.stringify(stu));}catch(e){}}
-function loadStudentLS(){try{const d=localStorage.getItem('t205_stu');if(d){stu=JSON.parse(d);applyStudent();}}catch(e){}}
+function loadStudentLS(){try{const d=localStorage.getItem('t205_stu');if(d){stu=JSON.parse(d);applyStudent();}else{_isFirstVisit=true;}}catch(e){_isFirstVisit=true;}}
 function updateGreeting(){
   const h=new Date().getHours();
   let line;
@@ -2837,25 +3932,81 @@ function updateGreeting(){
   else if(h>=19)line='Boa noite';
   else line='Boa madrugada';
   const firstName=(stu.nome||'').split(' ')[0]||'';
-  const greeting=firstName?`${line}, ${firstName}!`:`${line}!`;
+  const profileSet=!!(stu.nome||stu.escola||stu.turma);
+  const greeting=firstName?`${line}, ${firstName}!`:(profileSet?`${line}!`:'👋 Toque para configurar');
   const grEl=document.getElementById('greeting-line');
   const gnEl=document.getElementById('greeting-name');
   if(grEl)grEl.textContent=greeting;
-  if(gnEl)gnEl.textContent=stu.escola||'Turma 205';
+  // subtitle: escola · turma  (or prompt to edit)
+  const turmaStr=stu.turma?(' · Turma '+stu.turma):'';
+  const subtitle=stu.escola?(stu.escola+turmaStr):(profileSet?turmaStr.trim():'Toque para configurar seu perfil');
+  if(gnEl)gnEl.textContent=subtitle;
 }
 function applyStudent(){
+  const profileSet=!!(stu.nome||stu.escola||stu.turma);
   const nameEl=document.getElementById('greeting-name');
-  if(nameEl)nameEl.textContent=stu.escola||'Turma 205';
+  const turmaStr=stu.turma?(' · Turma '+stu.turma):'';
+  const subtitle=stu.escola?(stu.escola+turmaStr):(profileSet?turmaStr.trim():'Toque para configurar seu perfil');
+  if(nameEl)nameEl.textContent=subtitle;
   const schoolEl=document.getElementById('d-school');
-  if(schoolEl)schoolEl.textContent=(stu.escola||'Escola')+' · Ensino Médio';
+  const serieLabel={'1':'1° Ano','2':'2° Ano','3':'3° Ano','ef9':'9° Ano','outro':''}[stu.serie||'']||'';
+  const turnoLabel=stu.turno?(' · '+stu.turno.charAt(0).toUpperCase()+stu.turno.slice(1)):'';
+  if(schoolEl)schoolEl.textContent=stu.escola?(stu.escola+(serieLabel?' · '+serieLabel:'')+turnoLabel):(profileSet?'':' ');
   const turmaEl=document.getElementById('d-turma');
-  if(turmaEl)turmaEl.textContent=stu.turma||'205';
+  if(turmaEl)turmaEl.textContent=stu.turma||(profileSet?'':'—');
   // sync sidebar brand
   const sbName=document.getElementById('sb-name');
   const sbSub=document.getElementById('sb-sub');
-  if(sbName)sbName.textContent='Turma '+(stu.turma||'205');
-  if(sbSub)sbSub.textContent=stu.escola||'Juvenal Miller';
+  if(sbName)sbName.textContent=stu.turma?'Turma '+stu.turma:(profileSet?'Turma':'Turma 205');
+  if(sbSub)sbSub.textContent=stu.escola||(profileSet?'':'Juvenal Miller');
+  // apply avatar
+  applyAvatar();
+  // apply accent
+  applyAccent(stu.accentKey||'gold');
   updateGreeting();
+}
+
+function getInitials(nome){
+  if(!nome)return '?';
+  const parts=nome.trim().split(' ').filter(Boolean);
+  if(parts.length===1)return parts[0][0].toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+
+function applyAvatar(){
+  const av=document.getElementById('prof-avatar-display');
+  const initEl=document.getElementById('prof-avatar-initials');
+  const emojiEl=document.getElementById('prof-avatar-emoji');
+  const topbarAv=document.getElementById('topbar-avatar-inner');
+  if(!av)return;
+  const color=stu.avatarColor||'#FFD60A';
+  const isDark=(color==='#FFD60A'||color==='#30D158'||color==='#5AC8FA');
+  const txtColor=isDark?'#000000':'#FFFFFF';
+  av.style.background=color;
+  av.style.boxShadow='0 4px 20px '+color+'44';
+  if(initEl)initEl.style.color=txtColor;
+  const initials=getInitials(stu.nome);
+  if(initEl){initEl.style.display='';initEl.textContent=initials;initEl.style.color=txtColor;}
+  if(emojiEl)emojiEl.style.display='none';
+  // topbar avatar
+  const tbAv=document.querySelector('.topbar-avatar');
+  if(tbAv){
+    tbAv.style.background=color;
+    tbAv.style.border='2px solid '+color+'66';
+    tbAv.innerHTML='<span style="font-size:13px;font-weight:800;color:'+txtColor+';letter-spacing:-.5px">'+initials+'</span>';
+  }
+}
+
+const ACCENT_MAPS={
+  gold:{dark:'#FFD60A',light:'#B07D00'},
+  blue:{dark:'#0A84FF',light:'#007AFF'},
+  green:{dark:'#30D158',light:'#1C7C36'},
+  violet:{dark:'#BF5AF2',light:'#7519A8'},
+  red:{dark:'#FF453A',light:'#C5000F'},
+  orange:{dark:'#FF9F0A',light:'#A85200'}
+};
+function applyAccent(key){
+  document.documentElement.setAttribute('data-accent',key);
 }
 
 /* ══════════════════════════════════════════
@@ -4562,18 +5713,86 @@ function setSchedDay(d){schedDay=d;render(null);syncLayout();}
 
 /* ─── MODAL ─── */
 function openModal(){
+  const profileSet=!!(stu.nome||stu.escola||stu.turma);
+  const hint=document.getElementById('prof-first-visit-hint');
+  if(hint)hint.style.display=profileSet?'none':'flex';
   document.getElementById('m-nome').value=stu.nome;
   document.getElementById('m-escola').value=stu.escola;
   document.getElementById('m-turma').value=stu.turma;
+  const serieEl=document.getElementById('m-serie');
+  if(serieEl)serieEl.value=stu.serie||'3';
+  const turnoEl=document.getElementById('m-turno');
+  if(turnoEl)turnoEl.value=stu.turno||'manhã';
+  const metaEl=document.getElementById('m-meta');
+  if(metaEl)metaEl.value=stu.meta||6;
+  // avatar preview
+  syncProfilePreview();
+  // accent buttons
+  document.querySelectorAll('.prof-accent-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.key===(stu.accentKey||'gold'));
+  });
+  // color dots
+  document.querySelectorAll('.prof-color-dot').forEach(d=>{
+    d.classList.toggle('active',d.dataset.color===stu.avatarColor);
+  });
+
   document.getElementById('modal-overlay').classList.add('open');
 }
 function modalOvClick(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');}
 function saveStudent(){
-  stu.nome=document.getElementById('m-nome').value.trim()||'Aluno';
-  stu.escola=document.getElementById('m-escola').value.trim()||'Escola';
-  stu.turma=document.getElementById('m-turma').value.trim()||'205';
+  stu.nome=document.getElementById('m-nome').value.trim();
+  stu.escola=document.getElementById('m-escola').value.trim();
+  stu.turma=document.getElementById('m-turma').value.trim();
+  const serieEl=document.getElementById('m-serie');
+  if(serieEl)stu.serie=serieEl.value;
+  const turnoEl=document.getElementById('m-turno');
+  if(turnoEl)stu.turno=turnoEl.value;
+  const metaEl=document.getElementById('m-meta');
+  if(metaEl)stu.meta=parseFloat(metaEl.value)||6;
   applyStudent();saveStudentLS();
   document.getElementById('modal-overlay').classList.remove('open');
+}
+function updateProfileHero(){
+  syncProfilePreview();
+}
+function syncProfilePreview(){
+  const nome=document.getElementById('m-nome').value.trim()||'';
+  const escola=document.getElementById('m-escola').value.trim()||'';
+  const turma=document.getElementById('m-turma')?document.getElementById('m-turma').value.trim():'';
+  const heroName=document.getElementById('prof-hero-name');
+  const heroSub=document.getElementById('prof-hero-sub');
+  if(heroName)heroName.textContent=nome||'Seu nome';
+  if(heroSub)heroSub.textContent=(escola||'Escola')+(turma?' · Turma '+turma:'');
+  const av=document.getElementById('prof-avatar-display');
+  const initEl=document.getElementById('prof-avatar-initials');
+  const emojiEl=document.getElementById('prof-avatar-emoji');
+  if(!av)return;
+  const color=stu.avatarColor||'#FFD60A';
+  av.style.background=color;
+  const isDark=(color==='#FFD60A'||color==='#30D158'||color==='#5AC8FA');
+  const txtColor=isDark?'#000':'#fff';
+  const initials=getInitials(nome);
+  if(initEl){initEl.style.display='';initEl.textContent=initials;initEl.style.color=txtColor;}
+  if(emojiEl)emojiEl.style.display='none';
+}
+function toggleAvatarPicker(){
+  const p=document.getElementById('prof-avatar-picker');
+  if(!p)return;
+  const open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+}
+function setAvatarColor(color,btn){
+  stu.avatarColor=color;
+  document.querySelectorAll('.prof-color-dot').forEach(d=>d.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  syncProfilePreview();
+}
+
+function setAccent(key,btn){
+  stu.accentKey=key;
+  document.querySelectorAll('.prof-accent-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  applyAccent(key);
 }
 
 /* ─── TIMER ─── */
@@ -5855,6 +7074,8 @@ function toggleSidebar(){
 window.addEventListener('load',()=>{
   loadTheme();
   loadStudentLS();
+  applyAccent(stu.accentKey||'gold');
+  applyAvatar();
   updateGreeting();
   loadGrades();
   loadExams();
@@ -5867,6 +7088,12 @@ window.addEventListener('load',()=>{
   checkPendingNotifs();
   // toast de prova amanhã
   setTimeout(checkExamToasts, 1200);
+  // primeira visita: abre modal do perfil automaticamente
+  if(_isFirstVisit){
+    setTimeout(()=>{
+      openModal();
+    }, 600);
+  }
   // fecha o subject picker ao clicar fora
   document.addEventListener('click',e=>{
     const wrap=document.querySelector('.subj-picker-wrap');
