@@ -1629,18 +1629,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .wx-day-min{color:var(--t4);font-weight:400}
 .wx-updated{text-align:center;font-size:10px;color:var(--t4);padding:10px 0 0}
 .wx-error{padding:24px;text-align:center;font-size:13px;color:var(--t3)}
-.wx-loading{
-  padding:40px 24px;text-align:center;
-  display:flex;flex-direction:column;align-items:center;gap:14px;
-}
-.wx-loading-spinner{
-  width:36px;height:36px;border-radius:50%;
-  border:3px solid var(--line2);
-  border-top-color:var(--gold);
-  animation:wxSpin .8s linear infinite;
-}
-@keyframes wxSpin{to{transform:rotate(360deg)}}
-.wx-loading-txt{font-size:13px;color:var(--t3);font-weight:500;line-height:1.5}
 
 /* ── HOURLY FORECAST STRIP ── */
 .wx-section-title{
@@ -5481,135 +5469,11 @@ function checkExamToasts(){
 
 
 /* ═══════════════════════════════
-   WEATHER — wttr.in (free, no key)
+   WEATHER — Open-Meteo (free, no key)
    Rio Grande, RS: -32.035, -52.099
 ═══════════════════════════════ */
 let _wxData = null;
 let _wxLastFetch = 0;
-
-/* Mapa WWO (wttr.in) → WMO-equivalente para o sistema de ícones */
-function _wwoToWmo(c){
-  if(c===113)return 0;
-  if(c===116)return 2;
-  if(c===119||c===122)return 3;
-  if(c===143||c===248||c===260)return 45;
-  if(c===263||c===266)return 51;
-  if(c===281||c===284)return 53;
-  if(c===176||c===293||c===296||c===353)return 61;
-  if(c===299||c===302)return 63;
-  if(c===305||c===308||c===356)return 65;
-  if(c===311||c===314)return 65;
-  if(c===317||c===320||c===362||c===365)return 61;
-  if(c===179||c===323||c===326||c===368)return 71;
-  if(c===329||c===332)return 73;
-  if(c===227||c===335||c===338||c===371)return 75;
-  if(c===230)return 75;
-  if(c===182||c===185||c===350||c===374||c===377)return 77;
-  if(c===359)return 82;
-  if(c===392||c===395)return 75;
-  if(c===200||c===386||c===389)return 95;
-  return 3;
-}
-
-/* Descrições em PT para códigos WWO */
-function _wwoDesc(c){
-  const m={
-    113:'Céu limpo',116:'Parcialmente nublado',119:'Nublado',122:'Muito nublado',
-    143:'Névoa',248:'Neblina',260:'Neblina gelada',
-    176:'Chuva irregular',179:'Neve irregular',182:'Granizo leve',185:'Chuviscos gelados',
-    200:'Trovoadas isoladas',227:'Neve com vento',230:'Nevasca',
-    263:'Garoa leve',266:'Garoa',281:'Garoa gelada',284:'Garoa gelada forte',
-    293:'Chuva leve',296:'Chuva leve',299:'Chuva moderada',302:'Chuva moderada',
-    305:'Chuva forte',308:'Chuva muito forte',311:'Chuva gelada leve',314:'Chuva gelada',
-    317:'Granizo leve',320:'Granizo moderado',
-    323:'Neve leve',326:'Neve leve',329:'Neve moderada',332:'Neve moderada',
-    335:'Neve forte',338:'Neve muito forte',350:'Granizo',
-    353:'Pancadas leves',356:'Pancadas moderadas',359:'Pancadas fortes',
-    362:'Pancadas c/ granizo leve',365:'Pancadas c/ granizo',
-    368:'Neve fraca',371:'Neve forte',374:'Granizo leve',377:'Granizo forte',
-    386:'Chuva c/ trovões',389:'Tempestade',392:'Neve c/ trovões',395:'Tempestade de neve'
-  };
-  return m[c]||'Desconhecido';
-}
-
-/* Emoji de fase lunar */
-function _moonEmoji(phase){
-  const m={
-    'New Moon':'🌑','Waxing Crescent':'🌒','First Quarter':'🌓','Waxing Gibbous':'🌔',
-    'Full Moon':'🌕','Waning Gibbous':'🌖','Last Quarter':'🌗','Waning Crescent':'🌘'
-  };
-  return m[phase]||'🌙';
-}
-
-/* Fase lunar em PT */
-function _moonPhasePt(phase){
-  const m={
-    'New Moon':'Lua Nova','Waxing Crescent':'Crescente','First Quarter':'Quarto Crescente',
-    'Waxing Gibbous':'Gibosa Crescente','Full Moon':'Lua Cheia',
-    'Waning Gibbous':'Gibosa Minguante','Last Quarter':'Quarto Minguante','Waning Crescent':'Minguante'
-  };
-  return m[phase]||phase;
-}
-
-/* Normaliza resposta do wttr.in para a estrutura esperada pelo restante do código */
-function _normalizeWttr(w){
-  const cc=w.current_condition[0];
-  const today=w.weather[0];
-
-  // hourly — 8 slots por dia (a cada 3h: 0,300,...,2100)
-  const hTimes=[],hTemps=[],hWcodes=[],hPrec=[];
-  w.weather.forEach(day=>{
-    day.hourly.forEach(h=>{
-      const hh=parseInt(h.time)/100;
-      hTimes.push(day.date+'T'+String(hh).padStart(2,'0')+':00');
-      hTemps.push(parseInt(h.tempC));
-      hWcodes.push(_wwoToWmo(parseInt(h.weatherCode)));
-      hPrec.push(parseInt(h.chanceofrain)||0);
-    });
-  });
-
-  // daily
-  const dTimes=w.weather.map(d=>d.date);
-  const dWcodes=w.weather.map(d=>_wwoToWmo(parseInt(d.hourly[4]?.weatherCode||d.hourly[3]?.weatherCode||113)));
-  const dMax=w.weather.map(d=>parseInt(d.maxtempC));
-  const dMin=w.weather.map(d=>parseInt(d.mintempC));
-  const dPrec=w.weather.map(d=>d.hourly.reduce((s,h)=>s+parseFloat(h.precipMM||0),0));
-  const dPrecProb=w.weather.map(d=>Math.max(...d.hourly.map(h=>parseInt(h.chanceofrain)||0)));
-  const dUV=w.weather.map(d=>parseInt(d.uvIndex)||0);
-
-  // moon & astronomy
-  const astro=today.astronomy&&today.astronomy[0]||{};
-  const moon={
-    phase:astro.moon_phase||'',
-    illumination:parseInt(astro.moon_illumination)||0,
-    sunrise:astro.sunrise||'',
-    sunset:astro.sunset||''
-  };
-
-  const wmoCode=_wwoToWmo(parseInt(cc.weatherCode));
-
-  return{
-    _wttr:w,
-    _moon:moon,
-    _desc:_wwoDesc(parseInt(cc.weatherCode)),
-    current:{
-      temperature_2m:parseInt(cc.temp_C),
-      apparent_temperature:parseInt(cc.FeelsLikeC),
-      weathercode:wmoCode,
-      windspeed_10m:parseInt(cc.windspeedKmph),
-      relativehumidity_2m:parseInt(cc.humidity),
-      precipitation:parseFloat(cc.precipMM)||0,
-      surface_pressure:parseInt(cc.pressure)||null,
-      visibility:parseInt(cc.visibility)*1000
-    },
-    hourly:{time:hTimes,temperature_2m:hTemps,weathercode:hWcodes,precipitation_probability:hPrec},
-    daily:{
-      time:dTimes,weathercode:dWcodes,
-      temperature_2m_max:dMax,temperature_2m_min:dMin,
-      precipitation_sum:dPrec,uv_index_max:dUV,precipitation_probability_max:dPrecProb
-    }
-  };
-}
 
 /* ══════════════════════════════════════════════════
    WEATHER — SVG ICON SYSTEM (day + night)
@@ -5739,11 +5603,10 @@ async function fetchWeather(force){
   const now=Date.now();
   if(!force&&_wxData&&(now-_wxLastFetch)<5*60*1000)return _wxData;
   try{
-    const url='https://wttr.in/Rio+Grande,RS?format=j1';
+    const url='https://api.open-meteo.com/v1/forecast?latitude=-32.035&longitude=-52.099&current=temperature_2m,apparent_temperature,weathercode,windspeed_10m,relativehumidity_2m,precipitation,surface_pressure,visibility&hourly=temperature_2m,weathercode,precipitation_probability,windspeed_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,uv_index_max,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=5';
     const r=await fetch(url);
     if(!r.ok)throw new Error('HTTP '+r.status);
-    const raw=await r.json();
-    const d=_normalizeWttr(raw);
+    const d=await r.json();
     _wxData=d;
     _wxLastFetch=now;
     updateWeatherBtn(d);
@@ -5774,31 +5637,8 @@ function openWeatherPopup(){
   const ov=document.getElementById('wx-overlay');
   if(!ov)return;
   ov.classList.add('open');
-  if(_wxData){
-    // dados em cache: mostra imediatamente
-    _renderWeatherPopup(_wxData);
-    // atualiza em background silenciosamente
-    fetchWeather(false).then(d=>{if(d)_renderWeatherPopup(d);});
-  } else {
-    // sem cache: mostra spinner e aguarda fetch
-    _showWxLoading();
-    fetchWeather(true).then(d=>{
-      if(d) _renderWeatherPopup(d);
-      else _showWxError();
-    });
-  }
-}
-
-function _showWxLoading(){
-  const body=document.getElementById('wx-body');
-  if(!body)return;
-  body.innerHTML='<div class="wx-loading"><div class="wx-loading-spinner"></div><div class="wx-loading-txt">A previsão do tempo está<br>sendo carregada, aguarde.</div></div>';
-}
-
-function _showWxError(){
-  const body=document.getElementById('wx-body');
-  if(!body)return;
-  body.innerHTML='<div class="wx-loading"><div class="wx-loading-txt" style="color:var(--red)">⚠️ Não foi possível carregar<br>a previsão do tempo.<br><small style="color:var(--t4);font-weight:400">Verifique sua conexão e tente novamente.</small></div></div>';
+  _renderWeatherPopup(_wxData);
+  fetchWeather(false).then(d=>{if(d)_renderWeatherPopup(d);});
 }
 
 function closeWeatherPopup(){
@@ -5810,12 +5650,11 @@ function _renderWeatherPopup(d){
   const body=document.getElementById('wx-body');
   if(!body)return;
   if(!d||!d.current){
-    _showWxError();
+    body.innerHTML='<div class="wx-error">Não foi possível carregar a previsão do tempo.<br><small>Verifique sua conexão</small></div>';
     return;
   }
   const c=d.current;
-  const [iconSvg,_descFallback]=_wxCode(c.weathercode);
-  const desc=d._desc||_descFallback;
+  const [iconSvg,desc]=_wxCode(c.weathercode);
   const now=new Date();
   const DAYS_PT=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const DAYS_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -5837,14 +5676,6 @@ function _renderWeatherPopup(d){
     return[uv.toFixed(1),'var(--violet)','Extremo'];
   }
   const [uvVal,uvColor,uvLabel]=uvInfo(todayUV);
-
-  // Moon & astronomy from wttr.in
-  const moon=d._moon||{};
-  const moonEmoji=moon.phase?_moonEmoji(moon.phase):'🌙';
-  const moonPt=moon.phase?_moonPhasePt(moon.phase):'—';
-  const moonIllum=moon.illumination!=null?moon.illumination+'%':'—';
-  const sunriseVal=moon.sunrise||'—';
-  const sunsetVal=moon.sunset||'—';
 
   // Pressure color
   const pressureVal=c.surface_pressure?Math.round(c.surface_pressure):null;
@@ -5954,21 +5785,6 @@ function _renderWeatherPopup(d){
         <div class="wx-card-val">${visVal!=null?visVal+' km':'—'}</div>
         <div class="wx-card-lbl">Visibilidade</div>
       </div>
-      <div class="wx-card">
-        <div class="wx-card-icon" style="font-size:22px;line-height:1">${moonEmoji}</div>
-        <div class="wx-card-val" style="font-size:13px;letter-spacing:-.3px">${moonPt}</div>
-        <div class="wx-card-lbl">Lua · ${moonIllum}</div>
-      </div>
-      <div class="wx-card">
-        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#FB923C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><path d="M2 17h20" stroke-dasharray="2 2"/></svg></div>
-        <div class="wx-card-val" style="font-size:14px">${sunriseVal}</div>
-        <div class="wx-card-lbl">Nascer do sol</div>
-      </div>
-      <div class="wx-card">
-        <div class="wx-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><path d="M2 7h20" stroke-dasharray="2 2"/></svg></div>
-        <div class="wx-card-val" style="font-size:14px">${sunsetVal}</div>
-        <div class="wx-card-lbl">Pôr do sol</div>
-      </div>
     </div>
     ${hourlyHtml?`<div class="wx-section-title">Previsão por hora — Hoje
       <div class="wx-hour-nav">
@@ -5978,7 +5794,7 @@ function _renderWeatherPopup(d){
     </div>
     <div class="wx-hourly-wrap"><div class="wx-hour-strip" id="wx-hour-strip">${hourlyHtml}</div></div>`:''}
     ${forecastHtml?`<div class="wx-section-title">Próximos dias</div><div class="wx-forecast" style="padding-top:0">${forecastHtml}</div>`:''}
-    <div class="wx-updated">Atualizado às ${timeStr} · ${skyLabel} · wttr.in</div>
+    <div class="wx-updated">Atualizado às ${timeStr} · ${skyLabel} · Open-Meteo</div>
   `;
 }
 
