@@ -338,7 +338,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;justify-content:center;
   color:var(--t4);transition:color .15s;
 }
-.eval-edit-btn:active{color:var(--blue)}
+.eval-edit-btn:active{color:var(--gold)}
 .eval-edit-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .eval-edit-btn .ic-check{display:none}
 
@@ -415,7 +415,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   width:100%;padding:15px;
   background:var(--bg1);border:1.5px dashed var(--line2);
   border-radius:14px;
-  font-size:14px;font-weight:600;color:var(--blue);
+  font-size:14px;font-weight:600;color:var(--gold);
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
   transition:all .18s var(--ease-ios);
   margin-top:2px;
@@ -777,11 +777,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   color-scheme:var(--cs);font-family:var(--ff);
 }
 .aec-input::placeholder{color:var(--t3)}
-.aec-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
+.aec-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldbg)}
 .aec-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 /* submit */
 .add-exam-btn{
-  width:100%;padding:15px;background:var(--blue);color:#FFFFFF;
+  width:100%;padding:15px;background:var(--gold);color:#000000;
   border:none;border-radius:16px;font-size:16px;font-weight:600;
   cursor:pointer;transition:opacity .18s var(--ease-ios),transform .08s var(--ease-ios);
   letter-spacing:-0.2px;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;
@@ -813,7 +813,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .field-wrap select option{background:var(--bg2);color:var(--t1)}
 .field-wrap select:focus,
-.field-wrap input:focus{box-shadow:0 0 0 3.5px var(--blue)}
+.field-wrap input:focus{box-shadow:0 0 0 3.5px var(--goldbg);border-color:var(--gold)}
 .field-wrap input::placeholder{color:var(--t3)}
 
 /* exam list */
@@ -902,8 +902,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .field-label{display:block;font-size:12px;font-weight:600;color:var(--t2);letter-spacing:0;text-transform:none;margin-bottom:7px}
 .field-input{width:100%;padding:14px 16px;background:var(--bg2);border:0.5px solid var(--line);border-radius:13px;font-size:16px;font-weight:400;color:var(--t1);outline:none;transition:box-shadow .2s var(--ease-ios),background .2s var(--ease-ios)}
 .field-input::placeholder{color:var(--t3)}
-.field-input:focus{background:var(--bg3);box-shadow:0 0 0 3.5px var(--blue)}
-.modal-save-btn{width:100%;padding:16px;background:var(--blue);color:#FFFFFF;border:none;border-radius:16px;font-size:17px;font-weight:600;cursor:pointer;margin-top:12px;letter-spacing:-0.3px;transition:opacity .18s var(--ease-ios)}
+.field-input:focus{background:var(--bg3);box-shadow:0 0 0 3.5px var(--goldbg);border-color:var(--gold)}
+.modal-save-btn{width:100%;padding:16px;background:var(--gold);color:#000000;border:none;border-radius:16px;font-size:17px;font-weight:600;cursor:pointer;margin-top:12px;letter-spacing:-0.3px;transition:opacity .18s var(--ease-ios)}
 .modal-save-btn:active{opacity:.7}
 
 /* ── THEME TOGGLE ── */
@@ -1102,12 +1102,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   width:100%;
 }
 .slot-btn:active{transform:scale(.97)}
-.slot-btn.selected{border-color:var(--blue);background:rgba(10,132,255,.08)}
+.slot-btn.selected{border-color:var(--gold);background:var(--goldbg)}
 .slot-btn-day{font-size:12px;font-weight:700;color:var(--t1);min-width:62px;flex-shrink:0}
 .slot-btn-time{font-family:var(--ffm);font-size:12px;color:var(--t3);flex:1}
 .slot-btn-period{font-size:10px;font-weight:600;color:var(--t4);background:var(--bg3);padding:3px 7px;border-radius:5px;flex-shrink:0}
-.slot-btn.selected .slot-btn-day{color:var(--blue)}
-.slot-btn.selected .slot-btn-time{color:var(--blue)}
+.slot-btn.selected .slot-btn-day{color:var(--gold)}
+.slot-btn.selected .slot-btn-time{color:var(--gold)}
 
 .ex-date-hint{font-size:11px;margin-top:5px;min-height:16px;transition:color .2s}
 .field-wrap input[type=date].valid{box-shadow:0 0 0 3px rgba(48,209,88,.35)!important}
@@ -1125,7 +1125,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;gap:10px;cursor:pointer;
   transition:box-shadow .2s var(--ease-ios),border-color .2s;text-align:left;
 }
-.subj-picker-btn.open,.subj-picker-btn:focus-visible{border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18)}
+.subj-picker-btn.open,.subj-picker-btn:focus-visible{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldbg)}
 .subj-picker-btn-chevron{width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;margin-left:auto;flex-shrink:0;transition:transform .22s var(--ease-ios)}
 .subj-picker-btn.open .subj-picker-btn-chevron{transform:rotate(180deg)}
 .subj-picker-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:none}
@@ -1147,11 +1147,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .subj-picker-option:last-child{border-bottom:none}
 .subj-picker-option:active{background:var(--bg3)}
-.subj-picker-option.selected{background:rgba(10,132,255,.09)}
-.subj-picker-option.selected .subj-picker-opt-name{color:var(--blue);font-weight:700}
-.subj-picker-opt-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.subj-picker-option.selected{background:var(--goldbg)}
+.subj-picker-option.selected .subj-picker-opt-name{color:var(--gold);font-weight:700}
+.subj-picker-opt-dot{display:none}
 .subj-picker-opt-name{flex:1}
-.subj-picker-opt-check{width:14px;height:14px;stroke:var(--blue);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:0;flex-shrink:0}
+.subj-picker-opt-check{width:14px;height:14px;stroke:var(--gold);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;opacity:0;flex-shrink:0}
 .subj-picker-option.selected .subj-picker-opt-check{opacity:1}
 
 /* ─── DATE STRIP OUTER WRAPPER (for nav arrows on desktop) ─── */
@@ -1218,9 +1218,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .date-card:active{transform:scale(.93)}
 .date-card.selected{
-  border-color:var(--blue);
-  background:rgba(10,132,255,.12);
-  box-shadow:0 0 0 3px rgba(10,132,255,.15);
+  border-color:var(--gold);
+  background:var(--goldbg);
+  box-shadow:0 0 0 3px var(--goldbg);
 }
 .date-card-dow{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
 .date-card-num{font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--t1);line-height:1;letter-spacing:-1px}
@@ -1229,8 +1229,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--bg3);border-radius:4px;padding:2px 5px;display:inline-block}
 .date-card.selected .date-card-dow,
 .date-card.selected .date-card-num,
-.date-card.selected .date-card-mon{color:var(--blue)}
-.date-card.selected .date-card-dist{background:rgba(10,132,255,.15);color:var(--blue)}
+.date-card.selected .date-card-mon{color:var(--gold)}
+.date-card.selected .date-card-dist{background:var(--goldbg);color:var(--gold)}
 
 /* card especial — data personalizada */
 .date-card.custom-card{
@@ -1240,9 +1240,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .date-card.custom-card.selected{border-style:solid}
 .date-card-custom-icon{width:18px;height:18px;stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;margin:2px auto 6px}
-.date-card.selected .date-card-custom-icon{stroke:var(--blue)}
+.date-card.selected .date-card-custom-icon{stroke:var(--gold)}
 .date-card-custom-lbl{font-size:10px;font-weight:700;color:var(--t3);line-height:1.3}
-.date-card.selected .date-card-custom-lbl{color:var(--blue)}
+.date-card.selected .date-card-custom-lbl{color:var(--gold)}
 
 /* ─── CUSTOM DATE SECTION ─── */
 .custom-date-reveal{
@@ -1266,7 +1266,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .valid-day-chip:active{transform:scale(.93)}
 .valid-day-chip.hit{
-  background:rgba(10,132,255,.12);border-color:var(--blue);color:var(--blue);
+  background:var(--goldbg);border-color:var(--gold);color:var(--gold);
 }
 .valid-days-label{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
 
@@ -1405,7 +1405,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .bloco-search-wrap{flex:1;position:relative}
 .bloco-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .bloco-search{width:100%;padding:11px 14px 11px 36px;background:var(--bg2);border:1px solid var(--line2);border-radius:22px;font-size:14px;color:var(--t1);outline:none;transition:all .2s var(--ease-ios)}
-.bloco-search:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(10,132,255,.18);background:var(--bg3)}
+.bloco-search:focus{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldbg);background:var(--bg3)}
 .bloco-search::placeholder{color:var(--t4)}
 .bloco-new-btn{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--gold);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s var(--ease-spring),opacity .15s;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .bloco-new-btn:active{transform:scale(.88);opacity:.8}
@@ -1492,7 +1492,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   padding:20px 20px 8px;
   -webkit-overflow-scrolling:touch;
 }
-.note-title-inp{font-size:24px;font-weight:700;color:var(--t1);background:transparent;border:none;outline:none;width:100%;margin-bottom:3px;letter-spacing:-0.6px;padding:0;line-height:1.3;caret-color:var(--blue)}
+.note-title-inp{font-size:24px;font-weight:700;color:var(--t1);background:transparent;border:none;outline:none;width:100%;margin-bottom:3px;letter-spacing:-0.6px;padding:0;line-height:1.3;caret-color:var(--gold)}
 .note-title-inp:focus,.note-title-inp:focus-visible{outline:none!important;box-shadow:none!important}
 #note-content-inp:focus,#note-content-inp:focus-visible{outline:none!important;box-shadow:none!important}
 .note-title-inp::placeholder{color:var(--t4)}
@@ -1501,7 +1501,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .note-content-inp{
   flex:1;font-size:15px;line-height:1.75;color:var(--t2);background:transparent;border:none;outline:none;
   width:100%;resize:none;min-height:260px;font-family:var(--ff);padding:0 0 20px;letter-spacing:-0.1px;
-  caret-color:var(--blue);
+  caret-color:var(--gold);
 }
 .note-content-inp::placeholder{color:var(--t4)}
 /* bottom bar: word count + colors */
@@ -1614,9 +1614,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   transition:background .12s var(--ease-ios),opacity .12s;
 }
 .confirm-actions button:active{background:var(--bg3);opacity:.75}
-.confirm-cancel{color:var(--blue)}
+.confirm-cancel{color:var(--gold)}
 .confirm-ok{color:var(--red)}
-.confirm-ok.safe{color:var(--blue)}
+.confirm-ok.safe{color:var(--gold)}
 .confirm-actions .confirm-vdiv{width:0.5px;background:var(--line2);flex-shrink:0}
 
 /* ═══════════════════════════════
@@ -2675,8 +2675,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   transition: all .18s var(--ease-ios);
 }
 .grade-input:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(10,132,255,.18);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--goldbg);
   background: var(--bg1);
 }
 
@@ -2894,16 +2894,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .field-input:focus {
   background: var(--bg1);
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3.5px rgba(10,132,255,.18);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3.5px var(--goldbg);
 }
 
 .modal-save-btn {
   border-radius: var(--r-md);
   font-size: 17px; font-weight: 600;
   padding: 15px;
-  background: var(--blue);
-  box-shadow: 0 4px 16px rgba(10,132,255,.3);
+  background: var(--gold);
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
   letter-spacing: -.3px;
   transition: opacity .18s, transform .1s var(--ease-ios);
 }
@@ -2919,8 +2919,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   padding: 13px 15px;
 }
 .aec-input:focus {
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(10,132,255,.18);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--goldbg);
   background: var(--bg1);
 }
 
@@ -2953,8 +2953,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .bloco-search:focus {
   background: var(--bg1);
-  border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(10,132,255,.18);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--goldbg);
 }
 
 /* ══════════════════════════════════════
@@ -3205,7 +3205,7 @@ input, textarea, select {
    ACESSIBILIDADE / SCROLL
 ══════════════════════════════════════ */
 :focus-visible {
-  outline: 3px solid rgba(10,132,255,.6);
+  outline: 3px solid var(--goldbd);
   outline-offset: 2px;
   border-radius: 6px;
 }
@@ -4333,7 +4333,7 @@ function renderResultado(el){
   h+=`<div class="res-analytic-card">
     <div class="rac-eyebrow">Preenchidas</div>
     <div class="rac-subj">${filledSubjs} de ${total} matérias</div>
-    <div class="rac-val" style="color:var(--blue)">${completionPct}%</div>
+    <div class="rac-val" style="color:var(--gold)">${completionPct}%</div>
   </div>`;
   h+=`<div class="res-analytic-card">
     <div class="rac-eyebrow">Acima da média</div>
@@ -6473,10 +6473,10 @@ function autoSaveNote(){
     _saveCurrentNote();
     const l2=document.getElementById('note-saved-lbl');
     if(l2){l2.textContent='Salvo';l2.className='note-editor-saved ok';}
-    // update date label with new timestamp
-    const note=notes.find(n=>n.id===_editNoteId);
-    const dl=document.getElementById('note-date-lbl');
-    if(dl&&note)dl.textContent=fmtNoteDateFull(note.updatedAt||note.createdAt);
+    // update date label
+    const _noteAfterSave=notes.find(n=>n.id===_editNoteId);
+    const _dlAfterSave=document.getElementById('note-date-lbl');
+    if(_dlAfterSave&&_noteAfterSave)_dlAfterSave.textContent=fmtNoteDateFull(_noteAfterSave.updatedAt||_noteAfterSave.createdAt);
     // fade back to default after 2s
     setTimeout(()=>{const l3=document.getElementById('note-saved-lbl');if(l3&&l3.textContent==='Salvo')l3.className='note-editor-saved';},2000);
   },700);
