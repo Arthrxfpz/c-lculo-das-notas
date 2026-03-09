@@ -1493,6 +1493,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   -webkit-overflow-scrolling:touch;
 }
 .note-title-inp{font-size:24px;font-weight:700;color:var(--t1);background:transparent;border:none;outline:none;width:100%;margin-bottom:3px;letter-spacing:-0.6px;padding:0;line-height:1.3;caret-color:var(--blue)}
+.note-title-inp:focus,.note-title-inp:focus-visible{outline:none!important;box-shadow:none!important}
+#note-content-inp:focus,#note-content-inp:focus-visible{outline:none!important;box-shadow:none!important}
 .note-title-inp::placeholder{color:var(--t4)}
 .note-date-lbl{font-size:11px;color:var(--t4);margin-bottom:14px;font-family:var(--ffm)}
 .note-divider{height:0.5px;background:var(--line3);margin-bottom:14px}
@@ -6209,6 +6211,7 @@ let _editNoteId=null;
 let _noteAutoSaveTimer=null;
 let _noteSearch='';
 let _noteSort='recent'; // 'recent' | 'oldest' | 'alpha'
+let _noteDirty=false;
 
 function saveNotes(){try{localStorage.setItem('t205_notes',JSON.stringify(notes));}catch(e){}}
 function loadNotes(){try{const d=localStorage.getItem('t205_notes');if(d)notes=JSON.parse(d);}catch(e){}}
@@ -6226,6 +6229,13 @@ function fmtNoteDate(ts){
   if(diffD===1)return'Ontem';
   if(diffD<7)return`${diffD} dias atrás`;
   return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+}
+function fmtNoteDateFull(ts){
+  if(!ts)return'—';
+  const d=new Date(ts);
+  const date=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const time=d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return`Modificado em ${date} às ${time}`;
 }
 
 function _sortNotes(arr){
@@ -6384,11 +6394,12 @@ function openNoteEditor(noteId){
     saveNotes();
   }
   _editNoteId=note.id;
+  _noteDirty=false;
 
   document.getElementById('note-title-inp').value=note.title||'';
   const ce=document.getElementById('note-content-inp');
   if(ce){ce.innerHTML=note.content||'';}
-  document.getElementById('note-date-lbl').textContent=fmtNoteDate(note.updatedAt||note.createdAt);
+  document.getElementById('note-date-lbl').textContent=fmtNoteDateFull(note.updatedAt||note.createdAt);
   const savedLbl=document.getElementById('note-saved-lbl');
   if(savedLbl){savedLbl.textContent='Salvo';savedLbl.className='note-editor-saved ok';}
 
@@ -6439,19 +6450,22 @@ function _saveCurrentNote(){
   note.title=(document.getElementById('note-title-inp').value||'').trim();
   const ce2=document.getElementById('note-content-inp');
   note.content=ce2?(ce2.innerHTML||'').trim():'';
-  note.updatedAt=Date.now();
+  if(_noteDirty) note.updatedAt=Date.now();
   // discard if completely empty
   if(!note.title&&!note.content.replace(/<[^>]*>/g,'').trim()){
     notes=notes.filter(n=>n.id!==_editNoteId);
   }else{
-    // re-sort: move to front among non-pinned
-    const idx=notes.findIndex(n=>n.id===_editNoteId);
-    if(idx>0&&!note.pinned){notes.splice(idx,1);notes.unshift(note);}
+    // re-sort: move to front among non-pinned only if edited
+    if(_noteDirty){
+      const idx=notes.findIndex(n=>n.id===_editNoteId);
+      if(idx>0&&!note.pinned){notes.splice(idx,1);notes.unshift(note);}
+    }
   }
   saveNotes();
 }
 
 function autoSaveNote(){
+  _noteDirty=true;
   clearTimeout(_noteAutoSaveTimer);
   const lbl=document.getElementById('note-saved-lbl');
   if(lbl){lbl.textContent='Salvando...';lbl.className='note-editor-saved dirty';}
@@ -6459,6 +6473,10 @@ function autoSaveNote(){
     _saveCurrentNote();
     const l2=document.getElementById('note-saved-lbl');
     if(l2){l2.textContent='Salvo';l2.className='note-editor-saved ok';}
+    // update date label with new timestamp
+    const note=notes.find(n=>n.id===_editNoteId);
+    const dl=document.getElementById('note-date-lbl');
+    if(dl&&note)dl.textContent=fmtNoteDateFull(note.updatedAt||note.createdAt);
     // fade back to default after 2s
     setTimeout(()=>{const l3=document.getElementById('note-saved-lbl');if(l3&&l3.textContent==='Salvo')l3.className='note-editor-saved';},2000);
   },700);
