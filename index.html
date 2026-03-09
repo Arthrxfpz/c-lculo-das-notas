@@ -1832,6 +1832,24 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     margin-right: auto;
     box-sizing: border-box;
   }
+  /* garante que margin shorthand de elementos filhos não sobrescreva o auto de centralização */
+  .page-slide > .section-label,
+  .page-slide > .res-analytics,
+  .page-slide > .res-rows-wrap,
+  .page-slide > .resumo-subj-list,
+  .page-slide > .exam-list,
+  .page-slide > .notice,
+  .page-slide > .res-hero,
+  .page-slide > .res-trend-row,
+  .page-slide > .res-risk-card,
+  .page-slide > .subj-list,
+  .page-slide > .bloco-header,
+  .page-slide > .bloco-sort-row,
+  .page-slide > .bloco-stats-row,
+  .page-slide > .bloco-empty {
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
 
   /* ─ sidebar ─ */
   .nav {
