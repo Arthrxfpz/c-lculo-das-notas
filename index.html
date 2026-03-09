@@ -2053,6 +2053,25 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .note-editor-overlay { left:264px; }
   .exam-toast { left:calc(264px + 16px); right:16px; transform:none; max-width:460px; }
 
+  /* exam sheet: centered modal on desktop with proper scroll */
+  .exam-sheet-overlay { align-items:center; justify-content:center; }
+  .exam-sheet {
+    border-radius:22px !important;
+    border-top:none !important;
+    border:1px solid var(--line2) !important;
+    box-shadow:0 28px 80px rgba(0,0,0,.36) !important;
+    max-width:520px !important;
+    max-height:82dvh !important;
+    height:82dvh !important;
+    animation:cfPop .28s var(--ease-spring) !important;
+  }
+  .exam-sheet-body {
+    flex:1 !important;
+    min-height:0 !important;
+    overflow-y:auto !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
   /* modal centered */
   .modal-overlay { align-items:center; }
   .modal-box {
@@ -3876,9 +3895,11 @@ input, textarea, select {
   <div class="notif-box">
     <div class="notif-handle-row"><div class="notif-handle"></div></div>
     <div class="notif-header">
-      <div class="notif-header-icon">🔔</div>
+      <div class="notif-header-icon">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--violet);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      </div>
       <div class="notif-header-info">
-        <div class="notif-header-title">Lembrete de Estudo</div>
+        <div class="notif-header-title">Lembrete de Estudo <span style="display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.6px;background:var(--violetbg);color:var(--violet);border:1px solid var(--violetbd);border-radius:5px;padding:2px 6px;vertical-align:middle;margin-left:4px;text-transform:uppercase">BETA</span></div>
         <div class="notif-header-sub" id="notif-header-sub">Defina quando quer ser lembrado</div>
       </div>
       <button class="notif-close-btn" onclick="closeNotifPopup()">
@@ -4571,7 +4592,7 @@ function renderHorarios(el){
     if(p.break){list+=`<div class="sched-break${isCur?' current':''}" data-ps="${ps}" data-pe="${pe}"><div class="sched-break-line"></div><div class="sched-break-txt">${fmtHM(p.s)} — RECREIO</div><div class="sched-break-line"></div></div>`;return;}
     const cls=dd[ci];const color=SUBJ_COLORS[cls.subj]||'#505050';
     const safeSubj=cls.subj.replace(/'/g,"\\'");const safeProf=cls.prof.replace(/'/g,"\\'");const safeCol=color.replace(/'/g,"\\'");
-    const hasExamToday=isTd&&exams.some(e=>e.examDate===todayStr()&&e.subj===cls.subj);
+    const hasExamToday=isTd&&exams.some(e=>e.examDate===todayStr()&&e.subj===cls.subj&&!isExamPast(e));
     const examBadge=hasExamToday?`<span class="sched-exam-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Prova hoje</span>`:'';
     list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}${hasExamToday?' has-exam':''}" data-ps="${ps}" data-pe="${pe}" style="--accent-color:${color}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
       <div class="sched-time"><span class="start">${fmtHM(p.s)}</span><span class="end">${fmtHM(p.e)}</span></div>
@@ -4602,11 +4623,29 @@ function daysDiff(dateStr){
 
 const PT_WEEKDAYS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
 
-function msUntilExam(dateStr){
-  const target=new Date(dateStr+'T00:00:00');
+function msUntilExam(dateStr,examTime){
+  /* examTime may be stored as "17:40 – 18:30" — extract only the start time */
+  let timeStr='23:59';
+  if(examTime){
+    const m=examTime.match(/(\d{1,2}:\d{2})/);
+    if(m)timeStr=m[1];
+  }
+  const target=new Date(dateStr+'T'+timeStr+':00');
   const now=new Date();
   return Math.max(0,target-now);
 }
+
+/* Returns true if the exam has fully passed (date+time) */
+function isExamPast(e){
+  let timeStr='23:59';
+  if(e.examTime){
+    const m=e.examTime.match(/(\d{1,2}:\d{2})/);
+    if(m)timeStr=m[1];
+  }
+  const target=new Date(e.examDate+'T'+timeStr+':00');
+  return new Date()>target;
+}
+
 function fmtCd(ms){
   const totalSec=Math.floor(ms/1000);
   const d=Math.floor(totalSec/86400);
@@ -4912,9 +4951,9 @@ let provasFilter='all';
 function setProvasFilter(val){provasFilter=val;render(null);}
 
 function renderProvas(el){
-  const upcoming=exams.filter(e=>daysDiff(e.examDate)>=0);
-  const done=exams.filter(e=>daysDiff(e.examDate)<0);
-  const soon=exams.filter(e=>{const d=daysDiff(e.examDate);return d>=0&&d<=7;});
+  const upcoming=exams.filter(e=>!isExamPast(e));
+  const done=exams.filter(e=>isExamPast(e));
+  const soon=exams.filter(e=>{const d=daysDiff(e.examDate);return !isExamPast(e)&&d>=0&&d<=7;});
   const totalValor=upcoming.reduce((a,e)=>a+(parseFloat(e.valor)||0),0);
 
   let statsHtml='';
@@ -5025,11 +5064,11 @@ function renderProvas(el){
   }else if(sorted.length===0){
     listHtml=`<div class="exam-empty" style="padding:28px 16px"><strong>Nenhuma prova desta mat\u00e9ria</strong>Selecione outra mat\u00e9ria no filtro.</div>`;
   }else{
-    const upcomingExams=sorted.filter(e=>daysDiff(e.examDate)>=0);
-    const doneExams=sorted.filter(e=>daysDiff(e.examDate)<0).reverse();
+    const upcomingExams=sorted.filter(e=>!isExamPast(e));
+    const doneExams=sorted.filter(e=>isExamPast(e)).reverse();
     const buildItem=(e)=>{
       const diff=daysDiff(e.examDate);
-      const isPast=diff<0;const isToday=diff===0;const isSoon=diff>0&&diff<=3;
+      const isPast=isExamPast(e);const isToday=diff===0&&!isPast;const isSoon=diff>0&&diff<=3&&!isPast;
       let badgeCls,badgeTxt,itemCls;
       if(isPast){badgeCls='done-badge';badgeTxt='Realizada';itemCls='done';}
       else if(isToday){badgeCls='today-badge';badgeTxt='HOJE';itemCls='today-exam';}
@@ -5037,7 +5076,7 @@ function renderProvas(el){
       else{badgeCls='future-badge';badgeTxt=`${diff}d`;itemCls='';}
       const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'#505050';
       const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
-      const timeHtml=e.examTime?`<span class="exam-time-chip">\ud83d\udd50 ${escHtml(e.examTime)}</span>`:'';
+      const timeHtml=e.examTime?`<span class="exam-time-chip"><svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${escHtml(e.examTime)}</span>`:'';
       const titleHtml=e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:'';
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
       const notifScheduled=getExamNotif(e.id);
@@ -5083,7 +5122,7 @@ function openExamDetail(examId){
 
   const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'#FFD60A';
   const diff=daysDiff(e.examDate);
-  const ms=msUntilExam(e.examDate);
+  const ms=msUntilExam(e.examDate,e.examTime);
   const cd=fmtCd(ms);
   const weekDay=PT_WEEKDAYS[new Date(e.examDate+'T00:00:00').getDay()];
 
@@ -5092,19 +5131,20 @@ function openExamDetail(examId){
   document.getElementById('es-title').textContent=e.title||'Prova';
 
   let cdColor,urgLabel,urgBg;
-  if(diff===0){cdColor='var(--red)';urgLabel='🔥 Prova HOJE!';urgBg='var(--redbg)';}
-  else if(diff<=3){cdColor='var(--amber)';urgLabel='⚡ Urgente';urgBg='var(--amberbg)';}
-  else if(diff<=7){cdColor='var(--gold)';urgLabel='📅 Esta semana';urgBg='var(--goldbg)';}
-  else{cdColor='var(--green)';urgLabel='✅ Com antecedência';urgBg='var(--greenbg)';}
+  if(diff===0&&!isExamPast(e)){cdColor='var(--red)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Prova HOJE!';urgBg='var(--redbg)';}
+  else if(isExamPast(e)){cdColor='var(--t4)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Realizada';urgBg='var(--bg3)';}
+  else if(diff<=3){cdColor='var(--amber)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Urgente';urgBg='var(--amberbg)';}
+  else if(diff<=7){cdColor='var(--gold)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Esta semana';urgBg='var(--goldbg)';}
+  else{cdColor='var(--green)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Com antecedência';urgBg='var(--greenbg)';}
 
   const valorRow=e.valor?`<div class="exam-detail-row">
     <span class="edr-label">Valor</span>
-    <span class="edr-val" style="color:var(--gold)">⬡ ${parseFloat(e.valor).toFixed(1)} pontos</span>
+    <span class="edr-val" style="color:var(--gold)"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${parseFloat(e.valor).toFixed(1)} pontos</span>
   </div>`:'';
 
   const timeRow=e.examTime?`<div class="exam-detail-row">
     <span class="edr-label">Horário</span>
-    <span class="edr-val" style="color:var(--violet)">🕐 ${escHtml(e.examTime)}</span>
+    <span class="edr-val" style="color:var(--violet)"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:var(--violet);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${escHtml(e.examTime)}</span>
   </div>`:'';
 
   const body=`
@@ -5197,8 +5237,13 @@ function addExam(){
   const today=new Date();today.setHours(0,0,0,0);
   const sel=new Date(examDate+'T00:00:00');
   if(sel<today){showDup('Não é possível adicionar uma prova em data passada.');return;}
-
+  // also block if same day but time has already passed
   const examTime=window._exSlotTime||null;
+  if(sel.getTime()===today.getTime()&&examTime){
+    const [hh,mm]=examTime.split(':').map(Number);
+    const examDtFull=new Date(examDate+'T'+examTime+':00');
+    if(new Date()>examDtFull){showDup('Este horário já passou. Não é possível adicionar uma prova no passado.');return;}
+  }
 
   // ── Verificação de duplicata ──
   const dup=exams.find(e=>{
@@ -5557,8 +5602,8 @@ function _scheduleInMemoryNotif(n){
 function _fireNotif(n){
   try{
     if(!_notifSupported()||Notification.permission!=='granted')return;
-    const body=`${n.subj}${n.title?' — '+n.title:''}\nProva no dia ${fmtDateBR(n.examDate)}`;
-    new Notification('📚 Hora de estudar!',{body,tag:'exam-'+n.examId,requireInteraction:false});
+    const body=`Só vindo aqui pra te avisar que tem uma prova pra estudar...\n${n.subj}${n.title?' — '+n.title:''} · ${fmtDateBR(n.examDate)}`;
+    new Notification('📚 Hora de estudar!',{body,tag:'exam-'+n.examId,requireInteraction:false,silent:false});
     const arr=_loadNotifs();
     const idx=arr.findIndex(x=>x.examId===n.examId);
     if(idx>=0){arr[idx].fired=true;_saveNotifs(arr);}
@@ -6009,6 +6054,12 @@ function tickTimer(){
           badge.className='sched-now-badge';badge.id='sched-now-badge';
           badge.textContent='Agora';el.appendChild(badge);
         }else if(!isCur&&badge){badge.remove();}
+        // remove "Prova hoje" exam badge if exam already passed
+        const examBadgeEl=el.querySelector('.sched-exam-badge');
+        if(examBadgeEl&&isPast){
+          examBadgeEl.remove();
+          el.classList.remove('has-exam');
+        }
       });
       document.querySelectorAll('.sched-break[data-ps]').forEach(el=>{
         const ps=parseFloat(el.dataset.ps);
@@ -6022,11 +6073,21 @@ function tickTimer(){
   if(window._openExamDetailId){
     const e2=exams.find(x=>x.id===window._openExamDetailId);
     if(e2){
-      const cd2=fmtCd(msUntilExam(e2.examDate));
-      const dd=document.getElementById('esd-d');const dh=document.getElementById('esd-h');
-      const dm=document.getElementById('esd-m');const ds=document.getElementById('esd-s');
-      if(dd)dd.textContent=cd2.d;if(dh)dh.textContent=cd2.h;
-      if(dm)dm.textContent=cd2.m;if(ds)ds.textContent=cd2.s;
+      if(isExamPast(e2)){
+        /* exam passed while sheet was open — update to "Realizada" state */
+        const dd=document.getElementById('esd-d');const dh=document.getElementById('esd-h');
+        const dm=document.getElementById('esd-m');const ds=document.getElementById('esd-s');
+        if(dd)dd.textContent='—';if(dh)dh.textContent='—';
+        if(dm)dm.textContent='—';if(ds)ds.textContent='—';
+        /* refresh provas list in background */
+        if(curPage==='provas')render(null);
+      } else {
+        const cd2=fmtCd(msUntilExam(e2.examDate,e2.examTime));
+        const dd=document.getElementById('esd-d');const dh=document.getElementById('esd-h');
+        const dm=document.getElementById('esd-m');const ds=document.getElementById('esd-s');
+        if(dd)dd.textContent=cd2.d;if(dh)dh.textContent=cd2.h;
+        if(dm)dm.textContent=cd2.m;if(ds)ds.textContent=cd2.s;
+      }
     }
   }
 }
@@ -6077,8 +6138,8 @@ function openSubjSheet(subjName, prof, color){
 
   // upcoming provas for this subject
   const subjProvas=exams.filter(e=>e.subj===subjName).sort((a,b)=>a.examDate.localeCompare(b.examDate));
-  const upcoming=subjProvas.filter(e=>daysDiff(e.examDate)>=0);
-  const done=subjProvas.filter(e=>daysDiff(e.examDate)<0);
+  const upcoming=subjProvas.filter(e=>!isExamPast(e));
+  const done=subjProvas.filter(e=>isExamPast(e));
 
   // progress toward 6.0 for final
   const progressPct=final!==null?Math.min((final/6)*100,100):0;
