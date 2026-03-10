@@ -231,37 +231,37 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
    SUBJECT ACCORDION — redesign premium iOS
 ═══════════════════════════════ */
 .subj-list{
-  display:flex;flex-direction:column;gap:8px;
+  display:flex;flex-direction:column;gap:14px;
 }
 .subj-item{
   background:var(--bg1);
-  border-radius:16px;
+  border-radius:18px;
   overflow:hidden;
   transition:all .22s var(--ease-ios);
   border:1px solid var(--line2);
-  box-shadow:0 1px 8px rgba(0,0,0,.05);
+  box-shadow:0 2px 10px rgba(0,0,0,.06);
 }
 [data-theme="dark"] .subj-item{
-  box-shadow:0 1px 12px rgba(0,0,0,.22);
+  box-shadow:0 2px 14px rgba(0,0,0,.26);
 }
 .subj-item.open{
   border-color:var(--line);
-  box-shadow:0 3px 18px rgba(0,0,0,.09);
+  box-shadow:0 4px 22px rgba(0,0,0,.11);
 }
 [data-theme="dark"] .subj-item.open{
-  box-shadow:0 3px 22px rgba(0,0,0,.32);
+  box-shadow:0 4px 26px rgba(0,0,0,.36);
 }
 
 .subj-header{
   display:flex;align-items:center;gap:14px;
-  padding:16px 18px 14px;
+  padding:17px 18px 16px;
   cursor:pointer;user-select:none;
   transition:background .12s var(--ease-ios);
 }
 .subj-header:active{background:var(--bg2)}
 .subj-label{flex:1;min-width:0}
-.subj-name{font-size:15px;font-weight:700;color:var(--t1);line-height:1.3;letter-spacing:-0.3px}
-.subj-count{font-size:12px;color:var(--t3);margin-top:2px;font-weight:400;letter-spacing:-0.1px}
+.subj-name{font-size:15.5px;font-weight:700;color:var(--t1);line-height:1.3;letter-spacing:-0.35px}
+.subj-count{font-size:12px;color:var(--t3);margin-top:3px;font-weight:500;letter-spacing:-0.1px}
 .subj-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
 
 /* grade pill — iOS badge style */
@@ -541,7 +541,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   margin:18px 0 8px;padding-left:2px;
 }
 /* subject result rows */
-.res-rows-wrap{display:flex;flex-direction:column;gap:7px}
+.res-rows-wrap{display:flex;flex-direction:column;gap:10px}
 .res-row{
   background:var(--bg1);border:1px solid var(--line2);border-radius:14px;
   padding:13px 16px;
@@ -552,7 +552,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 [data-theme="dark"] .res-row{box-shadow:0 1px 7px rgba(0,0,0,.16)}
 .res-row:active{background:var(--bg2)}
-.res-row-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--accent-color,var(--t4))}
+.res-row-dot{display:none}
 .res-row-info{flex:1;min-width:0}
 .res-row-name{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;letter-spacing:-0.2px}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
@@ -579,7 +579,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;gap:10px;
 }
 .risk-row:last-child{margin-bottom:0}
-.risk-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--accent-color,var(--amber))}
+.risk-dot{display:none}
 .risk-info{flex:1;min-width:0}
 .risk-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .risk-chips{display:flex;gap:4px;flex-wrap:wrap}
@@ -602,8 +602,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   box-shadow:0 2px 14px rgba(0,0,0,.07);
 }
 [data-theme="dark"] .resumo-banner{box-shadow:0 2px 20px rgba(0,0,0,.28)}
-.resumo-banner-eyebrow{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px;display:flex;align-items:center;gap:6px}
-.resumo-banner-eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+.resumo-banner-eyebrow{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:12px}
+.resumo-banner-eyebrow .dot{display:none}
 .resumo-banner-avg{font-family:var(--ffm);font-size:58px;font-weight:700;line-height:1;letter-spacing:-3px;margin-bottom:8px}
 .resumo-banner-badge{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:5px 13px;border-radius:20px;margin-bottom:16px}
 .resumo-banner-badge.pass{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd)}
@@ -615,10 +615,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-stat-pill .sp-val{font-family:var(--ffm);font-size:18px;font-weight:700;line-height:1}
 .resumo-stat-pill .sp-lbl{font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-top:4px}
 /* progress ring decoration */
-.resumo-banner-ring{position:absolute;right:-10px;top:-10px;width:100px;height:100px;opacity:.06;border-radius:50%;border:18px solid var(--gold)}
+.resumo-banner-ring{display:none}
 
 /* subject cards */
-.resumo-subj-list{display:flex;flex-direction:column;gap:8px}
+.resumo-subj-list{display:flex;flex-direction:column;gap:14px}
 .resumo-subj-card{
   background:var(--bg1);border:1px solid var(--line2);border-radius:18px;
   overflow:hidden;animation:fadeIn .22s var(--ease-ios) both;
@@ -2743,9 +2743,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
    CARDS — Radius e sombra unificados
 ══════════════════════════════════════ */
 .subj-item {
-  border-radius: var(--r-xl);
-  border: 1.5px solid var(--line2);
-  box-shadow: var(--shadow-card);
+  border-radius: 18px;
+  border: 1px solid var(--line2);
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
   transition: all .24s var(--ease-ios);
 }
 [data-theme="dark"] .subj-item {
@@ -2753,18 +2753,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .subj-item.open {
   border-color: var(--line);
-  box-shadow: 0 2px 6px rgba(0,0,0,.08), 0 8px 28px rgba(0,0,0,.12);
+  box-shadow: 0 4px 22px rgba(0,0,0,.11);
 }
 [data-theme="dark"] .subj-item.open {
-  box-shadow: 0 2px 6px rgba(0,0,0,.3), 0 8px 32px rgba(0,0,0,.45);
+  box-shadow: 0 4px 26px rgba(0,0,0,.36);
 }
 
 .subj-header {
-  padding: 16px 18px 15px;
+  padding: 17px 18px 16px;
   gap: 14px;
 }
-.subj-name { font-size: 15px; font-weight: 700; letter-spacing: -.35px; }
-.subj-count { font-size: 11.5px; margin-top: 2px; letter-spacing: -.1px; }
+.subj-name { font-size: 15.5px; font-weight: 700; letter-spacing: -.35px; }
+.subj-count { font-size: 12px; font-weight: 500; margin-top: 3px; letter-spacing: -.1px; }
 
 /* ── Grade Tag — mais premium ── */
 .grade-tag {
@@ -3285,7 +3285,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   /* Hover lift on desktop cards */
   .subj-item:hover {
     transform: translateY(-2px) !important;
-    box-shadow: var(--shadow-card-hover) !important;
+    box-shadow: 0 6px 28px rgba(0,0,0,.13) !important;
   }
   .resumo-subj-card:hover {
     transform: translateY(-2px) !important;
@@ -4512,7 +4512,7 @@ function renderResultado(el){
     atRisk.forEach(x=>{
       const gap=Math.max(0,6-x.g).toFixed(1);
       const t1=trimGrade(x.s.id,'1T'),t2=trimGrade(x.s.id,'2T'),t3=trimGrade(x.s.id,'3T');
-      h+=`<div class="risk-row" style="--accent-color:${x.s.color}">
+      h+=`<div class="risk-row">
         <div class="risk-dot"></div>
         <div class="risk-info">
           <div class="risk-name">${x.s.name}</div>
@@ -4532,7 +4532,7 @@ function renderResultado(el){
   subjScores.forEach(({s,g,s2},i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T');
     const pct=g!==null?Math.min(g/10*100,100):0;
-    h+=`<div class="res-row ${s2}" style="animation-delay:${i*.02}s;--accent-color:${s.color}" onclick="openSubjSheet('${s.name.replace(/'/g,"\\'")}','','${s.color}')">
+    h+=`<div class="res-row ${s2}" style="animation-delay:${i*.02}s" onclick="openSubjSheet('${s.name.replace(/'/g,"\\'")}','','${s.color}')">
       <div class="res-row-dot"></div>
       <div class="res-row-info">
         <div class="res-row-name">${s.name}</div>
@@ -4588,7 +4588,7 @@ function renderResumo(el){
       : 'Dados parciais';
     h+=`<div class="resumo-subj-card" style="animation-delay:${i*.02}s" onclick="openSubjSheet('${s.name.replace(/'/g,"\'")}','','${s.color}')">
       <div class="resumo-subj-head">
-        <div class="resumo-subj-colorbar" style="background:${s.color}"></div>
+        
         <div class="resumo-subj-info">
           <div class="resumo-subj-name">${s.name}</div>
           <div class="resumo-subj-trend">${trendStr}</div>
@@ -5764,11 +5764,32 @@ function toggleEditEval(sid,tab,i){
     if(inp){inp.focus();try{inp.select();}catch(e){}}
   }
 }
-function doneEditEval(sid,tab,i){
+function doneEditEval(sid,tab,i,force){
   const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
-  if(!item)return;
-  item.classList.remove('editing');
+  if(!item)return false;
   const r=G[sid][tab][i];
+  // Validação: nota (got) e peso (total) são obrigatórios
+  if(!force && (nf(r.got)===null || nf(r.total)===null)){
+    const missing=[];
+    if(nf(r.got)===null)  missing.push(document.getElementById(`ig-${sid}-${tab}-${i}`));
+    if(nf(r.total)===null)missing.push(document.getElementById(`it-${sid}-${tab}-${i}`));
+    missing.forEach(inp=>{
+      if(!inp)return;
+      inp.style.setProperty('border-color','var(--red)','important');
+      inp.style.setProperty('color','var(--red)','important');
+      setTimeout(()=>{inp.style.removeProperty('border-color');inp.style.removeProperty('color');},1400);
+    });
+    item.animate(
+      [{transform:'translateX(-5px)'},{transform:'translateX(5px)'},
+       {transform:'translateX(-4px)'},{transform:'translateX(4px)'},
+       {transform:'translateX(0)'}],
+      {duration:320,easing:'ease-out'}
+    );
+    // foca no primeiro campo vazio
+    if(missing[0])missing[0].focus();
+    return false; // continua em edição
+  }
+  item.classList.remove('editing');
   // sync name span
   const nt=document.getElementById(`ent-${sid}-${tab}-${i}`);
   if(nt){nt.textContent=r.name||'sem nome';nt.className='eval-name-text'+(r.name?'':' ph');}
@@ -5778,6 +5799,7 @@ function doneEditEval(sid,tab,i){
   if(gs){gs.textContent=gotV!==null?fmt(gotV):'—';gs.className='eval-sc-text'+(gotV===null?' ph':'');}
   const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
   if(ts){ts.textContent=totV!==null?fmt(totV):'—';ts.className='eval-sc-text'+(totV===null?' ph':'');}
+  return true;
 }
 
 function toggleAcc(sid){
@@ -5864,10 +5886,41 @@ function _refreshEvList(sid,tab){
     const lbl=btn.querySelector('span.add-eval-lbl');
     if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)';
   }
+  // atualizar contador de avaliações em tempo real
+  const subjItem=document.getElementById(`si-${sid}`);
+  if(subjItem){
+    const countEl=subjItem.querySelector('.subj-count');
+    if(countEl){
+      const cnt=rows.length;
+      countEl.textContent=cnt===0?'Nenhuma avaliação':cnt===1?'1 avaliação':`${cnt} avaliações`;
+    }
+  }
   updateCardDisplay(sid,tab);
 }
 
 function addEv(sid,tab){
+  // Se houver alguma avaliação em edição, fecha/descarta antes de criar nova
+  const editingEl=document.querySelector('.eval-item.editing');
+  if(editingEl){
+    // parse do id: ei-{eSid}-{eTab}-{eIdx}
+    const raw=editingEl.id.slice(3);         // remove 'ei-'
+    const lastDash=raw.lastIndexOf('-');
+    const eIdx=parseInt(raw.slice(lastDash+1),10);
+    const rest=raw.slice(0,lastDash);
+    const lastDash2=rest.lastIndexOf('-');
+    const eTab=rest.slice(lastDash2+1);
+    const eSid=rest.slice(0,lastDash2);
+    const er=G[eSid]&&G[eSid][eTab]&&G[eSid][eTab][eIdx];
+    if(er&&(nf(er.got)===null||nf(er.total)===null)){
+      // avaliação incompleta — descarta silenciosamente
+      G[eSid][eTab].splice(eIdx,1);
+      saveGrades();
+      _refreshEvList(eSid,eTab);
+    }else{
+      // avaliação válida — só fecha o modo edição (force=true)
+      doneEditEval(eSid,eTab,eIdx,true);
+    }
+  }
   openAcc[sid+'_'+tab]=true;
   G[sid][tab].push({name:'',got:'',total:''});
   saveGrades();
