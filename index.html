@@ -676,7 +676,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .lb-sub{font-size:12px;color:var(--t3);line-height:1.5}
 .lb-sub strong{color:var(--t2);font-weight:600}
 .lb-timer{position:absolute;top:16px;right:18px;font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--gold);line-height:1}
-.lb-timer-label{font-size:9px;font-weight:600;color:var(--t3);text-align:right;text-transform:uppercase;letter-spacing:1px;margin-top:3px;position:absolute;right:18px;top:46px}
+.lb-timer-label{font-size:9px;font-weight:600;color:var(--goldl);text-align:right;text-transform:uppercase;letter-spacing:1px;margin-top:3px;position:absolute;right:18px;top:46px;opacity:.7}
 .lb-progress{margin-top:12px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
 .lb-progress-fill{height:100%;border-radius:1px;background:var(--gold);transition:width 1s linear}
 .live-banner.break-time .lb-progress-fill{background:var(--amber)}
@@ -773,7 +773,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .add-exam-card.open .aec-header-icon{background:var(--gold);border-color:var(--gold)}
 .aec-header-icon svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
-.add-exam-card.open .aec-header-icon svg{stroke:#000}
+.add-exam-card.open .aec-header-icon svg{stroke:var(--accent-text,#000)}
 .aec-header-title{font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-0.3px}
 .aec-header-sub{font-size:11px;color:var(--t4);margin-top:1px;transition:opacity .2s}
 .add-exam-card.open .aec-header-sub{opacity:0;height:0;overflow:hidden;margin:0}
@@ -801,7 +801,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* step rows */
 .aec-step{margin-bottom:14px}
 .aec-step-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
-.aec-step-lbl span{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--bg3);font-size:9px;font-weight:800;color:var(--t3)}
+.aec-step-lbl span{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--goldbg);font-size:9px;font-weight:800;color:var(--gold)}
 /* text inputs inside steps */
 .aec-input{
   width:100%;padding:13px 15px;background:var(--bg2);border:1.5px solid var(--line2);
@@ -927,7 +927,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 ═══════════════════════════════ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:500;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
-.modal-box{background:var(--bg1);border-top:0.5px solid var(--line2);border-radius:28px 28px 0 0;padding:22px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .4s var(--ease-sheet)}
+.modal-box{background:var(--bg1);border-top:1px solid var(--goldbd);border-radius:28px 28px 0 0;padding:22px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .4s var(--ease-sheet)}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .modal-handle{width:36px;height:4px;background:var(--bg5);border-radius:4px;margin:0 auto 24px;opacity:.5}
 .modal-title{font-size:20px;font-weight:700;color:var(--t1);margin-bottom:20px;letter-spacing:-0.4px}
@@ -1148,7 +1148,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .field-wrap input[type=date].warn-date{box-shadow:0 0 0 3px rgba(255,159,10,.35)!important}
 
 /* ─── EXAM ITEM time chip ─── */
-.exam-time-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--violet);background:var(--violetbg);border:1px solid var(--violetbd);padding:3px 7px;border-radius:4px;font-family:var(--ffm);font-weight:600}
+.exam-time-chip{display:inline-flex;align-items:center;gap:3px;font-size:11px;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:3px 7px;border-radius:4px;font-family:var(--ffm);font-weight:600}
 
 /* ─── CUSTOM SUBJECT PICKER ─── */
 .subj-picker-wrap{position:relative}
@@ -1161,7 +1161,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .subj-picker-btn.open,.subj-picker-btn:focus-visible{border-color:var(--gold);box-shadow:0 0 0 3px var(--goldbg)}
 .subj-picker-btn-chevron{width:14px;height:14px;stroke:var(--t3);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;margin-left:auto;flex-shrink:0;transition:transform .22s var(--ease-ios)}
 .subj-picker-btn.open .subj-picker-btn-chevron{transform:rotate(180deg)}
-.subj-picker-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:none}
+.subj-picker-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;display:none!important}
 .subj-picker-label{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .subj-picker-label.placeholder{color:var(--t3)}
 .subj-picker-list{
@@ -1441,7 +1441,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .bloco-search::placeholder{color:var(--t4)}
 .bloco-new-btn{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--gold);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s var(--ease-spring),opacity .15s;box-shadow:0 2px 10px rgba(0,0,0,.2)}
 .bloco-new-btn:active{transform:scale(.88);opacity:.8}
-.bloco-new-btn svg{width:18px;height:18px;stroke:#000;fill:none;stroke-width:2.5;stroke-linecap:round}
+.bloco-new-btn svg{width:18px;height:18px;stroke:var(--accent-text,#000);fill:none;stroke-width:2.5;stroke-linecap:round}
 /* sort row */
 .bloco-sort-row{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
 .bloco-sort-row::-webkit-scrollbar{display:none}
@@ -2613,7 +2613,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .custom-slot-period{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;min-width:52px}
 .custom-slot-time{font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--t1);flex:1}
 .custom-slot-check{width:18px;height:18px;border-radius:50%;background:var(--gold);display:none;align-items:center;justify-content:center;flex-shrink:0}
-.custom-slot-check svg{width:10px;height:10px;stroke:#000;fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.custom-slot-check svg{width:10px;height:10px;stroke:var(--accent-text,#000);fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
 .custom-slot-btn.selected .custom-slot-check{display:flex}
 
 /* ─── Prova hoje badge no horário ─── */
@@ -2993,7 +2993,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 [data-theme="dark"] .wx-sheet,
 [data-theme="dark"] .notif-box {
   background: #1C1C1E;
-  border-top: 0.5px solid rgba(84,84,88,.5);
+  border-top: 1px solid var(--goldbd);
 }
 
 .modal-handle,
@@ -3465,9 +3465,10 @@ input, textarea, select {
 /* ── Section label ── */
 .prof-section-label {
   font-size: 11px; font-weight: 700;
-  color: var(--t4);
+  color: var(--gold);
   text-transform: uppercase; letter-spacing: .8px;
   margin: 4px 0 10px 2px;
+  opacity: .7;
 }
 
 /* ── 2-col row ── */
@@ -4004,7 +4005,7 @@ input, textarea, select {
     <div class="notif-handle-row"><div class="notif-handle"></div></div>
     <div class="notif-header">
       <div class="notif-header-icon">
-        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--violet);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       </div>
       <div class="notif-header-info">
         <div class="notif-header-title">Lembrete de Estudo <span style="display:inline-flex;align-items:center;font-size:9px;font-weight:800;letter-spacing:.6px;background:var(--goldbg);color:var(--gold);border:1px solid var(--goldbd);border-radius:5px;padding:2px 6px;vertical-align:middle;margin-left:4px;text-transform:uppercase">BETA</span></div>
@@ -4852,7 +4853,7 @@ function pickSubj(name,color){
   const lbl=document.getElementById('ex-subj-label');
   if(lbl){lbl.textContent=name;lbl.classList.remove('placeholder');}
   const dot=document.getElementById('ex-subj-dot');
-  if(dot){dot.style.display='inline-block';dot.style.background=color;}
+  if(dot){dot.style.display='none';}
   // marca a opção selecionada
   document.querySelectorAll('.subj-picker-option').forEach(opt=>{
     const n=opt.dataset.name;
@@ -5079,12 +5080,12 @@ function renderProvas(el){
   if(exams.length>0){
     statsHtml=`<div class="provas-stats-v2">
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--greenbg)"><svg viewBox="0 0 24 24" style="stroke:var(--green)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--green)">${upcoming.length}</div><div class="ps2-lbl">Pr\u00f3ximas</div></div>
+        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${upcoming.length}</div><div class="ps2-lbl">Pr\u00f3ximas</div></div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--amber)">${soon.length}</div><div class="ps2-lbl">Esta semana</div></div>
+        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${soon.length}</div><div class="ps2-lbl">Esta semana</div></div>
       </div>
       <div class="ps2-card">
         <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
@@ -5263,7 +5264,7 @@ function openExamDetail(examId){
 
   const timeRow=e.examTime?`<div class="exam-detail-row">
     <span class="edr-label">Horário</span>
-    <span class="edr-val" style="color:var(--violet)"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:var(--violet);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${escHtml(e.examTime)}</span>
+    <span class="edr-val" style="color:var(--gold)"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${escHtml(e.examTime)}</span>
   </div>`:'';
 
   const body=`
