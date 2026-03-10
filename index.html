@@ -1761,6 +1761,38 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .wx-hour-prob{font-size:10px;font-weight:600;color:var(--blue)}
 .wx-card-icon svg{width:22px;height:22px;display:block;margin:0 auto;}
 /* Arrow nav — inline com o título, só desktop */
+/* ── Weather accordion ── */
+.wx-accordion{padding:0 18px;display:flex;flex-direction:column;gap:0}
+.wx-acc-item{border-radius:14px;overflow:hidden;border:1px solid var(--line3);margin-bottom:8px;background:var(--bg2);transition:box-shadow .2s}
+.wx-acc-item.open{box-shadow:0 2px 12px rgba(0,0,0,.07)}
+[data-theme="dark"] .wx-acc-item.open{box-shadow:0 2px 12px rgba(0,0,0,.22)}
+.wx-acc-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;transition:background .15s}
+.wx-acc-head:active{background:var(--bg3)}
+.wx-acc-day-name{font-size:14px;font-weight:700;color:var(--t1);min-width:52px;font-family:var(--ffm);letter-spacing:-.2px}
+.wx-acc-day-name.today{color:var(--gold)}
+.wx-acc-icon{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:28px;height:28px}
+.wx-acc-desc{flex:1;font-size:12px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wx-acc-precip{font-size:11px;font-weight:600;color:var(--blue);flex-shrink:0}
+.wx-acc-temps{font-family:var(--ffm);font-size:13px;font-weight:700;white-space:nowrap;display:flex;gap:5px;flex-shrink:0}
+.wx-acc-max{color:var(--t1)}
+.wx-acc-min{color:var(--t4);font-weight:400}
+.wx-acc-chevron{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;transition:transform .25s var(--ease-ios);color:var(--t4)}
+.wx-acc-chevron svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.wx-acc-item.open .wx-acc-chevron{transform:rotate(180deg);color:var(--gold)}
+.wx-acc-body{max-height:0;overflow:hidden;transition:max-height .32s var(--ease-ios)}
+.wx-acc-item.open .wx-acc-body{max-height:200px}
+.wx-acc-strip-wrap{padding:0 10px 12px;position:relative}
+.wx-acc-strip-wrap::after{content:"";position:absolute;right:10px;top:0;bottom:12px;width:28px;background:linear-gradient(to right,transparent,var(--bg2));pointer-events:none;border-radius:0 10px 10px 0}
+.wx-acc-strip{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none}
+.wx-acc-strip::-webkit-scrollbar{display:none}
+.wx-acc-nav{display:none;justify-content:flex-end;gap:4px;padding:0 10px 10px;margin-top:-4px}
+@media(min-width:768px){.wx-acc-nav{display:flex}}
+/* ── Topbar weather loading pulse ── */
+@keyframes wx-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.wx-loading-dots{display:inline-flex;gap:3px;align-items:center}
+.wx-loading-dots span{display:block;width:4px;height:4px;border-radius:50%;background:var(--t4);animation:wx-pulse 1.2s ease-in-out infinite}
+.wx-loading-dots span:nth-child(2){animation-delay:.2s}
+.wx-loading-dots span:nth-child(3){animation-delay:.4s}
 .wx-hour-nav{display:none;align-items:center;gap:4px;margin-left:auto}
 .wx-hour-nav-btn{
   width:26px;height:26px;border-radius:8px;
@@ -3114,7 +3146,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .wx-hour-item.now {
   border-color: var(--goldbd);
-  background: rgba(255,214,10,.09);
+  background: var(--goldbg);
 }
 
 /* ══════════════════════════════════════
@@ -3635,7 +3667,7 @@ input, textarea, select {
         <div class="weather-btn" id="wx-btn" onclick="openWeatherPopup()" title="Previsão do tempo">
           <span class="weather-icon" id="wx-icon"></span>
           <div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px">
-            <span class="weather-temp" id="wx-temp">…</span>
+            <span class="weather-temp" id="wx-temp"><span class="wx-loading-dots"><span></span><span></span><span></span></span></span>
             <span style="font-size:9px;font-weight:600;color:var(--t3);letter-spacing:0.1px;line-height:1">Rio Grande, RS</span>
           </div>
         </div>
@@ -3785,7 +3817,10 @@ input, textarea, select {
   <div class="wx-sheet">
     <div class="wx-handle-row"><div class="wx-handle"></div></div>
     <div id="wx-body">
-      <div class="wx-error">Carregando previsão...</div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:48px 0">
+        <div class="wx-loading-dots" style="gap:6px"><span style="width:7px;height:7px"></span><span style="width:7px;height:7px"></span><span style="width:7px;height:7px"></span></div>
+        <span style="font-size:13px;color:var(--t4);font-family:var(--ffm)">Carregando previsão...</span>
+      </div>
     </div>
   </div>
 </div>
@@ -7249,34 +7284,64 @@ function _renderWeatherPopup(d){
   const isNightNow=_isNight();
   const skyLabel=isNightNow?'☽ Noite':'☼ Dia';
 
-  // ── Hourly forecast — somente as horas de hoje até 23:00 ──
-  let hourlyHtml='';
-  if(d.hourly&&d.hourly.time){
+  // ── Build hourly HTML for a given daily index ──
+  function _buildHourly(dayIdx){
+    if(!d.hourly||!d.hourly.time)return'';
     const ht=d.hourly.time;
     const htemp=d.hourly.temperature_2m;
     const hwc=d.hourly.weathercode;
     const hprob=d.hourly.precipitation_probability;
+    const targetDate=d.daily.time[dayIdx]; // "YYYY-MM-DD"
     const nowH=now.getHours();
-    const todayStr=now.toDateString();
-    let startIdx=-1;
+    let html='';let firstIdx=-1;
     for(let i=0;i<ht.length;i++){
-      const hDate=new Date(ht[i]);
-      if(hDate.toDateString()===todayStr&&hDate.getHours()>=nowH){
-        if(startIdx===-1)startIdx=i;
-        const hh=hDate.getHours();
-        const isNow=(i===startIdx);
-        const lbl=isNow?'Agora':(hh<10?'0'+hh:hh)+'h';
-        const isNightH=(hh<6||hh>=20);
-        const hi=_wxIconHtml(hwc[i],isNightH,26);
-        const tp=Math.round(htemp[i]);
-        const prob=hprob?hprob[i]:null;
-        hourlyHtml+=`<div class="wx-hour-item${isNow?' now':''}">
-          <span class="wx-hour-lbl">${lbl}</span>
-          <div class="wx-hour-icon">${hi}</div>
-          <span class="wx-hour-temp">${tp}°</span>
-          ${prob!=null&&prob>0?`<span class="wx-hour-prob">💧${prob}%</span>`:'<span class="wx-hour-prob" style="opacity:0">—</span>'}
-        </div>`;
-      }
+      // ht[i] = "2026-03-10T20:00" — compare prefix directly, no Date() parsing
+      if(!ht[i].startsWith(targetDate))continue;
+      const hh=parseInt(ht[i].slice(11,13),10);
+      if(dayIdx===0&&hh<nowH)continue;
+      if(firstIdx===-1)firstIdx=i;
+      const isNow=(dayIdx===0&&i===firstIdx);
+      const lbl=isNow?'Agora':(hh<10?'0'+hh:hh)+'h';
+      const hi=_wxIconHtml(hwc[i],(hh<6||hh>=20),22);
+      const tp=Math.round(htemp[i]);
+      const prob=hprob?hprob[i]:null;
+      html+=`<div class="wx-hour-item${isNow?' now':''}" style="min-width:52px">
+        <span class="wx-hour-lbl">${lbl}</span>
+        <div class="wx-hour-icon">${hi}</div>
+        <span class="wx-hour-temp">${tp}°</span>
+        ${prob!=null&&prob>0?`<span class="wx-hour-prob">💧${prob}%</span>`:'<span class="wx-hour-prob" style="opacity:0">—</span>'}
+      </div>`;
+    }
+    return html;
+  }
+
+  // ── Build accordion rows for all days ──
+  let accordionHtml='';
+  if(d.daily&&d.daily.time){
+    const numDays=Math.min(5,d.daily.time.length);
+    for(let i=0;i<numDays;i++){
+      const dt=new Date(d.daily.time[i]+'T12:00:00');
+      const dayLabel=i===0?'Hoje':i===1?'Amanhã':DAYS_SHORT[dt.getDay()];
+      const isToday=(i===0);
+      const fi=_wxIconHtml(d.daily.weathercode[i],false,24);
+      const fd=_WX_DESCS[d.daily.weathercode[i]]||'—';
+      const mx=Math.round(d.daily.temperature_2m_max[i]);
+      const mn=Math.round(d.daily.temperature_2m_min[i]);
+      const precProb=d.daily.precipitation_probability_max?d.daily.precipitation_probability_max[i]:null;
+      const prec=d.daily.precipitation_sum?d.daily.precipitation_sum[i]:0;
+      const precipTxt=(precProb!=null&&precProb>0)?`<span class="wx-acc-precip">💧${precProb}%</span>`:(prec>0?`<span class="wx-acc-precip">💧${prec.toFixed(1)}mm</span>`:'');
+      const hourlyHtml=_buildHourly(i);
+      accordionHtml+=`<div class="wx-acc-item${isToday?' open':''}" id="wx-acc-${i}">
+        <div class="wx-acc-head" onclick="wxToggleAcc(${i})">
+          <span class="wx-acc-day-name${isToday?' today':''}">${dayLabel}</span>
+          <div class="wx-acc-icon">${fi}</div>
+          <span class="wx-acc-desc">${fd}</span>
+          ${precipTxt}
+          <div class="wx-acc-temps"><span class="wx-acc-max">${mx}°</span><span class="wx-acc-min">${mn}°</span></div>
+          <div class="wx-acc-chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+      ${hourlyHtml?`<div class="wx-acc-body" id="wx-acc-body-${i}"><div class="wx-acc-strip-wrap"><div class="wx-acc-strip" id="wx-acc-strip-${i}">${hourlyHtml}</div></div><div class="wx-acc-nav"><button class="wx-hour-nav-btn" onclick="wxAccScroll(${i},-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button><button class="wx-hour-nav-btn" onclick="wxAccScroll(${i},1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button></div></div>`:''}
+      </div>`;
     }
   }
 
@@ -7326,16 +7391,15 @@ function _renderWeatherPopup(d){
         <div class="wx-card-lbl">Visibilidade</div>
       </div>
     </div>
-    ${hourlyHtml?`<div class="wx-section-title">Previsão por hora — Hoje
-      <div class="wx-hour-nav">
-        <button class="wx-hour-nav-btn" onclick="wxHourScroll(-1)" aria-label="Anterior"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <button class="wx-hour-nav-btn" onclick="wxHourScroll(1)" aria-label="Próximo"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
-      </div>
-    </div>
-    <div class="wx-hourly-wrap"><div class="wx-hour-strip" id="wx-hour-strip">${hourlyHtml}</div></div>`:''}
-    ${forecastHtml?`<div class="wx-section-title">Próximos dias</div><div class="wx-forecast" style="padding-top:0">${forecastHtml}</div>`:''}
+    ${accordionHtml?`<div class="wx-section-title" style="margin-top:4px">Previsão</div><div class="wx-accordion">${accordionHtml}</div>`:''}
     <div class="wx-updated">Atualizado às ${timeStr} · ${skyLabel} · Open-Meteo</div>
   `;
+
+  // scroll "Agora" into view on today's strip
+  setTimeout(()=>{
+    const s=document.getElementById('wx-acc-strip-0');
+    if(s){const n=s.querySelector('.now');if(n)n.scrollIntoView({inline:'start',block:'nearest'});}
+  },80);
 }
 
 
@@ -7420,6 +7484,21 @@ new ResizeObserver(syncLayout).observe(document.getElementById('top-fixed'));
 setInterval(tickTimer,1000);
 setInterval(checkSchedRefresh,10000);
 setInterval(()=>fetchWeather(false),5*60*1000);
+
+function wxToggleAcc(idx){
+  const item=document.getElementById('wx-acc-'+idx);
+  if(!item)return;
+  const wasOpen=item.classList.contains('open');
+  // Close all others
+  document.querySelectorAll('.wx-acc-item').forEach(el=>el.classList.remove('open'));
+  // Toggle this one
+  if(!wasOpen)item.classList.add('open');
+}
+
+function wxAccScroll(idx,dir){
+  const s=document.getElementById('wx-acc-strip-'+idx);
+  if(s)s.scrollBy({left:dir*220,behavior:'smooth'});
+}
 
 function wxHourScroll(dir){
   const strip=document.getElementById('wx-hour-strip');
