@@ -304,14 +304,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* card base */
 .eval-item{
-  background:var(--bg1);border-radius:14px;overflow:hidden;
+  background:var(--bg1);border-radius:14px;overflow:visible;
   border:1px solid var(--line2);
   animation:fadeIn .2s var(--ease-ios) both;
 }
 [data-theme="dark"] .eval-item{box-shadow:0 1px 10px rgba(0,0,0,.18)}
 
 /* ── linha de cima: nome + ações ── */
-.eval-head{display:flex;align-items:center;padding:0 0 0 16px;min-height:46px}
+.eval-head{display:flex;align-items:center;padding:0 0 0 16px;min-height:46px;border-radius:14px 14px 0 0;overflow:hidden}
 
 /* nome — texto estático por padrão */
 .eval-name-text{
@@ -333,7 +333,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* botão lápis */
 .eval-edit-btn{
-  flex-shrink:0;width:38px;min-height:46px;
+  flex-shrink:0;min-width:38px;min-height:46px;padding:0 10px;
   background:transparent;border:none;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   color:var(--t4);transition:color .15s;
@@ -341,6 +341,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .eval-edit-btn:active{color:var(--gold)}
 .eval-edit-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .eval-edit-btn .ic-check{display:none}
+.eval-edit-btn .ic-ok{
+  font-size:11px;font-weight:800;color:var(--gold);letter-spacing:.5px;
+  background:var(--goldbg);border:1.5px solid var(--goldbd);
+  border-radius:8px;padding:4px 9px;line-height:1;
+  font-family:var(--ff);
+}
 
 /* botão lixo */
 .eval-rm-btn{
@@ -403,6 +409,32 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .eval-item.editing .eval-edit-btn .ic-check{display:inline}
 .eval-item.editing .eval-sc-text{display:none}
 .eval-item.editing .eval-sc-inp{display:block}
+
+/* ── badge "Editando" ── */
+.eval-item{position:relative}
+.eval-editing-badge{
+  display:none;align-items:center;gap:5px;
+  position:absolute;top:-13px;left:12px;
+  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:var(--gold);color:#000;
+  padding:3px 10px 3px 8px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+  pointer-events:none;white-space:nowrap;
+}
+@keyframes badgePop{
+  from{opacity:0;transform:translateY(4px) scale(.88)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+.eval-item.editing .eval-editing-badge{
+  display:flex;
+  animation:badgePop .22s var(--ease-spring) both;
+}
+.eval-item.editing{
+  border-color:var(--goldbd);
+  box-shadow:0 0 0 2.5px var(--goldbg),0 3px 18px rgba(0,0,0,.12);
+  margin-top:14px;
+  transition:margin-top .2s var(--ease-ios),border-color .2s,box-shadow .2s;
+}
 
 /* cabeçalho da lista */
 .eval-list-header{display:flex;align-items:center;padding:0 4px 5px 2px}
@@ -1796,6 +1828,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     gap:16px;
     max-width:760px;
     margin-left:auto; margin-right:auto;
+    transition:padding .3s var(--ease-ios), max-width .3s var(--ease-ios);
   }
   .topbar-avatar { display:none; }         /* avatar fica na sidebar */
   .topbar-hamburger { display:none; }      /* escondido quando sidebar aberta */
@@ -2013,28 +2046,54 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .sb-expand-arrow { width:14px; height:14px; stroke:var(--t3); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
 
   /* collapsed state */
+  /* ── Collapsed: sidebar some, topbar vira mobile ── */
   .nav.collapsed {
     width:0; min-width:0; padding:0;
     overflow:hidden; border-right-color:transparent; box-shadow:none;
   }
   .shell.collapsed { padding-left:0; }
   .top-fixed.collapsed { left:0; width:100%; transform:none; }
-  /* hambúrguer aparece quando colapsado */
-  .topbar-collapsed-avatar:hover { opacity:.82; }
-  .topbar-collapsed-avatar:active { transform:scale(.9); opacity:.6; }
-  .shell.collapsed .topbar-collapsed-avatar { display:flex; }
 
-  .shell.collapsed .topbar-hamburger,
-  .topbar-hamburger.visible {
+  /* topbar colapsado: padding igual ao mobile */
+  .shell.collapsed .topbar {
+    padding:10px 16px 10px;
+    max-width:none;
+    margin:0;
+  }
+
+  /* avatar de perfil: aparece (igual mobile) */
+  .shell.collapsed .topbar-avatar { display:flex; }
+
+  /* greeting: clicável e mostra subtítulo (igual mobile) */
+  .shell.collapsed .topbar-greeting { pointer-events:auto; cursor:pointer; }
+  .shell.collapsed .topbar-greeting-line { font-size:13px; font-weight:500; color:var(--t2); letter-spacing:-0.1px; }
+  .shell.collapsed .topbar-greeting-name { display:block; }
+
+  /* clima aparece de volta */
+  .shell.collapsed #wx-btn { display:flex; }
+
+  /* botão hambúrguer vira botão "expandir menu" — aparece na esquerda */
+  .shell.collapsed .topbar-hamburger {
     display:flex !important;
+    background:var(--goldbg);
+    border-color:var(--goldbd);
+    order:-1;
     animation:sbHamIn .22s var(--ease-spring) both;
   }
+  .shell.collapsed .topbar-hamburger span { background:var(--gold); }
   @keyframes sbHamIn {
     from { opacity:0; transform:scale(.8); }
     to   { opacity:1; transform:scale(1); }
   }
-  /* collapsed: topbar-greeting volta a ser clicável */
-  .shell.collapsed .topbar-greeting { pointer-events:auto; cursor:pointer; }
+
+  /* topbar-meta (série+turno) e turma-btn NÃO aparecem — greeting-name já tem escola·turma */
+  .shell.collapsed #d-turma-btn { display:none; }
+  /* tabs ficam com padding mobile quando collapsed */
+  .shell.collapsed .tabs-strip {
+    padding:0 16px 12px;
+    max-width:none;
+    margin:0;
+  }
 
   .note-editor-overlay.collapsed,
   .wx-overlay.collapsed,
@@ -5708,6 +5767,10 @@ function _buildOneEvalHtml(sid,tab,i){
   const gotTxt=gotV!==null?fmt(gotV):'—';
   const totTxt=totV!==null?fmt(totV):'—';
   return `<div class="eval-item" id="ei-${sid}-${tab}-${i}">
+    <div class="eval-editing-badge">
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+      Editando
+    </div>
     <div class="eval-head">
       <span class="eval-name-text${r.name?'':' ph'}" id="ent-${sid}-${tab}-${i}">${escHtml(r.name||'sem nome')}</span>
       <input class="eval-name-inp" id="eni-${sid}-${tab}-${i}" type="text" placeholder="Nome da avaliação"
@@ -5715,7 +5778,7 @@ function _buildOneEvalHtml(sid,tab,i){
         oninput="updF('${sid}','${tab}',${i},'name',this.value)">
       <button class="eval-edit-btn" onclick="toggleEditEval('${sid}','${tab}',${i})" title="Editar">
         <svg class="ic-pencil" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
-        <svg class="ic-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        <span class="ic-check ic-ok">OK</span>
       </button>
       <button class="eval-rm-btn" onclick="rmEv('${sid}','${tab}',${i})" title="Remover">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -5836,13 +5899,6 @@ function updF(sid,tab,i,field,val){
     if(txt){txt.textContent=val||'sem nome';txt.className='eval-name-text'+(val?'':' ph');}
   }
   updateCardDisplay(sid,tab);
-  // auto-fechar quando obtida + máx estiverem preenchidos E o nome já estiver ok
-  // (não dispara enquanto o usuário ainda está digitando no campo nome)
-  const rr=G[sid][tab][i];
-  if(field!=='name'&&rr.name&&rr.name.trim()&&nf(rr.got)!==null&&nf(rr.total)!==null){
-    const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
-    if(item&&item.classList.contains('editing'))doneEditEval(sid,tab,i);
-  }
 }
 
 function updateCardDisplay(sid,tab){
