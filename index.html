@@ -355,6 +355,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   font-family:var(--ff);
 }
 
+/* botão cancelar edição — só aparece em modo edição */
+.eval-cancel-btn{
+  flex-shrink:0;min-width:38px;min-height:46px;padding:0 10px;
+  background:transparent;border:none;border-left:1px solid var(--line3);cursor:pointer;
+  display:none;align-items:center;justify-content:center;
+  color:var(--t4);transition:color .15s,background .15s;
+}
+.eval-cancel-btn:active{color:var(--t2);background:var(--bg2)}
+.eval-cancel-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.eval-item.editing .eval-cancel-btn{display:flex}
+
 /* botão lixo */
 .eval-rm-btn{
   flex-shrink:0;width:38px;min-height:46px;
@@ -417,6 +428,47 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .eval-item.editing .eval-edit-btn .ic-check{display:inline}
 .eval-item.editing .eval-sc-text{display:none}
 .eval-item.editing .eval-sc-inp{display:block}
+.eval-item.editing .eval-rm-btn{display:none!important}
+
+/* ── mensagem de erro inline ── */
+.eval-error-msg{
+  display:none;align-items:center;gap:7px;
+  margin:0 12px 10px;padding:9px 13px;
+  background:var(--redbg);border:1px solid var(--redbd);border-radius:10px;
+  font-size:12px;font-weight:600;color:var(--red);letter-spacing:-0.1px;
+  animation:errPop .22s var(--ease-spring) both;
+}
+.eval-error-msg svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;flex-shrink:0}
+@keyframes errPop{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* ── tipo segmented control (Prova / Trabalho) ── */
+.tipo-seg{
+  display:flex;gap:0;background:var(--bg2);border:1px solid var(--line2);
+  border-radius:11px;padding:3px;overflow:hidden;margin-bottom:14px;
+}
+.tipo-seg-btn{
+  flex:1;padding:8px 10px;font-size:13px;font-weight:600;letter-spacing:-0.15px;
+  border:none;background:transparent;color:var(--t2);cursor:pointer;border-radius:9px;
+  transition:background .18s var(--ease-ios),color .18s,box-shadow .18s;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.tipo-seg-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tipo-seg-btn.active{
+  background:var(--bg1);color:var(--t1);font-weight:700;
+  box-shadow:0 1px 6px rgba(0,0,0,.18),0 0 0 0.5px rgba(0,0,0,.08);
+}
+[data-theme="dark"] .tipo-seg-btn.active{background:var(--bg3);box-shadow:0 1px 6px rgba(0,0,0,.4),0 0 0 0.5px rgba(255,255,255,.06)}
+
+/* exam tipo chip na lista */
+.exam-tipo-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+  padding:3px 8px;border-radius:7px;
+  background:var(--violetbg);color:var(--violet);border:1px solid var(--violetbd);
+}
+.exam-tipo-chip.prova{background:var(--redbg);color:var(--red);border-color:var(--redbd)}
+.exam-tipo-chip.trabalho{background:var(--violetbg);color:var(--violet);border-color:var(--violetbd)}
+.exam-tipo-chip svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
 
 /* ── badge "Editando" ── */
 .eval-item{position:relative}
@@ -1657,39 +1709,44 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* ── CUSTOM CONFIRM POPUP ── */
 .confirm-overlay{
   display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  z-index:2000;align-items:center;justify-content:center;
-  padding:24px;
+  background:rgba(0,0,0,.48);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);
+  z-index:2000;align-items:flex-end;justify-content:center;
+  padding:0 0 calc(24px + env(safe-area-inset-bottom));
 }
-.confirm-overlay.open{display:flex;animation:cfFade .22s var(--ease-ios)}
+.confirm-overlay.open{display:flex;animation:cfFade .2s var(--ease-ios)}
 @keyframes cfFade{from{opacity:0}to{opacity:1}}
 .confirm-box{
-  background:var(--bg1);border:0.5px solid var(--line2);
-  border-radius:22px;width:100%;max-width:320px;
-  overflow:hidden;
-  animation:cfPop .32s var(--ease-spring);
+  background:var(--bg1);border:0.5px solid var(--line);
+  border-radius:24px;width:100%;max-width:440px;
+  overflow:hidden;margin:0 16px;
+  animation:cfSlide .34s var(--ease-spring);
+  box-shadow:0 40px 120px rgba(0,0,0,.5),0 0 0 0.5px rgba(255,255,255,.04);
 }
-@keyframes cfPop{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+[data-theme="light"] .confirm-box{
+  box-shadow:0 20px 60px rgba(20,40,100,.22),0 0 0 0.5px rgba(0,0,0,.06);
+}
+@keyframes cfSlide{from{opacity:0;transform:translateY(32px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .confirm-icon{
-  width:52px;height:52px;border-radius:16px;
+  width:54px;height:54px;border-radius:18px;
   display:flex;align-items:center;justify-content:center;
-  margin:24px auto 14px;
+  margin:26px auto 14px;
 }
 .confirm-icon svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.confirm-icon.danger{background:var(--redbg);color:var(--red)}
-.confirm-icon.warn{background:var(--amberbg);color:var(--amber)}
-.confirm-title{font-size:17px;font-weight:700;color:var(--t1);text-align:center;padding:0 20px 6px;letter-spacing:-0.3px}
-.confirm-msg{font-size:14px;color:var(--t2);text-align:center;padding:0 20px 22px;line-height:1.55}
+.confirm-icon.danger{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
+.confirm-icon.warn{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
+.confirm-icon.info{background:var(--goldbg);color:var(--gold);border:1px solid var(--goldbd)}
+.confirm-title{font-size:17px;font-weight:700;color:var(--t1);text-align:center;padding:0 24px 7px;letter-spacing:-0.35px}
+.confirm-msg{font-size:14px;color:var(--t2);text-align:center;padding:0 24px 24px;line-height:1.6}
 .confirm-divider{height:0.5px;background:var(--line2)}
 .confirm-actions{display:flex}
 .confirm-actions button{
-  flex:1;padding:16px 12px;font-size:16px;font-weight:600;
+  flex:1;padding:17px 12px;font-size:16px;font-weight:600;
   background:transparent;border:none;cursor:pointer;
   font-family:var(--ff);letter-spacing:-0.2px;
   transition:background .12s var(--ease-ios),opacity .12s;
 }
 .confirm-actions button:active{background:var(--bg3);opacity:.75}
-.confirm-cancel{color:var(--gold)}
+.confirm-cancel{color:var(--t2)!important;font-weight:500!important}
 .confirm-ok{color:var(--red)}
 .confirm-ok.safe{color:var(--gold)}
 .confirm-actions .confirm-vdiv{width:0.5px;background:var(--line2);flex-shrink:0}
@@ -2595,12 +2652,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .confirm-overlay {
     align-items:center;
     justify-content:center;
+    padding-bottom:0;
   }
   .confirm-box {
-    border-radius:20px;
+    border-radius:24px;
     max-width:360px;
+    margin:0;
     width:calc(100% - 48px);
-    animation:cfPop .28s var(--ease-spring);
+    animation:cfSlide .28s var(--ease-spring);
     box-shadow:0 24px 72px rgba(0,0,0,.32);
   }
 
@@ -3163,25 +3222,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* ══════════════════════════════════════
    CONFIRM POPUP
 ══════════════════════════════════════ */
-.confirm-box {
-  border-radius: 22px;
-  border: 1.5px solid var(--line2);
-  box-shadow: 0 32px 96px rgba(0,0,0,.4);
-}
 [data-theme="dark"] .confirm-box {
   background: #1C1C1E;
+  border-color: rgba(255,255,255,.10);
 }
-.confirm-title { font-size: 17px; font-weight: 700; letter-spacing: -.35px; }
-.confirm-msg { font-size: 14px; line-height: 1.5; color: var(--t2); }
-.confirm-icon {
-  width: 50px; height: 50px;
-  border-radius: 14px;
-  margin: 22px auto 12px;
-}
-.confirm-actions button {
-  font-size: 17px; font-weight: 600;
-  padding: 16px 12px;
-  letter-spacing: -.2px;
+[data-theme="light"] .confirm-box {
+  background: #FFFFFF;
 }
 
 /* ══════════════════════════════════════
@@ -4455,7 +4501,7 @@ function applyAccent(key){
 const nf=v=>{const n=parseFloat(String(v).replace(',','.'));return isNaN(n)?null:n};
 
 function tabScore(sid,tab){
-  const rows=G[sid][tab];
+  const rows=G[sid][tab].filter(r=>!r._isNew);
   if(!rows.length)return null;
   let total=0,hasAny=false;
   rows.forEach(r=>{
@@ -4901,7 +4947,9 @@ function renderHorarios(el){
     const cls=dd[ci];const color=SUBJ_COLORS[cls.subj]||'#505050';
     const safeSubj=cls.subj.replace(/'/g,"\\'");const safeProf=cls.prof.replace(/'/g,"\\'");const safeCol=color.replace(/'/g,"\\'");
     const hasExamToday=isTd&&exams.some(e=>e.examDate===todayStr()&&e.subj===cls.subj&&!isExamPast(e));
-    const examBadge=hasExamToday?`<span class="sched-exam-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Prova hoje</span>`:'';
+    const examToday=hasExamToday?exams.find(e=>e.examDate===todayStr()&&e.subj===cls.subj&&!isExamPast(e)):null;
+    const examBadgeLabel=examToday?.tipo==='trabalho'?'Trabalho hoje':'Prova hoje';
+    const examBadge=hasExamToday?`<span class="sched-exam-badge"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${examBadgeLabel}</span>`:'';
     list+=`<div class="sched-item${isCur?' current':''}${isPast?' past':''}${hasExamToday?' has-exam':''}" data-ps="${ps}" data-pe="${pe}" onclick="openSubjSheet('${safeSubj}','${safeProf}','${safeCol}')">
       <div class="sched-time"><span class="start">${fmtHM(p.s)}</span><span class="end">${fmtHM(p.e)}</span></div>
       <div class="sched-divider"></div>
@@ -5320,6 +5368,17 @@ function renderProvas(el){
     <div class="aec-body-wrap">
       <div class="aec-body-inner">
         <div class="aec-body">
+          <div class="tipo-seg" id="ex-tipo-seg">
+            <button class="tipo-seg-btn active" id="tipo-btn-prova" type="button" onclick="setExamTipo('prova')">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Prova
+            </button>
+            <button class="tipo-seg-btn" id="tipo-btn-trabalho" type="button" onclick="setExamTipo('trabalho')">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Trabalho
+            </button>
+          </div>
+          <input type="hidden" id="ex-tipo" value="prova">
           <div class="aec-step">
             <div class="aec-step-lbl"><span>1</span>Matéria</div>
             <div class="subj-picker-wrap">
@@ -5346,16 +5405,16 @@ function renderProvas(el){
             <input class="aec-input" type="number" id="ex-valor" min="0" step="0.5" placeholder="Pontos">
           </div>
           <div class="aec-step" style="margin-top:14px">
-            <div class="aec-step-lbl"><span>5</span>Conteúdo da prova <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
-            <textarea class="aec-input" id="ex-conteudo" rows="3" placeholder="Conteúdo da prova" style="resize:none;line-height:1.55;min-height:80px"></textarea>
+            <div class="aec-step-lbl"><span>5</span>Conteúdo <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <textarea class="aec-input" id="ex-conteudo" rows="3" placeholder="Conteúdo..." style="resize:none;line-height:1.55;min-height:80px"></textarea>
           </div>
           <div class="aec-dup-banner" id="aec-dup-banner">
             <span class="aec-dup-banner-icon">⚠️</span>
             <span class="aec-dup-banner-text" id="aec-dup-banner-text">Já existe uma prova dessa matéria nesse dia e horário.</span>
           </div>
-          <button class="add-exam-btn" onclick="addExam()">
+          <button class="add-exam-btn" id="add-exam-btn-main" onclick="addExam()">
             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Adicionar Prova
+            <span id="add-exam-btn-lbl">Adicionar Prova</span>
           </button>
         </div>
       </div>
@@ -5383,6 +5442,8 @@ function renderProvas(el){
       else{badgeCls='future-badge';badgeTxt=`${diff}d`;itemCls='';}
       const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'#505050';
       const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
+      const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
+      const tipoChip=`<span class="exam-tipo-chip ${e.tipo==='trabalho'?'trabalho':'prova'}">${tipoLabel}</span>`;
       const timeHtml=e.examTime?`<span class="exam-time-chip"><svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${escHtml(e.examTime)}</span>`:'';
       const titleHtml=e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:'';
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
@@ -5393,6 +5454,7 @@ function renderProvas(el){
         <div class="exam-info">
           <div class="exam-subj">${escHtml(e.subj)}</div>${titleHtml}
           <div class="exam-meta-row">
+            ${tipoChip}
             <div class="exam-date-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>${fmtDateBR(e.examDate)}</span></div>
             ${valorHtml}${timeHtml}
           </div>
@@ -5435,15 +5497,21 @@ function openExamDetail(examId){
 
   document.getElementById('es-color-bar').style.background=color;
   document.getElementById('es-subj').textContent=e.subj;
-  document.getElementById('es-title').textContent=e.title||'Prova';
+  const tipoDefault=e.tipo==='trabalho'?'Trabalho':'Prova';
+  document.getElementById('es-title').textContent=e.title||tipoDefault;
 
   let cdColor,urgLabel,urgBg;
-  if(diff===0&&!isExamPast(e)){cdColor='var(--red)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> Prova HOJE!';urgBg='var(--redbg)';}
+  const tipoHoje=e.tipo==='trabalho'?'Trabalho HOJE!':'Prova HOJE!';
+  if(diff===0&&!isExamPast(e)){cdColor='var(--red)';urgLabel=`<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> ${tipoHoje}`;urgBg='var(--redbg)';}
   else if(isExamPast(e)){cdColor='var(--t4)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg> Realizada';urgBg='var(--bg3)';}
   else if(diff<=3){cdColor='var(--amber)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Urgente';urgBg='var(--amberbg)';}
   else if(diff<=7){cdColor='var(--gold)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Esta semana';urgBg='var(--goldbg)';}
   else{cdColor='var(--green)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Com antecedência';urgBg='var(--greenbg)';}
 
+  const tipoRow=`<div class="exam-detail-row">
+    <span class="edr-label">Tipo</span>
+    <span class="edr-val"><span class="exam-tipo-chip ${e.tipo==='trabalho'?'trabalho':'prova'}">${tipoDefault}</span></span>
+  </div>`;
   const valorRow=e.valor?`<div class="exam-detail-row">
     <span class="edr-label">Valor</span>
     <span class="edr-val">${parseFloat(e.valor).toFixed(1)} pts</span>
@@ -5484,6 +5552,7 @@ function openExamDetail(examId){
         <span class="edr-label">Matéria</span>
         <span class="edr-val">${escHtml(e.subj)}</span>
       </div>
+      ${tipoRow}
       <div class="exam-detail-row">
         <span class="edr-label">Dia da semana</span>
         <span class="edr-val">${weekDay}</span>
@@ -5502,7 +5571,7 @@ function openExamDetail(examId){
     ${e.conteudo?`<div class="edc-conteudo">
       <div class="edc-conteudo-header">
         <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        Conteúdo da Prova
+        ${e.tipo==='trabalho'?'Conteúdo do Trabalho':'Conteúdo da Prova'}
       </div>
       <ul class="edc-topic-list">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map((t,i)=>`<li class="edc-topic-item" style="animation-delay:${i*0.04}s"><span class="edc-topic-num">${i+1}</span><span class="edc-topic-text">${escHtml(t)}</span></li>`).join('')}</ul>
     </div>`:''}
@@ -5519,12 +5588,24 @@ function closeExamSheet(e){
   }
 }
 
+function setExamTipo(tipo){
+  document.getElementById('ex-tipo').value=tipo;
+  document.getElementById('tipo-btn-prova').classList.toggle('active',tipo==='prova');
+  document.getElementById('tipo-btn-trabalho').classList.toggle('active',tipo==='trabalho');
+  // Atualiza placeholders e labels
+  const titleInp=document.getElementById('ex-title');
+  if(titleInp)titleInp.placeholder=tipo==='trabalho'?'Título do trabalho':'Título da prova';
+  const lbl=document.getElementById('add-exam-btn-lbl');
+  if(lbl)lbl.textContent=tipo==='trabalho'?'Adicionar Trabalho':'Adicionar Prova';
+}
+
 function addExam(){
   const subj=document.getElementById('ex-subj').value;
   const examDate=document.getElementById('ex-date')?.value||'';
   const title=document.getElementById('ex-title').value.trim();
   const valor=document.getElementById('ex-valor').value;
   const conteudo=(document.getElementById('ex-conteudo')?.value||'').trim();
+  const tipo=document.getElementById('ex-tipo')?.value||'prova';
   const dupBanner=document.getElementById('aec-dup-banner');
   const dupText=document.getElementById('aec-dup-banner-text');
 
@@ -5568,7 +5649,7 @@ function addExam(){
   }
 
   const id='ex_'+Date.now();
-  exams.push({id,subj,examDate,title,valor,examTime,conteudo});
+  exams.push({id,subj,examDate,title,valor,examTime,conteudo,tipo});
   window._exSlotDow=null;window._exSlotTime=null;
   hideDup();
   saveExams();
@@ -5576,10 +5657,20 @@ function addExam(){
 }
 
 function rmExam(id){
-  exams=exams.filter(e=>e.id!==id);
-  // remove any scheduled notification for this exam
-  removeExamNotif(id);
-  saveExams();render(null);syncLayout();
+  const exam=exams.find(e=>e.id===id);
+  const name=exam&&exam.title?exam.title:'essa prova';
+  showConfirm({
+    title:'Remover prova?',
+    msg:`"${name}" será removida da sua lista de provas.`,
+    okLabel:'Remover',
+    danger:true,
+    iconSvg:`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="10" y1="14" x2="14" y2="18"/><line x1="14" y1="14" x2="10" y2="18"/></svg>`,
+    onOk:()=>{
+      exams=exams.filter(e=>e.id!==id);
+      removeExamNotif(id);
+      saveExams();render(null);syncLayout();
+    }
+  });
 }
 
 /* ═══════════════════════════════
@@ -5966,16 +6057,60 @@ function updateExamBadge(){
 /* ═══════════════════════════════
    ACCORDION / EVAL ACTIONS
 ═══════════════════════════════ */
+/* Mapa de snapshots para cancelar edições sem perder dados anteriores */
+const _evalSnaps={};
+
 function toggleEditEval(sid,tab,i){
   const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
   if(!item)return;
   if(item.classList.contains('editing')){
     doneEditEval(sid,tab,i);
   }else{
+    // Salva snapshot antes de entrar em edição (só se não for novo)
+    const r=G[sid][tab][i];
+    if(!r._isNew){
+      _evalSnaps[`${sid}-${tab}-${i}`]={name:r.name,got:r.got,total:r.total};
+    }
     item.classList.add('editing');
     const inp=document.getElementById(`eni-${sid}-${tab}-${i}`);
     if(inp){inp.focus();try{inp.select();}catch(e){}}
   }
+}
+
+function cancelEditEval(sid,tab,i){
+  const r=G[sid]&&G[sid][tab]&&G[sid][tab][i];
+  if(!r)return;
+  if(r._isNew){
+    // Rascunho — descarta silenciosamente
+    G[sid][tab].splice(i,1);
+    delete _evalSnaps[`${sid}-${tab}-${i}`];
+    _refreshEvList(sid,tab);
+    return;
+  }
+  // Edição de item existente — restaura snapshot
+  const snap=_evalSnaps[`${sid}-${tab}-${i}`];
+  if(snap){
+    r.name=snap.name; r.got=snap.got; r.total=snap.total;
+    delete _evalSnaps[`${sid}-${tab}-${i}`];
+  }
+  // Sai do modo edição sem salvar
+  const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
+  if(item) item.classList.remove('editing');
+  // Esconde erro se visível
+  const errEl=document.getElementById(`ev-err-${sid}-${tab}-${i}`);
+  if(errEl) errEl.style.display='none';
+  // Sincroniza DOM com os valores restaurados
+  const nt=document.getElementById(`ent-${sid}-${tab}-${i}`);
+  if(nt){nt.textContent=r.name||'sem nome';nt.className='eval-name-text'+(r.name?'':' ph');}
+  const gotV=nf(r.got),totV=nf(r.total);
+  const gs=document.getElementById(`egt-${sid}-${tab}-${i}`);
+  if(gs){gs.textContent=gotV!==null?fmt(gotV):'—';gs.className='eval-sc-text'+(gotV===null?' ph':'');}
+  const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
+  if(ts){ts.textContent=totV!==null?fmt(totV):'—';ts.className='eval-sc-text'+(totV===null?' ph':'');}
+  const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
+  if(badge){badge.textContent=gotV!==null?(totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV)):'—';}
+  // Re-sincroniza pill de nota e footer do card
+  updateCardDisplay(sid,tab);
 }
 function doneEditEval(sid,tab,i,force){
   const item=document.getElementById(`ei-${sid}-${tab}-${i}`);
@@ -5983,6 +6118,14 @@ function doneEditEval(sid,tab,i,force){
   const r=G[sid][tab][i];
   // Validação: nota (got) e peso (total) são obrigatórios
   if(!force && (nf(r.got)===null || nf(r.total)===null)){
+    // Mostra mensagem de erro inline
+    const errEl=document.getElementById(`ev-err-${sid}-${tab}-${i}`);
+    if(errEl){
+      errEl.style.display='flex';
+      clearTimeout(errEl._t);
+      errEl._t=setTimeout(()=>{errEl.style.display='none';},2800);
+    }
+    // Destaca os campos em falta
     const missing=[];
     if(nf(r.got)===null)  missing.push(document.getElementById(`ig-${sid}-${tab}-${i}`));
     if(nf(r.total)===null)missing.push(document.getElementById(`it-${sid}-${tab}-${i}`));
@@ -5998,11 +6141,17 @@ function doneEditEval(sid,tab,i,force){
        {transform:'translateX(0)'}],
       {duration:320,easing:'ease-out'}
     );
-    // foca no primeiro campo vazio
     if(missing[0])missing[0].focus();
-    return false; // continua em edição
+    return false;
   }
+  // Remove flag de rascunho, deleta snap e salva
+  if(r._isNew) delete r._isNew;
+  delete _evalSnaps[`${sid}-${tab}-${i}`];
+  saveGrades();
   item.classList.remove('editing');
+  // Esconde mensagem de erro se estiver visível
+  const errEl=document.getElementById(`ev-err-${sid}-${tab}-${i}`);
+  if(errEl){errEl.style.display='none';}
   // sync name span
   const nt=document.getElementById(`ent-${sid}-${tab}-${i}`);
   if(nt){nt.textContent=r.name||'sem nome';nt.className='eval-name-text'+(r.name?'':' ph');}
@@ -6012,6 +6161,7 @@ function doneEditEval(sid,tab,i,force){
   if(gs){gs.textContent=gotV!==null?fmt(gotV):'—';gs.className='eval-sc-text'+(gotV===null?' ph':'');}
   const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
   if(ts){ts.textContent=totV!==null?fmt(totV):'—';ts.className='eval-sc-text'+(totV===null?' ph':'');}
+  updateCardDisplay(sid,tab);
   return true;
 }
 
@@ -6031,7 +6181,8 @@ function _buildOneEvalHtml(sid,tab,i){
   if(gotV!==null){
     resVal=totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV);
   }
-  const otherSum=rows.reduce((acc,rr,j)=>j===i?acc:acc+(nf(rr.total)||0),0);
+  // otherSum: só rows salvas (não rascunhos), excluindo o próprio item
+  const otherSum=rows.reduce((acc,rr,j)=>j===i||rr._isNew?acc:acc+(nf(rr.total)||0),0);
   const maxTot=parseFloat((10-otherSum).toFixed(2));
   const maxGot=totV!==null?totV:10;
   const gotTxt=gotV!==null?fmt(gotV):'—';
@@ -6050,9 +6201,16 @@ function _buildOneEvalHtml(sid,tab,i){
         <svg class="ic-pencil" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
         <span class="ic-check ic-ok">OK</span>
       </button>
+      <button class="eval-cancel-btn" onclick="cancelEditEval('${sid}','${tab}',${i})" title="Cancelar">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
       <button class="eval-rm-btn" onclick="rmEv('${sid}','${tab}',${i})" title="Remover">
         <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
       </button>
+    </div>
+    <div class="eval-error-msg" id="ev-err-${sid}-${tab}-${i}">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      É necessário preencher a nota e o peso.
     </div>
     <div class="eval-scores">
       <div class="eval-sc-cell">
@@ -6087,11 +6245,11 @@ function _buildEvListHtml(sid,tab){
 /* Atualiza cirurgicamente a lista de evals SEM re-render da página — sem scroll bug */
 function _refreshEvList(sid,tab){
   const listEl=document.getElementById(`el-${sid}-${tab}`);
-  if(!listEl){render(null);return;} // fallback: se não achar o container, re-render
+  if(!listEl){render(null);return;}
   listEl.innerHTML=_buildEvListHtml(sid,tab);
-  // atualizar botão adicionar
   const rows=G[sid][tab];
-  const allocated=rows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
+  const savedRows=rows.filter(r=>!r._isNew);
+  const allocated=savedRows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
   const canAdd=parseFloat(allocated.toFixed(2))<10;
   const btn=document.getElementById(`ab-${sid}-${tab}`);
   if(btn){
@@ -6099,12 +6257,12 @@ function _refreshEvList(sid,tab){
     const lbl=btn.querySelector('span.add-eval-lbl');
     if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)';
   }
-  // atualizar contador de avaliações em tempo real
+  // contador: só avaliações salvas
   const subjItem=document.getElementById(`si-${sid}`);
   if(subjItem){
     const countEl=subjItem.querySelector('.subj-count');
     if(countEl){
-      const cnt=rows.length;
+      const cnt=savedRows.length;
       countEl.textContent=cnt===0?'Nenhuma avaliação':cnt===1?'1 avaliação':`${cnt} avaliações`;
     }
   }
@@ -6124,10 +6282,10 @@ function addEv(sid,tab){
     const eTab=rest.slice(lastDash2+1);
     const eSid=rest.slice(0,lastDash2);
     const er=G[eSid]&&G[eSid][eTab]&&G[eSid][eTab][eIdx];
-    if(er&&(nf(er.got)===null||nf(er.total)===null)){
-      // avaliação incompleta — descarta silenciosamente
+    if(er&&er._isNew){
+      // rascunho não salvo — descarta silenciosamente
       G[eSid][eTab].splice(eIdx,1);
-      saveGrades();
+      delete _evalSnaps[`${eSid}-${eTab}-${eIdx}`];
       _refreshEvList(eSid,eTab);
     }else{
       // avaliação válida — só fecha o modo edição (force=true)
@@ -6135,24 +6293,34 @@ function addEv(sid,tab){
     }
   }
   openAcc[sid+'_'+tab]=true;
-  G[sid][tab].push({name:'',got:'',total:''});
-  saveGrades();
+  G[sid][tab].push({name:'',got:'',total:'',_isNew:true});
+  // NÃO salva imediatamente — só salva após preenchimento mínimo (nota + peso)
   _refreshEvList(sid,tab);
   // auto-open edit mode on the new item
   const newIdx=G[sid][tab].length-1;
   setTimeout(()=>toggleEditEval(sid,tab,newIdx),50);
 }
 function rmEv(sid,tab,i){
-  G[sid][tab].splice(i,1);
-  saveGrades();
-  _refreshEvList(sid,tab);
+  const r=G[sid][tab][i];
+  const name=r&&r.name?r.name:'essa avaliação';
+  showConfirm({
+    title:'Apagar avaliação?',
+    msg:`"${name}" será removida permanentemente. Essa ação não pode ser desfeita.`,
+    okLabel:'Apagar',
+    danger:true,
+    onOk:()=>{
+      G[sid][tab].splice(i,1);
+      saveGrades();
+      _refreshEvList(sid,tab);
+    }
+  });
 }
 function updF(sid,tab,i,field,val){
   const rows=G[sid][tab];
 
   if(field==='total'){
-    // sum of other rows' totals
-    const otherSum=rows.reduce((acc,r,j)=>j===i?acc:acc+(nf(r.total)||0),0);
+    // sum of other rows' totals — ignora rascunhos
+    const otherSum=rows.reduce((acc,r,j)=>j===i||r._isNew?acc:acc+(nf(r.total)||0),0);
     const maxAllowed=parseFloat((10-otherSum).toFixed(2));
     let num=nf(val);
     if(num!==null){
@@ -6193,13 +6361,18 @@ function updF(sid,tab,i,field,val){
     rows[i][field]=val;
   }
 
-  saveGrades();
-  // sync display spans live while typing in edit mode
+  // Não salva no localStorage durante a edição — só salva no doneEditEval (OK)
+  // Atualiza o display ao vivo apenas para o badge de resultado do próprio item
+  const r2=rows[i];
+  const gv2=nf(r2.got),tv2=nf(r2.total);
+  const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
+  if(badge){badge.textContent=gv2!==null?(tv2!==null&&tv2>0?`${fmt(gv2)}/${fmt(tv2)}`:fmt(gv2)):'—';}
+  // Sync nome no span
   if(field==='name'){
     const txt=document.getElementById(`ent-${sid}-${tab}-${i}`);
     if(txt){txt.textContent=val||'sem nome';txt.className='eval-name-text'+(val?'':' ph');}
   }
-  updateCardDisplay(sid,tab);
+  // NÃO chama updateCardDisplay aqui — a nota do card só muda ao confirmar (OK)
 }
 
 function updateCardDisplay(sid,tab){
@@ -6225,23 +6398,24 @@ function updateCardDisplay(sid,tab){
   const rows=G[sid][tab];
   rows.forEach((r,i)=>{
     const gv=nf(r.got),tv=nf(r.total);
-    // result pill
-    const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
-    if(badge){badge.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)}/${fmt(tv)}`:fmt(gv)):'—';}
-    // static text spans (shown when not editing)
+    // static text spans
     const gs=document.getElementById(`egt-${sid}-${tab}-${i}`);
     if(gs){gs.textContent=gv!==null?fmt(gv):'—';gs.className='eval-sc-text'+(gv===null?' ph':'');}
     const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
     if(ts){ts.textContent=tv!==null?fmt(tv):'—';ts.className='eval-sc-text'+(tv===null?' ph':'');}
+    // result badge
+    const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
+    if(badge){badge.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)}/${fmt(tv)}`:fmt(gv)):'—';}
     // cap inputs
     const ginp=document.getElementById(`ig-${sid}-${tab}-${i}`);
     if(ginp&&tv!==null)ginp.max=tv;
-    const otherSum=rows.reduce((acc,rr,j)=>j===i?acc:acc+(nf(rr.total)||0),0);
+    const otherSum=rows.reduce((acc,rr,j)=>j===i||rr._isNew?acc:acc+(nf(rr.total)||0),0);
     const tinp=document.getElementById(`it-${sid}-${tab}-${i}`);
     if(tinp)tinp.max=parseFloat((10-otherSum).toFixed(2));
   });
-  // atualiza botão adicionar com base no peso total alocado
-  const allocated=parseFloat(rows.reduce((acc,r)=>acc+(nf(r.total)||0),0).toFixed(2));
+  // peso alocado: só rows salvas, sem snaps
+  const savedRows=rows.filter(r=>!r._isNew);
+  const allocated=parseFloat(savedRows.reduce((acc,r)=>acc+(nf(r.total)||0),0).toFixed(2));
   const canAdd=allocated<10;
   const addBtn=document.getElementById(`ab-${sid}-${tab}`);
   if(addBtn){
@@ -6953,7 +7127,7 @@ function copyNoteToClipboard(){
 
 /* ─── CUSTOM CONFIRM POPUP ─── */
 function showConfirm(opts){
-  // opts: { title, msg, okLabel, danger, iconType, onOk }
+  // opts: { title, msg, okLabel, danger, iconSvg, onOk }
   const overlay=document.getElementById('confirm-overlay');
   const titleEl=document.getElementById('confirm-title');
   const msgEl=document.getElementById('confirm-msg');
@@ -6964,8 +7138,18 @@ function showConfirm(opts){
   titleEl.textContent=opts.title||'Confirmação';
   msgEl.textContent=opts.msg||'Tem certeza?';
   okBtn.textContent=opts.okLabel||'Confirmar';
-  okBtn.className='confirm-ok'+(opts.danger!==false?' ':' safe');
-  iconEl.className='confirm-icon '+(opts.danger!==false?'danger':'warn');
+  const isDanger=opts.danger!==false;
+  okBtn.className='confirm-ok'+(isDanger?'':' safe');
+  iconEl.className='confirm-icon '+(isDanger?'danger':'warn');
+
+  // Ícone dinâmico: lixeira para danger, alerta para warn
+  if(opts.iconSvg){
+    iconEl.innerHTML=opts.iconSvg;
+  } else if(isDanger){
+    iconEl.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+  } else {
+    iconEl.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  }
 
   overlay.classList.add('open');
 
