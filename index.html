@@ -5077,6 +5077,18 @@ function renderResultado(el){
  * 'recovered'    → EAC feito e a nota final (max) chegou a ≥ 6
  * 'insufficient' → EAC feito mas a nota final ainda está < 6
  */
+/** Retorna true se o peso somado das avaliações salvas do tab chegou a 10
+ *  — mesma lógica do botão "Peso máximo atingido" no tab de notas. */
+function _tabFull(sid,tab){
+  if(!G[sid]||!G[sid][tab])return false;
+  const rows=G[sid][tab].filter(r=>!r._isNew);
+  if(!rows.length)return false;
+  let sum=0;
+  rows.forEach(r=>{const t=nf(r.total);if(t!==null)sum+=t;});
+  // usa >=9.99 para absorver qualquer imprecisão de ponto flutuante
+  return sum>=9.99;
+}
+
 function _eacSt(base,eac){
   if(base===null||base>=6)return'ok';
   if(eac===null)return'pending';
@@ -5242,18 +5254,25 @@ function renderResumo(el){
 
     let recHtml='';
 
-    // 1. Alertas de EAC por trimestre (pending = oportunidade, recovered = sucesso)
-    recHtml+=_eacBlock(b1,e1,'1° Trimestre');
-    recHtml+=_eacBlock(b2,e2,'2° Trimestre');
-    // 3°T: usa fórmula final completa para calcular mínimo real e detectar impossibilidade
-    recHtml+=_eacBlock3T(t1,t2,b3,e3);
+    // Alertas só aparecem quando o peso do trimestre está completo (= 10 pts)
+    // e há pelo menos uma nota lançada nele (tabScore não nulo).
+    const full1T=_tabFull(s.id,'1T')&&b1!==null;
+    const full2T=_tabFull(s.id,'2T')&&b2!==null;
+    const full3T=_tabFull(s.id,'3T')&&b3!==null;
 
-    // 2. Recuperação por trimestre seguinte — só exibe quando o EAC do trimestre
-    //    problemático já foi feito (ou não era necessário), para não confundir.
-    //    Para T3: _eacBlock3T já cobre todos os cenários → suprimimos aqui.
+    // 1. Alertas de EAC por trimestre (pending = oportunidade, recovered = sucesso)
+    if(full1T) recHtml+=_eacBlock(b1,e1,'1° Trimestre');
+    if(full2T) recHtml+=_eacBlock(b2,e2,'2° Trimestre');
+    // 3°T: usa fórmula final completa para calcular mínimo real e detectar impossibilidade
+    if(full3T) recHtml+=_eacBlock3T(t1,t2,b3,e3);
+
+    // 2. Recuperação por trimestre seguinte — só exibe quando os trimestres de referência
+    //    têm peso completo (= 10 pts). Para T3: _eacBlock3T já cobre, suprimimos aqui.
     const rec=getTrimesterRecovery(s.id);
     if(rec&&!(rec.phase==='t3'&&b3!==null)){
-      const showIt=rec.phase==='t2'?est1!=='pending':est2!=='pending';
+      // Só mostra se o trimestre de referência do alerta tem peso completo
+      const refFull=rec.phase==='t2'?full1T:(full1T&&full2T);
+      const showIt=refFull;
       if(showIt){
         if(rec.phase==='t2'){
           if(rec.impossible){
