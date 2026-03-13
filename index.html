@@ -7627,9 +7627,6 @@ function _isNight(){const h=new Date().getHours();return h<6||h>=19;}
 ══════════════════════════════════════ */
 function _wxIconHtml(code,isNight,size){
   size=size||56;
-  /* uid único para masks — SVGs inline compartilham o mesmo DOM */
-  const u=(Math.random()*0xFFFFF|0).toString(36);
-
   /* ─── Paleta ─────────────────────────────── */
   const SUN='#FFD60A', SUN_GLOW='rgba(255,214,10,.22)';
   const MOON='#D8EAFB', MOON_DIM='#B0C4DE';
@@ -7658,21 +7655,19 @@ function _wxIconHtml(code,isNight,size){
       <line x1="12.7" y1="43.3" x2="17.5" y2="38.5"/>
     </g>`;
 
-  /* LUA cheia — crescente via máscara SVG, estrelas */
+  /* LUA cheia — crescente por dois arcos geométricos (sem mask, sem defs, zero bugs)
+     C1=(26,28) R=15 — corpo da lua
+     C2=(35,21) R=15 — sombra, canto superior direito
+     Pts de interseção: P2=(22,13.5) P1=(39,35.5)
+     Arco externo (convexo): P2→P1 CCW large  → large=1 sweep=0
+     Arco interno (côncavo): P1→P2 CW  small  → large=0 sweep=1 */
   const moonFull=`
-    <defs>
-      <mask id="mc${u}">
-        <rect width="56" height="56" fill="white"/>
-        <circle cx="35" cy="24" r="13.5" fill="black"/>
-      </mask>
-    </defs>
-    <circle cx="27" cy="29" r="15" fill="${MOON}" mask="url(#mc${u})"/>
-    <g fill="${MOON_DIM}">
-      <circle cx="45" cy="10" r="2"   opacity=".85"/>
-      <circle cx="51" cy="19" r="1.3" opacity=".6"/>
-      <circle cx="43" cy="5"  r="1.3" opacity=".7"/>
-      <circle cx="50" cy="8"  r="1"   opacity=".45"/>
-    </g>`;
+    <path fill="${MOON}"
+      d="M22,13.5
+         A15,15 0 1 0 39,35.5
+         A15,15 0 0 1 22,13.5 Z"/>
+`;
+
 
   /* SOL PEQUENO — canto superior esquerdo para "parcialmente nublado" */
   const sunSm=`
@@ -7689,15 +7684,16 @@ function _wxIconHtml(code,isNight,size){
       <line x1="8.6"  y1="26.4" x2="11.8" y2="23.2"/>
     </g>`;
 
-  /* LUA PEQUENA — crescente via máscara */
+  /* LUA PEQUENA — crescente por dois arcos (upper-left region, para combo com nuvem)
+     C1=(15,16) R=11, C2=(22,10) R=11
+     P2=(12,5.4) P1=(25,20.6)
+     Arco externo: P2→P1 CCW large  → large=1 sweep=0
+     Arco interno: P1→P2 CW  small  → large=0 sweep=1 */
   const moonSm=`
-    <defs>
-      <mask id="mcs${u}">
-        <rect width="56" height="56" fill="white"/>
-        <circle cx="25" cy="14" r="9" fill="black"/>
-      </mask>
-    </defs>
-    <circle cx="19" cy="18" r="10.5" fill="${MOON}" opacity=".92" mask="url(#mcs${u})"/>`;
+    <path fill="${MOON}" opacity=".95"
+      d="M12,5.4
+         A11,11 0 1 0 25,20.6
+         A11,11 0 0 1 12,5.4 Z"/>`;
 
   /* NUVEM LEVE — posicionada para combo com sol/lua no canto superior esquerdo */
   const cldCombo=(isNight?CLD_LT_N:CLD_LT);
@@ -7816,7 +7812,7 @@ function _wxIconHtml(code,isNight,size){
   }else{
     body=isNight?(moonSm+cloudCombo):(sunSm+cloudCombo);
   }
-  return`<svg viewBox="0 0 56 56" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;overflow:visible">${body}</svg>`;
+  return`<svg viewBox="0 0 56 56" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0">${body}</svg>`;
 }
 
 function _wxCode(code){
