@@ -779,6 +779,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-recovery-alert.impossible .resumo-recovery-val{color:var(--red)}
 .resumo-recovery-val-lbl{font-size:9px;font-weight:600;color:var(--amber);margin-top:2px;letter-spacing:.2px;white-space:nowrap}
 .resumo-recovery-alert.impossible .resumo-recovery-val-lbl{color:var(--red)}
+/* ── EAC variants ── */
+.resumo-recovery-alert.eac-pending{background:var(--amberbg);border-color:var(--amberbd)}
+.resumo-recovery-alert.eac-recovered{background:var(--greenbg);border-color:var(--greenbd)}
+.resumo-recovery-alert.eac-recovered .resumo-recovery-badge{color:var(--green)}
+.resumo-recovery-alert.eac-recovered .resumo-recovery-val{color:var(--green)}
+.resumo-recovery-alert.eac-recovered .resumo-recovery-val-lbl{color:var(--green)}
+/* pilulinha EAC na célula do trimestre */
+.resumo-trim-eac-pill{
+  display:inline-block;font-size:7.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
+  background:var(--violetbg);color:var(--violet);border:1px solid var(--violetbd);
+  border-radius:5px;padding:1px 5px;margin-left:4px;vertical-align:middle;line-height:1.4;
+}
 
 /* ── Risk row recovery info (resultado) ── */
 .risk-recovery{
@@ -5056,6 +5068,133 @@ function renderResultado(el){
 }
 
 /* ═══════════════════════════════
+   RESUMO — helpers EAC
+═══════════════════════════════ */
+/**
+ * Retorna o estado do EAC para um trimestre de uma matéria.
+ * 'ok'           → nota base ≥ 6 (ou sem nota), não precisa de EAC
+ * 'pending'      → nota base < 6 e EAC ainda não foi feito
+ * 'recovered'    → EAC feito e a nota final (max) chegou a ≥ 6
+ * 'insufficient' → EAC feito mas a nota final ainda está < 6
+ */
+function _eacSt(base,eac){
+  if(base===null||base>=6)return'ok';
+  if(eac===null)return'pending';
+  return Math.max(base,eac)>=6?'recovered':'insufficient';
+}
+
+/**
+ * Bloco EAC para o 3° Trimestre — usa a fórmula final completa.
+ * (T1×3 + T2×3 + T3×4) / 10 ≥ 6  →  T3 mínimo = (60 − T1×3 − T2×3) / 4
+ *
+ * t1, t2  = trimGrade já resolvidos (melhor entre base e EAC dos trim anteriores)
+ * b3      = tabScore base do 3T       (pode ser null)
+ * e3      = tabScore do EAC do 3T     (null = não feito)
+ */
+function _eacBlock3T(t1,t2,b3,e3){
+  // Sem T1 ou T2 fechados ainda → cai no bloco genérico por ora
+  if(t1===null||t2===null) return _eacBlock(b3,e3,'3° Trimestre');
+  // Sem nota base no 3T → getTrimesterRecovery cuida disso
+  if(b3===null) return'';
+
+  const minT3=(60-t1*3-t2*3)/4; // nota mínima no 3T para média ≥ 6
+  const impossible=minT3>10;
+  const alreadyOk=b3>=minT3;    // nota base já garante a passagem
+
+  // ── EAC ainda não feito ────────────────────────────────────────
+  if(e3===null){
+    if(alreadyOk) return''; // nota do 3T já é suficiente
+    if(impossible){
+      return'<div class="resumo-recovery-alert impossible">'+
+        '<div class="resumo-recovery-left">'+
+          '<div class="resumo-recovery-badge">Mesmo com o EAC não é possível passar</div>'+
+          '<div class="resumo-recovery-desc">Com 1°T '+fmt(t1)+' e 2°T '+fmt(t2)+', mesmo tirando 10 no EAC do 3°T a média final não chega a 6.0. A nota base foi '+fmt(b3)+'.</div>'+
+        '</div>'+
+      '</div>';
+    }
+    // Oportunidade — mostra o mínimo que precisa no EAC
+    // Como T3 final = max(b3, eac), o EAC precisa ser ≥ minT3
+    const needed=Math.max(0,minT3);
+    return'<div class="resumo-recovery-alert eac-pending">'+
+      '<div class="resumo-recovery-left">'+
+        '<div class="resumo-recovery-badge">Você ainda pode recuperar no EAC — 3° Trimestre</div>'+
+        '<div class="resumo-recovery-desc">Sua nota foi <strong>'+fmt(b3)+'</strong>. Para passar, você precisa tirar pelo menos <strong>'+needed.toFixed(1)+'</strong> no EAC do 3°T.</div>'+
+      '</div>'+
+      '<div class="resumo-recovery-right">'+
+        '<div class="resumo-recovery-val">'+needed.toFixed(1)+'</div>'+
+        '<div class="resumo-recovery-val-lbl">no EAC do 3°T</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  // ── EAC feito ──────────────────────────────────────────────────
+  const finalT3=Math.max(b3,e3);
+  const finalGr=(t1*3+t2*3+finalT3*4)/10;
+  const missingPts=Math.max(0,6-finalGr);
+
+  if(finalGr>=6){
+    // Recuperado!
+    return'<div class="resumo-recovery-alert eac-recovered">'+
+      '<div class="resumo-recovery-left">'+
+        '<div class="resumo-recovery-badge">Nota recuperada pelo EAC — 3° Trimestre</div>'+
+        '<div class="resumo-recovery-desc">Base '+fmt(b3)+' → EAC '+fmt(e3)+' · Usando '+fmt(finalT3)+' no 3°T. Média final: '+finalGr.toFixed(2)+'</div>'+
+      '</div>'+
+      '<div class="resumo-recovery-right">'+
+        '<div class="resumo-recovery-val">'+fmt(finalT3)+'</div>'+
+        '<div class="resumo-recovery-val-lbl">3°T final</div>'+
+      '</div>'+
+    '</div>';
+  }
+
+  // EAC feito mas a média ainda ficou abaixo — explica o motivo
+  const wentWell=e3>=6; // foi bem no EAC
+  const desc=wentWell
+    ? 'Você foi bem no EAC ('+fmt(e3)+'), mas as notas dos trimestres anteriores puxaram a média para baixo. Faltaram '+missingPts.toFixed(1)+' pts para chegar a 6.0.'
+    : 'Base '+fmt(b3)+' · EAC '+fmt(e3)+' · Melhor nota: '+fmt(finalT3)+'. Faltaram '+missingPts.toFixed(1)+' pts na média final para chegar a 6.0.';
+  return'<div class="resumo-recovery-alert impossible">'+
+    '<div class="resumo-recovery-left">'+
+      '<div class="resumo-recovery-badge">EAC feito — ainda abaixo da média</div>'+
+      '<div class="resumo-recovery-desc">'+desc+'</div>'+
+    '</div>'+
+    '<div class="resumo-recovery-right">'+
+      '<div class="resumo-recovery-val" style="color:var(--red)">'+finalGr.toFixed(2)+'</div>'+
+      '<div class="resumo-recovery-val-lbl" style="color:var(--red)">média final</div>'+
+    '</div>'+
+  '</div>';
+}
+
+/**
+ * Monta o bloco HTML do alerta de EAC para o 1° ou 2° Trimestre.
+ * Retorna string vazia quando não há nada a mostrar.
+ */
+function _eacBlock(base,eac,trlabel){
+  if(base===null||base>=6)return'';
+  const best=eac!==null?Math.max(base,eac):base;
+  if(eac===null){
+    return'<div class="resumo-recovery-alert eac-pending">'+
+      '<div class="resumo-recovery-left">'+
+        '<div class="resumo-recovery-badge">Você ainda pode recuperar no EAC — '+trlabel+'</div>'+
+        '<div class="resumo-recovery-desc">Sua nota foi <strong>'+fmt(base)+'</strong>. Faça o EAC para tentar subir essa nota antes que impacte sua média final.</div>'+
+      '</div>'+
+    '</div>';
+  }
+  if(best>=6){
+    return'<div class="resumo-recovery-alert eac-recovered">'+
+      '<div class="resumo-recovery-left">'+
+        '<div class="resumo-recovery-badge">Nota recuperada pelo EAC — '+trlabel+'</div>'+
+        '<div class="resumo-recovery-desc">Base '+fmt(base)+' → EAC '+fmt(eac)+' · Usando '+fmt(best)+' no cálculo final</div>'+
+      '</div>'+
+      '<div class="resumo-recovery-right">'+
+        '<div class="resumo-recovery-val">'+fmt(best)+'</div>'+
+        '<div class="resumo-recovery-val-lbl">'+trlabel.replace(' Trimestre','°T')+'</div>'+
+      '</div>'+
+    '</div>';
+  }
+  // EAC feito mas ainda < 6 — o bloco de recuperação por trimestre seguinte cobre isso
+  return'';
+}
+
+/* ═══════════════════════════════
    RESUMO
 ═══════════════════════════════ */
 function renderResumo(el){
@@ -5095,57 +5234,74 @@ function renderResumo(el){
     const trendIcon=t1!==null&&t2!==null&&t3!==null?(t3>t1?'↑ Subindo':t3<t1?'↓ Caindo':'→ Estável'):'Dados parciais';
     const trendStr=g!==null?(g>=7?`${trendIcon}`:`${trendIcon}`):`${trendIcon}`;
     const statusColor=ss==='pass'?'var(--green)':ss==='fail'?'var(--red)':ss==='warn'?'var(--amber)':'var(--bg4)';
-    const rec=getTrimesterRecovery(s.id);
+    // ── notas base e EAC por trimestre ───────────────────────
+    const b1=tabScore(s.id,'1T'),  e1=tabScore(s.id,'1T-EAC');
+    const b2=tabScore(s.id,'2T'),  e2=tabScore(s.id,'2T-EAC');
+    const b3=tabScore(s.id,'3T'),  e3=tabScore(s.id,'3T-EAC');
+    const est1=_eacSt(b1,e1), est2=_eacSt(b2,e2), est3=_eacSt(b3,e3);
+
     let recHtml='';
-    if(rec){
-      if(rec.phase==='t2'){
-        // T1 baixo, mostra mínimo no T2
-        if(rec.impossible){
-          recHtml='<div class="resumo-recovery-alert impossible">'+
-            '<div class="resumo-recovery-left">'+
-              '<div class="resumo-recovery-badge">Atenção no 2° Trimestre</div>'+
-              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', compensar no 2°T sozinho não é possível — a nota necessária ultrapassa 10</div>'+
-            '</div>'+
-          '</div>';
+
+    // 1. Alertas de EAC por trimestre (pending = oportunidade, recovered = sucesso)
+    recHtml+=_eacBlock(b1,e1,'1° Trimestre');
+    recHtml+=_eacBlock(b2,e2,'2° Trimestre');
+    // 3°T: usa fórmula final completa para calcular mínimo real e detectar impossibilidade
+    recHtml+=_eacBlock3T(t1,t2,b3,e3);
+
+    // 2. Recuperação por trimestre seguinte — só exibe quando o EAC do trimestre
+    //    problemático já foi feito (ou não era necessário), para não confundir.
+    //    Para T3: _eacBlock3T já cobre todos os cenários → suprimimos aqui.
+    const rec=getTrimesterRecovery(s.id);
+    if(rec&&!(rec.phase==='t3'&&b3!==null)){
+      const showIt=rec.phase==='t2'?est1!=='pending':est2!=='pending';
+      if(showIt){
+        if(rec.phase==='t2'){
+          if(rec.impossible){
+            recHtml+='<div class="resumo-recovery-alert impossible">'+
+              '<div class="resumo-recovery-left">'+
+                '<div class="resumo-recovery-badge">Atenção no 2° Trimestre</div>'+
+                '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', compensar no 2°T sozinho não é possível — a nota necessária ultrapassa 10</div>'+
+              '</div>'+
+            '</div>';
+          }else{
+            recHtml+='<div class="resumo-recovery-alert">'+
+              '<div class="resumo-recovery-left">'+
+                '<div class="resumo-recovery-badge">Nota necessária no 2° Trimestre</div>'+
+                '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', você precisa tirar pelo menos no 2°T para compensar:</div>'+
+              '</div>'+
+              '<div class="resumo-recovery-right">'+
+                '<div class="resumo-recovery-val">'+rec.minNeeded.toFixed(1)+'</div>'+
+                '<div class="resumo-recovery-val-lbl">no 2°T</div>'+
+              '</div>'+
+            '</div>';
+          }
         }else{
-          recHtml='<div class="resumo-recovery-alert">'+
-            '<div class="resumo-recovery-left">'+
-              '<div class="resumo-recovery-badge">Nota necessária no 2° Trimestre</div>'+
-              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', você precisa tirar pelo menos no 2°T para compensar:</div>'+
-            '</div>'+
-            '<div class="resumo-recovery-right">'+
-              '<div class="resumo-recovery-val">'+rec.minNeeded.toFixed(1)+'</div>'+
-              '<div class="resumo-recovery-val-lbl">no 2°T</div>'+
-            '</div>'+
-          '</div>';
-        }
-      }else{
-        // T1+T2 fechados, mostra situação do T3
-        if(rec.alreadyPassed){
-          recHtml='<div class="resumo-recovery-alert" style="background:var(--greenbg);border-color:var(--greenbd)">'+
-            '<div class="resumo-recovery-left">'+
-              '<div class="resumo-recovery-badge" style="color:var(--green)">Aprovação garantida</div>'+
-              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você já está aprovado independente da nota do 3° Trimestre</div>'+
-            '</div>'+
-          '</div>';
-        }else if(rec.impossible){
-          recHtml='<div class="resumo-recovery-alert impossible">'+
-            '<div class="resumo-recovery-left">'+
-              '<div class="resumo-recovery-badge">Aprovação impossível</div>'+
-              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', mesmo tirando 10 no 3° Trimestre a média final não chega a 6.0</div>'+
-            '</div>'+
-          '</div>';
-        }else{
-          recHtml='<div class="resumo-recovery-alert">'+
-            '<div class="resumo-recovery-left">'+
-              '<div class="resumo-recovery-badge">Nota necessária no 3° Trimestre</div>'+
-              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você precisa tirar pelo menos:</div>'+
-            '</div>'+
-            '<div class="resumo-recovery-right">'+
-              '<div class="resumo-recovery-val">'+rec.minNeeded.toFixed(1)+'</div>'+
-              '<div class="resumo-recovery-val-lbl">no 3°T para passar</div>'+
-            '</div>'+
-          '</div>';
+          if(rec.alreadyPassed){
+            recHtml+='<div class="resumo-recovery-alert" style="background:var(--greenbg);border-color:var(--greenbd)">'+
+              '<div class="resumo-recovery-left">'+
+                '<div class="resumo-recovery-badge" style="color:var(--green)">Aprovação garantida</div>'+
+                '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você já está aprovado independente da nota do 3° Trimestre</div>'+
+              '</div>'+
+            '</div>';
+          }else if(rec.impossible){
+            recHtml+='<div class="resumo-recovery-alert impossible">'+
+              '<div class="resumo-recovery-left">'+
+                '<div class="resumo-recovery-badge">Aprovação impossível</div>'+
+                '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', mesmo tirando 10 no 3° Trimestre a média final não chega a 6.0</div>'+
+              '</div>'+
+            '</div>';
+          }else{
+            recHtml+='<div class="resumo-recovery-alert">'+
+              '<div class="resumo-recovery-left">'+
+                '<div class="resumo-recovery-badge">Nota necessária no 3° Trimestre</div>'+
+                '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você precisa tirar pelo menos:</div>'+
+              '</div>'+
+              '<div class="resumo-recovery-right">'+
+                '<div class="resumo-recovery-val">'+rec.minNeeded.toFixed(1)+'</div>'+
+                '<div class="resumo-recovery-val-lbl">no 3°T para passar</div>'+
+              '</div>'+
+            '</div>';
+          }
         }
       }
     }
@@ -5161,9 +5317,9 @@ function renderResumo(el){
         </div>
       </div>
       <div class="resumo-trims">
-        <div class="resumo-trim"><div class="resumo-trim-lbl">1° Trim</div><div class="resumo-trim-val ${st(t1)}">${fmt(t1)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t1!==null?(Math.min(t1/10,1)*100).toFixed(1):0}%;background:${SC(st(t1))}"></div></div></div>
-        <div class="resumo-trim"><div class="resumo-trim-lbl">2° Trim</div><div class="resumo-trim-val ${st(t2)}">${fmt(t2)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t2!==null?(Math.min(t2/10,1)*100).toFixed(1):0}%;background:${SC(st(t2))}"></div></div></div>
-        <div class="resumo-trim"><div class="resumo-trim-lbl">3° Trim</div><div class="resumo-trim-val ${st(t3)}">${fmt(t3)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t3!==null?(Math.min(t3/10,1)*100).toFixed(1):0}%;background:${SC(st(t3))}"></div></div></div>
+        <div class="resumo-trim"><div class="resumo-trim-lbl">1° Trim</div><div class="resumo-trim-val ${st(t1)}">${fmt(t1)}${e1!==null&&b1!==null&&e1>b1?'<span class="resumo-trim-eac-pill">EAC</span>':''}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t1!==null?(Math.min(t1/10,1)*100).toFixed(1):0}%;background:${SC(st(t1))}"></div></div></div>
+        <div class="resumo-trim"><div class="resumo-trim-lbl">2° Trim</div><div class="resumo-trim-val ${st(t2)}">${fmt(t2)}${e2!==null&&b2!==null&&e2>b2?'<span class="resumo-trim-eac-pill">EAC</span>':''}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t2!==null?(Math.min(t2/10,1)*100).toFixed(1):0}%;background:${SC(st(t2))}"></div></div></div>
+        <div class="resumo-trim"><div class="resumo-trim-lbl">3° Trim</div><div class="resumo-trim-val ${st(t3)}">${fmt(t3)}${e3!==null&&b3!==null&&e3>b3?'<span class="resumo-trim-eac-pill">EAC</span>':''}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t3!==null?(Math.min(t3/10,1)*100).toFixed(1):0}%;background:${SC(st(t3))}"></div></div></div>
       </div>
       <div class="resumo-pbar-wrap"><div class="resumo-pbar"><div class="resumo-pbar-fill" style="width:${pct}%;background:${statusColor}"></div></div></div>
       ${recHtml}
