@@ -470,6 +470,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .exam-tipo-chip.trabalho{background:var(--violetbg);color:var(--violet);border-color:var(--violetbd)}
 .exam-tipo-chip svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
 
+/* badge unificado: data + hora */
+.exam-info-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--bg3);border:1px solid var(--line2);
+  border-radius:7px;
+  padding:4px 8px;
+  font-size:11px;font-weight:600;color:var(--t2);
+  font-family:var(--ffm);white-space:nowrap;
+}
+.exam-info-badge svg{width:10px;height:10px;stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.exam-info-badge-tipo{display:none}
+.exam-info-badge-meta{font-family:var(--ffm);font-size:11px;font-weight:600;color:var(--t2)}
+
 /* ── badge "Editando" ── */
 .eval-item{position:relative}
 .eval-editing-badge{
@@ -731,12 +744,21 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* trimestre pills */
 .resumo-trims{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg2);border-top:1px solid var(--line3)}
 [data-theme="light"] .resumo-trims{background:var(--bg3)}
-.resumo-trim{padding:9px 6px;text-align:center;border-right:1px solid var(--line3)}
+.resumo-trim{padding:9px 6px 8px;text-align:center;border-right:1px solid var(--line3)}
 .resumo-trim:last-child{border-right:none}
 .resumo-trim-lbl{font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
 .resumo-trim-val{font-family:var(--ffm);font-size:15px;font-weight:700}
 .resumo-trim-val.pass{color:var(--green)}.resumo-trim-val.warn{color:var(--amber)}
 .resumo-trim-val.fail{color:var(--red)}.resumo-trim-val.pending{color:var(--t4)}
+.resumo-trim-pbar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin:5px 4px 0}
+.resumo-trim-pbar-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.22,1,.36,1);opacity:.9}
+/* resultado trimestre bars */
+.res-trim-bars{display:flex;gap:6px;margin-top:5px}
+.res-trim-bar-wrap{flex:1;display:flex;flex-direction:column;gap:2px}
+.res-trim-bar-label{font-size:9px;font-weight:700;color:var(--t4);letter-spacing:.3px}
+.res-trim-bar-val{font-family:var(--ffm);font-size:11px;font-weight:700;line-height:1}
+.res-trim-bar-track{height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;margin-top:2px}
+.res-trim-bar-fill{height:100%;border-radius:2px;transition:width .9s cubic-bezier(.22,1,.36,1)}
 
 /* pbar — um pouco mais generosa */
 .resumo-pbar-wrap{padding:0 16px 11px;background:var(--bg2)}
@@ -939,28 +961,47 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .field-wrap input::placeholder{color:var(--t3)}
 
 /* exam list */
-.exam-list{display:flex;flex-direction:column;gap:6px}
+.exam-list{display:flex;flex-direction:column;gap:7px}
 .exam-item{
-  background:var(--bg1);border-bottom:0.5px solid var(--line);
-  border-left:3.5px solid var(--accent-color,var(--bg4));
-  padding:15px 16px;
-  display:flex;align-items:center;gap:12px;
-  transition:background .14s var(--ease-ios);
+  background:var(--bg1);
+  border:1px solid var(--line2);
+  border-left:3.5px solid var(--gold);
+  border-radius:14px;
+  padding:13px 14px 12px;
+  display:flex;flex-direction:column;gap:8px;
+  transition:background .14s var(--ease-ios),border-color .14s;
   animation:fadeIn .22s var(--ease-ios) both;
+  overflow:hidden;cursor:default;
 }
-.exam-item:active{background:var(--bg3)}
-.exam-item.done{opacity:.5;border-left-color:var(--t4)!important}
+.exam-item[onclick]{cursor:pointer}
+.exam-item:active{background:var(--bg2)}
+.exam-item.done{opacity:.52;border-left-color:var(--t4)!important;filter:saturate(.5)}
 .exam-item.soon{border-color:var(--amberbd);border-left-color:var(--amber)}
 .exam-item.today-exam{border-color:var(--redbd);border-left-color:var(--red);background:var(--redbg)}
+.exam-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.exam-item-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
+.exam-tipo-pill{
+  display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
+  padding:3px 8px 3px 6px;border-radius:7px;
+  background:var(--goldbg);color:var(--gold);border:1px solid var(--goldbd);
+  font-size:10px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;
+  white-space:nowrap;
+}
+.exam-tipo-pill svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.exam-item.done .exam-tipo-pill{background:var(--bg3);color:var(--t4);border-color:var(--line2)}
+.exam-item.today-exam .exam-tipo-pill{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.25)}
+.exam-subj-name{font-size:14px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
+.exam-item-body{display:flex;flex-direction:column;gap:4px}
+.exam-meta-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.exam-item-actions{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
 
 .exam-info{flex:1;min-width:0}
 .exam-subj{font-size:14px;font-weight:700;color:var(--t1);margin-bottom:1px}
-.exam-title-txt{font-size:12px;color:var(--t3);margin-bottom:5px;font-style:italic}
-.exam-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.exam-title-txt{font-size:12px;color:var(--t3);margin-bottom:2px;font-style:italic}
 .exam-date-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--t3);background:var(--bg3);padding:3px 7px;border-radius:4px}
 .exam-date-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .exam-date-chip span{font-family:var(--ffm);font-size:11px;font-weight:600;color:var(--t2)}
-.exam-valor-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:3px 7px;border-radius:4px}
+.exam-valor-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:3px 7px;border-radius:5px}
 
 .exam-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .exam-days-badge{
@@ -1141,17 +1182,80 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   max-height:90dvh;display:flex;flex-direction:column;
   animation:slideUp .42s var(--ease-sheet);
 }
-.exam-sheet-handle-row{padding:12px 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.exam-sheet-handle{width:36px;height:4px;background:var(--bg5);border-radius:4px;opacity:.5}
-.exam-sheet-head{padding:12px 20px 16px;flex-shrink:0;border-bottom:1px solid var(--line)}
-.exam-sheet-color-bar{width:36px;height:4px;border-radius:2px;margin-bottom:10px}
-.exam-sheet-head-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.exam-sheet-close-btn{display:none;width:32px;height:32px;flex-shrink:0;border-radius:50%;background:var(--bg3);border:1px solid var(--line2);color:var(--t2);cursor:pointer;align-items:center;justify-content:center;transition:background .15s,opacity .15s}
-.exam-sheet-close-btn:active{opacity:.5}
-.exam-sheet-close-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+.exam-sheet-handle-row{padding:10px 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:absolute;top:0;left:0;right:0;z-index:3;pointer-events:none}
+.exam-sheet-handle{width:36px;height:4px;background:rgba(255,255,255,.5);border-radius:4px}
+.exam-sheet-head{
+  flex-shrink:0;border-bottom:1px solid var(--line2);
+  position:relative;overflow:hidden;border-radius:28px 28px 0 0;
+}
 .exam-sheet-color-bar,.subj-sheet-color-bar{display:none!important}
+/* hero colorido */
+.es-head-hero{
+  padding:28px 20px 20px;
+  position:relative;z-index:1;min-height:110px;
+  display:flex;flex-direction:column;justify-content:flex-end;
+}
+.es-head-bg{
+  position:absolute;inset:0;z-index:0;
+  transition:background .3s;
+}
+.es-head-bg-noise{
+  position:absolute;inset:0;z-index:1;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  opacity:.5;pointer-events:none;
+}
+/* badge tipo no topo do hero */
+.es-tipo-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 11px;border-radius:9px;
+  background:rgba(255,255,255,.18);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.28);
+  font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+  color:#fff;margin-bottom:10px;width:fit-content;
+}
+.es-tipo-badge svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+/* matéria + título */
+.es-hero-subj{
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.65);
+  letter-spacing:.1px;margin-bottom:3px;
+}
+.es-hero-title{
+  font-size:21px;font-weight:700;color:#fff;
+  letter-spacing:-.5px;line-height:1.25;
+  word-break:break-word;
+}
+/* data+hora pill no canto direito */
+.es-date-pill{
+  position:absolute;top:14px;right:14px;z-index:2;
+  display:flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:9px;
+  background:rgba(0,0,0,.28);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  font-size:11px;font-weight:600;color:rgba(255,255,255,.9);
+  font-family:var(--ffm);white-space:nowrap;
+}
+.es-date-pill svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+/* botão fechar */
+.exam-sheet-close-btn{
+  display:none;width:30px;height:30px;flex-shrink:0;border-radius:50%;
+  background:rgba(0,0,0,.25);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);
+  color:rgba(255,255,255,.9);cursor:pointer;
+  align-items:center;justify-content:center;
+  transition:background .15s;
+  position:absolute;top:14px;left:14px;z-index:2;
+}
+/* exam sheet head quando accent-text é preto (cores claras) */
+.exam-sheet-head[data-text-dark="1"] .es-hero-subj{color:rgba(0,0,0,.6)}
+.exam-sheet-head[data-text-dark="1"] .es-hero-title{color:rgba(0,0,0,.88)}
+.exam-sheet-head[data-text-dark="1"] .es-tipo-badge{color:rgba(0,0,0,.85);border-color:rgba(0,0,0,.18);background:rgba(0,0,0,.1)}
+.exam-sheet-head[data-text-dark="1"] .es-date-pill{background:rgba(0,0,0,.1);color:rgba(0,0,0,.8)}
+.exam-sheet-head[data-text-dark="1"] .exam-sheet-close-btn{background:rgba(0,0,0,.12);border-color:rgba(0,0,0,.18);color:rgba(0,0,0,.75)}
+.exam-sheet-head[data-text-dark="1"] .exam-sheet-handle{background:rgba(0,0,0,.25)}
+.exam-sheet-close-btn:active{background:rgba(0,0,0,.4)}
+.exam-sheet-close-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
 .exam-sheet-title{font-size:22px;font-weight:700;color:var(--t1);line-height:1.2;letter-spacing:-0.4px}
-.exam-sheet-body{overflow-y:auto;padding:18px 20px calc(28px + env(safe-area-inset-bottom));flex:1;display:flex;flex-direction:column;gap:16px}
+.exam-sheet-body{overflow-y:auto;padding:18px 20px calc(28px + env(safe-area-inset-bottom));flex:1;min-height:0;display:flex;flex-direction:column;gap:14px}
 
 .exam-cd-section{background:var(--bg2);border:1px solid var(--line2);border-radius:18px;padding:18px 16px}
 .exam-cd-header{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
@@ -2571,13 +2675,9 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   }
   .exam-sheet-handle-row { display:none; }
   .exam-sheet-head {
-    padding:24px 28px 18px;
     border-radius:22px 22px 0 0;
-    flex-shrink:0;
-    border-bottom:1px solid var(--line3);
   }
   .exam-sheet-close-btn { display:flex; }
-  .exam-sheet-title { font-size:24px; letter-spacing:-0.5px; }
   .exam-sheet-body {
     padding:24px 28px 32px;
     overflow-y:auto;
@@ -3085,12 +3185,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 
 .exam-item {
-  border-radius: var(--r-md);
-  border: 1.5px solid var(--line2) !important;
+  border-radius: var(--r-lg);
+  border: 1.5px solid var(--line2);
+  border-left: 3.5px solid var(--gold);
   box-shadow: var(--shadow-card);
 }
 [data-theme="dark"] .exam-item {
   background: #1A1A1E;
+  box-shadow: 0 2px 8px rgba(0,0,0,.35), 0 0 0 0.5px rgba(255,255,255,.04);
 }
 
 /* next exam hero */
@@ -4201,16 +4303,17 @@ input, textarea, select {
 <div class="exam-sheet-overlay" id="exam-sheet-overlay" onclick="closeExamSheet(event)">
   <div class="exam-sheet" id="exam-sheet">
     <div class="exam-sheet-handle-row"><div class="exam-sheet-handle"></div></div>
-    <div class="exam-sheet-head">
-      <div class="exam-sheet-color-bar" id="es-color-bar"></div>
-      <div class="exam-sheet-head-top">
-        <div>
-          <div class="exam-sheet-subj" id="es-subj">—</div>
-          <div class="exam-sheet-title" id="es-title">—</div>
-        </div>
-        <button class="exam-sheet-close-btn" onclick="closeExamSheet({target:document.getElementById('exam-sheet-overlay')})">
-          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+    <div class="exam-sheet-head" id="es-head">
+      <div class="es-head-bg" id="es-head-bg"></div>
+      <div class="es-head-bg-noise"></div>
+      <button class="exam-sheet-close-btn" onclick="closeExamSheet({target:document.getElementById('exam-sheet-overlay')})">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="es-date-pill" id="es-date-pill"></div>
+      <div class="es-head-hero">
+        <div class="es-tipo-badge" id="es-tipo-badge"></div>
+        <div class="es-hero-subj" id="es-subj"></div>
+        <div class="es-hero-title" id="es-title"></div>
       </div>
     </div>
     <div class="exam-sheet-body" id="es-body"></div>
@@ -4797,8 +4900,12 @@ function renderResultado(el){
       <div class="res-row-dot"></div>
       <div class="res-row-info">
         <div class="res-row-name">${s.name}</div>
-        <div class="chips"><span class="chip">1°T ${fmt(t1)}</span><span class="chip">2°T ${fmt(t2)}</span><span class="chip">3°T ${fmt(t3)}</span></div>
-        <div class="pbar"><div class="pbar-fill" style="width:${pct}%;background:${SC(s2)}"></div></div>
+        <div class="res-trim-bars">
+          <div class="res-trim-bar-wrap"><div class="res-trim-bar-label">1°T</div><div class="res-trim-bar-val" style="color:${SC(st(t1))}">${fmt(t1)}</div><div class="res-trim-bar-track"><div class="res-trim-bar-fill" style="width:${t1!==null?(Math.min(t1/10,1)*100).toFixed(1):0}%;background:${SC(st(t1))}"></div></div></div>
+          <div class="res-trim-bar-wrap"><div class="res-trim-bar-label">2°T</div><div class="res-trim-bar-val" style="color:${SC(st(t2))}">${fmt(t2)}</div><div class="res-trim-bar-track"><div class="res-trim-bar-fill" style="width:${t2!==null?(Math.min(t2/10,1)*100).toFixed(1):0}%;background:${SC(st(t2))}"></div></div></div>
+          <div class="res-trim-bar-wrap"><div class="res-trim-bar-label">3°T</div><div class="res-trim-bar-val" style="color:${SC(st(t3))}">${fmt(t3)}</div><div class="res-trim-bar-track"><div class="res-trim-bar-fill" style="width:${t3!==null?(Math.min(t3/10,1)*100).toFixed(1):0}%;background:${SC(st(t3))}"></div></div></div>
+        </div>
+        <div class="pbar" style="margin-top:6px"><div class="pbar-fill" style="width:${pct}%;background:${SC(s2)}"></div></div>
       </div>
       <div class="res-row-final"><span class="res-row-num">${fmt(g)}</span><span class="res-row-status">${SL[s2]}</span></div>
     </div>`;
@@ -4859,9 +4966,9 @@ function renderResumo(el){
         </div>
       </div>
       <div class="resumo-trims">
-        <div class="resumo-trim"><div class="resumo-trim-lbl">1° Trim</div><div class="resumo-trim-val ${st(t1)}">${fmt(t1)}</div></div>
-        <div class="resumo-trim"><div class="resumo-trim-lbl">2° Trim</div><div class="resumo-trim-val ${st(t2)}">${fmt(t2)}</div></div>
-        <div class="resumo-trim"><div class="resumo-trim-lbl">3° Trim</div><div class="resumo-trim-val ${st(t3)}">${fmt(t3)}</div></div>
+        <div class="resumo-trim"><div class="resumo-trim-lbl">1° Trim</div><div class="resumo-trim-val ${st(t1)}">${fmt(t1)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t1!==null?(Math.min(t1/10,1)*100).toFixed(1):0}%;background:${SC(st(t1))}"></div></div></div>
+        <div class="resumo-trim"><div class="resumo-trim-lbl">2° Trim</div><div class="resumo-trim-val ${st(t2)}">${fmt(t2)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t2!==null?(Math.min(t2/10,1)*100).toFixed(1):0}%;background:${SC(st(t2))}"></div></div></div>
+        <div class="resumo-trim"><div class="resumo-trim-lbl">3° Trim</div><div class="resumo-trim-val ${st(t3)}">${fmt(t3)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t3!==null?(Math.min(t3/10,1)*100).toFixed(1):0}%;background:${SC(st(t3))}"></div></div></div>
       </div>
       <div class="resumo-pbar-wrap"><div class="resumo-pbar"><div class="resumo-pbar-fill" style="width:${pct}%;background:${statusColor}"></div></div></div>
     </div>`;
@@ -5443,25 +5550,38 @@ function renderProvas(el){
       const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'#505050';
       const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
       const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
-      const tipoChip=`<span class="exam-tipo-chip ${e.tipo==='trabalho'?'trabalho':'prova'}">${tipoLabel}</span>`;
-      const timeHtml=e.examTime?`<span class="exam-time-chip"><svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:2px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${escHtml(e.examTime)}</span>`:'';
-      const titleHtml=e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:'';
+      const tipoIcon=e.tipo==='trabalho'
+        ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+        :`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+      // extrai só o horário de início (ex: "07:00 – 07:50" → "07:00")
+      const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
+      const metaTxt=timeStart?`${fmtDateBR(e.examDate)} · ${timeStart}`:fmtDateBR(e.examDate);
+      const dateSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+      const infoBadge=`<div class="exam-info-badge">${dateSvg}${metaTxt}</div>`;
+      
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
       const notifScheduled=getExamNotif(e.id);
       const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--gold)" stroke="var(--gold)"/>':''}</svg></button>`;
       const conteudoHtml=(!isPast&&e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
       return`<div class="exam-item ${itemCls}" ${clickAttr}>
-        <div class="exam-info">
-          <div class="exam-subj">${escHtml(e.subj)}</div>${titleHtml}
+        <div class="exam-item-head">
+          <div class="exam-item-head-left">
+            <span class="exam-tipo-pill">${tipoIcon}${tipoLabel}</span>
+            <span class="exam-subj-name">${escHtml(e.subj)}</span>
+          </div>
+          <div class="exam-item-actions">
+            <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
+          </div>
+        </div>
+        <div class="exam-item-body">
+          ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
           <div class="exam-meta-row">
-            ${tipoChip}
-            <div class="exam-date-chip"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span>${fmtDateBR(e.examDate)}</span></div>
-            ${valorHtml}${timeHtml}
+            ${infoBadge}
+            ${valorHtml}
           </div>
           ${conteudoHtml}
         </div>
-        <div class="exam-right">
-          <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
+        <div class="exam-item-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:-2px">
           ${bellBtn}
           <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
@@ -5495,11 +5615,33 @@ function openExamDetail(examId){
   const cd=fmtCd(ms);
   const weekDay=PT_WEEKDAYS[new Date(e.examDate+'T00:00:00').getDay()];
 
-  document.getElementById('es-color-bar').style.background=color;
-  document.getElementById('es-subj').textContent=e.subj;
+  // usa a cor accent do usuário no header
+  const cStyle=getComputedStyle(document.documentElement);
+  const accentColor=(cStyle.getPropertyValue('--gold')||'#FFD60A').trim();
+  const accentText=(cStyle.getPropertyValue('--accent-text')||'#ffffff').trim();
+  const isDarkText=accentText==='#000000'||accentText==='#000';
+
+  document.getElementById('es-head-bg').style.background=
+    `linear-gradient(150deg,${accentColor} 0%,${accentColor}cc 55%,${accentColor}88 100%)`;
+  document.getElementById('es-head').setAttribute('data-text-dark',isDarkText?'1':'0');
+
+  // ── Hero header ──────────────────────────────────────────
   const tipoDefault=e.tipo==='trabalho'?'Trabalho':'Prova';
+  const tipoIcon=e.tipo==='trabalho'
+    ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+    :`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+  document.getElementById('es-tipo-badge').innerHTML=tipoIcon+tipoDefault;
+  document.getElementById('es-subj').textContent=e.subj;
   document.getElementById('es-title').textContent=e.title||tipoDefault;
 
+  const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
+  const datePillTxt=timeStart
+    ?`${fmtDateBR(e.examDate)}&nbsp;&middot;&nbsp;${timeStart}`
+    :fmtDateBR(e.examDate);
+  document.getElementById('es-date-pill').innerHTML=
+    `<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${datePillTxt}`;
+
+  // ── Urgência ──────────────────────────────────────────────
   let cdColor,urgLabel,urgBg;
   const tipoHoje=e.tipo==='trabalho'?'Trabalho HOJE!':'Prova HOJE!';
   if(diff===0&&!isExamPast(e)){cdColor='var(--red)';urgLabel=`<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> ${tipoHoje}`;urgBg='var(--redbg)';}
@@ -5508,19 +5650,12 @@ function openExamDetail(examId){
   else if(diff<=7){cdColor='var(--gold)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Esta semana';urgBg='var(--goldbg)';}
   else{cdColor='var(--green)';urgLabel='<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;margin-right:3px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Com antecedência';urgBg='var(--greenbg)';}
 
-  const tipoRow=`<div class="exam-detail-row">
-    <span class="edr-label">Tipo</span>
-    <span class="edr-val"><span class="exam-tipo-chip ${e.tipo==='trabalho'?'trabalho':'prova'}">${tipoDefault}</span></span>
-  </div>`;
+  // valor — tipo e horário já aparecem no hero, sem duplicar
   const valorRow=e.valor?`<div class="exam-detail-row">
     <span class="edr-label">Valor</span>
     <span class="edr-val">${parseFloat(e.valor).toFixed(1)} pts</span>
   </div>`:'';
 
-  const timeRow=e.examTime?`<div class="exam-detail-row">
-    <span class="edr-label">Horário</span>
-    <span class="edr-val">${escHtml(e.examTime)}</span>
-  </div>`:'';
 
   const body=`
     <div class="exam-cd-section">
@@ -5552,16 +5687,10 @@ function openExamDetail(examId){
         <span class="edr-label">Matéria</span>
         <span class="edr-val">${escHtml(e.subj)}</span>
       </div>
-      ${tipoRow}
       <div class="exam-detail-row">
         <span class="edr-label">Dia da semana</span>
         <span class="edr-val">${weekDay}</span>
       </div>
-      <div class="exam-detail-row">
-        <span class="edr-label">Data</span>
-        <span class="edr-val">${fmtDateBR(e.examDate)}</span>
-      </div>
-      ${timeRow}
       ${valorRow}
       <div class="exam-detail-row">
         <span class="edr-label">Urgência</span>
@@ -7491,97 +7620,203 @@ const _WX_DESCS = {
 
 function _isNight(){const h=new Date().getHours();return h<6||h>=19;}
 
-/* SVG path fragments */
-const _WXS={
-  sun:`<circle cx="28" cy="28" r="10.5" fill="#FFD60A"/>
-    <g stroke="#FFD60A" stroke-width="2.8" stroke-linecap="round">
-      <line x1="28" y1="5" x2="28" y2="11"/><line x1="28" y1="45" x2="28" y2="51"/>
-      <line x1="5" y1="28" x2="11" y2="28"/><line x1="45" y1="28" x2="51" y2="28"/>
-      <line x1="11.5" y1="11.5" x2="15.5" y2="15.5"/><line x1="40.5" y1="40.5" x2="44.5" y2="44.5"/>
-      <line x1="44.5" y1="11.5" x2="40.5" y2="15.5"/><line x1="15.5" y1="40.5" x2="11.5" y2="44.5"/>
-    </g>`,
-  moon:`<path d="M31 8a14 14 0 1 1-14 14c0-.5 0-1 .07-1.5A10 10 0 0 0 31 8z" transform="translate(1 5)" fill="#D1D9EA"/>
-    <circle cx="37" cy="13" r="2.2" fill="#B8C6DC" opacity=".85"/>
-    <circle cx="43" cy="21" r="1.4" fill="#B8C6DC" opacity=".7"/>
-    <circle cx="34" cy="8" r="1.4" fill="#B8C6DC" opacity=".8"/>`,
-  sun_sm:`<circle cx="19" cy="19" r="7.5" fill="#FFD60A"/>
-    <g stroke="#FFD60A" stroke-width="2.2" stroke-linecap="round">
-      <line x1="19" y1="5" x2="19" y2="9.5"/><line x1="5" y1="19" x2="9.5" y2="19"/>
-      <line x1="9.3" y1="9.3" x2="12.5" y2="12.5"/><line x1="28.7" y1="9.3" x2="25.5" y2="12.5"/>
-    </g>`,
-  moon_sm:`<path d="M22 9a9 9 0 1 1-9 9c0-.3 0-.65.04-.97A6.5 6.5 0 0 0 22 9z" fill="#C8D2E8"/>`,
-  cloud_md:`<path d="M44 37H20a10.5 10.5 0 0 1-1.5-20.9A12.5 12.5 0 0 1 42 21.2 10.5 10.5 0 0 1 44 37z" fill="#94A3B8"/>`,
-  cloud_md_night:`<path d="M44 37H20a10.5 10.5 0 0 1-1.5-20.9A12.5 12.5 0 0 1 42 21.2 10.5 10.5 0 0 1 44 37z" fill="#5A6476"/>`,
-  cloud_dk:`<path d="M44 35H18a11 11 0 0 1-1.7-21.9A13 13 0 0 1 41 17.5 11 11 0 0 1 44 35z" fill="#334155"/>`,
-  cloud_blue:`<path d="M42 34H20a10 10 0 0 1-1.5-19.9A12 12 0 0 1 40 19.2 10 10 0 0 1 42 34z" fill="#475569"/>`,
-  drops_sm:`<g stroke="#93C5FD" stroke-width="2.4" stroke-linecap="round">
-    <line x1="20" y1="42" x2="17" y2="51"/><line x1="31" y1="42" x2="28" y2="51"/><line x1="42" y1="42" x2="39" y2="51"/>
-  </g>`,
-  drops_md:`<g stroke="#60A5FA" stroke-width="2.8" stroke-linecap="round">
-    <line x1="17" y1="41" x2="13" y2="52"/><line x1="28" y1="41" x2="24" y2="52"/>
-    <line x1="39" y1="41" x2="35" y2="52"/><line x1="50" y1="41" x2="46" y2="52"/>
-  </g>`,
-  drops_hvy:`<g stroke="#3B82F6" stroke-width="3" stroke-linecap="round">
-    <line x1="14" y1="40" x2="9" y2="53"/><line x1="25" y1="40" x2="20" y2="53"/>
-    <line x1="36" y1="40" x2="31" y2="53"/><line x1="47" y1="40" x2="42" y2="53"/>
-  </g>`,
-  snow_dots:`<g fill="#BAE6FD">
-    <circle cx="20" cy="42" r="3"/><circle cx="31" cy="46" r="3"/>
-    <circle cx="42" cy="42" r="3"/><circle cx="26" cy="53" r="2.5"/><circle cx="37" cy="53" r="2.5"/>
-  </g>`,
-  bolt:`<path d="M27 33l-6 11h8l-6 14 14-17H29l6-8z" fill="#FFD60A" stroke="#E8B800" stroke-width=".8" stroke-linejoin="round"/>`,
-  fog:`<g stroke="#94A3B8" stroke-width="3" stroke-linecap="round" fill="none">
-    <path d="M8 18 Q18 14 28 18 Q38 22 48 18"/>
-    <path d="M8 26 Q18 22 28 26 Q38 30 48 26"/>
-    <path d="M8 34 Q18 30 28 34 Q38 38 48 34"/>
-    <path d="M12 42 Q21 38 30 42 Q39 46 44 42"/>
-  </g>`,
-  fog_night:`<g stroke="#6B7A92" stroke-width="3" stroke-linecap="round" fill="none">
-    <path d="M8 18 Q18 14 28 18 Q38 22 48 18"/>
-    <path d="M8 26 Q18 22 28 26 Q38 30 48 26"/>
-    <path d="M8 34 Q18 30 28 34 Q38 38 48 34"/>
-    <path d="M12 42 Q21 38 30 42 Q39 46 44 42"/>
-  </g>`,
-  stars:`<circle cx="43" cy="9" r="1.7" fill="#D1D9EA" opacity=".8"/>
-    <circle cx="47" cy="16" r="1.1" fill="#D1D9EA" opacity=".6"/>
-    <circle cx="40" cy="5" r="1.1" fill="#D1D9EA" opacity=".7"/>`,
-};
-
+/* ══════════════════════════════════════
+   WEATHER ICONS — redesenhados
+   viewBox 0 0 56 56 em todos os ícones
+   Usa uid aleatório para máscaras SVG (sem conflito de ID)
+══════════════════════════════════════ */
 function _wxIconHtml(code,isNight,size){
   size=size||56;
+  /* uid único para masks — SVGs inline compartilham o mesmo DOM */
+  const u=(Math.random()*0xFFFFF|0).toString(36);
+
+  /* ─── Paleta ─────────────────────────────── */
+  const SUN='#FFD60A', SUN_GLOW='rgba(255,214,10,.22)';
+  const MOON='#D8EAFB', MOON_DIM='#B0C4DE';
+  const CLD_LT='#8A9DBB', CLD_LT_N='#4A5568';   /* light cloud / night */
+  const CLD_BL='#3D5A7A';                         /* blue cloud — moderate rain */
+  const CLD_DK='#1C2A3D';                         /* dark storm cloud */
+  const R_LT='#93C5FD', R_MD='#5DA8F5', R_HV='#3B82F6';
+  const SNW='#BAE6FD';
+  const FOG_D='#8A9DBB', FOG_N='#4D5D73';
+  const BOLT='#FFD60A';
+
+  /* ─── Formas base ─────────────────────────── */
+
+  /* SOL completo — centrado em (28,28), r=11, 8 raios geometricamente corretos */
+  const sunFull=`
+    <circle cx="28" cy="28" r="11" fill="${SUN}"/>
+    <circle cx="28" cy="28" r="14.5" fill="${SUN_GLOW}"/>
+    <g stroke="${SUN}" stroke-width="2.4" stroke-linecap="round">
+      <line x1="28" y1="7.5" x2="28" y2="13.5"/>
+      <line x1="28" y1="42.5" x2="28" y2="48.5"/>
+      <line x1="7.5"  y1="28" x2="13.5" y2="28"/>
+      <line x1="42.5" y1="28" x2="48.5" y2="28"/>
+      <line x1="12.7" y1="12.7" x2="17.5" y2="17.5"/>
+      <line x1="43.3" y1="12.7" x2="38.5" y2="17.5"/>
+      <line x1="43.3" y1="43.3" x2="38.5" y2="38.5"/>
+      <line x1="12.7" y1="43.3" x2="17.5" y2="38.5"/>
+    </g>`;
+
+  /* LUA cheia — crescente via máscara SVG, estrelas */
+  const moonFull=`
+    <defs>
+      <mask id="mc${u}">
+        <rect width="56" height="56" fill="white"/>
+        <circle cx="35" cy="24" r="13.5" fill="black"/>
+      </mask>
+    </defs>
+    <circle cx="27" cy="29" r="15" fill="${MOON}" mask="url(#mc${u})"/>
+    <g fill="${MOON_DIM}">
+      <circle cx="45" cy="10" r="2"   opacity=".85"/>
+      <circle cx="51" cy="19" r="1.3" opacity=".6"/>
+      <circle cx="43" cy="5"  r="1.3" opacity=".7"/>
+      <circle cx="50" cy="8"  r="1"   opacity=".45"/>
+    </g>`;
+
+  /* SOL PEQUENO — canto superior esquerdo para "parcialmente nublado" */
+  const sunSm=`
+    <circle cx="18" cy="17" r="8" fill="${SUN}"/>
+    <circle cx="18" cy="17" r="11" fill="${SUN_GLOW}"/>
+    <g stroke="${SUN}" stroke-width="1.9" stroke-linecap="round">
+      <line x1="18" y1="4"    x2="18" y2="8.5"/>
+      <line x1="18" y1="25.5" x2="18" y2="30"/>
+      <line x1="5"  y1="17"   x2="9.5" y2="17"/>
+      <line x1="26.5" y1="17" x2="31" y2="17"/>
+      <line x1="8.6"  y1="7.6"  x2="11.8" y2="10.8"/>
+      <line x1="27.4" y1="7.6"  x2="24.2" y2="10.8"/>
+      <line x1="27.4" y1="26.4" x2="24.2" y2="23.2"/>
+      <line x1="8.6"  y1="26.4" x2="11.8" y2="23.2"/>
+    </g>`;
+
+  /* LUA PEQUENA — crescente via máscara */
+  const moonSm=`
+    <defs>
+      <mask id="mcs${u}">
+        <rect width="56" height="56" fill="white"/>
+        <circle cx="25" cy="14" r="9" fill="black"/>
+      </mask>
+    </defs>
+    <circle cx="19" cy="18" r="10.5" fill="${MOON}" opacity=".92" mask="url(#mcs${u})"/>`;
+
+  /* NUVEM LEVE — posicionada para combo com sol/lua no canto superior esquerdo */
+  const cldCombo=(isNight?CLD_LT_N:CLD_LT);
+  const cloudCombo=`<path d="M48 44H28a13 13 0 0 1-2.2-25.8A15 15 0 0 1 46 26.2 13 13 0 0 1 48 44z" fill="${cldCombo}"/>`;
+
+  /* NUVEM CENTRALIZADA — para garoa/neve/chuva sozinha */
+  const cloudLt=`<path d="M46 39H22a12 12 0 0 1-2-23.8A14 14 0 0 1 44 22.2 12 12 0 0 1 46 39z" fill="${CLD_LT}"/>`;
+  const cloudLtN=`<path d="M46 39H22a12 12 0 0 1-2-23.8A14 14 0 0 1 44 22.2 12 12 0 0 1 46 39z" fill="${CLD_LT_N}"/>`;
+
+  /* NUVEM AZUL — para chuva moderada */
+  const cloudBl=`<path d="M46 37H20a13 13 0 0 1-2.2-25.8A15 15 0 0 1 44 19.2 13 13 0 0 1 46 37z" fill="${CLD_BL}"/>`;
+
+  /* NUVEM ESCURA — para chuva forte / tempestade */
+  const cloudDk=`<path d="M47 35H17a14 14 0 0 1-2.5-27.8A16 16 0 0 1 44 17.2 14 14 0 0 1 47 35z" fill="${CLD_DK}"/>`;
+
+  /* NUBLADO — duas nuvens sobrepostas */
+  const overcast=isNight
+    ?`<path d="M44 31H20a11 11 0 0 1-2-21.8A13 13 0 0 1 42 15.5 11 11 0 0 1 44 31z" fill="#3C4A5E"/>
+      <path d="M48 43H24a10 10 0 0 1-1.8-19.8A12 12 0 0 1 46 28.5 10 10 0 0 1 48 43z" fill="#2D3A4C"/>`
+    :`<path d="M44 31H20a11 11 0 0 1-2-21.8A13 13 0 0 1 42 15.5 11 11 0 0 1 44 31z" fill="#94A3B8"/>
+      <path d="M48 43H24a10 10 0 0 1-1.8-19.8A12 12 0 0 1 46 28.5 10 10 0 0 1 48 43z" fill="#6E7F9A"/>`;
+
+  /* GOTAS DE CHUVA — inclinadas ~20° para a esquerda (dx=-3.5 para cada 10px de altura) */
+  const dropsLt=`<g stroke="${R_LT}" stroke-width="2.2" stroke-linecap="round">
+    <line x1="22" y1="43" x2="18.5" y2="53"/>
+    <line x1="32" y1="43" x2="28.5" y2="53"/>
+    <line x1="42" y1="43" x2="38.5" y2="53"/>
+  </g>`;
+
+  const dropsMd=`<g stroke="${R_MD}" stroke-width="2.6" stroke-linecap="round">
+    <line x1="17" y1="41" x2="12.5" y2="53"/>
+    <line x1="27" y1="41" x2="22.5" y2="53"/>
+    <line x1="37" y1="41" x2="32.5" y2="53"/>
+    <line x1="47" y1="41" x2="42.5" y2="53"/>
+  </g>`;
+
+  const dropsHv=`<g stroke="${R_HV}" stroke-width="3" stroke-linecap="round">
+    <line x1="13" y1="39" x2="7.5"  y2="53"/>
+    <line x1="22" y1="39" x2="16.5" y2="53"/>
+    <line x1="31" y1="39" x2="25.5" y2="53"/>
+    <line x1="40" y1="39" x2="34.5" y2="53"/>
+    <line x1="49" y1="39" x2="43.5" y2="53"/>
+  </g>`;
+
+  /* GOTAS PARA TEMPESTADE — laterais, deixa espaço pro raio */
+  const dropsTh=`<g stroke="${R_MD}" stroke-width="2.2" stroke-linecap="round">
+    <line x1="14" y1="40" x2="11" y2="50"/>
+    <line x1="46" y1="40" x2="43" y2="50"/>
+  </g>`;
+
+  /* FLOCO DE NEVE — dois flocos simétricos */
+  const snowFlakes=`<g stroke="${SNW}" stroke-width="1.9" stroke-linecap="round">
+    <line x1="19" y1="42" x2="19" y2="53"/><line x1="13.5" y1="47.5" x2="24.5" y2="47.5"/>
+    <line x1="15"  y1="43.5" x2="23" y2="51.5"/><line x1="23"  y1="43.5" x2="15" y2="51.5"/>
+    <line x1="37" y1="43" x2="37" y2="53"/><line x1="31.5" y1="48" x2="42.5" y2="48"/>
+    <line x1="33" y1="44.5" x2="41" y2="51.5"/><line x1="41" y1="44.5" x2="33" y2="51.5"/>
+  </g>`;
+
+  /* NEVE LEVE — bolinhas estilizadas */
+  const snowDots=`<g fill="${SNW}">
+    <circle cx="20" cy="44" r="3.5"/><circle cx="30" cy="49" r="3.5"/>
+    <circle cx="40" cy="44" r="3.5"/><circle cx="25" cy="54" r="2.8"/><circle cx="36" cy="54" r="2.8"/>
+  </g>`;
+
+  /* RAIO — bolt limpo e legível em qualquer tamanho */
+  const bolt=`<path d="M30 32l-9 13h9.5l-9 15 18-23H29l9-5z"
+    fill="${BOLT}" stroke="#C8A000" stroke-width=".9" stroke-linejoin="round"/>`;
+
+  /* NÉVOA — linhas onduladas com amplitude decrescente */
+  const fogLines=isNight
+    ?`<g stroke="${FOG_N}" stroke-width="2.8" stroke-linecap="round" fill="none">
+        <path d="M6  15 Q16 11 26 15 Q36 19 46 15"/>
+        <path d="M6  24 Q16 20 26 24 Q36 28 46 24"/>
+        <path d="M6  33 Q16 29 26 33 Q36 37 46 33"/>
+        <path d="M9  42 Q18 38 27 42 Q36 46 42 42"/>
+      </g>`
+    :`<g stroke="${FOG_D}" stroke-width="2.8" stroke-linecap="round" fill="none">
+        <path d="M6  15 Q16 11 26 15 Q36 19 46 15"/>
+        <path d="M6  24 Q16 20 26 24 Q36 28 46 24"/>
+        <path d="M6  33 Q16 29 26 33 Q36 37 46 33"/>
+        <path d="M9  42 Q18 38 27 42 Q36 46 42 42"/>
+      </g>`;
+
+  /* ─── Composição por código WMO ──────────── */
   let body='';
   if(code===0||code===1){
-    body=isNight?(_WXS.moon+_WXS.stars):_WXS.sun;
+    body=isNight ? moonFull : sunFull;
   }else if(code===2){
-    body=isNight?(_WXS.moon_sm+_WXS.stars+_WXS.cloud_md_night):(_WXS.sun_sm+_WXS.cloud_md);
+    body=isNight ? (moonSm+cloudCombo) : (sunSm+cloudCombo);
   }else if(code===3){
-    body=isNight
-      ?`<path d="M44 33H20a10.5 10.5 0 0 1-1.5-20.9A12.5 12.5 0 0 1 42 17.2 10.5 10.5 0 0 1 44 33z" fill="#4A5568"/><path d="M46 43H24a8 8 0 0 1-1.2-15.9A10 10 0 0 1 44 31 8 8 0 0 1 46 43z" fill="#374151" opacity=".65"/>`
-      :`<path d="M44 33H20a10.5 10.5 0 0 1-1.5-20.9A12.5 12.5 0 0 1 42 17.2 10.5 10.5 0 0 1 44 33z" fill="#94A3B8"/><path d="M46 43H24a8 8 0 0 1-1.2-15.9A10 10 0 0 1 44 31 8 8 0 0 1 46 43z" fill="#6B7A92" opacity=".6"/>`;
+    body=overcast;
   }else if(code===45||code===48){
-    body=isNight?_WXS.fog_night:_WXS.fog;
+    body=fogLines;
   }else if(code>=51&&code<=55){
-    body=(isNight?_WXS.cloud_md_night:_WXS.cloud_md)+_WXS.drops_sm;
+    /* garoa: nuvem centralizada + gotas leves */
+    body=(isNight?cloudLtN:cloudLt)+dropsLt;
   }else if(code>=61&&code<=63){
-    body=_WXS.cloud_blue+_WXS.drops_md;
+    body=cloudBl+dropsMd;
   }else if(code===65||code===67){
-    body=_WXS.cloud_dk+_WXS.drops_hvy;
-  }else if(code>=71&&code<=77){
-    body=_WXS.cloud_md+_WXS.snow_dots;
+    body=cloudDk+dropsHv;
+  }else if(code>=71&&code<=73){
+    body=(isNight?cloudLtN:cloudLt)+snowDots;
+  }else if(code>=75&&code<=77){
+    body=cloudBl+snowFlakes;
   }else if(code===80){
-    body=(isNight?_WXS.cloud_md_night:_WXS.cloud_md)+_WXS.drops_sm;
+    /* pancadas leves: sol/lua + nuvem combo + gotas */
+    body=(isNight?(moonSm+cloudCombo):(sunSm+cloudCombo))+dropsLt;
   }else if(code===81){
-    body=_WXS.cloud_blue+_WXS.drops_md;
+    body=cloudBl+dropsMd;
   }else if(code===82){
-    body=_WXS.cloud_dk+_WXS.drops_hvy;
+    body=cloudDk+dropsHv;
   }else if(code===85||code===86){
-    body=_WXS.cloud_dk+_WXS.snow_dots;
+    body=cloudBl+snowFlakes;
   }else if(code>=95){
-    body=_WXS.cloud_dk+_WXS.drops_sm+_WXS.bolt;
+    body=cloudDk+dropsTh+bolt;
   }else{
-    body=isNight?_WXS.cloud_md_night:_WXS.cloud_md;
+    body=isNight?(moonSm+cloudCombo):(sunSm+cloudCombo);
   }
-  return `<svg viewBox="0 0 56 56" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0">${body}</svg>`;
+  return`<svg viewBox="0 0 56 56" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;overflow:visible">${body}</svg>`;
 }
 
 function _wxCode(code){
