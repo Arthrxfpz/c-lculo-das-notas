@@ -752,6 +752,51 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-trim-val.fail{color:var(--red)}.resumo-trim-val.pending{color:var(--t4)}
 .resumo-trim-pbar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin:5px 4px 0}
 .resumo-trim-pbar-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.22,1,.36,1);opacity:.9}
+/* ── Trimester recovery alert (resumo cards) ── */
+.resumo-recovery-alert{
+  margin:0 12px 12px;
+  padding:10px 14px;
+  background:var(--amberbg);
+  border:1px solid var(--amberbd);
+  border-radius:12px;
+  display:flex;align-items:center;gap:12px;
+}
+.resumo-recovery-alert.impossible{
+  background:var(--redbg);border-color:var(--redbd);
+}
+.resumo-recovery-left{flex:1;min-width:0}
+.resumo-recovery-badge{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--amber);margin-bottom:2px;
+}
+.resumo-recovery-alert.impossible .resumo-recovery-badge{color:var(--red)}
+.resumo-recovery-desc{font-size:12px;font-weight:500;color:var(--t2);line-height:1.4}
+.resumo-recovery-right{text-align:right;flex-shrink:0}
+.resumo-recovery-val{
+  font-family:var(--ffm);font-size:24px;font-weight:700;color:var(--amber);
+  line-height:1;letter-spacing:-0.5px;
+}
+.resumo-recovery-alert.impossible .resumo-recovery-val{color:var(--red)}
+.resumo-recovery-val-lbl{font-size:9px;font-weight:600;color:var(--amber);margin-top:2px;letter-spacing:.2px;white-space:nowrap}
+.resumo-recovery-alert.impossible .resumo-recovery-val-lbl{color:var(--red)}
+
+/* ── Risk row recovery info (resultado) ── */
+.risk-recovery{
+  margin-top:8px;padding:9px 12px;border-radius:10px;
+  background:var(--amberbg);border:1px solid var(--amberbd);
+  display:flex;align-items:center;gap:10px;
+}
+.risk-recovery.impossible{background:var(--redbg);border-color:var(--redbd)}
+.risk-recovery-body{flex:1;min-width:0}
+.risk-recovery-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--amber);margin-bottom:1px}
+.risk-recovery.impossible .risk-recovery-label{color:var(--red)}
+.risk-recovery-txt{font-size:12px;font-weight:500;color:var(--t2);line-height:1.35}
+.risk-recovery-num{
+  font-family:var(--ffm);font-size:22px;font-weight:700;color:var(--amber);
+  flex-shrink:0;line-height:1;letter-spacing:-0.5px;
+}
+.risk-recovery.impossible .risk-recovery-num{color:var(--red)}
+
 /* resultado trimestre bars */
 .res-trim-bars{display:flex;gap:6px;margin-top:5px}
 .res-trim-bar-wrap{flex:1;display:flex;flex-direction:column;gap:2px}
@@ -4630,7 +4675,53 @@ function finalGrade(sid){
 const fmt=n=>n===null?'—':Number(n).toFixed(1);
 const st=n=>n===null?'pending':n>=6?'pass':n>=5?'warn':'fail';
 const SL={pass:'Aprovado',fail:'Reprovado',warn:'Em Risco',pending:'Pendente'};
+
+/* Status definitivo: se todos os trimestres estão fechados e nota < 6 → reprovado, sem "Em Risco" */
+function stFinal(sid,grade){
+  if(grade===null)return'pending';
+  if(grade>=6)return'pass';
+  const t1=trimGrade(sid,'1T'),t2=trimGrade(sid,'2T'),t3=trimGrade(sid,'3T');
+  const allDone=t1!==null&&t2!==null&&t3!==null;
+  if(allDone)return'fail'; // todos fechados e abaixo de 6 = reprovado
+  return grade>=5?'warn':'fail';
+}
 const SC=s=>s==='pass'?'var(--green)':s==='fail'?'var(--red)':s==='warn'?'var(--amber)':'var(--bg4)';
+
+/**
+ * Retorna informações de recuperação para um trimestre fechado com nota < 6.
+ * Calcula o mínimo necessário no próximo trimestre para ainda ser possível passar.
+ * Fórmula: (T1×3 + T2×3 + T3×4) / 10 ≥ 6  →  soma ≥ 60
+ */
+function getTrimesterRecovery(sid){
+  const t1=trimGrade(sid,'1T');
+  const t2=trimGrade(sid,'2T');
+  const t3=trimGrade(sid,'3T');
+
+  // T1 fechado, T2 ainda pendente — mostra mínimo no T2
+  // Para compensar o T1 e manter média dos dois ≥ 6: T2 = 12 − T1
+  if(t1!==null && t2===null){
+    if(t1<6){
+      const minT2=12-t1;
+      return{
+        phase:'t2',
+        t1,
+        minNeeded:Math.max(0,minT2),
+        impossible:minT2>10
+      };
+    }
+    return null;
+  }
+
+  // T1+T2 fechados, T3 ainda pendente — mostra mínimo no T3
+  // Fórmula real: (T1×3 + T2×3 + T3×4) / 10 = 6  →  T3 = (60 − T1×3 − T2×3) / 4
+  if(t1!==null && t2!==null && t3===null){
+    const minT3=(60-t1*3-t2*3)/4;
+    if(minT3<=0) return{phase:'t3',t1,t2,alreadyPassed:true,impossible:false,minNeeded:0};
+    return{phase:'t3',t1,t2,alreadyPassed:false,impossible:minT3>10,minNeeded:minT3};
+  }
+
+  return null;
+}
 
 /* ══════════════════════════════════════════
    LAYOUT SYNC
@@ -4753,7 +4844,7 @@ function renderResultado(el){
   let pass=0,fail=0,warn=0,pend=0,sum=0,cnt=0;
   const subjScores=[];
   SUBJECTS.forEach(s=>{
-    const g=finalGrade(s.id),s2=st(g);
+    const g=finalGrade(s.id),s2=stFinal(s.id,g);
     if(s2!=='pending'){sum+=g;cnt++;}
     if(s2==='pass')pass++;
     else if(s2==='fail')fail++;
@@ -4768,7 +4859,10 @@ function renderResultado(el){
   const scored=subjScores.filter(x=>x.g!==null);
   const best=scored.length?scored.reduce((a,b)=>b.g>a.g?b:a):null;
   const worst=scored.length?scored.reduce((a,b)=>b.g<a.g?b:a):null;
-  const atRisk=subjScores.filter(x=>x.s2==='warn'||x.s2==='fail');
+  const atRisk=subjScores.filter(x=>{
+    if(x.s2==='warn'||x.s2==='fail')return true;
+    return getTrimesterRecovery(x.s.id)!==null;
+  });
 
   // trimester averages for trend bars
   const trimAvg=tr=>{
@@ -4872,19 +4966,66 @@ function renderResultado(el){
   // ── AT RISK
   if(atRisk.length){
     h+=`<div class="res-risk-card">
-      <div class="res-risk-title">⚠ Em risco — o que falta para passar</div>`;
+      <div class="res-risk-title">⚠ Situação no 3° Trimestre</div>`;
     atRisk.forEach(x=>{
-      const gap=Math.max(0,6-x.g).toFixed(1);
       const t1=trimGrade(x.s.id,'1T'),t2=trimGrade(x.s.id,'2T'),t3=trimGrade(x.s.id,'3T');
+      const rec=getTrimesterRecovery(x.s.id);
+      const gap=x.g!==null?Math.max(0,6-x.g).toFixed(1):null;
+      let recBlock='';
+      if(rec){
+        if(rec.phase==='t2'){
+          if(rec.impossible){
+            recBlock='<div class="risk-recovery impossible">'+
+              '<div class="risk-recovery-body">'+
+                '<div class="risk-recovery-label">Atenção no 2° Trimestre</div>'+
+                '<div class="risk-recovery-txt">1°T '+fmt(rec.t1)+' — compensar no 2°T sozinho não é possível (nota necessária > 10)</div>'+
+              '</div>'+
+            '</div>';
+          }else{
+            recBlock='<div class="risk-recovery">'+
+              '<div class="risk-recovery-body">'+
+                '<div class="risk-recovery-label">Mínimo no 2° Trimestre para compensar</div>'+
+                '<div class="risk-recovery-txt">Com 1°T '+fmt(rec.t1)+', você precisa de:</div>'+
+              '</div>'+
+              '<div class="risk-recovery-num">'+rec.minNeeded.toFixed(1)+'</div>'+
+            '</div>';
+          }
+        }else{
+          if(rec.alreadyPassed){
+            recBlock='<div class="risk-recovery" style="background:var(--greenbg);border-color:var(--greenbd)">'+
+              '<div class="risk-recovery-body">'+
+                '<div class="risk-recovery-label" style="color:var(--green)">Aprovação garantida</div>'+
+                '<div class="risk-recovery-txt">1°T '+fmt(rec.t1)+' · 2°T '+fmt(rec.t2)+' — já aprovado, qualquer nota no 3°T serve</div>'+
+              '</div>'+
+            '</div>';
+          }else if(rec.impossible){
+            recBlock='<div class="risk-recovery impossible">'+
+              '<div class="risk-recovery-body">'+
+                '<div class="risk-recovery-label">Aprovação impossível</div>'+
+                '<div class="risk-recovery-txt">1°T '+fmt(rec.t1)+' · 2°T '+fmt(rec.t2)+' — mesmo tirando 10 no 3°T a média não chega a 6.0</div>'+
+              '</div>'+
+            '</div>';
+          }else{
+            recBlock='<div class="risk-recovery">'+
+              '<div class="risk-recovery-body">'+
+                '<div class="risk-recovery-label">Mínimo no 3° Trimestre para passar</div>'+
+                '<div class="risk-recovery-txt">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você precisa de:</div>'+
+              '</div>'+
+              '<div class="risk-recovery-num">'+rec.minNeeded.toFixed(1)+'</div>'+
+            '</div>';
+          }
+        }
+      }
       h+=`<div class="risk-row">
         <div class="risk-dot"></div>
-        <div class="risk-info">
+        <div class="risk-info" style="flex:1;min-width:0">
           <div class="risk-name">${x.s.name}</div>
           <div class="risk-chips"><span class="chip">1°T ${fmt(t1)}</span><span class="chip">2°T ${fmt(t2)}</span><span class="chip">3°T ${fmt(t3)}</span></div>
+          ${recBlock}
         </div>
         <div class="risk-right">
           <div class="risk-current" style="color:${SC(x.s2)}">${fmt(x.g)}</div>
-          <div class="risk-gap">faltam ${gap} pts</div>
+          <div class="risk-gap">${gap!==null?`faltam ${gap} pts`:'pendente'}</div>
         </div>
       </div>`;
     });
@@ -4949,11 +5090,65 @@ function renderResumo(el){
   const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'—';
   SUBJECTS.forEach((s,i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
-    const ss=st(g);
+    const ss=stFinal(s.id,g);
     const pct=g!==null?Math.min(g/10*100,100):0;
     const trendIcon=t1!==null&&t2!==null&&t3!==null?(t3>t1?'↑ Subindo':t3<t1?'↓ Caindo':'→ Estável'):'Dados parciais';
     const trendStr=g!==null?(g>=7?`${trendIcon}`:`${trendIcon}`):`${trendIcon}`;
     const statusColor=ss==='pass'?'var(--green)':ss==='fail'?'var(--red)':ss==='warn'?'var(--amber)':'var(--bg4)';
+    const rec=getTrimesterRecovery(s.id);
+    let recHtml='';
+    if(rec){
+      if(rec.phase==='t2'){
+        // T1 baixo, mostra mínimo no T2
+        if(rec.impossible){
+          recHtml='<div class="resumo-recovery-alert impossible">'+
+            '<div class="resumo-recovery-left">'+
+              '<div class="resumo-recovery-badge">Atenção no 2° Trimestre</div>'+
+              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', compensar no 2°T sozinho não é possível — a nota necessária ultrapassa 10</div>'+
+            '</div>'+
+          '</div>';
+        }else{
+          recHtml='<div class="resumo-recovery-alert">'+
+            '<div class="resumo-recovery-left">'+
+              '<div class="resumo-recovery-badge">Nota necessária no 2° Trimestre</div>'+
+              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', você precisa tirar pelo menos no 2°T para compensar:</div>'+
+            '</div>'+
+            '<div class="resumo-recovery-right">'+
+              '<div class="resumo-recovery-val">'+rec.minNeeded.toFixed(1)+'</div>'+
+              '<div class="resumo-recovery-val-lbl">no 2°T</div>'+
+            '</div>'+
+          '</div>';
+        }
+      }else{
+        // T1+T2 fechados, mostra situação do T3
+        if(rec.alreadyPassed){
+          recHtml='<div class="resumo-recovery-alert" style="background:var(--greenbg);border-color:var(--greenbd)">'+
+            '<div class="resumo-recovery-left">'+
+              '<div class="resumo-recovery-badge" style="color:var(--green)">Aprovação garantida</div>'+
+              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você já está aprovado independente da nota do 3° Trimestre</div>'+
+            '</div>'+
+          '</div>';
+        }else if(rec.impossible){
+          recHtml='<div class="resumo-recovery-alert impossible">'+
+            '<div class="resumo-recovery-left">'+
+              '<div class="resumo-recovery-badge">Aprovação impossível</div>'+
+              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', mesmo tirando 10 no 3° Trimestre a média final não chega a 6.0</div>'+
+            '</div>'+
+          '</div>';
+        }else{
+          recHtml='<div class="resumo-recovery-alert">'+
+            '<div class="resumo-recovery-left">'+
+              '<div class="resumo-recovery-badge">Nota necessária no 3° Trimestre</div>'+
+              '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você precisa tirar pelo menos:</div>'+
+            '</div>'+
+            '<div class="resumo-recovery-right">'+
+              '<div class="resumo-recovery-val">'+rec.minNeeded.toFixed(1)+'</div>'+
+              '<div class="resumo-recovery-val-lbl">no 3°T para passar</div>'+
+            '</div>'+
+          '</div>';
+        }
+      }
+    }
     h+=`<div class="resumo-subj-card" style="animation-delay:${i*.03}s;border-left:3px solid ${statusColor}" onclick="openSubjSheet('${s.name.replace(/'/g,"\'")}','','${s.color}')">
       <div class="resumo-subj-head">
         <div class="resumo-subj-info">
@@ -4971,6 +5166,7 @@ function renderResumo(el){
         <div class="resumo-trim"><div class="resumo-trim-lbl">3° Trim</div><div class="resumo-trim-val ${st(t3)}">${fmt(t3)}</div><div class="resumo-trim-pbar"><div class="resumo-trim-pbar-fill" style="width:${t3!==null?(Math.min(t3/10,1)*100).toFixed(1):0}%;background:${SC(st(t3))}"></div></div></div>
       </div>
       <div class="resumo-pbar-wrap"><div class="resumo-pbar"><div class="resumo-pbar-fill" style="width:${pct}%;background:${statusColor}"></div></div></div>
+      ${recHtml}
     </div>`;
   });
   h+='</div>';
