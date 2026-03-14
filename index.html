@@ -180,10 +180,10 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--bg2);border:1px solid var(--line2);
   font-size:13px;font-weight:500;color:var(--t2);
   border-radius:22px;cursor:pointer;
-  transition:background .2s var(--ease-ios),color .2s var(--ease-ios),transform .12s var(--ease-ios),border-color .2s,box-shadow .2s;
+  transition:background .22s var(--ease-spring),color .22s var(--ease-spring),transform .14s var(--ease-spring),border-color .22s,box-shadow .22s;
   white-space:nowrap;letter-spacing:-0.1px;
 }
-.tab-btn:active{transform:scale(.94)}
+.tab-btn:active{transform:scale(.92)}
 .tab-btn.active{
   background:var(--gold);color:var(--accent-text,#000);font-weight:700;border-color:transparent;
   box-shadow:0 2px 10px rgba(0,0,0,.18);
@@ -200,29 +200,46 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   overscroll-behavior:contain;
   padding:var(--slide-pt,160px) 16px calc(96px + env(safe-area-inset-bottom));
 }
-/* ── PAGE TRANSITIONS ──
-   Entering: fade-in + rise (conteúdo novo emerge da base)
-   Leaving : dissolve rápido atrás do novo
-   Z-index: incoming=2 (frente), outgoing=1 (atrás)
-   Sem translateX → sem bugs de scroll/overflow
+/* ── PAGE TRANSITIONS — iOS style, MOBILE ONLY (≤767px) ──
+   Desktop: sem animação, troca instantânea.
+
+   Fix de bugs:
+   - overflow:hidden no .scroll-content + clip-path cortam slides fora da tela
+   - will-change no slide garante compositing via GPU (sem repaints)
+   - Slide que sai recebe visibility:hidden imediatamente se for interrompido
+     (tratado no JS, não no CSS)
+   - Duração curta (300ms) reduz janela de race condition em navegação rápida
 */
-.page-slide.is-entering {
-  animation: pg-rise 300ms cubic-bezier(0.22,1,0.36,1) both;
-  z-index:2;
+@media (max-width: 767px) {
+  .scroll-content {
+    overflow: hidden;   /* backup — garante que translateX não vaze */
+  }
+
+  /* O slide que ENTRA fica na frente e anima */
+  .page-slide.is-entering-push,
+  .page-slide.is-entering-pop {
+    z-index: 2;
+    will-change: transform, opacity;
+  }
+  /* O slide que SAI fica atrás, sem interação */
+  .page-slide.is-leaving-push,
+  .page-slide.is-leaving-pop {
+    z-index: 1;
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+
+  .page-slide.is-entering-push { animation: pg-push-in  300ms cubic-bezier(0.32,0.72,0,1) both; }
+  .page-slide.is-leaving-push  { animation: pg-push-out 300ms cubic-bezier(0.32,0.72,0,1) both; }
+  .page-slide.is-entering-pop  { animation: pg-pop-in   300ms cubic-bezier(0.32,0.72,0,1) both; }
+  .page-slide.is-leaving-pop   { animation: pg-pop-out  300ms cubic-bezier(0.32,0.72,0,1) both; }
 }
-.page-slide.is-leaving {
-  animation: pg-fade 200ms cubic-bezier(0.4,0,1,1) both;
-  pointer-events:none;
-  z-index:1;
-}
-@keyframes pg-rise {
-  from { opacity:0; transform:translateY(20px) }
-  to   { opacity:1; transform:translateY(0)    }
-}
-@keyframes pg-fade {
-  from { opacity:1 }
-  to   { opacity:0 }
-}
+
+/* Keyframes fora do @media (compatibilidade com todos os browsers) */
+@keyframes pg-push-in  { from { transform:translateX(100%); opacity:.4 } to { transform:translateX(0); opacity:1 } }
+@keyframes pg-push-out { from { transform:translateX(0);    opacity:1   } to { transform:translateX(-25%); opacity:0 } }
+@keyframes pg-pop-in   { from { transform:translateX(-25%); opacity:0   } to { transform:translateX(0); opacity:1 } }
+@keyframes pg-pop-out  { from { transform:translateX(0);    opacity:1   } to { transform:translateX(100%); opacity:.4 } }
 
 /* ── NOTICE ── */
 .notice{background:var(--amberbg);border:1px solid var(--amberbd);border-radius:16px;padding:15px 18px;margin-bottom:16px;
@@ -1195,9 +1212,20 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
    MODAL
 ═══════════════════════════════ */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:500;align-items:flex-end;justify-content:center}
-.modal-overlay.open{display:flex}
+.modal-overlay.open{display:flex;animation:cfFade .28s var(--ease-sheet)}
 .modal-box{background:var(--bg1);border-top:1px solid var(--line2);border-radius:28px 28px 0 0;padding:22px 24px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:480px;animation:slideUp .4s var(--ease-sheet)}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes slideUp{
+  0%   { transform:translateY(100%) scale(0.98); opacity:0 }
+  55%  { opacity:1 }
+  100% { transform:translateY(0) scale(1); opacity:1 }
+}
+@keyframes slideDown{
+  from { transform:translateY(0) scale(1); opacity:1 }
+  to   { transform:translateY(110%) scale(0.98); opacity:0 }
+}
+/* iOS overlay fade */
+@keyframes overlayFadeIn  { from{opacity:0} to{opacity:1} }
+@keyframes overlayFadeOut { from{opacity:1} to{opacity:0} }
 .modal-handle{width:36px;height:4px;background:var(--bg5);border-radius:4px;margin:0 auto 24px;opacity:.5}
 .modal-title{font-size:20px;font-weight:700;color:var(--t1);margin-bottom:20px;letter-spacing:-0.4px}
 .field-group{margin-bottom:12px}
@@ -1240,7 +1268,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:rgba(0,0,0,.5);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   z-index:500;align-items:flex-end;justify-content:center;
 }
-.subj-sheet-overlay.open{display:flex}
+.subj-sheet-overlay.open{display:flex;animation:cfFade .28s var(--ease-sheet)}
 .subj-sheet{
   background:var(--bg1);border-top:none;border-bottom:none;
   border-radius:28px 28px 0 0;padding:0;
@@ -1789,32 +1817,75 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .bloco-empty-title{font-size:18px;font-weight:700;color:var(--t4);margin-bottom:8px}
 .bloco-empty-sub{font-size:13px;line-height:1.6;color:var(--t4)}
 .bloco-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* ─── BLOCO LIST CARDS ─── */
+.bloco-grid{display:flex;flex-direction:column;gap:0}
 .bloco-card{
-  border-radius:18px;padding:15px 14px 13px;cursor:pointer;
-  border:1px solid var(--line2);border-left:3px solid var(--bg4);
-  min-height:110px;background:var(--bg1);
-  display:flex;flex-direction:column;justify-content:space-between;
-  transition:transform .14s var(--ease-ios),box-shadow .14s;
-  position:relative;overflow:hidden;animation:fadeIn .2s var(--ease-ios) both;
+  padding:14px 16px 13px;cursor:pointer;
+  border-bottom:0.5px solid var(--line3);
+  background:transparent;
+  display:flex;align-items:flex-start;gap:12px;
+  transition:background .12s var(--ease-ios);
+  position:relative;animation:fadeIn .18s var(--ease-ios) both;
 }
-.bloco-card:active{transform:scale(.95)}
-[data-theme="dark"] .bloco-card{box-shadow:0 2px 12px rgba(0,0,0,.25)}
-.bloco-card-pinmark{position:absolute;top:9px;right:9px;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
-.bloco-card-pinmark svg{width:11px;height:11px;stroke:var(--gold);fill:var(--gold);stroke-width:1.5}
-.bloco-card-title{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:5px;line-height:1.35;letter-spacing:-0.2px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;padding-right:14px}
-.bloco-card-preview{font-size:12px;color:var(--t2);line-height:1.5;flex:1;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;opacity:.75}
-.bloco-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:6px}
-.bloco-card-meta{font-size:10px;font-weight:500;color:var(--t4)}
-.bloco-card-wc{font-size:10px;color:var(--t4);font-family:var(--ffm)}
-.bloco-card-rm{width:22px;height:22px;border-radius:50%;background:transparent;border:none;color:var(--t4);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:color .12s,background .12s;flex-shrink:0}
+.bloco-card:first-child{border-top:0.5px solid var(--line3);}
+.bloco-card:active{background:var(--bg2)}
+[data-theme="light"] .bloco-card:active{background:var(--bg3)}
+/* accent dot left */
+.bloco-card-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;
+  background:var(--bg4);
+  transition:background .2s;
+}
+.bloco-card.nc-yellow .bloco-card-dot{background:#FFD60A}
+.bloco-card.nc-green  .bloco-card-dot{background:#30D158}
+.bloco-card.nc-blue   .bloco-card-dot{background:#0A84FF}
+.bloco-card.nc-red    .bloco-card-dot{background:#FF453A}
+.bloco-card.nc-violet .bloco-card-dot{background:#BF5AF2}
+.bloco-card.nc-orange .bloco-card-dot{background:#FF9F0A}
+.bloco-card.nc-teal   .bloco-card-dot{background:#5AC8FA}
+.bloco-card.nc-pink   .bloco-card-dot{background:#FF375F}
+.bloco-card-main{flex:1;min-width:0}
+.bloco-card-pinmark{display:inline-flex;align-items:center;margin-right:4px;vertical-align:middle}
+.bloco-card-pinmark svg{width:9px;height:9px;fill:var(--gold);stroke:none}
+.bloco-card-title{
+  font-size:14px;font-weight:600;color:var(--t1);line-height:1.35;
+  letter-spacing:-0.25px;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;
+  margin-bottom:3px;
+}
+.bloco-card-preview{
+  font-size:12.5px;color:var(--t3);line-height:1.55;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+}
+.bloco-card-footer{display:flex;align-items:center;gap:8px;margin-top:6px}
+.bloco-card-meta{font-size:11px;font-weight:500;color:var(--t4);letter-spacing:-.1px}
+.bloco-card-wc{
+  font-size:10px;color:var(--t4);font-family:var(--ffm);
+  background:var(--bg2);border:1px solid var(--line3);
+  border-radius:5px;padding:1px 5px;
+}
+.bloco-card-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.bloco-card-rm{
+  width:26px;height:26px;border-radius:8px;background:transparent;border:none;
+  color:var(--t4);display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:color .12s,background .12s;
+}
 .bloco-card-rm:active{color:var(--red);background:var(--redbg)}
-.bloco-card-rm svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
-.bloco-stats-row{display:flex;gap:8px;margin-bottom:14px}
-.bloco-stat{background:var(--bg1);border:1px solid var(--line2);border-radius:13px;padding:11px 12px;flex:1;text-align:center}
-.bloco-stat-val{font-family:var(--ffm);font-size:19px;font-weight:700;color:var(--gold)}
-.bloco-stat-lbl{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.bloco-section-label{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:4px;display:flex;align-items:center;gap:6px}
-.bloco-section-label svg{width:11px;height:11px;stroke:var(--gold);fill:var(--gold);stroke-width:1.5}
+.bloco-card-rm svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round}
+
+/* stats */
+.bloco-stats-row{display:flex;gap:0;margin-bottom:16px;background:var(--bg1);border:1px solid var(--line2);border-radius:16px;overflow:hidden}
+.bloco-stat{padding:13px 0;flex:1;text-align:center;position:relative}
+.bloco-stat+.bloco-stat::before{content:'';position:absolute;left:0;top:20%;height:60%;width:0.5px;background:var(--line2)}
+.bloco-stat-val{font-family:var(--ffm);font-size:20px;font-weight:700;color:var(--t1);line-height:1}
+.bloco-stat-lbl{font-size:10px;font-weight:500;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+
+/* section label */
+.bloco-section-label{
+  font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1.2px;
+  margin:16px 0 4px 2px;display:flex;align-items:center;gap:5px;
+}
+.bloco-section-label svg{width:10px;height:10px;fill:var(--gold);stroke:none}
 
 /* ── NOTE EDITOR OVERLAY ── */
 .note-editor-overlay{
@@ -1826,64 +1897,71 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .note-editor-overlay.open{display:flex;animation:slideUp .38s var(--ease-sheet)}
 .note-editor-topbar{
   display:flex;align-items:center;gap:10px;
-  padding:calc(14px + env(safe-area-inset-top)) 16px 12px;
+  padding:calc(12px + env(safe-area-inset-top)) 14px 10px;
   border-bottom:0.5px solid var(--line3);
-  background:rgba(0,0,0,.06);
+  background:var(--nav-bg);
   backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);
   flex-shrink:0;
 }
-.note-editor-back{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:opacity .15s}
-.note-editor-back:active{opacity:.5}
-.note-editor-back svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.note-editor-meta{flex:1;min-width:0}
-.note-editor-saved{font-size:11px;color:var(--t3);letter-spacing:-0.1px;font-weight:500}
+.note-editor-back{
+  display:flex;align-items:center;gap:5px;
+  padding:6px 10px 6px 6px;border-radius:10px;
+  background:transparent;border:none;cursor:pointer;
+  color:var(--gold);font-size:13px;font-weight:600;font-family:var(--ff);
+  letter-spacing:-.1px;transition:background .14s;flex-shrink:0;
+}
+.note-editor-back:active{background:var(--bg2)}
+.note-editor-back svg{width:18px;height:18px;stroke:var(--gold);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.note-editor-meta{flex:1;min-width:0;text-align:center}
+.note-editor-saved{font-size:11px;color:var(--t4);letter-spacing:-.1px;font-weight:500}
 .note-editor-saved.dirty{color:var(--amber)}
 .note-editor-saved.ok{color:var(--green)}
-.note-editor-actions{display:flex;align-items:center;gap:7px}
+.note-editor-actions{display:flex;align-items:center;gap:6px}
 .note-action-btn{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--bg2);border:1px solid var(--line2);
+  width:32px;height:32px;border-radius:9px;
+  background:transparent;border:none;
   display:flex;align-items:center;justify-content:center;cursor:pointer;
-  transition:opacity .15s,background .15s,border-color .15s;
+  transition:background .14s,color .14s;
+  color:var(--t2);
 }
-.note-action-btn:active{opacity:.5}
-.note-action-btn svg{width:15px;height:15px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.note-action-btn.danger{border-color:var(--redbd)}
-.note-action-btn.danger svg{stroke:var(--red)}
-.note-action-btn.pin-active{background:var(--goldbg);border-color:var(--goldbd)}
-.note-action-btn.pin-active svg{stroke:var(--gold);fill:var(--gold)}
-.note-action-btn.copied{background:var(--greenbg);border-color:var(--greenbd)}
-.note-action-btn.copied svg{stroke:var(--green)}
+.note-action-btn:active{background:var(--bg2)}
+.note-action-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.note-action-btn.danger{color:var(--red)}
+.note-action-btn.pin-active{color:var(--gold)}
+.note-action-btn.pin-active svg{fill:var(--gold)}
+.note-action-btn.copied{color:var(--green)}
 .note-editor-body{
   flex:1;overflow-y:auto;display:flex;flex-direction:column;
-  padding:20px 20px 8px;
+  padding:22px 22px 8px;
   -webkit-overflow-scrolling:touch;
 }
-.note-title-inp{font-size:24px;font-weight:700;color:var(--t1);background:transparent;border:none;outline:none;width:100%;margin-bottom:3px;letter-spacing:-0.6px;padding:0;line-height:1.3;caret-color:var(--gold)}
+.note-title-inp{
+  font-size:26px;font-weight:800;color:var(--t1);background:transparent;border:none;outline:none;
+  width:100%;margin-bottom:4px;letter-spacing:-.8px;padding:0;line-height:1.25;caret-color:var(--gold);
+}
 .note-title-inp:focus,.note-title-inp:focus-visible{outline:none!important;box-shadow:none!important}
 #note-content-inp:focus,#note-content-inp:focus-visible{outline:none!important;box-shadow:none!important}
 .note-title-inp::placeholder{color:var(--t4)}
-.note-date-lbl{font-size:11px;color:var(--t4);margin-bottom:14px;font-family:var(--ffm)}
-.note-divider{height:0.5px;background:var(--line3);margin-bottom:14px}
+.note-date-lbl{font-size:11px;color:var(--t4);margin-bottom:16px;font-family:var(--ffm);letter-spacing:.1px}
+.note-divider{height:0.5px;background:var(--line3);margin-bottom:16px}
 .note-content-inp{
-  flex:1;font-size:15px;line-height:1.75;color:var(--t2);background:transparent;border:none;outline:none;
-  width:100%;resize:none;min-height:260px;font-family:var(--ff);padding:0 0 20px;letter-spacing:-0.1px;
+  flex:1;font-size:15.5px;line-height:1.8;color:var(--t1);background:transparent;border:none;outline:none;
+  width:100%;resize:none;min-height:260px;font-family:var(--ff);padding:0 0 32px;letter-spacing:-.1px;
   caret-color:var(--gold);
 }
 .note-content-inp::placeholder{color:var(--t4)}
-/* bottom bar: word count + colors */
+/* bottom bar */
 .note-bottom-bar{
-  display:flex;align-items:center;gap:0;
+  display:flex;align-items:center;
   border-top:0.5px solid var(--line3);
-  background:rgba(0,0,0,.04);
+  background:var(--nav-bg);
   backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
   flex-shrink:0;
-  padding-bottom:env(safe-area-inset-bottom);
+  padding:6px 14px calc(6px + env(safe-area-inset-bottom));
 }
 .note-wc-bar{
-  padding:10px 14px;font-size:11px;font-weight:600;color:var(--t4);
-  font-family:var(--ffm);white-space:nowrap;flex-shrink:0;
-  border-right:0.5px solid var(--line3);
+  font-size:11px;font-weight:500;color:var(--t4);
+  font-family:var(--ffm);white-space:nowrap;
 }
 .note-color-strip{
   display:flex;gap:10px;padding:10px 14px;
@@ -1901,33 +1979,66 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .note-color-dot:active{opacity:.7}
 .note-color-dot.active{outline-color:var(--t1);border-color:rgba(255,255,255,.3)}
 
+/* ── note content rich elements ── */
+.note-content-inp mark{
+  background:rgba(255,214,10,.28);color:inherit;border-radius:3px;padding:0 2px;
+}
+[data-theme="light"] .note-content-inp mark{background:rgba(255,200,0,.35);}
+.note-content-inp h1{font-size:22px;font-weight:800;color:var(--t1);line-height:1.3;margin:10px 0 4px;letter-spacing:-.5px}
+.note-content-inp h2{font-size:17px;font-weight:700;color:var(--t1);line-height:1.35;margin:8px 0 3px;letter-spacing:-.3px}
+.note-content-inp h3{font-size:14px;font-weight:700;color:var(--t2);line-height:1.4;margin:6px 0 2px;letter-spacing:-.2px}
+.note-content-inp blockquote{
+  border-left:3px solid var(--gold);margin:6px 0;padding:4px 0 4px 12px;
+  color:var(--t2);font-style:italic;border-radius:0 6px 6px 0;background:var(--goldbg);
+}
+.note-content-inp hr.nf-divider{
+  border:none;border-top:1.5px solid var(--line2);margin:10px 0;border-radius:2px;
+}
+.nf-task-item{
+  display:flex;align-items:baseline;gap:7px;padding:2px 0;
+}
+.nf-task-chk{
+  width:15px;height:15px;flex-shrink:0;margin-top:3px;
+  accent-color:var(--gold);cursor:pointer;
+}
+.nf-task-lbl{
+  flex:1;min-width:0;font-size:14px;color:var(--t1);cursor:text;
+  line-height:1.5;
+}
+.nf-task-item input:checked ~ .nf-task-lbl{
+  text-decoration:line-through;color:var(--t3);
+}
+
 /* ── NOTE FORMAT TOOLBAR ── */
 .note-format-bar{
-  display:flex;align-items:center;gap:4px;
-  padding:8px 14px;
+  display:flex;align-items:center;gap:2px;
+  padding:7px 12px 7px;
   border-bottom:0.5px solid var(--line3);
-  background:rgba(0,0,0,.03);
+  background:var(--nav-bg);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   overflow-x:auto;scrollbar-width:none;flex-shrink:0;
 }
 .note-format-bar::-webkit-scrollbar{display:none}
 .nf-btn{
   flex:0 0 auto;
-  min-width:34px;height:34px;
+  min-width:32px;height:32px;
   display:flex;align-items:center;justify-content:center;
-  background:var(--bg2);border:1px solid var(--line2);
-  border-radius:9px;cursor:pointer;
-  font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--t2);
-  padding:0 10px;
-  transition:background .15s var(--ease-ios),border-color .15s,color .15s,transform .08s var(--ease-ios);
+  background:transparent;border:none;
+  border-radius:8px;cursor:pointer;
+  font-family:var(--ff);font-size:13px;font-weight:700;color:var(--t2);
+  padding:0 8px;
+  transition:background .12s var(--ease-ios),color .12s,transform .07s var(--ease-ios);
   white-space:nowrap;letter-spacing:-0.2px;
 }
-.nf-btn:active{transform:scale(.88);background:var(--bg3)}
-.nf-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.nf-btn.nf-bold{font-style:normal;font-family:var(--ff);font-weight:900;font-size:14px}
-.nf-btn.nf-italic{font-style:italic;font-family:var(--ff);font-weight:700;font-size:14px}
-.nf-btn.nf-strike{text-decoration:line-through}
-.nf-sep{width:1px;height:20px;background:var(--line2);flex-shrink:0;margin:0 3px}
-.nf-btn.active{background:var(--gold)!important;color:var(--accent-text,#000)!important;border-color:transparent!important;box-shadow:none!important}
+.nf-btn:active{transform:scale(.84);background:var(--bg3)}
+.nf-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nf-btn.nf-bold strong{font-weight:900;font-size:14px}
+.nf-btn.nf-italic em{font-style:italic;font-weight:700;font-size:14px}
+.nf-sep{width:0.5px;height:18px;background:var(--line2);flex-shrink:0;margin:0 4px}
+.nf-btn.active{
+  background:var(--goldbg)!important;color:var(--gold)!important;
+  box-shadow:0 0 0 1px var(--goldbd) inset;
+}
 /* rich text editor styles */
 .note-content-inp{position:relative}
 .note-content-inp:empty::before{content:attr(data-placeholder);color:var(--t4);pointer-events:none}
@@ -1965,7 +2076,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 [data-theme="light"] .confirm-box{
   box-shadow:0 20px 60px rgba(20,40,100,.22),0 0 0 0.5px rgba(0,0,0,.06);
 }
-@keyframes cfSlide{from{opacity:0;transform:translateY(32px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes cfSlide{from{opacity:0;transform:translateY(40px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
 .confirm-icon{
   width:54px;height:54px;border-radius:18px;
   display:flex;align-items:center;justify-content:center;
@@ -4547,6 +4658,7 @@ input, textarea, select {
     <div class="note-editor-topbar">
       <div class="note-editor-back" onclick="closeNoteEditor()">
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Voltar</span>
       </div>
       <div class="note-editor-meta">
         <div class="note-editor-saved" id="note-saved-lbl">Editando...</div>
@@ -4567,12 +4679,15 @@ input, textarea, select {
     <div class="note-format-bar" id="note-format-bar">
       <button class="nf-btn" id="nf-h1" onclick="nfHeading(1)" title="Título grande">H1</button>
       <button class="nf-btn" id="nf-h2" onclick="nfHeading(2)" title="Subtítulo">H2</button>
-      <button class="nf-btn" id="nf-h3" onclick="nfHeading(3)" title="Título pequeno">H3</button>
+      <button class="nf-btn" id="nf-h3" onclick="nfHeading(3)" title="Pequeno">H3</button>
       <div class="nf-sep"></div>
-      <button class="nf-btn nf-bold" id="nf-bold" onclick="nfExec('bold')" title="Negrito">B</button>
-      <button class="nf-btn nf-italic" id="nf-italic" onclick="nfExec('italic')" title="Itálico">I</button>
-      <button class="nf-btn nf-strike" id="nf-strike" onclick="nfExec('strikeThrough')" title="Riscado">S</button>
-      <button class="nf-btn" id="nf-code" onclick="nfCode()" title="Código inline" style="font-family:var(--ffm);font-size:12px">{ }</button>
+      <button class="nf-btn nf-bold" id="nf-bold" onclick="nfExec('bold')" title="Negrito"><strong>B</strong></button>
+      <button class="nf-btn nf-italic" id="nf-italic" onclick="nfExec('italic')" title="Itálico"><em>I</em></button>
+      <button class="nf-btn nf-underline" id="nf-underline" onclick="nfExec('underline')" title="Sublinhado" style="text-decoration:underline">U</button>
+      <button class="nf-btn nf-strike" id="nf-strike" onclick="nfExec('strikeThrough')" title="Riscado" style="text-decoration:line-through">S</button>
+      <button class="nf-btn" id="nf-hl" onclick="nfHighlight()" title="Marcador">
+        <svg viewBox="0 0 24 24" style="width:13px;height:13px"><path d="M9 3L5 9l7 7 7-7-4-6z" fill="currentColor" stroke="none"/><line x1="5" y1="20" x2="19" y2="20" stroke-width="2.5" stroke-linecap="round"/></svg>
+      </button>
       <div class="nf-sep"></div>
       <button class="nf-btn" id="nf-ul" onclick="nfExec('insertUnorderedList')" title="Lista com marcador">
         <svg viewBox="0 0 24 24"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
@@ -4580,14 +4695,25 @@ input, textarea, select {
       <button class="nf-btn" id="nf-ol" onclick="nfExec('insertOrderedList')" title="Lista numerada">
         <svg viewBox="0 0 24 24"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4" stroke-linecap="round"/><path d="M4 10h2" stroke-linecap="round"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" stroke-linecap="round"/></svg>
       </button>
-      <button class="nf-btn" id="nf-check" onclick="nfCheckbox()" title="Lista de tarefas">
+      <button class="nf-btn" id="nf-check" onclick="nfCheckbox()" title="Tarefa">
         <svg viewBox="0 0 24 24"><rect x="3" y="5" width="14" height="14" rx="2"/><polyline points="7 12 10 15 17 8"/></svg>
+      </button>
+      <button class="nf-btn" id="nf-indent" onclick="nfExec('indent')" title="Aumentar recuo">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><polyline points="3 12 8 15 3 18"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <button class="nf-btn" id="nf-outdent" onclick="nfExec('outdent')" title="Diminuir recuo">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><polyline points="8 12 3 15 8 18"/><line x1="11" y1="12" x2="21" y2="12"/><line x1="11" y1="18" x2="21" y2="18"/></svg>
       </button>
       <div class="nf-sep"></div>
       <button class="nf-btn" id="nf-quote" onclick="nfExec('formatBlock','blockquote')" title="Citação">
         <svg viewBox="0 0 24 24"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
       </button>
-      <button class="nf-btn" id="nf-hr" onclick="nfSeparator()" title="Linha separadora">—</button>
+      <button class="nf-btn" id="nf-hr" onclick="nfSeparator()" title="Divisor">
+        <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12" stroke-width="2.5" stroke-linecap="round"/><circle cx="8" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="16" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="nf-btn" id="nf-clear" onclick="nfClearFormat()" title="Limpar formatação">
+        <svg viewBox="0 0 24 24"><path d="M6 5l12 14M4 19l4-4M10 5h10l-3.5 4.5"/></svg>
+      </button>
     </div>
     <div class="note-editor-body">
       <input class="note-title-inp" id="note-title-inp" type="text" placeholder="Título..." oninput="autoSaveNote();updateNoteWC()">
@@ -4597,7 +4723,6 @@ input, textarea, select {
     </div>
     <div class="note-bottom-bar">
       <div class="note-wc-bar" id="note-wc-bar">0 pal.</div>
-      <div class="note-color-strip" id="note-color-strip"></div>
     </div>
   </div>
 
@@ -5128,26 +5253,72 @@ function _buildSlide(){
   return s;
 }
 
+/* ─── RENDER — controle explícito de slides, sem race condition ───
+   _activeSlide  : referência direta ao slide visível atual
+   _leaveTimer   : timer de limpeza em andamento (cancelável)
+   _leaveSlide   : slide em animação de saída (referência direta)
+
+   Ao navegar rapidamente:
+   1. O timer anterior é cancelado
+   2. O slide "saindo" é removido IMEDIATAMENTE (não fica fantasma)
+   3. O novo slide começa a entrar sobre o slide atual
+   4. Um único timer novo é registrado para limpeza
+*/
+let _activeSlide  = null;
+let _leaveTimer   = null;
+let _leaveSlide   = null;
+
 function render(dir){
-  const ct=document.getElementById('scroll-content');
+  const ct = document.getElementById('scroll-content');
+  const isMobile = window.innerWidth <= 767;
 
-  // Elimina qualquer leaving fantasma pendente
-  ct.querySelectorAll('.is-leaving').forEach(s=>s.remove());
-  const out=ct.querySelector('.page-slide');
+  // ── Cancela qualquer limpeza pendente e remove slide saindo ──
+  if(_leaveTimer){ clearTimeout(_leaveTimer); _leaveTimer = null; }
+  if(_leaveSlide && _leaveSlide.parentNode){ _leaveSlide.remove(); _leaveSlide = null; }
 
-  // Sem direção = troca instantânea (salvar nota, refresh timer, etc.)
-  if(!dir||!out){ if(out)out.remove(); ct.appendChild(_buildSlide()); return; }
+  // ── Remove qualquer slide órfão (segurança extra) ──
+  ct.querySelectorAll('.page-slide').forEach(s => {
+    if(s !== _activeSlide) s.remove();
+  });
 
-  // Novo slide entra NA FRENTE (z:2), antigo some ATRÁS (z:1)
-  const inn=_buildSlide();
-  ct.appendChild(inn);           // append depois do out → fica na frente no DOM
-  void inn.getBoundingClientRect(); // força reflow antes da animação
+  const out = _activeSlide;
 
-  out.classList.add('is-leaving');   // dissolve atrás
-  inn.classList.add('is-entering');  // sobe e aparece na frente
+  // ── Sem direção OU desktop → troca instantânea ──
+  if(!dir || !out || !isMobile){
+    if(out){ out.remove(); }
+    const inn = _buildSlide();
+    ct.appendChild(inn);
+    _activeSlide = inn;
+    return;
+  }
 
-  // Limpeza APENAS por setTimeout — animationend tem bug de bubble com filhos animados
-  setTimeout(()=>{ if(out.parentNode)out.remove(); }, 220);
+  // ── Animação iOS ──
+  const isPush = dir === 'push';
+  const enterClass = isPush ? 'is-entering-push' : 'is-entering-pop';
+  const leaveClass  = isPush ? 'is-leaving-push'  : 'is-leaving-pop';
+
+  // Remove qualquer classe de animação anterior do slide atual
+  out.classList.remove('is-entering-push','is-entering-pop','is-leaving-push','is-leaving-pop');
+
+  // Cria e injeta o novo slide
+  const inn = _buildSlide();
+  ct.appendChild(inn);
+  _activeSlide = inn;          // já define o novo como ativo
+  _leaveSlide  = out;          // guarda referência ao slide que vai sair
+
+  // Força reflow para garantir que o browser registre o estado inicial
+  // antes de adicionar as classes de animação
+  void inn.offsetWidth;
+
+  out.classList.add(leaveClass);
+  inn.classList.add(enterClass);
+
+  // Remove o slide saindo após a animação (300ms + 80ms de margem)
+  _leaveTimer = setTimeout(()=>{
+    if(_leaveSlide && _leaveSlide.parentNode){ _leaveSlide.remove(); }
+    _leaveSlide = null;
+    _leaveTimer = null;
+  }, 380);
 }
 
 /* ═══════════════════════════════
@@ -8264,15 +8435,18 @@ function _buildNoteCard(n){
   const preview=(n.content||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
   const safeId=n.id.replace(/'/g,"\\'");
   const colorClass=col.cssClass?' '+col.cssClass:'';
+  const pinHtml=n.pinned?`<span class="bloco-card-pinmark"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span>`:'';
   return`<div class="bloco-card${colorClass}" onclick="openNoteEditor('${safeId}')">
-    ${n.pinned?`<div class="bloco-card-pinmark"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:${col.accent};stroke:none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>`:''}
-    <div>
-      <div class="bloco-card-title">${escHtml(n.title||'Sem título')}</div>
-      <div class="bloco-card-preview">${preview?escHtml(preview):'<span style="color:var(--t4);font-style:italic">Nota vazia</span>'}</div>
+    <div class="bloco-card-dot"></div>
+    <div class="bloco-card-main">
+      <div class="bloco-card-title">${pinHtml}${escHtml(n.title||'Sem título')}</div>
+      <div class="bloco-card-preview">${preview?escHtml(preview):'<em style="color:var(--t4)">Nota vazia</em>'}</div>
+      <div class="bloco-card-footer">
+        <div class="bloco-card-meta">${fmtNoteDate(n.updatedAt||n.createdAt)}</div>
+        ${wc>0?`<div class="bloco-card-wc">${wc} pal.</div>`:''}
+      </div>
     </div>
-    <div class="bloco-card-footer">
-      <div class="bloco-card-meta">${fmtNoteDate(n.updatedAt||n.createdAt)}</div>
-      ${wc>0?`<div class="bloco-card-wc">${wc}p</div>`:''}
+    <div class="bloco-card-side">
       <button class="bloco-card-rm" onclick="event.stopPropagation();deleteNote('${safeId}')" title="Apagar">
         <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -8574,55 +8748,77 @@ function nfHeading(level){
   updateToolbarState();
 }
 
-function nfCode(){
+function nfHighlight(){
   const el=_nfFocus();
   if(!el)return;
   const sel=window.getSelection();
   if(!sel||!sel.rangeCount)return;
   const range=sel.getRangeAt(0);
+  // check if already highlighted
   let node=range.commonAncestorContainer;
   if(node.nodeType===3)node=node.parentElement;
-  const codeEl=node.closest('code');
-  if(codeEl){
-    // unwrap existing <code>
-    const parent=codeEl.parentNode;
-    while(codeEl.firstChild)parent.insertBefore(codeEl.firstChild,codeEl);
-    parent.removeChild(codeEl);
+  const markEl=node.closest('mark');
+  if(markEl){
+    // unwrap
+    const parent=markEl.parentNode;
+    while(markEl.firstChild)parent.insertBefore(markEl.firstChild,markEl);
+    parent.removeChild(markEl);
+    parent.normalize();
   }else{
     const selected=range.toString();
-    const code=document.createElement('code');
-    code.textContent=selected||'código';
-    range.deleteContents();
-    range.insertNode(code);
-    if(!selected){
-      const r2=document.createRange();
-      r2.selectNodeContents(code);
-      sel.removeAllRanges();sel.addRange(r2);
-    }else{
-      const r2=document.createRange();
-      r2.setStartAfter(code);r2.collapse(true);
-      sel.removeAllRanges();sel.addRange(r2);
-    }
+    if(!selected)return;
+    const mark=document.createElement('mark');
+    range.surroundContents(mark);
   }
   autoSaveNote();updateNoteWC();
   updateToolbarState();
 }
 
 function nfCheckbox(){
-  if(!_nfFocus())return;
-  document.execCommand('insertHTML',false,'<div>☐ </div>');
+  const el=_nfFocus();
+  if(!el)return;
+  // Insert a proper checkbox item as a div with a real checkbox input
+  const id='chk_'+Date.now();
+  document.execCommand('insertHTML',false,
+    '<div class="nf-task-item"><input type="checkbox" id="'+id+'" class="nf-task-chk" onchange="nfTaskCheck(this)"><label for="'+id+'" class="nf-task-lbl">​</label></div>'
+  );
+  // Try to place cursor inside the label
+  const lbl=el.querySelector('#'+id+'~label, label[for="'+id+'"]');
+  if(lbl){
+    const r=document.createRange();
+    r.setStart(lbl,lbl.childNodes.length);
+    r.collapse(true);
+    const s=window.getSelection();
+    s.removeAllRanges();s.addRange(r);
+  }
   autoSaveNote();updateNoteWC();
+}
+
+function nfTaskCheck(chkEl){
+  const lbl=chkEl.nextElementSibling;
+  if(lbl)lbl.style.textDecoration=chkEl.checked?'line-through':'';
+  autoSaveNote();
 }
 
 function nfSeparator(){
   if(!_nfFocus())return;
-  document.execCommand('insertHTML',false,'<hr>');
+  document.execCommand('insertHTML',false,'<hr class="nf-divider"><p><br></p>');
   autoSaveNote();updateNoteWC();
+}
+
+function nfClearFormat(){
+  const el=_nfFocus();
+  if(!el)return;
+  document.execCommand('removeFormat',false,null);
+  document.execCommand('formatBlock',false,'p');
+  autoSaveNote();updateNoteWC();
+  updateToolbarState();
 }
 
 /* ─── TOOLBAR STATE UPDATE ─── */
 const _NF_CMDS={
-  'nf-bold':'bold','nf-italic':'italic','nf-strike':'strikeThrough',
+  'nf-bold':'bold','nf-italic':'italic','nf-underline':'underline',
+  'nf-strike':'strikeThrough',
   'nf-ul':'insertUnorderedList','nf-ol':'insertOrderedList'
 };
 function updateToolbarState(){
@@ -8631,14 +8827,16 @@ function updateToolbarState(){
       const btn=document.getElementById(id);
       if(btn)btn.classList.toggle('active',document.queryCommandState(cmd));
     });
-    // headings: check current block tag
+    // headings + blockquote: check current block tag
     const sel=window.getSelection();
     let blockTag='';
+    let inMark=false;
     if(sel&&sel.rangeCount>0){
       let node=sel.getRangeAt(0).commonAncestorContainer;
       if(node.nodeType===3)node=node.parentElement;
       const hEl=node.closest('h1,h2,h3,blockquote');
       if(hEl)blockTag=hEl.tagName.toLowerCase();
+      inMark=!!node.closest('mark');
     }
     ['nf-h1','nf-h2','nf-h3'].forEach(id=>{
       const btn=document.getElementById(id);
@@ -8647,6 +8845,8 @@ function updateToolbarState(){
     });
     const qBtn=document.getElementById('nf-quote');
     if(qBtn)qBtn.classList.toggle('active',blockTag==='blockquote');
+    const hlBtn=document.getElementById('nf-hl');
+    if(hlBtn)hlBtn.classList.toggle('active',inMark);
     // code: check if inside <code>
     const cBtn=document.getElementById('nf-code');
     if(cBtn&&sel&&sel.rangeCount>0){
@@ -8726,7 +8926,7 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   try{localStorage.setItem('t205_theme',t);}catch(e){}
   // reapply avatar so colors stay correct for new theme
-  requestAnimationFrame(()=>{ if(typeof applyAvatar==='function') applyAvatar(); });
+  requestAnimationFrame(()=>{ if(typeof applyAvatar==='function') applyAvatar(); if(typeof _drawMainChart==='function') _drawMainChart(); });
 }
 function toggleTheme(){
   const cur=document.documentElement.getAttribute('data-theme');
