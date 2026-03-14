@@ -785,6 +785,61 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-recovery-alert.eac-recovered .resumo-recovery-badge{color:var(--green)}
 .resumo-recovery-alert.eac-recovered .resumo-recovery-val{color:var(--green)}
 .resumo-recovery-alert.eac-recovered .resumo-recovery-val-lbl{color:var(--green)}
+
+/* ── Médias por trimestre (linha de cards) ── */
+.resumo-trim-avgs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.resumo-trim-avg-card{
+  background:var(--bg1);border:1px solid var(--line2);border-radius:14px;
+  padding:12px 8px 10px;text-align:center;
+}
+[data-theme="dark"] .resumo-trim-avg-card{box-shadow:0 2px 8px rgba(0,0,0,.35),0 0 0 0.5px rgba(255,255,255,.04)}
+[data-theme="light"] .resumo-trim-avg-card{box-shadow:0 1px 4px rgba(20,40,100,.05),0 3px 12px rgba(20,40,100,.07)}
+.resumo-trim-avg-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t4);margin-bottom:5px}
+.resumo-trim-avg-val{font-family:var(--ffm);font-size:22px;font-weight:700;line-height:1;letter-spacing:-0.5px}
+.resumo-trim-avg-pbar{height:3px;background:var(--bg3);border-radius:2px;overflow:hidden;margin:7px 4px 0}
+.resumo-trim-avg-pbar-fill{height:100%;border-radius:2px;transition:width .9s cubic-bezier(.22,1,.36,1)}
+
+/* ── Card resultado de ano (aparece quando 100% fechado) ── */
+.ano-result-card{
+  border-radius:22px;padding:24px 20px 20px;margin-bottom:14px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  position:relative;overflow:hidden;
+  animation:anoCardPop .42s var(--ease-spring) both;
+}
+@keyframes anoCardPop{
+  from{opacity:0;transform:scale(.94) translateY(12px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.ano-result-card.pass{
+  background:var(--greenbg);border:1.5px solid var(--greenbd);
+  box-shadow:0 6px 32px rgba(48,209,88,.16);
+}
+.ano-result-card.fail{
+  background:var(--redbg);border:1.5px solid var(--redbd);
+  box-shadow:0 6px 32px rgba(255,69,58,.16);
+}
+.ano-result-emoji{font-size:50px;line-height:1;margin-bottom:10px}
+.ano-result-eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:4px;opacity:.7}
+.ano-result-card.pass .ano-result-eyebrow{color:var(--green)}
+.ano-result-card.fail .ano-result-eyebrow{color:var(--red)}
+.ano-result-title{font-size:26px;font-weight:800;letter-spacing:-0.6px;line-height:1.1;margin-bottom:6px}
+.ano-result-card.pass .ano-result-title{color:var(--green)}
+.ano-result-card.fail .ano-result-title{color:var(--red)}
+.ano-result-sub{font-size:13px;font-weight:500;color:var(--t2);line-height:1.45;max-width:260px}
+.ano-result-detail{
+  margin-top:16px;width:100%;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:7px;
+}
+.ano-rd-item{
+  border-radius:11px;padding:9px 4px 8px;
+  background:rgba(0,0,0,.07);
+}
+[data-theme="light"] .ano-rd-item{background:rgba(0,0,0,.055)}
+.ano-rd-val{font-family:var(--ffm);font-size:17px;font-weight:700;line-height:1}
+.ano-result-card.pass .ano-rd-val{color:var(--green)}
+.ano-result-card.fail .ano-rd-val{color:var(--red)}
+.ano-rd-lbl{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+
 /* pilulinha EAC na célula do trimestre */
 .resumo-trim-eac-pill{
   display:inline-block;font-size:7.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
@@ -2434,7 +2489,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
   /* grids */
   .resumo-stats-grid { grid-template-columns:repeat(4,1fr); }
-  .provas-stats-v2   { grid-template-columns:repeat(4,1fr); }
 
   /* live banner */
   .live-banner { border-radius:22px; padding:20px 24px; }
@@ -2442,20 +2496,140 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* ─ extra wide ─ */
 @media (min-width:1140px) {
-  /* provas 2-col only when there are exams (JS adds class) */
-  .provas-2col {
-    display:grid;
-    grid-template-columns:400px 1fr;
-    gap:28px; align-items:start;
-  }
   /* notas: ALWAYS single column — not touched */
 }
+
+/* ═══════════════════════════════════════════
+   PROVAS — DESKTOP LAYOUT SYSTEM
+   O wrapper quebra o limite de 680px do page-slide
+   para aproveitar toda a largura disponível.
+═══════════════════════════════════════════ */
+.provas-page-wrap {
+  display:flex;
+  flex-direction:column;
+  gap:0;
+}
+
 /* ─────────────────────────────────────────────────────
    PROVAS FORM CENTERED (no exams state)
 ───────────────────────────────────────────────────── */
 .provas-form-centered {
   max-width:520px;
   margin:0 auto;
+}
+
+@media (min-width:768px) {
+  /* Quebra o limite de 680px do page-slide para o wrapper de provas */
+  .page-slide > .provas-page-wrap {
+    max-width: 960px !important;
+    width: calc(100% - 64px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* Stats: 4 colunas no wrapper */
+  .provas-page-wrap .provas-stats-v2 {
+    grid-template-columns: repeat(4,1fr);
+    margin-bottom:18px;
+  }
+
+  /* Filter chips: sem scroll, wrap natural */
+  .provas-page-wrap .provas-filter {
+    flex-wrap: wrap;
+    overflow:visible;
+    gap:7px;
+    margin-bottom:16px;
+  }
+
+  /* 2col: form fixo à esquerda, lista ocupa o resto */
+  .provas-page-wrap .provas-2col {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  /* Form: sempre expandido no desktop — esconde o toggle header, mostra só o corpo */
+  .provas-page-wrap .add-exam-card {
+    margin-bottom: 0;
+    position: sticky;
+    top: 20px;
+  }
+  .provas-page-wrap .add-exam-card .aec-header {
+    pointer-events: none;
+    cursor: default;
+  }
+  .provas-page-wrap .add-exam-card .aec-header-sub {
+    display: none;
+  }
+  .provas-page-wrap .add-exam-card .aec-header-badge,
+  .provas-page-wrap .add-exam-card .aec-chevron {
+    display: none;
+  }
+  /* Força o corpo aberto */
+  .provas-page-wrap .add-exam-card .aec-body-wrap {
+    grid-template-rows: 1fr !important;
+  }
+  .provas-page-wrap .add-exam-card .aec-header {
+    border-bottom: 1px solid var(--line3);
+  }
+  .provas-page-wrap .add-exam-card .aec-header-icon {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+  .provas-page-wrap .add-exam-card .aec-header-icon svg {
+    stroke: var(--accent-text, #000);
+  }
+
+  /* Lista de provas: ocupa coluna direita inteira */
+  .provas-page-wrap .provas-list-col {
+    min-width: 0;
+  }
+
+  /* Centered form (sem provas) */
+  .provas-page-wrap .provas-form-centered {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Exam items no desktop: cursor pointer sempre visível */
+  .provas-page-wrap .exam-item {
+    cursor: pointer;
+    transition: background .14s var(--ease-ios), transform .14s !important;
+  }
+  .provas-page-wrap .exam-item:hover {
+    background: var(--bg2) !important;
+    transform: translateX(3px);
+  }
+}
+
+@media (min-width:1060px) {
+  .page-slide > .provas-page-wrap {
+    max-width: 1080px !important;
+  }
+  .provas-page-wrap .provas-2col {
+    grid-template-columns: 370px 1fr;
+    gap: 28px;
+  }
+  /* Lista em 2 colunas quando há espaço suficiente */
+  .provas-page-wrap .exam-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .provas-page-wrap .exam-list .exam-item {
+    margin: 0;
+  }
+}
+
+@media (min-width:1300px) {
+  .page-slide > .provas-page-wrap {
+    max-width: 1200px !important;
+  }
+  .provas-page-wrap .provas-2col {
+    grid-template-columns: 400px 1fr;
+    gap: 32px;
+  }
 }
 
 /* ═══════════════════════════════
@@ -2820,16 +2994,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
     box-shadow:0 24px 72px rgba(0,0,0,.32);
   }
 
-  /* provas 2col on 768px+ only when has exams */
-  .provas-2col {
-    display:grid;
-    grid-template-columns:380px 1fr;
-    gap:24px; align-items:start;
-  }
-  .provas-form-centered {
-    max-width:520px;
-    margin:0 auto;
-  }
 }
 
 
@@ -4324,8 +4488,8 @@ input, textarea, select {
       <span>Provas</span>
     </button>
     <button class="nav-btn" id="n-resumo" onclick="setPage('resumo',this)">
-      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-      <span>Resumo</span>
+      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Desempenho</span>
     </button>
     <button class="nav-btn" id="n-calendario" onclick="setPage('calendario',this)">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="8" y="14" width="3" height="3" rx=".5"/></svg>
@@ -5379,9 +5543,10 @@ function _eacBlock(base,eac,trlabel){
 }
 
 /* ═══════════════════════════════
-   RESUMO
+   DESEMPENHO (antigo Resumo)
 ═══════════════════════════════ */
 function renderResumo(el){
+  // ── Contagem por status ──
   let passCount=0,failCount=0,warnCount=0,pendCount=0,sumAll=0,cntAll=0;
   SUBJECTS.forEach(s=>{
     const g=finalGrade(s.id),ss=st(g);
@@ -5389,31 +5554,17 @@ function renderResumo(el){
     else if(ss==='fail')failCount++;
     else if(ss==='warn')warnCount++;
     else pendCount++;
-    if(ss!=='pending'){sumAll+=g;cntAll++;}
+    if(g!==null){sumAll+=g;cntAll++;}
   });
   const avgAll=cntAll>0?sumAll/cntAll:null;
   const avgSt=st(avgAll);
   const avgColor=avgAll!==null?SC(avgSt):'var(--t4)';
 
-  // Banner hero
-  const bannerHtml=`<div class="resumo-banner">
-    <div class="resumo-banner-ring"></div>
-    <div class="resumo-banner-eyebrow"><span class="dot"></span>Visão geral</div>
-    <div class="resumo-banner-avg" style="color:${avgColor}">${fmt(avgAll)}<span style="font-size:22px;font-weight:400;color:var(--t3);letter-spacing:0"> / 10</span></div>
-    <div class="resumo-banner-badge ${avgSt}">${SL[avgSt]}</div>
-    <div class="resumo-stats-grid">
-      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--green)">${passCount}</div><div class="sp-lbl">Aprovadas</div></div>
-      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--amber)">${warnCount}</div><div class="sp-lbl">Em risco</div></div>
-      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--red)">${failCount}</div><div class="sp-lbl">Reprovadas</div></div>
-      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--t4)">${pendCount}</div><div class="sp-lbl">Pendentes</div></div>
-    </div>
-  </div>`;
-
-  // ── Analytics (antes era só na aba "Resultado") ──
+  // ── Dados analíticos ──
   const subjScoresR=[];let sumR=0,cntR=0;
   SUBJECTS.forEach(s=>{
     const g=finalGrade(s.id),s2=stFinal(s.id,g);
-    if(s2!=='pending'){sumR+=g;cntR++;}
+    if(g!==null){sumR+=g;cntR++;}
     subjScoresR.push({s,g,s2});
   });
   const scoredR=subjScoresR.filter(x=>x.g!==null);
@@ -5424,22 +5575,102 @@ function renderResumo(el){
   const abovePassR=scoredR.filter(x=>x.g>=6).length;
   const abovePassPctR=scoredR.length?Math.round((abovePassR/scoredR.length)*100):0;
   const varianceR=scoredR.length>1?Math.sqrt(scoredR.reduce((acc,x)=>acc+(x.g-(sumR/cntR))**2,0)/scoredR.length):null;
-  const pendR=subjScoresR.filter(x=>x.s2==='pending').length;
+
+  // ── Médias por trimestre ──
   const trimAvgR=tr=>{let s=0,c=0;SUBJECTS.forEach(sub=>{const v=trimGrade(sub.id,tr);if(v!==null){s+=v;c++;}});return c>0?s/c:null;};
   const ta1R=trimAvgR('1T'),ta2R=trimAvgR('2T'),ta3R=trimAvgR('3T');
 
+  // ── Total de avaliações lançadas ──
+  const ALL_TABS_DATA=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC'];
+  let totalEvals=0,filledEvals=0;
+  SUBJECTS.forEach(s=>{
+    ALL_TABS_DATA.forEach(tab=>{
+      const rows=(G[s.id][tab]||[]).filter(r=>!r._isNew);
+      rows.forEach(r=>{totalEvals++;if(nf(r.got)!==null)filledEvals++;});
+    });
+  });
+
+  // ── Verificar se o ano todo está fechado (todas as matérias têm nota final) ──
+  const allSubjFinal=SUBJECTS.map(s=>({g:finalGrade(s.id),s}));
+  const yearClosed=allSubjFinal.every(x=>x.g!==null);
+  const yearApproved=yearClosed&&allSubjFinal.every(x=>x.g>=6);
+  const yearFailed=yearClosed&&!yearApproved;
+  const failedSubjs=yearClosed?allSubjFinal.filter(x=>x.g<6):[];
+
+  // ── Banner hero ──
+  const bannerHtml=`<div class="resumo-banner">
+    <div class="resumo-banner-ring"></div>
+    <div class="resumo-banner-eyebrow"><span class="dot"></span>Visão geral · ${completionR}% concluído</div>
+    <div class="resumo-banner-avg" style="color:${avgColor}">${fmt(avgAll)}<span style="font-size:22px;font-weight:400;color:var(--t3);letter-spacing:0"> / 10</span></div>
+    <div class="resumo-banner-badge ${avgSt}">${SL[avgSt]}</div>
+    <div class="resumo-stats-grid">
+      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--green)">${passCount}</div><div class="sp-lbl">Aprovadas</div></div>
+      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--amber)">${warnCount}</div><div class="sp-lbl">Em risco</div></div>
+      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--red)">${failCount}</div><div class="sp-lbl">Reprovadas</div></div>
+      <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--t4)">${pendCount}</div><div class="sp-lbl">Pendentes</div></div>
+    </div>
+  </div>`;
+
+  // ── Card de resultado do ano (só quando 100% fechado) ──
+  let anoCardHtml='';
+  if(yearClosed){
+    if(yearApproved){
+      anoCardHtml=`<div class="ano-result-card pass">
+        <div class="ano-result-emoji">🏆</div>
+        <div class="ano-result-eyebrow">Resultado do Ano</div>
+        <div class="ano-result-title">Aprovado de Ano!</div>
+        <div class="ano-result-sub">Parabéns! Você foi aprovado em todas as ${totalR} matérias.</div>
+        <div class="ano-result-detail">
+          <div class="ano-rd-item"><div class="ano-rd-val">${fmt(avgAll)}</div><div class="ano-rd-lbl">Média final</div></div>
+          <div class="ano-rd-item"><div class="ano-rd-val">${passCount}</div><div class="ano-rd-lbl">Aprovadas</div></div>
+          <div class="ano-rd-item"><div class="ano-rd-val">${abovePassPctR}%</div><div class="ano-rd-lbl">Acima de 6.0</div></div>
+        </div>
+      </div>`;
+    }else{
+      const failNames=failedSubjs.map(x=>x.s.name).join(', ');
+      anoCardHtml=`<div class="ano-result-card fail">
+        <div class="ano-result-emoji">📋</div>
+        <div class="ano-result-eyebrow">Resultado do Ano</div>
+        <div class="ano-result-title">Reprovado de Ano</div>
+        <div class="ano-result-sub">Reprovado em ${failedSubjs.length} matéria${failedSubjs.length>1?'s':''}: ${failNames}.</div>
+        <div class="ano-result-detail">
+          <div class="ano-rd-item"><div class="ano-rd-val">${fmt(avgAll)}</div><div class="ano-rd-lbl">Média final</div></div>
+          <div class="ano-rd-item"><div class="ano-rd-val">${failedSubjs.length}</div><div class="ano-rd-lbl">Reprovadas</div></div>
+          <div class="ano-rd-item"><div class="ano-rd-val">${passCount}</div><div class="ano-rd-lbl">Aprovadas</div></div>
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── Médias por trimestre (3 cards) ──
+  let trimAvgsHtml='';
+  if(ta1R!==null||ta2R!==null||ta3R!==null){
+    trimAvgsHtml=`<div class="resumo-trim-avgs">`;
+    [['1° Trim',ta1R],['2° Trim',ta2R],['3° Trim',ta3R]].forEach(([lbl,val])=>{
+      const c=val!==null?SC(st(val)):'var(--bg4)';
+      const pct=val!==null?(Math.min(val/10,1)*100).toFixed(1):0;
+      trimAvgsHtml+=`<div class="resumo-trim-avg-card">
+        <div class="resumo-trim-avg-lbl">${lbl}</div>
+        <div class="resumo-trim-avg-val" style="color:${c}">${val!==null?fmt(val):'—'}</div>
+        <div class="resumo-trim-avg-pbar"><div class="resumo-trim-avg-pbar-fill" style="width:${pct}%;background:${c}"></div></div>
+      </div>`;
+    });
+    trimAvgsHtml+=`</div>`;
+  }
+
+  // ── Grid analytics ──
   let analyticsHtml=`<div class="res-analytics">`;
   if(bestR)analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow" style="color:var(--green)">↑ Melhor matéria</div><div class="rac-subj">${bestR.s.name}</div><div class="rac-val" style="color:var(--green)">${fmt(bestR.g)}</div></div>`;
   if(worstR&&worstR!==bestR)analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow" style="color:var(--red)">↓ Mais difícil</div><div class="rac-subj">${worstR.s.name}</div><div class="rac-val" style="color:var(--red)">${fmt(worstR.g)}</div></div>`;
-  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Preenchidas</div><div class="rac-subj">${filledR} de ${totalR} matérias</div><div class="rac-val" style="color:var(--gold)">${completionR}%</div></div>`;
-  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Acima da média</div><div class="rac-subj">nota ≥ 6.0</div><div class="rac-val" style="color:${abovePassPctR>=50?'var(--green)':'var(--amber)'}">${abovePassPctR}%</div></div>`;
+  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Progresso</div><div class="rac-subj">${filledR} de ${totalR} matérias</div><div class="rac-val" style="color:var(--gold)">${completionR}%</div></div>`;
+  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Acima de 6.0</div><div class="rac-subj">das matérias com nota</div><div class="rac-val" style="color:${abovePassPctR>=50?'var(--green)':'var(--amber)'}">${abovePassPctR}%</div></div>`;
   if(varianceR!==null)analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Consistência</div><div class="rac-subj">desvio padrão</div><div class="rac-val" style="color:${varianceR<1.5?'var(--green)':varianceR<2.5?'var(--amber)':'var(--red)'}">${varianceR.toFixed(2)}</div></div>`;
-  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Pendentes</div><div class="rac-subj">sem nota final</div><div class="rac-val" style="color:var(--t3)">${pendR}</div></div>`;
+  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Avaliações</div><div class="rac-subj">${filledEvals} lançadas de ${totalEvals}</div><div class="rac-val" style="color:var(--t2)">${totalEvals>0?Math.round(filledEvals/totalEvals*100):0}%</div></div>`;
   analyticsHtml+=`</div>`;
 
+  // ── Gráfico de barras por trimestre ──
   let trendHtml='';
   if(ta1R!==null||ta2R!==null||ta3R!==null){
-    const maxT=Math.max(...[ta1R,ta2R,ta3R].filter(v=>v!==null),0.01);
     trendHtml=`<div class="res-trend-row"><div class="res-trend-title">Evolução por trimestre</div><div class="res-trend-bars">`;
     [['1°T',ta1R],['2°T',ta2R],['3°T',ta3R]].forEach(([lbl,val])=>{
       const pct=val!==null?(val/10)*100:0;
@@ -5449,7 +5680,7 @@ function renderResumo(el){
     trendHtml+=`</div></div>`;
   }
 
-  let h=bannerHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
+  let h=anoCardHtml+bannerHtml+trimAvgsHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
   const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'—';
   SUBJECTS.forEach((s,i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
@@ -6236,7 +6467,19 @@ function renderProvas(el){
   }
 
   const hasExams=listHtml.trim()!=='';
-  el.innerHTML=statsHtml+filterHtml+(hasExams?'<div class="provas-2col">'+formHtml+'<div>'+listHtml+'</div></div>':'<div class="provas-form-centered">'+formHtml+'</div>');
+  const isDesktop=window.innerWidth>=768;
+  let inner;
+  if(hasExams){
+    inner=`<div class="provas-2col">`+formHtml+`<div class="provas-list-col">`+listHtml+`</div></div>`;
+  }else{
+    inner=`<div class="provas-form-centered">` +formHtml+`</div>`;
+  }
+  el.innerHTML=`<div class="provas-page-wrap">`+statsHtml+filterHtml+inner+`</div>`;
+  // Desktop: força o form sempre aberto
+  if(isDesktop){
+    const card=document.getElementById('add-exam-card');
+    if(card)card.classList.add('open');
+  }
   updateExamBadge();
 }
 /* ─── EXAM DETAIL SHEET ─── */
