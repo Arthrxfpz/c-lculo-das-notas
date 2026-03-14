@@ -607,6 +607,30 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .res-trend-lbl{font-size:10px;font-weight:600;color:var(--t4)}
 .res-trend-val{font-family:var(--ffm);font-size:11px;font-weight:700;color:var(--t2)}
 
+/* ── RES CHARTS ── */
+.res-charts-card{
+  background:var(--bg1);border:1px solid var(--line2);border-radius:20px;
+  padding:16px 16px 14px;margin-bottom:12px;overflow:hidden;
+}
+[data-theme="dark"] .res-charts-card{box-shadow:0 2px 8px rgba(0,0,0,.4),0 0 0 0.5px rgba(255,255,255,.04)}
+[data-theme="light"] .res-charts-card{box-shadow:0 1px 3px rgba(20,40,100,.05),0 4px 16px rgba(20,40,100,.08)}
+.res-charts-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.res-charts-title{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px}
+.res-charts-segs{display:flex;background:var(--bg2);border:1px solid var(--line2);border-radius:10px;padding:3px;gap:2px}
+.res-chart-seg{
+  padding:5px 11px;font-size:12px;font-weight:600;letter-spacing:-.1px;
+  border:none;background:transparent;color:var(--t3);border-radius:7px;
+  cursor:pointer;transition:background .15s,color .15s,box-shadow .15s;font-family:var(--ff);
+}
+.res-chart-seg.active{
+  background:var(--bg1);color:var(--t1);font-weight:700;
+  box-shadow:0 1px 5px rgba(0,0,0,.15),0 0 0 0.5px rgba(0,0,0,.06);
+}
+[data-theme="dark"] .res-chart-seg.active{background:var(--bg3);box-shadow:0 1px 5px rgba(0,0,0,.4),0 0 0 0.5px rgba(255,255,255,.06)}
+.res-chart-pane{display:none}
+.res-chart-pane.visible{display:block;animation:fadeIn .2s var(--ease-ios) both}
+.res-chart-pane canvas{display:block;width:100%}
+
 /* section label */
 .section-label{
   font-size:11px;font-weight:700;color:var(--t3);
@@ -5680,7 +5704,42 @@ function renderResumo(el){
     trendHtml+=`</div></div>`;
   }
 
-  let h=anoCardHtml+bannerHtml+trimAvgsHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
+  // ── Dados para gráficos ──
+  const _chartData={
+    byTrim:{
+      '1T':SUBJECTS.map(s=>{const g=tabScore(s.id,'1T');const s2=g===null?'pending':g>=6?'pass':g>=5?'warn':'fail';return{s,g,s2};}),
+      '2T':SUBJECTS.map(s=>{const g=tabScore(s.id,'2T');const s2=g===null?'pending':g>=6?'pass':g>=5?'warn':'fail';return{s,g,s2};}),
+      '3T':SUBJECTS.map(s=>{const g=tabScore(s.id,'3T');const s2=g===null?'pending':g>=6?'pass':g>=5?'warn':'fail';return{s,g,s2};}),
+      'geral':SUBJECTS.map(s=>{
+        const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T');
+        const vals=[t1,t2,t3].filter(v=>v!==null);
+        const pg=vals.length?vals.reduce((a,b)=>a+b,0)/vals.length:null;
+        const s2=pg===null?'pending':pg>=6?'pass':pg>=5?'warn':'fail';
+        return{s,g:pg,s2};
+      })
+    },
+    ta1R,ta2R,ta3R,
+    trimSubjs:SUBJECTS.map(s=>({s,t1:trimGrade(s.id,'1T'),t2:trimGrade(s.id,'2T'),t3:trimGrade(s.id,'3T')}))
+  };
+  const chartsHtml=`<div class="res-charts-card">
+    <div class="res-charts-hdr">
+      <span class="res-charts-title">Gráficos</span>
+    </div>
+    <div class="res-charts-segs res-charts-trim-segs">
+      <button class="res-chart-seg active" onclick="switchResTrim('1T',this)">1\u00b0T</button>
+      <button class="res-chart-seg" onclick="switchResTrim('2T',this)">2\u00b0T</button>
+      <button class="res-chart-seg" onclick="switchResTrim('3T',this)">3\u00b0T</button>
+      <button class="res-chart-seg" onclick="switchResTrim('geral',this)">Geral</button>
+    </div>
+    <div class="res-charts-segs res-charts-type-segs" style="margin-top:8px">
+      <button class="res-chart-seg active" onclick="switchResType('radar',this)">Radar</button>
+      <button class="res-chart-seg" onclick="switchResType('barras',this)">Barras</button>
+      <button class="res-chart-seg res-chart-seg-linha" onclick="switchResType('linha',this)" style="display:none">Linha</button>
+    </div>
+    <div style="margin-top:12px"><canvas id="rc-canvas-main"></canvas></div>
+  </div>`;
+
+  let h=anoCardHtml+bannerHtml+chartsHtml+trimAvgsHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
   const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'—';
   SUBJECTS.forEach((s,i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
@@ -5789,6 +5848,321 @@ function renderResumo(el){
   });
   h+='</div>';
   el.innerHTML=h;
+  setTimeout(()=>_initResCharts(_chartData),0);
+}
+
+/* ═══════════════════════════════
+   GRÁFICOS — DESEMPENHO (Canvas puro)
+═══════════════════════════════ */
+let _rcd=null;
+let _rcTrim='1T';
+let _rcType='radar';
+
+function _initResCharts(data){
+  _rcd=data;
+  _rcTrim='1T';_rcType='radar';
+  _drawMainChart();
+}
+
+function switchResTrim(trim,btn){
+  _rcTrim=trim;
+  document.querySelectorAll('.res-charts-trim-segs .res-chart-seg').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const linhaBtn=document.querySelector('.res-chart-seg-linha');
+  if(linhaBtn){
+    if(trim==='geral'){linhaBtn.style.display='';}
+    else{
+      linhaBtn.style.display='none';
+      if(_rcType==='linha'){
+        _rcType='barras';
+        document.querySelectorAll('.res-charts-type-segs .res-chart-seg').forEach(b=>b.classList.remove('active'));
+        const first=document.querySelector('.res-charts-type-segs .res-chart-seg');
+        if(first)first.classList.add('active');
+      }
+    }
+  }
+  setTimeout(_drawMainChart,10);
+}
+
+function switchResType(type,btn){
+  _rcType=type;
+  document.querySelectorAll('.res-charts-type-segs .res-chart-seg').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  setTimeout(_drawMainChart,10);
+}
+
+function switchResChart(type,btn){switchResType(type,btn);}
+
+function _cssv(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+
+function _chartColor(s2){
+  return s2==='pass'?_cssv('--green'):s2==='fail'?_cssv('--red'):s2==='warn'?_cssv('--amber'):_cssv('--bg5');
+}
+
+function _rrect(ctx,x,y,w,h,r){
+  if(w<=0)return;
+  r=Math.min(r,Math.abs(w)/2,Math.abs(h)/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function _drawMainChart(){
+  if(!_rcd)return;
+  const canvas=document.getElementById('rc-canvas-main');
+  if(!canvas)return;
+  const subjects=_rcd.byTrim[_rcTrim];
+  const dpr=window.devicePixelRatio||1;
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth||300;
+  let H;
+  if(_rcType==='radar') H=Math.min(W,310);
+  else if(_rcType==='barras') H=subjects.length*44+44;
+  else H=210;
+  canvas.width=Math.round(W*dpr);
+  canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  if(_rcType==='radar') _drawRadarChart(ctx,W,H,subjects);
+  else if(_rcType==='barras') _drawBarrasChart(ctx,W,H,subjects);
+  else _drawLinhaChart(ctx,W,H);
+}
+
+function _drawResChart(type){_rcType=type;_drawMainChart();}
+
+function _drawRadarChart(ctx,W,H,subjects){
+  subjects=subjects||(_rcd?_rcd.byTrim[_rcTrim]:[]);
+  const N=subjects.length;
+  if(!N)return;
+  const cx=W/2,cy=H/2;
+  const R=Math.min(cx,cy)-50;
+  const step=(Math.PI*2)/N;
+  const start=-Math.PI/2;
+  const gold=_cssv('--gold');
+  const line2=_cssv('--line2');
+  const t4=_cssv('--t4');
+  const t2=_cssv('--t2');
+  const bg1=_cssv('--bg1');
+  const amber=_cssv('--amber');
+  const ff=`-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`;
+  const ffm=`ui-monospace,'SF Mono',Menlo,monospace`;
+
+  // Grid rings at 2,4,6,8,10
+  for(let v=2;v<=10;v+=2){
+    const r=(v/10)*R;
+    ctx.beginPath();
+    for(let i=0;i<N;i++){
+      const a=start+i*step;
+      const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle=v===6?amber+'66':line2;
+    ctx.lineWidth=v===6?1.5:0.7;
+    ctx.setLineDash(v===6?[4,3]:[]);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // 6.0 ring label
+  {const r6=(6/10)*R;
+  ctx.fillStyle=amber;
+  ctx.font=`600 9px ${ff}`;
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('6.0',cx,cy-r6-2);}
+
+  // Spokes
+  subjects.forEach((_,i)=>{
+    const a=start+i*step;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);
+    ctx.strokeStyle=line2;ctx.lineWidth=0.7;ctx.stroke();
+  });
+
+  // Data points
+  const pts=subjects.map((d,i)=>{
+    const a=start+i*step;
+    const v=d.g!==null?d.g:0;
+    const r=(v/10)*R;
+    return{x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,g:d.g,s2:d.s2};
+  });
+
+  // Fill
+  ctx.beginPath();
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.closePath();
+  ctx.globalAlpha=0.18;ctx.fillStyle=gold;ctx.fill();ctx.globalAlpha=1;
+
+  // Stroke
+  ctx.beginPath();
+  pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.closePath();
+  ctx.strokeStyle=gold;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+
+  // Dots
+  pts.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);
+    ctx.fillStyle=p.g===null?t4:_chartColor(p.s2);ctx.fill();
+    ctx.strokeStyle=bg1;ctx.lineWidth=1.5;ctx.stroke();
+  });
+
+  // Labels
+  subjects.forEach((d,i)=>{
+    const a=start+i*step;
+    const lx=cx+Math.cos(a)*(R+26);
+    const ly=cy+Math.sin(a)*(R+26);
+    const name=d.s.name.length>9?d.s.name.substring(0,8)+'…':d.s.name;
+    ctx.fillStyle=d.g!==null?_chartColor(d.s2):t4;
+    ctx.font=`600 10px ${ff}`;
+    const ta=lx<cx-6?'right':lx>cx+6?'left':'center';
+    const tb=ly<cy-6?'bottom':ly>cy+6?'top':'middle';
+    ctx.textAlign=ta;ctx.textBaseline=tb;
+    ctx.fillText(name,lx,ly);
+    if(d.g!==null){
+      ctx.fillStyle=t2;
+      ctx.font=`700 9px ${ffm}`;
+      const oy=tb==='bottom'?-11:11;
+      ctx.textBaseline='middle';
+      ctx.fillText(d.g.toFixed(1),lx,ly+oy);
+    }
+  });
+}
+
+function _drawBarrasChart(ctx,W,H,subjects){
+  subjects=subjects||(_rcd?_rcd.byTrim[_rcTrim]:[]);
+  if(!subjects.length)return;
+  const padL=8,padR=42,padT=18,rowH=44,barH=16;
+  const innerW=W-padL-padR;
+  const bg2=_cssv('--bg2');
+  const t3=_cssv('--t3');
+  const t4=_cssv('--t4');
+  const amber=_cssv('--amber');
+  const ff=`-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`;
+  const ffm=`ui-monospace,'SF Mono',Menlo,monospace`;
+  const refX=padL+(6/10)*innerW;
+
+  subjects.forEach((d,i)=>{
+    const y=padT+i*rowH;
+    const by=y+(rowH-barH)/2+8;
+    _rrect(ctx,padL,by,innerW,barH,5);
+    ctx.fillStyle=bg2;ctx.fill();
+    const v=d.g!==null?d.g:0;
+    const fw=Math.max((v/10)*innerW,v>0?8:0);
+    if(fw>0){
+      const col=_chartColor(d.s2);
+      const grd=ctx.createLinearGradient(padL,0,padL+fw,0);
+      grd.addColorStop(0,col+'99');grd.addColorStop(1,col);
+      _rrect(ctx,padL,by,fw,barH,5);
+      ctx.fillStyle=grd;ctx.fill();
+    }
+    const name=d.s.name.length>17?d.s.name.substring(0,16)+'…':d.s.name;
+    ctx.fillStyle=t3;ctx.font=`500 10px ${ff}`;
+    ctx.textAlign='left';ctx.textBaseline='bottom';
+    ctx.fillText(name,padL+2,by-2);
+    ctx.fillStyle=d.g!==null?_chartColor(d.s2):t4;
+    ctx.font=`700 12px ${ffm}`;
+    ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(d.g!==null?d.g.toFixed(1):'—',padL+innerW+5,by+barH/2);
+  });
+
+  // Reference line at 6.0
+  const totalH=padT+subjects.length*rowH;
+  ctx.beginPath();ctx.moveTo(refX,padT-6);ctx.lineTo(refX,totalH);
+  ctx.strokeStyle=amber+'88';ctx.lineWidth=1.2;
+  ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=amber;ctx.font=`600 9px ${ff}`;
+  ctx.textAlign='center';ctx.textBaseline='bottom';
+  ctx.fillText('6.0',refX,padT-6);
+}
+
+function _drawLinhaChart(ctx,W,H){
+  const{ta1R,ta2R,ta3R,trimSubjs}=_rcd||{ta1R:null,ta2R:null,ta3R:null,trimSubjs:[]};
+  const ff=`-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif`;
+  const ffm=`ui-monospace,'SF Mono',Menlo,monospace`;
+  const padL=30,padR=16,padT=22,padB=26;
+  const gW=W-padL-padR,gH=H-padT-padB;
+  const t4=_cssv('--t4');const t3=_cssv('--t3');const t2=_cssv('--t2');
+  const gold=_cssv('--gold');const line2=_cssv('--line2');
+  const amber=_cssv('--amber');const green=_cssv('--green');const red=_cssv('--red');
+  const bg1=_cssv('--bg1');
+  const xs=[padL,padL+gW*0.5,padL+gW];
+
+  if(ta1R===null&&ta2R===null&&ta3R===null){
+    ctx.fillStyle=t4;ctx.font=`500 12px ${ff}`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Nenhum dado de trimestre ainda',W/2,H/2);
+    return;
+  }
+
+  // Grid
+  for(let v=0;v<=10;v+=2){
+    const y=padT+gH-(v/10)*gH;
+    ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+gW,y);
+    ctx.strokeStyle=v===6?amber+'55':line2;
+    ctx.lineWidth=v===6?1.2:0.5;
+    ctx.setLineDash(v===6?[4,3]:[]);
+    ctx.stroke();
+    ctx.fillStyle=v===6?amber:t4;
+    ctx.font=`${v===6?'600':'500'} 9px ${ffm}`;
+    ctx.textAlign='right';ctx.textBaseline='middle';
+    ctx.fillText(v,padL-5,y);
+  }
+  ctx.setLineDash([]);
+
+  // X labels
+  ['1°T','2°T','3°T'].forEach((lbl,i)=>{
+    ctx.fillStyle=t3;ctx.font=`600 10px ${ff}`;
+    ctx.textAlign='center';ctx.textBaseline='top';
+    ctx.fillText(lbl,xs[i],padT+gH+5);
+  });
+
+  // Per-subject thin lines
+  trimSubjs.forEach(s=>{
+    const vals=[s.t1,s.t2,s.t3];
+    ctx.beginPath();
+    ctx.strokeStyle=gold+'30';ctx.lineWidth=1;
+    let moved=false;
+    vals.forEach((v,i)=>{
+      if(v===null)return;
+      const y=padT+gH-(v/10)*gH;
+      if(!moved){ctx.moveTo(xs[i],y);moved=true;}else ctx.lineTo(xs[i],y);
+    });
+    ctx.stroke();
+  });
+
+  // Average line (gold, thick)
+  const avgs=[ta1R,ta2R,ta3R];
+  const avgPts=avgs.map((v,i)=>({x:xs[i],y:v!==null?padT+gH-(v/10)*gH:null,v}));
+  ctx.beginPath();ctx.strokeStyle=gold;ctx.lineWidth=2.5;ctx.lineJoin='round';
+  let moved=false;
+  avgPts.forEach(p=>{
+    if(p.y===null)return;
+    if(!moved){ctx.moveTo(p.x,p.y);moved=true;}else ctx.lineTo(p.x,p.y);
+  });
+  ctx.stroke();
+
+  // Dots + value labels
+  avgPts.forEach(p=>{
+    if(p.y===null)return;
+    const col=p.v>=6?green:p.v>=5?amber:red;
+    ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle=bg1;ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle=t2;ctx.font=`700 10px ${ffm}`;
+    ctx.textAlign='center';ctx.textBaseline='bottom';
+    ctx.fillText(p.v.toFixed(1),p.x,p.y-9);
+  });
 }
 
 /* ═══════════════════════════════
