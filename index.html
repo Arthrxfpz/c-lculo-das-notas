@@ -4041,6 +4041,139 @@ input, textarea, select {
 [data-theme="dark"] .aec-header-badge    { background: var(--bg3); border-color: var(--line2); }
 [data-theme="dark"] .modal-box           { border-top-color: var(--line2); }
 
+/* ══════════════════════════════════════════
+   CALENDÁRIO
+══════════════════════════════════════════ */
+.cal-wrap{padding:0 14px 32px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0 16px;gap:8px}
+.cal-nav-title{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.5px;text-align:center;flex:1}
+/* slide animations */
+@keyframes calSlideInRight{from{opacity:0;transform:translateX(52px)}to{opacity:1;transform:translateX(0)}}
+@keyframes calSlideInLeft{from{opacity:0;transform:translateX(-52px)}to{opacity:1;transform:translateX(0)}}
+.cal-grid-wrap{overflow:hidden}
+.cal-grid-wrap.slide-right{animation:calSlideInRight .28s var(--ease-ios)}
+.cal-grid-wrap.slide-left{animation:calSlideInLeft .28s var(--ease-ios)}
+.cal-nav-btn{width:34px;height:34px;background:var(--bg2);border:1px solid var(--line2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,opacity .15s;flex-shrink:0}
+.cal-nav-btn:active{opacity:.6;transform:scale(.9)}
+.cal-nav-btn svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cal-nav-btn:disabled{opacity:.28;pointer-events:none}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px}
+.cal-wd{text-align:center;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;padding:4px 0 6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-day{
+  aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border-radius:10px;cursor:pointer;position:relative;
+  transition:background .12s var(--ease-ios);
+  -webkit-tap-highlight-color:transparent;
+}
+.cal-day:active:not(.empty){background:var(--bg3);transform:scale(.9)}
+.cal-day.empty{cursor:default;pointer-events:none}
+.cal-day-num{font-size:13.5px;font-weight:600;color:var(--t1);line-height:1;z-index:1}
+.cal-day.sunday .cal-day-num{color:var(--red)}
+.cal-day.today{background:var(--bg2)}
+.cal-day.today .cal-day-num{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--accent,var(--gold));color:var(--accent-text,#000);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:13px;
+}
+.cal-day.today.sunday .cal-day-num{color:var(--accent-text,#000)}
+.cal-day-dots{display:flex;gap:2px;margin-top:3px;height:5px;align-items:center}
+.cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+/* feriado — ponto âmbar no canto */
+.cal-day.feriado::after{
+  content:'';position:absolute;top:5px;right:5px;
+  width:4px;height:4px;border-radius:50%;background:var(--amber);
+}
+.cal-day.today.feriado::after{top:3px;right:3px}
+
+/* ── Cal Day Sheet ── */
+.cal-day-sheet-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  z-index:610;align-items:flex-end;justify-content:center;
+}
+.cal-day-sheet-overlay.open{display:flex}
+.cal-day-sheet{
+  background:var(--bg1);border-radius:28px 28px 0 0;
+  width:100%;max-width:480px;max-height:80dvh;
+  display:flex;flex-direction:column;
+  animation:slideUp .38s var(--ease-sheet);
+}
+.cal-day-sheet-handle-row{padding:10px 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cal-day-sheet-handle{width:36px;height:4px;background:var(--line);border-radius:4px}
+.cal-day-sheet-head{
+  flex-shrink:0;padding:16px 20px 14px;
+  border-bottom:0.5px solid var(--line3);
+}
+.cal-day-sheet-date{font-size:22px;font-weight:700;color:var(--t1);letter-spacing:-.5px}
+.cal-day-sheet-dow{font-size:13px;font-weight:500;color:var(--t3);margin-top:2px}
+.cal-day-sheet-body{flex:1;overflow-y:auto;padding:14px 20px 28px;display:flex;flex-direction:column;gap:10px}
+/* feriado pill */
+.cal-feriado-pill{
+  display:flex;align-items:center;gap:10px;
+  background:var(--amberbg);border:1px solid var(--amberbd);border-radius:12px;
+  padding:12px 14px;
+}
+.cal-feriado-pill svg{width:16px;height:16px;stroke:var(--amber);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.cal-feriado-name{font-size:13px;font-weight:700;color:var(--amber)}
+/* exam card in day sheet */
+.cal-exam-card{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
+  padding:13px 14px;cursor:pointer;
+  transition:background .15s;
+}
+.cal-exam-card:active{background:var(--bg3)}
+.cal-exam-color{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:36px}
+.cal-exam-info{flex:1;min-width:0}
+.cal-exam-subj{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.cal-exam-title{font-size:14px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-exam-time{font-size:11px;font-weight:500;color:var(--t4);margin-top:2px}
+.cal-exam-chevron{width:18px;height:18px;flex-shrink:0;opacity:.4}
+.cal-exam-chevron svg{width:18px;height:18px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cal-day-empty-state{text-align:center;padding:28px 0 12px;color:var(--t4);font-size:13px;font-weight:500}
+/* close btn */
+.cal-day-sheet-close{
+  margin:0 20px 24px;padding:14px;background:var(--bg3);border:1px solid var(--line2);
+  border-radius:14px;font-size:15px;font-weight:600;color:var(--t2);cursor:pointer;
+  text-align:center;flex-shrink:0;
+  transition:background .15s;
+}
+.cal-day-sheet-close:active{background:var(--bg4)}
+/* ── Cal disclaimer ── */
+.cal-disclaimer{
+  display:flex;align-items:flex-start;gap:9px;
+  margin:0 0 14px;padding:11px 13px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:12px;
+}
+.cal-disclaimer svg{width:14px;height:14px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+.cal-disclaimer-text{font-size:11px;font-weight:500;color:var(--t3);line-height:1.5}
+
+/* ── Cal event list (below grid) ── */
+.cal-event-list{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.cal-event-row{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
+  padding:12px 14px;cursor:pointer;transition:background .15s;
+}
+.cal-event-row:active{background:var(--bg3)}
+.cal-event-row-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:36px;flex-shrink:0}
+.cal-event-row-day{font-size:20px;font-weight:800;color:var(--t1);line-height:1;font-family:var(--ffm)}
+.cal-event-row-dow{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.cal-event-row-divider{width:1px;align-self:stretch;background:var(--line3);flex-shrink:0}
+.cal-event-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cal-event-row-feriado{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--amber)}
+.cal-event-row-feriado svg{width:11px;height:11px;stroke:var(--amber);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.cal-event-row-exam{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-event-row-exam-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cal-event-row-chevron{opacity:.35;flex-shrink:0}
+.cal-event-row-chevron svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cal-event-row.past{opacity:.38}
+
+/* collapsed desktop */
+.cal-day-sheet-overlay.collapsed{left:264px}
+
 </style>
 <body>
 <div class="shell">
@@ -4118,7 +4251,7 @@ input, textarea, select {
       <button class="tab-btn"        data-tab="2T-EAC"  onclick="switchTab('2T-EAC',this)">EAC 2°</button>
       <button class="tab-btn"        data-tab="3T"      onclick="switchTab('3T',this)">3° Trimestre</button>
       <button class="tab-btn"        data-tab="3T-EAC"  onclick="switchTab('3T-EAC',this)">EAC 3°</button>
-      <button class="tab-btn"        data-tab="resultado" onclick="switchTab('resultado',this)">Resultado</button>
+
     </div>
   </div>
 
@@ -4169,10 +4302,11 @@ input, textarea, select {
       <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
       <span>Resumo</span>
     </button>
-    <button class="nav-btn" id="n-resultado" onclick="setPage('resultado',this)">
-      <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      <span>Resultado</span>
+    <button class="nav-btn" id="n-calendario" onclick="setPage('calendario',this)">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="8" y="14" width="3" height="3" rx=".5"/></svg>
+      <span>Calendário</span>
     </button>
+
     <button class="nav-btn" id="n-bloco" onclick="setPage('bloco',this)">
       <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
       <span>Caderno</span>
@@ -4181,6 +4315,19 @@ input, textarea, select {
 
   <!-- Expand btn: agora é o hambúrguer no topbar, esse div é só um anchor para o JS -->
   <span id="sb-expand-btn" style="display:none"></span>
+
+  <!-- CAL DAY SHEET -->
+  <div class="cal-day-sheet-overlay" id="cal-day-sheet-overlay" onclick="if(event.target===this)closeCalDaySheet()">
+    <div class="cal-day-sheet" id="cal-day-sheet">
+      <div class="cal-day-sheet-handle-row"><div class="cal-day-sheet-handle"></div></div>
+      <div class="cal-day-sheet-head">
+        <div class="cal-day-sheet-date" id="cal-day-sheet-date">—</div>
+        <div class="cal-day-sheet-dow" id="cal-day-sheet-dow"></div>
+      </div>
+      <div class="cal-day-sheet-body" id="cal-day-sheet-body"></div>
+      <div class="cal-day-sheet-close" onclick="closeCalDaySheet()">Fechar</div>
+    </div>
+  </div>
 
   <!-- NOTE EDITOR OVERLAY -->
   <div class="note-editor-overlay" id="note-editor-overlay">
@@ -4754,15 +4901,15 @@ function syncLayout(){
    Abordagem: ambos os slides são position:absolute
    e a transição usa CSS transition (não animation)
 ══════════════════════════════════════════ */
-const PAGE_ORDER=['notas','horarios','provas','resumo','resultado','bloco'];
+const PAGE_ORDER=['notas','horarios','provas','resumo','calendario','bloco'];
 
 function _buildSlide(){
   const s=document.createElement('div');
   s.className='page-slide';
   if(curPage==='horarios')renderHorarios(s);
   else if(curPage==='provas')renderProvas(s);
-  else if(curPage==='resumo')renderResumo(s);
-  else if(curPage==='resultado')renderResultado(s);
+  else if(curPage==='resumo'||curPage==='resultado')renderResumo(s);
+  else if(curPage==='calendario')renderCalendario(s);
   else if(curPage==='bloco')renderBloco(s);
   else renderNotasTab(s);
   return s;
@@ -5237,7 +5384,47 @@ function renderResumo(el){
     </div>
   </div>`;
 
-  let h=bannerHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
+  // ── Analytics (antes era só na aba "Resultado") ──
+  const subjScoresR=[];let sumR=0,cntR=0;
+  SUBJECTS.forEach(s=>{
+    const g=finalGrade(s.id),s2=stFinal(s.id,g);
+    if(s2!=='pending'){sumR+=g;cntR++;}
+    subjScoresR.push({s,g,s2});
+  });
+  const scoredR=subjScoresR.filter(x=>x.g!==null);
+  const bestR=scoredR.length?scoredR.reduce((a,b)=>b.g>a.g?b:a):null;
+  const worstR=scoredR.length?scoredR.reduce((a,b)=>b.g<a.g?b:a):null;
+  const filledR=scoredR.length,totalR=SUBJECTS.length;
+  const completionR=Math.round((filledR/totalR)*100);
+  const abovePassR=scoredR.filter(x=>x.g>=6).length;
+  const abovePassPctR=scoredR.length?Math.round((abovePassR/scoredR.length)*100):0;
+  const varianceR=scoredR.length>1?Math.sqrt(scoredR.reduce((acc,x)=>acc+(x.g-(sumR/cntR))**2,0)/scoredR.length):null;
+  const pendR=subjScoresR.filter(x=>x.s2==='pending').length;
+  const trimAvgR=tr=>{let s=0,c=0;SUBJECTS.forEach(sub=>{const v=trimGrade(sub.id,tr);if(v!==null){s+=v;c++;}});return c>0?s/c:null;};
+  const ta1R=trimAvgR('1T'),ta2R=trimAvgR('2T'),ta3R=trimAvgR('3T');
+
+  let analyticsHtml=`<div class="res-analytics">`;
+  if(bestR)analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow" style="color:var(--green)">↑ Melhor matéria</div><div class="rac-subj">${bestR.s.name}</div><div class="rac-val" style="color:var(--green)">${fmt(bestR.g)}</div></div>`;
+  if(worstR&&worstR!==bestR)analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow" style="color:var(--red)">↓ Mais difícil</div><div class="rac-subj">${worstR.s.name}</div><div class="rac-val" style="color:var(--red)">${fmt(worstR.g)}</div></div>`;
+  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Preenchidas</div><div class="rac-subj">${filledR} de ${totalR} matérias</div><div class="rac-val" style="color:var(--gold)">${completionR}%</div></div>`;
+  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Acima da média</div><div class="rac-subj">nota ≥ 6.0</div><div class="rac-val" style="color:${abovePassPctR>=50?'var(--green)':'var(--amber)'}">${abovePassPctR}%</div></div>`;
+  if(varianceR!==null)analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Consistência</div><div class="rac-subj">desvio padrão</div><div class="rac-val" style="color:${varianceR<1.5?'var(--green)':varianceR<2.5?'var(--amber)':'var(--red)'}">${varianceR.toFixed(2)}</div></div>`;
+  analyticsHtml+=`<div class="res-analytic-card"><div class="rac-eyebrow">Pendentes</div><div class="rac-subj">sem nota final</div><div class="rac-val" style="color:var(--t3)">${pendR}</div></div>`;
+  analyticsHtml+=`</div>`;
+
+  let trendHtml='';
+  if(ta1R!==null||ta2R!==null||ta3R!==null){
+    const maxT=Math.max(...[ta1R,ta2R,ta3R].filter(v=>v!==null),0.01);
+    trendHtml=`<div class="res-trend-row"><div class="res-trend-title">Evolução por trimestre</div><div class="res-trend-bars">`;
+    [['1°T',ta1R],['2°T',ta2R],['3°T',ta3R]].forEach(([lbl,val])=>{
+      const pct=val!==null?(val/10)*100:0;
+      const c=val!==null?SC(st(val)):'var(--bg3)';
+      trendHtml+=`<div class="res-trend-bar-wrap"><div class="res-trend-val">${val!==null?fmt(val):'—'}</div><div style="flex:1;width:100%;display:flex;align-items:flex-end"><div class="res-trend-bar" style="height:${Math.max(pct,3)}%;background:${c};width:100%"></div></div><div class="res-trend-lbl">${lbl}</div></div>`;
+    });
+    trendHtml+=`</div></div>`;
+  }
+
+  let h=bannerHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
   const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'—';
   SUBJECTS.forEach((s,i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
@@ -5386,6 +5573,19 @@ function getSchedStatus(){
 function renderHorarios(el){
   const s2=getSchedStatus();
   const dow=new Date().getDay();
+
+  // ── Feriado hoje? ──────────────────────────────────────────
+  const feriadoHoje=FERIADOS_2026[todayStr()];
+  if(feriadoHoje){
+    el.innerHTML=`
+      <div class="live-banner no-class" style="background:var(--amberbg);border-color:var(--amberbd);border:1px solid var(--amberbd)">
+        <div class="lb-tag"><div class="dot" style="background:var(--amber)"></div><span style="color:var(--amber)">Feriado</span></div>
+        <div class="lb-main" style="color:var(--amber)">🎉 ${feriadoHoje}</div>
+        <div class="lb-sub">Não há aulas hoje. Aproveite o feriado!</div>
+      </div>`;
+    return;
+  }
+
   let banner='';
   if(s2.type==='in-class'){
     const pct=Math.min((s2.elapsed/s2.duration)*100,100).toFixed(1);
@@ -6931,10 +7131,9 @@ function switchTab(tab,btn){
   curTab=tab;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const TABS=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC','resultado'];
+  const TABS=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC'];
   const dir=TABS.indexOf(tab)>=TABS.indexOf(prev)?'push':'pop';
-  if(tab==='resultado'){curPage='resultado';setNavActive('resultado');document.getElementById('tabs-strip').style.display='none';}
-  else{curPage='notas';setNavActive('notas');document.getElementById('tabs-strip').style.display='';}
+  curPage='notas';setNavActive('notas');document.getElementById('tabs-strip').style.display='';
   render(dir);syncLayout();
 }
 
@@ -6959,7 +7158,7 @@ function setPage(page,btn){
 
 function setNavActive(p){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',resultado:'n-resultado',bloco:'n-bloco'};
+  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',calendario:'n-calendario',bloco:'n-bloco'};
   const el=document.getElementById(m[p]||'n-notas');
   if(el)el.classList.add('active');
 }
@@ -8443,7 +8642,7 @@ function toggleSidebar(){
   const noteEditor = document.getElementById('note-editor-overlay');
   const wxOverlay = document.getElementById('wx-overlay');
   const notifOverlay = document.getElementById('notif-overlay');
-  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay'];
+  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay','cal-day-sheet-overlay'];
   const toastEl = document.getElementById('exam-toast');
 
   const hamburger = document.getElementById('topbar-hamburger');
@@ -8511,6 +8710,253 @@ new ResizeObserver(syncLayout).observe(document.getElementById('top-fixed'));
 setInterval(tickTimer,1000);
 setInterval(checkSchedRefresh,10000);
 setInterval(()=>fetchWeather(false),5*60*1000);
+
+/* ══════════════════════════════════════════
+   CALENDÁRIO
+══════════════════════════════════════════ */
+const FERIADOS_2026 = {
+  '2026-04-03':'Sexta-feira Santa',
+  '2026-04-05':'Páscoa',
+  '2026-04-15':'Parada Pedagógica',
+  '2026-04-20':'Feriado Ponte',
+  '2026-04-21':'Tiradentes',
+  '2026-05-01':'Dia do Trabalhador',
+  '2026-06-04':'Corpus Christi',
+  '2026-06-05':'Feriado Ponte',
+  '2026-07-27':'Recesso Escolar',
+  '2026-07-28':'Recesso Escolar',
+  '2026-07-29':'Recesso Escolar',
+  '2026-07-30':'Recesso Escolar',
+  '2026-07-31':'Recesso Escolar',
+  '2026-08-05':'Parada Pedagógica',
+  '2026-09-07':'Dia da Independência',
+  '2026-10-12':'Dia de Nossa Senhora',
+  '2026-10-13':'Dia dos Professores',
+  '2026-11-02':'Finados',
+  '2026-11-20':'Dia da Consciência Negra',
+  '2026-11-25':'Parada Pedagógica',
+};
+
+const CAL_MONTHS_PT=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+// estado: mês atual visível (0–11), começa no mês de hoje (ou jan se não for 2026)
+let _calMonth=(new Date().getFullYear()===2026)?new Date().getMonth():0;
+
+function renderCalendario(el){
+  el.innerHTML=_buildCalHtml();
+}
+
+function _buildCalHtml(){
+  const mo=_calMonth;
+  const today=new Date();
+  const todayY=today.getFullYear();
+  const todayM=today.getMonth();
+  const todayD=today.getDate();
+
+  const canPrev=mo>0;
+  const canNext=mo<11;
+
+  let html=`<div class="cal-wrap">
+    <div class="cal-disclaimer">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span class="cal-disclaimer-text">Os feriados exibidos são baseados no calendário oficial da rede estadual do RS.</span>
+    </div>
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="calNavMonth(-1)"${canPrev?'':' disabled'}>
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="cal-nav-title">${CAL_MONTHS_PT[mo]} 2026</div>
+      <button class="cal-nav-btn" onclick="calNavMonth(1)"${canNext?'':' disabled'}>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="cal-weekdays">`;
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=>{ html+=`<div class="cal-wd">${d}</div>`; });
+  html+='</div><div class="cal-grid-wrap"><div class="cal-grid">';
+
+  const firstDow=new Date(2026,mo,1).getDay();
+  const daysInMonth=new Date(2026,mo+1,0).getDate();
+
+  for(let i=0;i<firstDow;i++) html+='<div class="cal-day empty"></div>';
+
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow=new Date(2026,mo,d).getDay();
+    const isSun=dow===0;
+    const isToday=(todayY===2026&&todayM===mo&&todayD===d);
+    const isFeriado=!!FERIADOS_2026[dateStr];
+    const dayExams=exams.filter(e=>e.examDate===dateStr);
+
+    let cls='cal-day';
+    if(isSun) cls+=' sunday';
+    if(isToday) cls+=' today';
+    if(isFeriado) cls+=' feriado';
+
+    let dotsHtml='';
+    if(dayExams.length){
+      dotsHtml='<div class="cal-day-dots">';
+      dayExams.slice(0,3).forEach(e=>{
+        const color=SUBJ_COLORS[e.subj]||'var(--red)';
+        dotsHtml+=`<div class="cal-dot" style="background:${color}"></div>`;
+      });
+      dotsHtml+='</div>';
+    }
+
+    html+=`<div class="${cls}" onclick="calDayClick('${dateStr}')">
+      <div class="cal-day-num">${d}</div>
+      ${dotsHtml}
+    </div>`;
+  }
+  html+='</div></div></div>'; // cal-grid + cal-grid-wrap + cal-wrap (fechamento provisório)
+
+  // event list below grid
+  const evListHtml=_buildCalEventListHtml(mo);
+  if(evListHtml) html=html.slice(0,-6)+evListHtml+'</div>'; // reabrir e fechar cal-wrap
+  return html;
+}
+
+function _buildCalEventListHtml(mo){
+  const daysInMonth=new Date(2026,mo+1,0).getDate();
+  const PT_WD_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const today=new Date();today.setHours(0,0,0,0);
+  let rows='';
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const feriado=FERIADOS_2026[dateStr];
+    const dayExams=exams.filter(e=>e.examDate===dateStr);
+    if(!feriado&&!dayExams.length) continue;
+
+    const dow=new Date(2026,mo,d).getDay();
+    const dowLbl=PT_WD_SHORT[dow];
+    const isPast=new Date(dateStr+'T23:59:59')<today;
+
+    let infoHtml='';
+    if(feriado) infoHtml+=`<div class="cal-event-row-feriado"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${feriado}</div>`;
+    dayExams.forEach(e=>{
+      const color=SUBJ_COLORS[e.subj]||'var(--red)';
+      const lbl=e.title?`${e.subj} · ${e.title}`:e.subj;
+      infoHtml+=`<div class="cal-event-row-exam"><div class="cal-event-row-exam-dot" style="background:${color}"></div>${lbl}</div>`;
+    });
+
+    rows+=`<div class="cal-event-row${isPast?' past':''}" onclick="calDayClick('${dateStr}')">
+      <div class="cal-event-row-left">
+        <div class="cal-event-row-day">${d}</div>
+        <div class="cal-event-row-dow">${dowLbl}</div>
+      </div>
+      <div class="cal-event-row-divider"></div>
+      <div class="cal-event-row-info">${infoHtml}</div>
+      <div class="cal-event-row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+    </div>`;
+  }
+  if(!rows) return '';
+  return `<div class="cal-event-list">${rows}</div>`;
+}
+
+function calNavMonth(dir){
+  const next=_calMonth+dir;
+  if(next<0||next>11) return;
+  _calMonth=next;
+
+  const slide=document.querySelector('.page-slide');
+  if(!slide||curPage!=='calendario') return;
+
+  // Update title and button states instantly
+  const title=slide.querySelector('.cal-nav-title');
+  if(title) title.textContent=CAL_MONTHS_PT[_calMonth]+' 2026';
+  const btns=slide.querySelectorAll('.cal-nav-btn');
+  if(btns[0]) btns[0].disabled=_calMonth===0;
+  if(btns[1]) btns[1].disabled=_calMonth===11;
+
+  // Rebuild only the grid-wrap with animation
+  const mo=_calMonth;
+  const today=new Date();
+  const todayY=today.getFullYear(),todayM=today.getMonth(),todayD=today.getDate();
+  const firstDow=new Date(2026,mo,1).getDay();
+  const daysInMonth=new Date(2026,mo+1,0).getDate();
+
+  let gridHtml='<div class="cal-grid">';
+  for(let i=0;i<firstDow;i++) gridHtml+='<div class="cal-day empty"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow=new Date(2026,mo,d).getDay();
+    const isSun=dow===0,isToday=(todayY===2026&&todayM===mo&&todayD===d),isFeriado=!!FERIADOS_2026[dateStr];
+    const dayExams=exams.filter(e=>e.examDate===dateStr);
+    let cls='cal-day';
+    if(isSun)cls+=' sunday';if(isToday)cls+=' today';if(isFeriado)cls+=' feriado';
+    let dots='';
+    if(dayExams.length){
+      dots='<div class="cal-day-dots">';
+      dayExams.slice(0,3).forEach(e=>{dots+=`<div class="cal-dot" style="background:${SUBJ_COLORS[e.subj]||'var(--red)'}"></div>`;});
+      dots+='</div>';
+    }
+    gridHtml+=`<div class="${cls}" onclick="calDayClick('${dateStr}')"><div class="cal-day-num">${d}</div>${dots}</div>`;
+  }
+  gridHtml+='</div>';
+
+  const wrap=slide.querySelector('.cal-grid-wrap');
+  if(wrap){
+    const animClass=dir>0?'slide-right':'slide-left';
+    wrap.innerHTML=gridHtml;
+    wrap.classList.remove('slide-right','slide-left');
+    void wrap.offsetWidth;
+    wrap.classList.add(animClass);
+  }
+
+  // Update event list below grid
+  const calWrap=slide.querySelector('.cal-wrap');
+  if(calWrap){
+    let oldList=calWrap.querySelector('.cal-event-list');
+    if(oldList) oldList.remove();
+    const newListHtml=_buildCalEventListHtml(mo);
+    if(newListHtml) calWrap.insertAdjacentHTML('beforeend',newListHtml);
+  }
+}
+
+function calDayClick(dateStr){
+  const parts=dateStr.split('-');
+  const d=new Date(dateStr+'T00:00:00');
+  const dow=PT_WEEKDAYS[d.getDay()];
+  const fmtd=`${parts[2]}/${parts[1]}/${parts[0]}`;
+  const feriado=FERIADOS_2026[dateStr];
+  const dayExams=exams.filter(e=>e.examDate===dateStr);
+
+  document.getElementById('cal-day-sheet-date').textContent=fmtd;
+  document.getElementById('cal-day-sheet-dow').textContent=dow;
+
+  let body='';
+  if(feriado){
+    body+=`<div class="cal-feriado-pill">
+      <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="cal-feriado-name">${feriado}</div>
+    </div>`;
+  }
+  if(dayExams.length){
+    dayExams.forEach(e=>{
+      const color=SUBJ_COLORS[e.subj]||'var(--red)';
+      const timeTxt=e.examTime?`<div class="cal-exam-time">🕐 ${e.examTime}</div>`:'';
+      const titleTxt=e.title||e.subj;
+      body+=`<div class="cal-exam-card" onclick="closeCalDaySheet();setTimeout(()=>openExamDetail('${e.id}'),220)">
+        <div class="cal-exam-color" style="background:${color}"></div>
+        <div class="cal-exam-info">
+          <div class="cal-exam-subj">${e.subj}</div>
+          <div class="cal-exam-title">${titleTxt}</div>
+          ${timeTxt}
+        </div>
+        <div class="cal-exam-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>`;
+    });
+  }
+  if(!feriado&&!dayExams.length){
+    body='<div class="cal-day-empty-state">Nenhum evento neste dia</div>';
+  }
+
+  document.getElementById('cal-day-sheet-body').innerHTML=body;
+  document.getElementById('cal-day-sheet-overlay').classList.add('open');
+}
+
+function closeCalDaySheet(){
+  document.getElementById('cal-day-sheet-overlay').classList.remove('open');
+}
 
 function wxToggleAcc(idx){
   const item=document.getElementById('wx-acc-'+idx);
