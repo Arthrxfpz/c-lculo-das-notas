@@ -4044,48 +4044,73 @@ input, textarea, select {
 /* ══════════════════════════════════════════
    CALENDÁRIO
 ══════════════════════════════════════════ */
-.cal-wrap{padding:0 14px 32px}
-.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0 16px;gap:8px}
-.cal-nav-title{font-size:19px;font-weight:700;color:var(--t1);letter-spacing:-.5px;text-align:center;flex:1}
+/* ── Horários — feriado dimming ── */
+.schedule-list.feriado-day .sched-item,
+.schedule-list.feriado-day .sched-break{opacity:.3;pointer-events:none;user-select:none}
+/* ── Horários — próximo feriado notice ── */
+.sched-feriado-notice{
+  display:flex;align-items:center;gap:10px;
+  margin:12px 16px 4px;padding:11px 14px;
+  background:var(--amberbg);border:1px solid var(--amberbd);border-radius:12px;
+  color:var(--amber);
+}
+.sched-feriado-notice svg{width:15px;height:15px;flex-shrink:0;opacity:.9}
+.sched-feriado-notice div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.sfn-label{font-size:12px;font-weight:700;color:var(--amber);line-height:1.3}
+.sfn-name{font-size:11px;font-weight:500;color:var(--amber);opacity:.75;line-height:1.3}
+
+/* ══════════════════════════════════════════
+   CALENDÁRIO
+══════════════════════════════════════════ */
+.cal-wrap{padding:0 16px 36px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0 18px;gap:8px}
+.cal-nav-title{font-size:20px;font-weight:700;color:var(--t1);letter-spacing:-.6px;text-align:center;flex:1}
 /* slide animations */
-@keyframes calSlideInRight{from{opacity:0;transform:translateX(52px)}to{opacity:1;transform:translateX(0)}}
-@keyframes calSlideInLeft{from{opacity:0;transform:translateX(-52px)}to{opacity:1;transform:translateX(0)}}
+@keyframes calSlideInRight{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:translateX(0)}}
+@keyframes calSlideInLeft{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:translateX(0)}}
 .cal-grid-wrap{overflow:hidden}
-.cal-grid-wrap.slide-right{animation:calSlideInRight .28s var(--ease-ios)}
-.cal-grid-wrap.slide-left{animation:calSlideInLeft .28s var(--ease-ios)}
-.cal-nav-btn{width:34px;height:34px;background:var(--bg2);border:1px solid var(--line2);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,opacity .15s;flex-shrink:0}
-.cal-nav-btn:active{opacity:.6;transform:scale(.9)}
+.cal-grid-wrap.slide-right{animation:calSlideInRight .26s var(--ease-ios)}
+.cal-grid-wrap.slide-left{animation:calSlideInLeft .26s var(--ease-ios)}
+.cal-nav-btn{
+  width:36px;height:36px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s,opacity .15s,transform .1s;flex-shrink:0;
+}
+.cal-nav-btn:active{opacity:.6;transform:scale(.88)}
 .cal-nav-btn svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.cal-nav-btn:disabled{opacity:.28;pointer-events:none}
-.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px}
-.cal-wd{text-align:center;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;padding:4px 0 6px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-nav-btn:disabled{opacity:.22;pointer-events:none}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
+.cal-wd{text-align:center;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;padding:3px 0 7px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal-day{
   aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border-radius:10px;cursor:pointer;position:relative;
-  transition:background .12s var(--ease-ios);
+  border-radius:12px;cursor:pointer;position:relative;
+  transition:background .12s var(--ease-ios),transform .1s;
   -webkit-tap-highlight-color:transparent;
 }
-.cal-day:active:not(.empty){background:var(--bg3);transform:scale(.9)}
+.cal-day:active:not(.empty){background:var(--bg3);transform:scale(.88)}
 .cal-day.empty{cursor:default;pointer-events:none}
-.cal-day-num{font-size:13.5px;font-weight:600;color:var(--t1);line-height:1;z-index:1}
+.cal-day-num{font-size:14px;font-weight:500;color:var(--t1);line-height:1;z-index:1;letter-spacing:-.2px}
 .cal-day.sunday .cal-day-num{color:var(--red)}
-.cal-day.today{background:var(--bg2)}
+/* hoje — círculo accent */
 .cal-day.today .cal-day-num{
-  width:28px;height:28px;border-radius:50%;
+  width:30px;height:30px;border-radius:50%;
   background:var(--accent,var(--gold));color:var(--accent-text,#000);
   display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:13px;
+  font-weight:800;font-size:14px;
 }
 .cal-day.today.sunday .cal-day-num{color:var(--accent-text,#000)}
-.cal-day-dots{display:flex;gap:2px;margin-top:3px;height:5px;align-items:center}
+/* dots */
+.cal-day-dots{display:flex;gap:3px;margin-top:4px;height:5px;align-items:center}
 .cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-/* feriado — ponto âmbar no canto */
-.cal-day.feriado::after{
-  content:'';position:absolute;top:5px;right:5px;
-  width:4px;height:4px;border-radius:50%;background:var(--amber);
+/* feriado — traço âmbar embaixo do número */
+.cal-day.feriado .cal-day-num{text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:3px;text-decoration-thickness:2px}
+.cal-day.today.feriado .cal-day-num{text-decoration:none}
+.cal-day.today.feriado::after{
+  content:'';position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
+  width:5px;height:5px;border-radius:50%;background:var(--amber);
 }
-.cal-day.today.feriado::after{top:3px;right:3px}
 
 /* ── Cal Day Sheet ── */
 .cal-day-sheet-overlay{
@@ -4151,25 +4176,25 @@ input, textarea, select {
 .cal-disclaimer-text{font-size:11px;font-weight:500;color:var(--t3);line-height:1.5}
 
 /* ── Cal event list (below grid) ── */
-.cal-event-list{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.cal-event-list{display:flex;flex-direction:column;gap:7px;margin-top:22px}
 .cal-event-row{
   display:flex;align-items:center;gap:12px;
   background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
-  padding:12px 14px;cursor:pointer;transition:background .15s;
+  padding:12px 14px;cursor:pointer;transition:background .15s,opacity .15s;
 }
 .cal-event-row:active{background:var(--bg3)}
-.cal-event-row-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:36px;flex-shrink:0}
+.cal-event-row-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;flex-shrink:0}
 .cal-event-row-day{font-size:20px;font-weight:800;color:var(--t1);line-height:1;font-family:var(--ffm)}
-.cal-event-row-dow{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
-.cal-event-row-divider{width:1px;align-self:stretch;background:var(--line3);flex-shrink:0}
-.cal-event-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cal-event-row-dow{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.cal-event-row-divider{width:0.5px;align-self:stretch;background:var(--line2);flex-shrink:0}
+.cal-event-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
 .cal-event-row-feriado{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--amber)}
 .cal-event-row-feriado svg{width:11px;height:11px;stroke:var(--amber);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .cal-event-row-exam{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-event-row-exam-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.cal-event-row-chevron{opacity:.35;flex-shrink:0}
+.cal-event-row-exam-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cal-event-row-chevron{opacity:.3;flex-shrink:0}
 .cal-event-row-chevron svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.cal-event-row.past{opacity:.38}
+.cal-event-row.past{opacity:.35}
 
 /* collapsed desktop */
 .cal-day-sheet-overlay.collapsed{left:264px}
@@ -5574,20 +5599,38 @@ function renderHorarios(el){
   const s2=getSchedStatus();
   const dow=new Date().getDay();
 
-  // ── Feriado hoje? ──────────────────────────────────────────
-  const feriadoHoje=FERIADOS_2026[todayStr()];
-  if(feriadoHoje){
-    el.innerHTML=`
-      <div class="live-banner no-class" style="background:var(--amberbg);border-color:var(--amberbd);border:1px solid var(--amberbd)">
-        <div class="lb-tag"><div class="dot" style="background:var(--amber)"></div><span style="color:var(--amber)">Feriado</span></div>
-        <div class="lb-main" style="color:var(--amber)">🎉 ${feriadoHoje}</div>
-        <div class="lb-sub">Não há aulas hoje. Aproveite o feriado!</div>
-      </div>`;
-    return;
+  // ── Feriado hoje? (só dia útil conta) ─────────────────────
+  const feriadoHoje = (dow>=1&&dow<=5) ? FERIADOS_2026[todayStr()] : null;
+
+  // ── Próximo dia útil feriado? (ignora sáb/dom) ────────────
+  let proximoFeriadoTxt = null;
+  if(!feriadoHoje){
+    const td=new Date();td.setHours(0,0,0,0);
+    for(let i=1;i<=7;i++){
+      const check=new Date(td);check.setDate(td.getDate()+i);
+      const wd=check.getDay();
+      if(wd<1||wd>5) continue; // pula fim de semana
+      const checkStr=check.getFullYear()+'-'+String(check.getMonth()+1).padStart(2,'0')+'-'+String(check.getDate()).padStart(2,'0');
+      const f=FERIADOS_2026[checkStr];
+      if(f){
+        const labels=['','segunda','terça','quarta','quinta','sexta',''];
+        const daysUntil=i-(wd===1&&dow===5?3:0); // ajuste visual simples
+        const label=i===1?'Amanhã':`${labels[wd].charAt(0).toUpperCase()+labels[wd].slice(1)} (${String(check.getDate()).padStart(2,'0')}/${String(check.getMonth()+1).padStart(2,'0')})`;
+        proximoFeriadoTxt={label,nome:f};
+      }
+      break; // só verifica o primeiro dia útil seguinte
+    }
   }
 
+  // ── Banner ────────────────────────────────────────────────
   let banner='';
-  if(s2.type==='in-class'){
+  if(feriadoHoje){
+    banner=`<div class="live-banner no-class" style="background:var(--amberbg);border:1px solid var(--amberbd)">
+      <div class="lb-tag"><div class="dot" style="background:var(--amber)"></div><span style="color:var(--amber)">Feriado</span></div>
+      <div class="lb-main" style="color:var(--amber)">${feriadoHoje}</div>
+      <div class="lb-sub">Não há aulas hoje.</div>
+    </div>`;
+  } else if(s2.type==='in-class'){
     const pct=Math.min((s2.elapsed/s2.duration)*100,100).toFixed(1);
     const nextTxt=s2.next?`Próxima: <strong>${s2.next.subj}</strong> com ${s2.next.prof}`:'Última aula do dia';
     banner=`<div class="live-banner in-class"><div class="lb-tag"><div class="dot"></div>Em aula</div><div class="lb-main">Na aula de <span>${s2.cls.subj}</span></div><div class="lb-sub">${nextTxt}</div><div class="lb-timer" id="lb-timer">${fmtCountdown(s2.remaining)}</div><div class="lb-timer-label">restante</div><div class="lb-progress"><div class="lb-progress-fill" id="lb-pbar" style="width:${pct}%"></div></div></div>`;
@@ -5597,14 +5640,25 @@ function renderHorarios(el){
     const lbl=s2.type==='before'?s2.first:s2.next;
     banner=`<div class="live-banner between"><div class="lb-tag"><div class="dot"></div>Entre aulas</div><div class="lb-main">Próxima: <span>${lbl.subj}</span></div><div class="lb-sub">Prof. <strong>${lbl.prof}</strong></div><div class="lb-timer" id="lb-timer">${fmtCountdown(s2.remaining)}</div><div class="lb-timer-label">para iniciar</div></div>`;
   }else if(s2.type==='after'){
-    const dow2=new Date().getDay();
-    const afterMsg=dow2===5?'Bom fim de semana!':'Até amanhã!';
-    banner=`<div class="live-banner no-class"><div class="lb-tag"><div class="dot"></div>Encerrado</div><div class="lb-main">Aulas encerradas hoje</div><div class="lb-sub">${afterMsg}</div></div>`;
+    // sub: se próximo dia útil for feriado, mostrar aviso no lugar de "Até amanhã"
+    const subTxt = proximoFeriadoTxt
+      ? `<span style="color:var(--amber)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
+      : (dow===5?'Bom fim de semana!':'Até amanhã!');
+    banner=`<div class="live-banner no-class"><div class="lb-tag"><div class="dot"></div>Encerrado</div><div class="lb-main">Aulas encerradas hoje</div><div class="lb-sub">${subTxt}</div></div>`;
+    proximoFeriadoTxt=null; // já exibido no banner, não duplicar
   }else if(s2.type==='weekend'){
     if(dow===6){
-      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--violet)"></div><span style="color:var(--violet)">Final de semana</span></div><div class="lb-main" style="font-size:16px">É sábado! <span style="color:var(--violet)">Descansa que você merece.</span></div><div class="lb-sub">As aulas voltam na segunda-feira.</div></div>`;
+      const subTxt = proximoFeriadoTxt
+        ? `<span style="color:var(--amber)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
+        : 'As aulas voltam na segunda-feira.';
+      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--violet)"></div><span style="color:var(--violet)">Final de semana</span></div><div class="lb-main" style="font-size:16px">É sábado! <span style="color:var(--violet)">Descansa que você merece.</span></div><div class="lb-sub">${subTxt}</div></div>`;
+      proximoFeriadoTxt=null;
     }else{
-      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--violet)"></div><span style="color:var(--violet)">Final de semana</span></div><div class="lb-main" style="font-size:16px">Hoje é domingo, <span style="color:var(--amber)">as aulas voltam amanhã.</span></div><div class="lb-sub">Aproveita as últimas horas.</div></div>`;
+      const subTxt = proximoFeriadoTxt
+        ? `<span style="color:var(--amber)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
+        : 'Aproveita as últimas horas.';
+      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--violet)"></div><span style="color:var(--violet)">Final de semana</span></div><div class="lb-main" style="font-size:16px">Hoje é domingo, <span style="color:var(--amber)">as aulas voltam amanhã.</span></div><div class="lb-sub">${subTxt}</div></div>`;
+      proximoFeriadoTxt=null;
     }
   }
 
@@ -5615,8 +5669,18 @@ function renderHorarios(el){
   });
   daySel+='</div>';
 
+  // ── Lista de aulas — só apaga se o dia selecionado for feriado em dia útil ──
+  const schedDayDate=(()=>{
+    const t=new Date();t.setHours(0,0,0,0);
+    const todayWd=t.getDay(); // 0=Dom
+    const diff=schedDay-todayWd;
+    const d=new Date(t);d.setDate(t.getDate()+diff);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  })();
+  const feriadoNoDiaSelecionado=FERIADOS_2026[schedDayDate];
+
   const dd=SCHED[schedDay];const now=nowMins();const isTd=schedDay===todayDow;
-  let list='<div class="schedule-list">';
+  let list=`<div class="schedule-list${feriadoNoDiaSelecionado?' feriado-day':''}">`;
   let ci=0;
   PERIODS.forEach((p,pi)=>{
     const ps=toMins(p.s),pe=toMins(p.e);
@@ -5637,6 +5701,7 @@ function renderHorarios(el){
     ci++;
   });
   list+='</div>';
+
   el.innerHTML=banner+daySel+list;
 }
 
