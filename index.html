@@ -55,6 +55,8 @@
     _syncTimer = setTimeout(async () => {
       try {
         _ignoreNextSnapshot = true;
+        const now = Date.now();
+        localStorage.setItem('t205_updatedAt', String(now));
         const payload = {
           grades:  JSON.parse(localStorage.getItem('t205_grades')  || 'null'),
           exams:   JSON.parse(localStorage.getItem('t205_exams')   || '[]'),
@@ -62,7 +64,7 @@
           notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
           notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
           theme:   localStorage.getItem('t205_theme') || 'dark',
-          updatedAt: Date.now()
+          updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
         _showSyncBadge('ok');
@@ -95,7 +97,9 @@
     try {
       const snap = await getDoc(doc(db, 'users', uid));
       if (snap.exists()) {
-        _applyCloudData(snap.data());
+        const d = snap.data();
+        if (d.updatedAt) localStorage.setItem('t205_updatedAt', String(d.updatedAt));
+        _applyCloudData(d);
         _showSyncBadge('ok');
       }
     } catch(e) { console.error('Firebase load error:', e); }
@@ -133,11 +137,16 @@
     if (user) {
       _applyGoogleProfile(user);
       await _fbLoadAll(user.uid);
-      // Listener em tempo real (outro aparelho salvou)
+      // Listener em tempo real — só aplica se o dado remoto for mais novo
       onSnapshot(doc(db, 'users', user.uid), (snap) => {
         if (_ignoreNextSnapshot) { _ignoreNextSnapshot = false; return; }
         if (!snap.exists()) return;
-        _applyCloudData(snap.data());
+        const d = snap.data();
+        const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
+        const remoteTs = d.updatedAt || 0;
+        if (remoteTs <= localTs) return;
+        localStorage.setItem('t205_updatedAt', String(remoteTs));
+        _applyCloudData(d);
         _showSyncBadge('live');
       });
     }
