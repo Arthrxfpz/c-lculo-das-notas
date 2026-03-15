@@ -46,7 +46,6 @@
 
   let _syncTimer = null;
   let _currentUid = null;
-  let _ignoreNextSnapshot = false;
 
   /* ── Salva tudo no Firestore (debounced 800ms) ── */
   window._fbSaveAll = function() {
@@ -54,7 +53,6 @@
     clearTimeout(_syncTimer);
     _syncTimer = setTimeout(async () => {
       try {
-        _ignoreNextSnapshot = true;
         const now = Date.now();
         localStorage.setItem('t205_updatedAt', String(now));
         const payload = {
@@ -130,6 +128,28 @@
     }
   }
 
+  /* ── Verifica se há dados mais novos no Firestore e aplica se tiver ── */
+  async function _fbCheckUpdates() {
+    if (!_currentUid) return;
+    try {
+      const snap = await getDoc(doc(db, 'users', _currentUid));
+      if (!snap.exists()) return;
+      const d = snap.data();
+      const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
+      const remoteTs = d.updatedAt || 0;
+      if (remoteTs <= localTs) return;
+      localStorage.setItem('t205_updatedAt', String(remoteTs));
+      _applyCloudData(d);
+      _showSyncBadge('live');
+    } catch(e) { console.error('Firebase check error:', e); }
+  }
+  window._fbCheckUpdates = _fbCheckUpdates;
+
+  /* ── Quando a aba volta ao foco, verifica atualizações de outros dispositivos ── */
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') _fbCheckUpdates();
+  });
+
   /* ── Observer: login / logout ── */
   onAuthStateChanged(auth, async (user) => {
     _currentUid = user ? user.uid : null;
@@ -137,18 +157,6 @@
     if (user) {
       _applyGoogleProfile(user);
       await _fbLoadAll(user.uid);
-      // Listener em tempo real — só aplica se o dado remoto for mais novo
-      onSnapshot(doc(db, 'users', user.uid), (snap) => {
-        if (_ignoreNextSnapshot) { _ignoreNextSnapshot = false; return; }
-        if (!snap.exists()) return;
-        const d = snap.data();
-        const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
-        const remoteTs = d.updatedAt || 0;
-        if (remoteTs <= localTs) return;
-        localStorage.setItem('t205_updatedAt', String(remoteTs));
-        _applyCloudData(d);
-        _showSyncBadge('live');
-      });
     }
   });
 
