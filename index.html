@@ -144,25 +144,33 @@
   });
 
   function _updateAuthUI(user) {
-    const btnLogin = document.getElementById('fb-login-btn');
-    const chip     = document.getElementById('fb-user-chip');
-    const chipPhoto= document.getElementById('fb-chip-photo');
-    const chipName = document.getElementById('fb-chip-name');
-    const topbarAv = document.querySelector('.topbar-avatar');
+    const btnLogin  = document.getElementById('fb-login-btn');
+    const chip      = document.getElementById('fb-user-chip');
+    const chipPhoto = document.getElementById('fb-chip-photo');
+    const chipName  = document.getElementById('fb-chip-name');
+    const topbarAv  = document.querySelector('.topbar-avatar');
+    const greeting  = document.querySelector('.topbar-greeting');
+    const loginLabel= null; // removido — texto está dentro do botão
     if (!btnLogin) return;
+
     if (user) {
+      // logado: mostra tudo normalmente, esconde texto de convite
       btnLogin.style.display = 'none';
       chip.classList.add('visible');
       chipPhoto.src = user.photoURL || '';
       chipPhoto.style.display = user.photoURL ? 'block' : 'none';
       const firstName = (user.displayName||'').split(' ')[0] || 'Conta';
       chipName.textContent = firstName;
-      // esconde o topbar-avatar (initials) para não duplicar
       if (topbarAv) topbarAv.style.display = 'none';
+      if (greeting) greeting.style.display = '';
+      if (loginLabel) loginLabel.style.display = 'none';
     } else {
+      // deslogado: esconde saudação e avatar, mostra botão com texto
       btnLogin.style.display = 'flex';
       chip.classList.remove('visible');
-      if (topbarAv) topbarAv.style.display = '';
+      if (topbarAv) topbarAv.style.display = 'none';
+      if (greeting) greeting.style.display = 'none';
+      if (loginLabel) loginLabel.style.display = 'flex';
     }
   }
 
@@ -284,6 +292,14 @@
 }
 /* ── FIREBASE AUTH UI ── */
 
+/* Label de convite ao login */
+.fb-login-label{
+  display:flex;align-items:center;
+  font-size:13px;font-weight:600;color:var(--t2);
+  letter-spacing:-0.15px;white-space:nowrap;
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
+}
+
 /* Slot de auth — entre a saudação e os botões de ação */
 .topbar-auth-slot{
   display:flex;align-items:center;gap:6px;flex-shrink:0;
@@ -291,24 +307,27 @@
 
 /* Botão login — mobile: só ícone G (compacto); desktop: ícone + texto */
 .fb-login-btn{
-  display:flex;align-items:center;justify-content:center;gap:7px;
-  height:36px;
-  padding:0 8px;           /* mobile: só ícone, padding estreito */
-  background:var(--bg1);
-  border:1.5px solid var(--line);
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  height:38px;
+  padding:0 16px 0 10px;
+  background:#fff;
+  border:1.5px solid rgba(0,0,0,.12);
   border-radius:22px;
-  cursor:pointer;font-size:12.5px;font-weight:700;color:var(--t1);
+  cursor:pointer;font-size:13px;font-weight:600;color:#3c4043;
   font-family:var(--ff);letter-spacing:-0.1px;
-  transition:background .18s,border-color .18s,transform .12s var(--ease-spring),box-shadow .18s;
+  transition:box-shadow .18s,transform .12s var(--ease-spring);
   white-space:nowrap;flex-shrink:0;
-  box-shadow:0 1px 6px rgba(0,0,0,.10);
+  box-shadow:0 1px 3px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
 }
-[data-theme="dark"] .fb-login-btn{background:var(--bg2);border-color:var(--line)}
-.fb-login-btn:hover{background:var(--bg3);box-shadow:0 2px 10px rgba(0,0,0,.18)}
-.fb-login-btn:active{transform:scale(.93);box-shadow:none}
+[data-theme="dark"] .fb-login-btn{
+  background:var(--bg2);border-color:var(--line);color:var(--t1);
+  box-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+.fb-login-btn:hover{box-shadow:0 2px 8px rgba(0,0,0,.2),0 4px 16px rgba(0,0,0,.08)}
+.fb-login-btn:active{transform:scale(.94);box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .fb-login-btn-icon{width:20px;height:20px;flex-shrink:0;display:block}
-/* texto escondido no mobile, visível no desktop */
-.fb-login-btn-label{display:none}
+/* texto sempre visível */
+.fb-login-btn-label{display:inline}
 
 /* Chip do usuário logado */
 .fb-user-chip{
@@ -433,7 +452,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .topbar-avatar{
   width:36px;height:36px;background:var(--bg3);border-radius:50%;
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  display:none;align-items:center;justify-content:center;flex-shrink:0;
   border:1px solid var(--line2);cursor:pointer;
   transition:opacity .2s;
 }
@@ -2645,10 +2664,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .topbar-greeting-name { display:none; }
   .topbar-meta { display:none; }
 
-  /* desktop: botão com texto completo, chip mostra nome */
-  .fb-login-btn { padding:0 16px 0 10px; }
-  .fb-login-btn-label { display:inline; }
+  /* desktop: chip mostra nome, label some */
   .fb-chip-name { display:block; }
+  .fb-login-label { display:none !important; }
+  /* desktop: reordena auth slot para depois da saudação */
+  .topbar-greeting { order:0; }
+  .topbar-auth-slot { order:1; }
+  .topbar-actions { order:2; }
 
   .tabs-strip {
     padding:0 44px 14px;
@@ -4873,15 +4895,10 @@ input, textarea, select {
       <div class="topbar-avatar" onclick="openModal()">
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
-      <div class="topbar-greeting" onclick="openModal()">
-        <div class="topbar-greeting-line" id="greeting-line">Toque para configurar seu perfil</div>
-        <div class="topbar-greeting-name" id="greeting-name"></div>
-        <div class="topbar-meta" id="d-school"></div>
-      </div>
 
-      <!-- Auth slot: fica entre a saudação e os botões de ação -->
+      <!-- Auth slot: antes da saudação no mobile -->
       <div class="topbar-auth-slot">
-        <!-- Botão login: ícone só no mobile, texto completo no desktop -->
+        <!-- Label de convite (visível quando deslogado) -->
         <button class="fb-login-btn" id="fb-login-btn" onclick="window._fbLoginClick&&window._fbLoginClick()" title="Entrar com Google">
           <svg class="fb-login-btn-icon" viewBox="0 0 48 48">
             <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -4889,14 +4906,19 @@ input, textarea, select {
             <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
             <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
           </svg>
-          <span class="fb-login-btn-label">Entrar com Google</span>
+          <span class="fb-login-btn-label">Faça login com o Google</span>
         </button>
-        <!-- Chip do usuário logado -->
         <div class="fb-user-chip" id="fb-user-chip" onclick="window._fbLogoutClick&&window._fbLogoutClick()">
           <img class="fb-chip-photo" id="fb-chip-photo" src="" alt="">
           <span class="fb-chip-name" id="fb-chip-name"></span>
           <div class="fb-sync-dot fb-sync-idle" id="fb-sync-dot"></div>
         </div>
+      </div>
+
+      <div class="topbar-greeting" onclick="openModal()" style="display:none">
+        <div class="topbar-greeting-line" id="greeting-line">Toque para configurar seu perfil</div>
+        <div class="topbar-greeting-name" id="greeting-name"></div>
+        <div class="topbar-meta" id="d-school"></div>
       </div>
 
       <div class="topbar-actions">
