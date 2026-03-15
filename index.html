@@ -164,6 +164,13 @@
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
     } else {
       _hideSplash(); // sessão expirada ou não logado — libera o splash
+      // Mostra o prompt de login se o usuário ainda não dispensou
+      setTimeout(() => {
+        if (!localStorage.getItem('t205_skip_login_prompt')) {
+          const el = document.getElementById('login-prompt-overlay');
+          if (el) el.classList.add('open');
+        }
+      }, 420);
     }
   });
 
@@ -259,6 +266,21 @@
 
   window._fbIsSyncing   = () => !!_currentUid;
   window._fbCurrentUser = () => auth.currentUser;
+
+  window._closeLoginPrompt = function() {
+    const el = document.getElementById('login-prompt-overlay');
+    if (el) el.classList.remove('open');
+  };
+
+  window._skipLoginPrompt = function() {
+    localStorage.setItem('t205_skip_login_prompt', '1');
+    window._closeLoginPrompt();
+  };
+
+  window._loginFromPrompt = function() {
+    window._closeLoginPrompt();
+    window._fbLoginClick();
+  };
 </script>
 
 <!-- Google tag (gtag.js) -->
@@ -492,6 +514,93 @@
   transition:background .15s,transform .12s var(--ease-spring);
 }
 .fb-logout-btn-cancel:active{background:var(--bg3);transform:scale(.97)}
+
+/* ── PROMPT DE LOGIN (aparece 1x para usuários não logados) ── */
+.login-prompt-overlay{
+  position:fixed;inset:0;z-index:9998;
+  background:rgba(0,0,0,.60);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .30s var(--ease-ios);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.login-prompt-overlay.open{opacity:1;pointer-events:all}
+.login-prompt-sheet{
+  width:100%;max-width:480px;
+  background:var(--bg1);
+  border-radius:28px 28px 0 0;
+  padding:10px 24px 32px;
+  transform:translateY(110%);
+  transition:transform .38s var(--ease-sheet);
+  border-top:0.5px solid var(--line2);
+}
+.login-prompt-overlay.open .login-prompt-sheet{transform:translateY(0)}
+
+.login-prompt-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--bg4);margin:0 auto 26px;
+}
+.login-prompt-icon-wrap{
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:18px;
+}
+.login-prompt-icon-bg{
+  width:60px;height:60px;border-radius:18px;
+  background:var(--bg2);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.15);
+}
+.login-prompt-title{
+  font-size:20px;font-weight:800;color:var(--t1);
+  text-align:center;letter-spacing:-0.5px;
+  margin-bottom:10px;line-height:1.2;
+}
+.login-prompt-sub{
+  font-size:14px;font-weight:400;color:var(--t2);
+  text-align:center;line-height:1.55;letter-spacing:-0.1px;
+  margin-bottom:28px;padding:0 4px;
+}
+.login-prompt-sub strong{
+  font-weight:700;color:var(--t1);
+}
+.login-prompt-btn-google{
+  width:100%;height:52px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  background:#fff;border:1.5px solid rgba(0,0,0,.13);
+  border-radius:16px;cursor:pointer;
+  font-size:15px;font-weight:700;color:#3c4043;
+  font-family:var(--ff);letter-spacing:-0.15px;
+  box-shadow:0 2px 10px rgba(0,0,0,.12),0 4px 18px rgba(0,0,0,.06);
+  transition:box-shadow .18s,transform .12s var(--ease-spring),background .15s;
+  margin-bottom:10px;
+}
+[data-theme="dark"] .login-prompt-btn-google{
+  background:var(--bg2);border-color:var(--line);color:var(--t1);
+  box-shadow:0 2px 12px rgba(0,0,0,.45);
+}
+.login-prompt-btn-google:hover{box-shadow:0 4px 16px rgba(0,0,0,.18)}
+.login-prompt-btn-google:active{transform:scale(.96)}
+.login-prompt-btn-google svg{width:22px;height:22px;flex-shrink:0}
+.login-prompt-btn-skip{
+  width:100%;height:46px;
+  display:flex;align-items:center;justify-content:center;
+  background:transparent;border:1.5px solid var(--line2);
+  border-radius:14px;cursor:pointer;
+  font-size:14px;font-weight:600;color:var(--t3);
+  font-family:var(--ff);letter-spacing:-0.1px;
+  transition:background .15s,color .15s,transform .12s var(--ease-spring);
+}
+.login-prompt-btn-skip:hover{background:var(--bg2);color:var(--t2)}
+.login-prompt-btn-skip:active{transform:scale(.97)}
+.login-prompt-divider{
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.login-prompt-divider-line{flex:1;height:1px;background:var(--line3)}
+.login-prompt-divider-text{
+  font-size:11px;font-weight:500;color:var(--t4);
+  letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;
+}
 
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
@@ -4949,6 +5058,48 @@ input, textarea, select {
 <style>
 @keyframes splash-spin{to{transform:rotate(360deg)}}
 </style>
+
+<!-- ── Prompt de login Google (mostra apenas 1x, se não estiver logado) ── -->
+<div class="login-prompt-overlay" id="login-prompt-overlay" onclick="if(event.target===this)_closeLoginPrompt()">
+  <div class="login-prompt-sheet">
+    <div class="login-prompt-handle"></div>
+
+    <div class="login-prompt-icon-wrap">
+      <div class="login-prompt-icon-bg">
+        <!-- Google G icon -->
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="login-prompt-title">Salve seu progresso</div>
+    <p class="login-prompt-sub">
+      Faça login com o Google para <strong>salvar seu progresso na nuvem</strong> e acessar o mesmo conteúdo em outros dispositivos.
+    </p>
+
+    <button class="login-prompt-btn-google" onclick="_loginFromPrompt()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Entrar com o Google
+    </button>
+
+    <div class="login-prompt-divider">
+      <div class="login-prompt-divider-line"></div>
+      <span class="login-prompt-divider-text">ou</span>
+      <div class="login-prompt-divider-line"></div>
+    </div>
+
+    <button class="login-prompt-btn-skip" onclick="_skipLoginPrompt()">Não lembrar mais</button>
+  </div>
+</div>
 
 <div class="shell">
 
