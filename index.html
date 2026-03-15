@@ -5,6 +5,217 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Cálculo das notas</title>
 
+<!-- ═══════════════════════════════════════════════════════
+     FIREBASE — Auth Google + Firestore (sync entre aparelhos)
+     ▸ Crie um projeto em https://console.firebase.google.com
+     ▸ Ative "Authentication" → "Google"
+     ▸ Ative "Firestore Database"
+     ▸ Substitua os valores abaixo pelas suas chaves do projeto
+     ═══════════════════════════════════════════════════════ -->
+<script type="module">
+  import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+  import { getAnalytics }    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey:            "AIzaSyBownWEMVI3hOipdVJCML_1_nTY7FLJgJQ",
+    authDomain:        "calculodasnotas.firebaseapp.com",
+    projectId:         "calculodasnotas",
+    storageBucket:     "calculodasnotas.firebasestorage.app",
+    messagingSenderId: "882266006008",
+    appId:             "1:882266006008:web:cba9b3a4ae50e48645f60d",
+    measurementId:     "G-KYXNCTKJ4V"
+  };
+
+  const app      = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+  const auth     = getAuth(app);
+  const db       = getFirestore(app);
+
+  window._fbAuth    = auth;
+  window._fbDb      = db;
+  window._fbDoc     = doc;
+  window._fbSetDoc  = setDoc;
+  window._fbGetDoc  = getDoc;
+  window._fbOnSnapshot = onSnapshot;
+  window._fbSignIn  = () => signInWithPopup(auth, new GoogleAuthProvider());
+  window._fbSignOut = () => signOut(auth);
+
+  let _syncTimer = null;
+  let _currentUid = null;
+  let _ignoreNextSnapshot = false;
+
+  /* ── Salva tudo no Firestore (debounced 800ms) ── */
+  window._fbSaveAll = function() {
+    if (!_currentUid) return;
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(async () => {
+      try {
+        _ignoreNextSnapshot = true;
+        const payload = {
+          grades:  JSON.parse(localStorage.getItem('t205_grades')  || 'null'),
+          exams:   JSON.parse(localStorage.getItem('t205_exams')   || '[]'),
+          student: JSON.parse(localStorage.getItem('t205_stu')     || 'null'),
+          notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
+          notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
+          theme:   localStorage.getItem('t205_theme') || 'dark',
+          updatedAt: Date.now()
+        };
+        await setDoc(doc(db, 'users', _currentUid), payload);
+        _showSyncBadge('ok');
+      } catch(e) {
+        _showSyncBadge('err');
+        console.error('Firebase save error:', e);
+      }
+    }, 800);
+  };
+
+  /* ── Aplica dados do Firestore na UI ── */
+  function _applyCloudData(d) {
+    if (d.grades)  localStorage.setItem('t205_grades', JSON.stringify(d.grades));
+    if (d.exams)   localStorage.setItem('t205_exams',  JSON.stringify(d.exams));
+    if (d.student) localStorage.setItem('t205_stu',    JSON.stringify(d.student));
+    if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
+    if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
+    if (d.theme)   localStorage.setItem('t205_theme',  d.theme);
+    if (typeof loadGrades       === 'function') loadGrades();
+    if (typeof loadExams        === 'function') loadExams();
+    if (typeof loadStudentLS    === 'function') loadStudentLS();
+    if (typeof loadNotes        === 'function') loadNotes();
+    if (typeof renderCurrentPage === 'function') renderCurrentPage();
+    if (typeof updateGreeting    === 'function') updateGreeting();
+    if (typeof applyThemeFromLS  === 'function') applyThemeFromLS();
+  }
+
+  /* ── Carrega dados do Firestore ── */
+  async function _fbLoadAll(uid) {
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (snap.exists()) {
+        _applyCloudData(snap.data());
+        _showSyncBadge('ok');
+      }
+    } catch(e) { console.error('Firebase load error:', e); }
+  }
+
+  /* ── Preenche o perfil com dados do Google ── */
+  function _applyGoogleProfile(user) {
+    // Só preenche nome se o usuário ainda não configurou manualmente
+    const raw = localStorage.getItem('t205_stu');
+    let s = raw ? JSON.parse(raw) : null;
+    if (!s) s = {nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'gold'};
+
+    let changed = false;
+    if (!s.nome && user.displayName) {
+      s.nome = user.displayName;
+      changed = true;
+    }
+    // Sempre atualiza a foto do Google (pode ter mudado)
+    const newPhoto = user.photoURL || '';
+    if (s.googlePhoto !== newPhoto) {
+      s.googlePhoto = newPhoto;
+      changed = true;
+    }
+    if (changed) {
+      localStorage.setItem('t205_stu', JSON.stringify(s));
+      if (typeof loadStudentLS === 'function') loadStudentLS();
+      if (typeof updateGreeting === 'function') updateGreeting();
+    }
+  }
+
+  /* ── Observer: login / logout ── */
+  onAuthStateChanged(auth, async (user) => {
+    _currentUid = user ? user.uid : null;
+    _updateAuthUI(user);
+    if (user) {
+      _applyGoogleProfile(user);
+      await _fbLoadAll(user.uid);
+      // Listener em tempo real (outro aparelho salvou)
+      onSnapshot(doc(db, 'users', user.uid), (snap) => {
+        if (_ignoreNextSnapshot) { _ignoreNextSnapshot = false; return; }
+        if (!snap.exists()) return;
+        _applyCloudData(snap.data());
+        _showSyncBadge('live');
+      });
+    }
+  });
+
+  function _updateAuthUI(user) {
+    const btnLogin = document.getElementById('fb-login-btn');
+    const chip     = document.getElementById('fb-user-chip');
+    const chipPhoto= document.getElementById('fb-chip-photo');
+    const chipName = document.getElementById('fb-chip-name');
+    const topbarAv = document.querySelector('.topbar-avatar');
+    if (!btnLogin) return;
+    if (user) {
+      btnLogin.style.display = 'none';
+      chip.classList.add('visible');
+      chipPhoto.src = user.photoURL || '';
+      chipPhoto.style.display = user.photoURL ? 'block' : 'none';
+      const firstName = (user.displayName||'').split(' ')[0] || 'Conta';
+      chipName.textContent = firstName;
+      // esconde o topbar-avatar (initials) para não duplicar
+      if (topbarAv) topbarAv.style.display = 'none';
+    } else {
+      btnLogin.style.display = 'flex';
+      chip.classList.remove('visible');
+      if (topbarAv) topbarAv.style.display = '';
+    }
+  }
+
+  function _showSyncBadge(state) {
+    const dot = document.getElementById('fb-sync-dot');
+    if (!dot) return;
+    dot.className = 'fb-sync-dot fb-sync-' + state;
+    if (state !== 'live') {
+      clearTimeout(dot._t);
+      dot._t = setTimeout(() => { dot.className = 'fb-sync-dot fb-sync-idle'; }, 2500);
+    }
+  }
+
+  window._fbLoginClick = () => {
+    window._fbSignIn()
+      .then(() => { setTimeout(() => location.reload(), 300); })
+      .catch(e => console.error(e));
+  };
+
+  window._fbLogoutClick = () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    // preenche popup
+    const photo = document.getElementById('fb-logout-photo');
+    const initials = document.getElementById('fb-logout-initials');
+    const initialsTxt = document.getElementById('fb-logout-initials-txt');
+    const nameEl  = document.getElementById('fb-logout-name');
+    const emailEl = document.getElementById('fb-logout-email');
+    if (photo) { photo.src = user.photoURL||''; photo.style.display = user.photoURL ? 'block':'none'; }
+    if (initials) initials.style.display = user.photoURL ? 'none':'flex';
+    if (initialsTxt) {
+      const parts = (user.displayName||'?').split(' ').filter(Boolean);
+      initialsTxt.textContent = parts.length>1 ? parts[0][0]+parts[parts.length-1][0] : (parts[0]||'?')[0].toUpperCase();
+    }
+    if (nameEl)  nameEl.textContent  = user.displayName || 'Usuário';
+    if (emailEl) emailEl.textContent = user.email || '';
+    document.getElementById('fb-logout-overlay').classList.add('open');
+  };
+
+  window._fbCloseLogout = () => {
+    document.getElementById('fb-logout-overlay').classList.remove('open');
+  };
+
+  window._fbConfirmLogout = async () => {
+    window._fbCloseLogout();
+    await window._fbSignOut();
+    setTimeout(() => location.reload(), 300);
+  };
+
+  window._fbIsSyncing   = () => !!_currentUid;
+  window._fbCurrentUser = () => auth.currentUser;
+</script>
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-L37W7PK87P"></script>
 <script>
@@ -71,6 +282,118 @@
   --bg-grid-line:rgba(30,50,100,.022);
   --cs:light;
 }
+/* ── FIREBASE AUTH UI ── */
+
+/* Slot de auth — entre a saudação e os botões de ação */
+.topbar-auth-slot{
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+}
+
+/* Botão login — mobile: só ícone G (compacto); desktop: ícone + texto */
+.fb-login-btn{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  height:36px;
+  padding:0 8px;           /* mobile: só ícone, padding estreito */
+  background:var(--bg1);
+  border:1.5px solid var(--line);
+  border-radius:22px;
+  cursor:pointer;font-size:12.5px;font-weight:700;color:var(--t1);
+  font-family:var(--ff);letter-spacing:-0.1px;
+  transition:background .18s,border-color .18s,transform .12s var(--ease-spring),box-shadow .18s;
+  white-space:nowrap;flex-shrink:0;
+  box-shadow:0 1px 6px rgba(0,0,0,.10);
+}
+[data-theme="dark"] .fb-login-btn{background:var(--bg2);border-color:var(--line)}
+.fb-login-btn:hover{background:var(--bg3);box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.fb-login-btn:active{transform:scale(.93);box-shadow:none}
+.fb-login-btn-icon{width:20px;height:20px;flex-shrink:0;display:block}
+/* texto escondido no mobile, visível no desktop */
+.fb-login-btn-label{display:none}
+
+/* Chip do usuário logado */
+.fb-user-chip{
+  display:none;align-items:center;gap:7px;
+  background:var(--bg2);border:1.5px solid var(--line2);
+  border-radius:22px;padding:2px 10px 2px 3px;
+  cursor:pointer;flex-shrink:0;
+  transition:background .18s,transform .12s var(--ease-spring),border-color .18s;
+}
+.fb-user-chip:hover{background:var(--bg3);border-color:var(--line)}
+.fb-user-chip:active{transform:scale(.93)}
+.fb-user-chip.visible{display:flex}
+.fb-chip-photo{
+  width:28px;height:28px;border-radius:50%;
+  object-fit:cover;border:1.5px solid var(--line2);
+  flex-shrink:0;display:block;
+}
+.fb-chip-name{
+  font-size:12px;font-weight:700;color:var(--t1);
+  letter-spacing:-0.15px;max-width:90px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:none; /* só aparece no desktop */
+}
+.fb-sync-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  transition:background .3s,box-shadow .3s;
+}
+.fb-sync-idle{background:var(--green);opacity:.45}
+.fb-sync-ok  {background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
+.fb-sync-live{background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
+.fb-sync-err {background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
+
+/* ── POPUP DE LOGOUT ── */
+.fb-logout-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.55);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .28s var(--ease-ios);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.fb-logout-overlay.open{opacity:1;pointer-events:all}
+.fb-logout-sheet{
+  width:100%;max-width:480px;
+  background:var(--bg1);border-radius:26px 26px 0 0;
+  padding:8px 20px 28px;
+  transform:translateY(100%);
+  transition:transform .36s var(--ease-sheet);
+  border-top:0.5px solid var(--line2);
+}
+.fb-logout-overlay.open .fb-logout-sheet{transform:translateY(0)}
+.fb-logout-handle{width:36px;height:4px;border-radius:2px;background:var(--bg4);margin:0 auto 22px;cursor:pointer}
+.fb-logout-photo-wrap{display:flex;justify-content:center;margin-bottom:14px}
+.fb-logout-photo{
+  width:72px;height:72px;border-radius:50%;
+  object-fit:cover;border:3px solid var(--line2);
+  box-shadow:0 4px 20px rgba(0,0,0,.22);
+}
+.fb-logout-photo-fallback{
+  width:72px;height:72px;border-radius:50%;
+  background:var(--gold);display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:800;color:#000;
+  box-shadow:0 4px 20px rgba(0,0,0,.22);
+}
+.fb-logout-name{font-size:18px;font-weight:800;color:var(--t1);text-align:center;letter-spacing:-0.4px;margin-bottom:4px}
+.fb-logout-email{font-size:13px;color:var(--t3);text-align:center;letter-spacing:-0.1px;margin-bottom:24px}
+.fb-logout-actions{display:flex;flex-direction:column;gap:10px}
+.fb-logout-btn-sair{
+  width:100%;padding:15px;border-radius:16px;border:none;
+  background:var(--red);color:#fff;
+  font-size:15px;font-weight:800;font-family:var(--ff);letter-spacing:-0.2px;
+  cursor:pointer;
+  transition:opacity .15s,transform .12s var(--ease-spring);
+}
+.fb-logout-btn-sair:active{opacity:.8;transform:scale(.97)}
+.fb-logout-btn-cancel{
+  width:100%;padding:14px;border-radius:16px;
+  background:var(--bg2);border:1.5px solid var(--line2);color:var(--t1);
+  font-size:15px;font-weight:700;font-family:var(--ff);letter-spacing:-0.2px;
+  cursor:pointer;
+  transition:background .15s,transform .12s var(--ease-spring);
+}
+.fb-logout-btn-cancel:active{background:var(--bg3);transform:scale(.97)}
+
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html{font-size:16px}
 body{font-family:var(--ff);background:var(--bg0);color:var(--t1);min-height:100dvh;display:flex;justify-content:center;
@@ -2322,6 +2645,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .topbar-greeting-name { display:none; }
   .topbar-meta { display:none; }
 
+  /* desktop: botão com texto completo, chip mostra nome */
+  .fb-login-btn { padding:0 16px 0 10px; }
+  .fb-login-btn-label { display:inline; }
+  .fb-chip-name { display:block; }
+
   .tabs-strip {
     padding:0 44px 14px;
     max-width:760px;
@@ -4550,6 +4878,27 @@ input, textarea, select {
         <div class="topbar-greeting-name" id="greeting-name"></div>
         <div class="topbar-meta" id="d-school"></div>
       </div>
+
+      <!-- Auth slot: fica entre a saudação e os botões de ação -->
+      <div class="topbar-auth-slot">
+        <!-- Botão login: ícone só no mobile, texto completo no desktop -->
+        <button class="fb-login-btn" id="fb-login-btn" onclick="window._fbLoginClick&&window._fbLoginClick()" title="Entrar com Google">
+          <svg class="fb-login-btn-icon" viewBox="0 0 48 48">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+          </svg>
+          <span class="fb-login-btn-label">Entrar com Google</span>
+        </button>
+        <!-- Chip do usuário logado -->
+        <div class="fb-user-chip" id="fb-user-chip" onclick="window._fbLogoutClick&&window._fbLogoutClick()">
+          <img class="fb-chip-photo" id="fb-chip-photo" src="" alt="">
+          <span class="fb-chip-name" id="fb-chip-name"></span>
+          <div class="fb-sync-dot fb-sync-idle" id="fb-sync-dot"></div>
+        </div>
+      </div>
+
       <div class="topbar-actions">
         <div class="weather-btn" id="wx-btn" onclick="openWeatherPopup()" title="Previsão do tempo">
           <span class="weather-icon" id="wx-icon"></span>
@@ -5008,11 +5357,11 @@ let schedDay=(todayDow>=1&&todayDow<=5)?todayDow:1;
 
 /* exams: {id,subj,title,examDate,valor} — persisted to localStorage */
 let exams=[];
-function saveExams(){try{localStorage.setItem('t205_exams',JSON.stringify(exams));}catch(e){}}
+function saveExams(){try{localStorage.setItem('t205_exams',JSON.stringify(exams));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();}
 function loadExams(){try{const d=localStorage.getItem('t205_exams');if(d)exams=JSON.parse(d);}catch(e){}}
 
 /* grades persist */
-function saveGrades(){try{localStorage.setItem('t205_grades',JSON.stringify(G));}catch(e){}}
+function saveGrades(){try{localStorage.setItem('t205_grades',JSON.stringify(G));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();}
 function loadGrades(){
   try{
     const d=localStorage.getItem('t205_grades');
@@ -5030,7 +5379,7 @@ function loadGrades(){
 }
 
 /* student persist */
-function saveStudentLS(){try{localStorage.setItem('t205_stu',JSON.stringify(stu));}catch(e){}}
+function saveStudentLS(){try{localStorage.setItem('t205_stu',JSON.stringify(stu));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();}
 function loadStudentLS(){try{const d=localStorage.getItem('t205_stu');if(d){stu=JSON.parse(d);applyStudent();}else{_isFirstVisit=true;}}catch(e){_isFirstVisit=true;}}
 function updateGreeting(){
   const h=new Date().getHours();
@@ -5085,33 +5434,76 @@ function applyAvatar(){
   const av=document.getElementById('prof-avatar-display');
   const initEl=document.getElementById('prof-avatar-initials');
   const emojiEl=document.getElementById('prof-avatar-emoji');
-  const topbarAv=document.getElementById('topbar-avatar-inner');
   if(!av)return;
   const {color,key}=_getAccentColor();
   const txtColor=ACCENT_NEEDS_DARK_TEXT.has(key)?'#000000':'#FFFFFF';
-  av.style.background=color;
-  av.style.boxShadow='0 4px 16px rgba(0,0,0,.25)';
-  if(initEl)initEl.style.color=txtColor;
   const initials=getInitials(stu.nome);
-  if(initEl){initEl.style.display='';initEl.textContent=initials;initEl.style.color=txtColor;}
-  if(emojiEl)emojiEl.style.display='none';
-  // topbar avatar
+  const googlePhoto=stu.googlePhoto||'';
+
+  // ── Perfil hero (modal) ──
+  av.style.background=googlePhoto?'transparent':color;
+  av.style.boxShadow=googlePhoto?'none':'0 4px 16px rgba(0,0,0,.25)';
+  // remove img anterior se existir
+  let profImg=av.querySelector('.prof-google-photo');
+  if(googlePhoto){
+    if(!profImg){
+      profImg=document.createElement('img');
+      profImg.className='prof-google-photo';
+      profImg.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;top:0;left:0';
+      av.style.position='relative';av.style.overflow='hidden';
+      av.appendChild(profImg);
+    }
+    profImg.src=googlePhoto;
+    if(initEl)initEl.style.display='none';
+    if(emojiEl)emojiEl.style.display='none';
+  } else {
+    if(profImg)profImg.remove();
+    if(initEl){initEl.style.display='';initEl.textContent=initials;initEl.style.color=txtColor;}
+    if(emojiEl)emojiEl.style.display='none';
+    av.style.background=color;
+  }
+
+  // ── Topbar avatar (mobile) ──
   const tbAv=document.querySelector('.topbar-avatar');
   if(tbAv){
-    tbAv.style.background=color;
-    tbAv.style.border='none';
-    tbAv.innerHTML='<span style="font-size:13px;font-weight:800;color:'+txtColor+';letter-spacing:-.5px">'+initials+'</span>';
+    if(googlePhoto){
+      tbAv.style.background='transparent';tbAv.style.border='none';tbAv.style.overflow='hidden';
+      tbAv.innerHTML='<img src="'+googlePhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    } else {
+      tbAv.style.background=color;tbAv.style.border='none';tbAv.style.overflow='';
+      tbAv.innerHTML='<span style="font-size:13px;font-weight:800;color:'+txtColor+';letter-spacing:-.5px">'+initials+'</span>';
+    }
   }
-  // sidebar avatar (desktop)
+
+  // ── Sidebar avatar (desktop) ──
   const sbAv=document.getElementById('sb-avatar');
   const sbInit=document.getElementById('sb-avatar-initials');
-  if(sbAv){sbAv.style.background=color;sbAv.style.boxShadow='0 2px 10px rgba(0,0,0,.2)';}
-  if(sbInit){sbInit.textContent=initials;sbInit.style.color=txtColor;}
-  // collapsed topbar avatar (desktop, sidebar minimizada)
+  if(sbAv){
+    if(googlePhoto){
+      sbAv.style.background='transparent';sbAv.style.boxShadow='none';sbAv.style.overflow='hidden';
+      sbAv.innerHTML='<img src="'+googlePhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    } else {
+      sbAv.innerHTML='<span class="sb-avatar-initials" id="sb-avatar-initials">'+initials+'</span>';
+      sbAv.style.background=color;sbAv.style.boxShadow='0 2px 10px rgba(0,0,0,.2)';
+      const sbInit2=document.getElementById('sb-avatar-initials');
+      if(sbInit2){sbInit2.textContent=initials;sbInit2.style.color=txtColor;}
+    }
+  } else if(sbInit){sbInit.textContent=initials;sbInit.style.color=txtColor;}
+
+  // ── Topbar collapsed avatar (desktop sidebar minimizada) ──
   const colAv=document.getElementById('topbar-collapsed-avatar');
   const colInit=document.getElementById('topbar-collapsed-avatar-initials');
-  if(colAv){colAv.style.background=color;colAv.style.boxShadow='0 2px 8px rgba(0,0,0,.2)';}
-  if(colInit){colInit.textContent=initials;colInit.style.color=txtColor;}
+  if(colAv){
+    if(googlePhoto){
+      colAv.style.background='transparent';colAv.style.boxShadow='none';colAv.style.overflow='hidden';
+      colAv.innerHTML='<img src="'+googlePhoto+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';
+    } else {
+      colAv.innerHTML='<span class="topbar-collapsed-avatar-initials" id="topbar-collapsed-avatar-initials">'+initials+'</span>';
+      colAv.style.background=color;colAv.style.boxShadow='0 2px 8px rgba(0,0,0,.2)';
+      const colInit2=document.getElementById('topbar-collapsed-avatar-initials');
+      if(colInit2){colInit2.textContent=initials;colInit2.style.color=txtColor;}
+    }
+  } else if(colInit){colInit.textContent=initials;colInit.style.color=txtColor;}
 }
 
 const ACCENT_MAPS={
@@ -8348,7 +8740,7 @@ let _noteSearch='';
 let _noteSort='recent'; // 'recent' | 'oldest' | 'alpha'
 let _noteDirty=false;
 
-function saveNotes(){try{localStorage.setItem('t205_notes',JSON.stringify(notes));}catch(e){}}
+function saveNotes(){try{localStorage.setItem('t205_notes',JSON.stringify(notes));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();}
 function loadNotes(){try{const d=localStorage.getItem('t205_notes');if(d)notes=JSON.parse(d);}catch(e){}}
 
 function fmtNoteDate(ts){
@@ -9867,5 +10259,21 @@ function toggleExamForm(){
   card.classList.toggle('open');
 }
 </script>
-</body>
-</html>
+<!-- POPUP LOGOUT GOOGLE -->
+<div class="fb-logout-overlay" id="fb-logout-overlay" onclick="if(event.target===this)_fbCloseLogout()">
+  <div class="fb-logout-sheet">
+    <div class="fb-logout-handle" onclick="_fbCloseLogout()"></div>
+    <div class="fb-logout-photo-wrap">
+      <img class="fb-logout-photo" id="fb-logout-photo" src="" alt="" onerror="this.style.display='none';document.getElementById('fb-logout-initials').style.display='flex'">
+      <div class="fb-logout-photo-fallback" id="fb-logout-initials" style="display:none"><span id="fb-logout-initials-txt">?</span></div>
+    </div>
+    <div class="fb-logout-name" id="fb-logout-name">—</div>
+    <div class="fb-logout-email" id="fb-logout-email">—</div>
+    <div class="fb-logout-actions">
+      <button class="fb-logout-btn-sair" onclick="_fbConfirmLogout()">Sair da conta</button>
+      <button class="fb-logout-btn-cancel" onclick="_fbCloseLogout()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
