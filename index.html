@@ -42,7 +42,7 @@
   window._fbGetDoc  = getDoc;
   window._fbOnSnapshot = onSnapshot;
   window._fbSignIn  = () => signInWithPopup(auth, new GoogleAuthProvider());
-  window._fbSignOut = () => signOut(auth);
+  window._fbSignOut = () => { window._intentionalLogout = true; return signOut(auth); };
 
   let _syncTimer = null;
   let _currentUid = null;
@@ -207,7 +207,21 @@
       if (greeting) greeting.style.display = '';
       if (loginLabel) loginLabel.style.display = 'none';
     } else {
-      // Limpa cache → próxima visita mostrará botão de login
+      if (window._intentionalLogout) {
+        // Logout intencional: apaga todos os dados do app e recarrega do zero
+        window._intentionalLogout = false;
+        try {
+          const theme = localStorage.getItem('t205_theme'); // mantém só o tema
+          ['t205_fb_user','t205_grades','t205_exams','t205_stu',
+           't205_notes','t205_notifs','t205_updatedAt','t205_skip_login_prompt',
+           't205_dismissed_toasts'].forEach(k => localStorage.removeItem(k));
+          if (theme) localStorage.setItem('t205_theme', theme);
+        } catch(e) {}
+        location.reload();
+        return; // não continua
+      }
+
+      // Sem sessão (carregamento inicial ou expirada) — só limpa cache do usuário
       try { localStorage.removeItem('t205_fb_user'); } catch(e) {}
       document.documentElement.setAttribute('data-fb-auth', 'out');
 
