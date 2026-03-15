@@ -154,7 +154,17 @@
     if (!btnLogin) return;
 
     if (user) {
-      // logado: mostra tudo normalmente, esconde texto de convite
+      // Persiste estado no localStorage → próxima visita será instantânea
+      try {
+        localStorage.setItem('t205_fb_user', JSON.stringify({
+          uid: user.uid,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          email: user.email
+        }));
+      } catch(e) {}
+      document.documentElement.setAttribute('data-fb-auth', 'in');
+
       btnLogin.style.display = 'none';
       chip.classList.add('visible');
       chipPhoto.src = user.photoURL || '';
@@ -165,7 +175,10 @@
       if (greeting) greeting.style.display = '';
       if (loginLabel) loginLabel.style.display = 'none';
     } else {
-      // deslogado: esconde saudação e avatar, mostra botão com texto
+      // Limpa cache → próxima visita mostrará botão de login
+      try { localStorage.removeItem('t205_fb_user'); } catch(e) {}
+      document.documentElement.setAttribute('data-fb-auth', 'out');
+
       btnLogin.style.display = 'flex';
       chip.classList.remove('visible');
       if (topbarAv) topbarAv.style.display = 'none';
@@ -252,6 +265,35 @@
     document.documentElement.setAttribute('data-theme','light');
 })();
 </script>
+<script>
+// Aplica estado de auth instantaneamente (antes do Firebase carregar)
+// evita o "flash" de conteúdo trocando depois de 1-2s
+(function(){
+  try{
+    var u=localStorage.getItem('t205_fb_user');
+    // marca no <html> para o CSS usar antes do DOM estar pronto
+    if(u){
+      document.documentElement.setAttribute('data-fb-auth','in');
+      // aplica foto+nome no chip assim que o DOM estiver pronto
+      var cached=JSON.parse(u);
+      document.addEventListener('DOMContentLoaded',function(){
+        try{
+          var chip=document.getElementById('fb-user-chip');
+          var photo=document.getElementById('fb-chip-photo');
+          var name=document.getElementById('fb-chip-name');
+          if(chip)chip.classList.add('visible');
+          if(photo&&cached.photoURL){photo.src=cached.photoURL;photo.style.display='block';}
+          if(name)name.textContent=(cached.displayName||'').split(' ')[0]||'Conta';
+        }catch(e){}
+      });
+    } else {
+      document.documentElement.setAttribute('data-fb-auth','out');
+    }
+  }catch(e){
+    document.documentElement.setAttribute('data-fb-auth','out');
+  }
+})();
+</script>
 <style>
 :root {
   /* Dark — fundo profundo azul-noite, cards com separação real */
@@ -299,6 +341,13 @@
   letter-spacing:-0.15px;white-space:nowrap;
   flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;
 }
+
+/* ── AUTH ESTADO INSTANTÂNEO (via data-fb-auth no <html>) ──
+   Aplicado antes do Firebase carregar — evita flash de UI trocando */
+[data-fb-auth="out"] .topbar-greeting { display:none !important; }
+[data-fb-auth="out"] .topbar-avatar   { display:none !important; }
+[data-fb-auth="in"]  .fb-login-btn    { display:none !important; }
+[data-fb-auth="in"]  .fb-login-label  { display:none !important; }
 
 /* Slot de auth — entre a saudação e os botões de ação */
 .topbar-auth-slot{
