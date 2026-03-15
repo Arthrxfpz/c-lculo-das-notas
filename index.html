@@ -302,9 +302,8 @@
   };
 
   window._fbConfirmLogout = async () => {
-    window._fbCloseLogout();
+    // _fbSignOut seta _intentionalLogout=true; o observer cuida do reload
     await window._fbSignOut();
-    setTimeout(() => location.reload(), 300);
   };
 
   window._fbIsSyncing   = () => !!_currentUid;
@@ -4541,6 +4540,64 @@ input, textarea, select {
   margin-bottom: 22px;
   padding: 0 2px;
 }
+/* ── PERFIL: lock overlay (sem login) ── */
+#prof-lock-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  background: var(--bg1);
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+[data-fb-auth="out"] #modal-overlay.open #prof-lock-overlay { display: flex; }
+#prof-lock-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  max-width: 280px;
+  text-align: center;
+}
+#prof-lock-icon {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--t3);
+  margin-bottom: 4px;
+}
+#prof-lock-icon svg { width: 24px; height: 24px; }
+#prof-lock-title {
+  font-size: 17px; font-weight: 700;
+  color: var(--t1); letter-spacing: -0.4px;
+}
+#prof-lock-msg {
+  font-size: 14px; color: var(--t3);
+  line-height: 1.45; letter-spacing: -0.1px;
+}
+#prof-lock-btn {
+  margin-top: 8px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 13px 20px;
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 14px;
+  font-size: 15px; font-weight: 600;
+  color: var(--t1);
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: opacity .18s var(--ease-ios), transform .18s var(--ease-ios);
+  letter-spacing: -0.2px;
+}
+#prof-lock-btn:active { opacity: .7; transform: scale(.97); }
+/* lock overlay: relative + overflow:hidden só quando deslogado */
+.modal-box.profile-box { position: relative; }
+[data-fb-auth="out"] .modal-box.profile-box { overflow: hidden; }
+
 .prof-avatar-wrap {
   position: relative;
   flex-shrink: 0;
@@ -4644,6 +4701,47 @@ input, textarea, select {
 
 
 /* ── Section label ── */
+/* ── Modal: seção de conta Google ── */
+.prof-account-section {
+  display: none;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+[data-fb-auth="in"] .prof-account-section { display: flex; }
+.prof-account-avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  flex-shrink: 0; object-fit: cover;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; font-weight: 700; color: var(--t1);
+  overflow: hidden;
+}
+.prof-account-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.prof-account-info { flex: 1; min-width: 0; }
+.prof-account-name { font-size: 15px; font-weight: 600; color: var(--t1); letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prof-account-email { font-size: 12px; color: var(--t3); letter-spacing: -0.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.prof-signout-btn {
+  display: none;
+  flex-shrink: 0;
+  padding: 7px 13px;
+  background: rgba(255,69,58,.1);
+  border: 0.5px solid rgba(255,69,58,.25);
+  border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+  color: #FF453A;
+  cursor: pointer;
+  letter-spacing: -0.1px;
+  transition: opacity .18s var(--ease-ios), transform .18s var(--ease-ios);
+  white-space: nowrap;
+}
+.prof-signout-btn:active { opacity: .7; transform: scale(.95); }
+[data-fb-auth="in"] .prof-signout-btn { display: block; }
+
 .prof-section-label {
   font-size: 11px; font-weight: 700;
   color: var(--gold);
@@ -5222,7 +5320,7 @@ input, textarea, select {
           </svg>
           <span class="fb-login-btn-label">Faça login com o Google</span>
         </button>
-        <div class="fb-user-chip" id="fb-user-chip" onclick="window._fbLogoutClick&&window._fbLogoutClick()">
+        <div class="fb-user-chip" id="fb-user-chip" onclick="openModal()">
           <img class="fb-chip-photo" id="fb-chip-photo" src="" alt="">
           <span class="fb-chip-name" id="fb-chip-name"></span>
           <span id="fb-sync-label"></span>
@@ -5453,6 +5551,31 @@ input, textarea, select {
       <div class="prof-hero-info">
         <div class="prof-hero-name" id="prof-hero-name">Seu nome</div>
         <div class="prof-hero-sub" id="prof-hero-sub">Escola · Turma</div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO DE CONTA GOOGLE — visível apenas quando logado -->
+    <div class="prof-account-section">
+      <div class="prof-account-avatar" id="prof-account-avatar"></div>
+      <div class="prof-account-info">
+        <div class="prof-account-name" id="prof-account-name">—</div>
+        <div class="prof-account-email" id="prof-account-email">—</div>
+      </div>
+      <button class="prof-signout-btn" onclick="_fbConfirmLogout()">Sair</button>
+    </div>
+
+    <!-- LOCK OVERLAY — visível apenas quando deslogado -->
+    <div id="prof-lock-overlay">
+      <div id="prof-lock-card">
+        <div id="prof-lock-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div id="prof-lock-title">Login necessário</div>
+        <div id="prof-lock-msg">Para personalizar seu perfil e a cor do app, entre com sua conta Google.</div>
+        <button id="prof-lock-btn" onclick="window._fbSignIn&&window._fbSignIn().then(()=>setTimeout(()=>location.reload(),300))">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          Entrar com o Google
+        </button>
       </div>
     </div>
 
@@ -8749,6 +8872,22 @@ function setSchedDay(d){schedDay=d;render(null);syncLayout();}
 
 /* ─── MODAL ─── */
 function openModal(){
+  // Popula seção de conta Google
+  const fbUser = window._fbCurrentUser ? window._fbCurrentUser() : null;
+  const acctAv  = document.getElementById('prof-account-avatar');
+  const acctName = document.getElementById('prof-account-name');
+  const acctEmail = document.getElementById('prof-account-email');
+  if (acctAv && fbUser) {
+    if (fbUser.photoURL) {
+      acctAv.innerHTML = '<img src="'+fbUser.photoURL+'" alt="">';
+    } else {
+      const parts = (fbUser.displayName||'?').split(' ').filter(Boolean);
+      acctAv.textContent = parts.length>1 ? parts[0][0]+parts[parts.length-1][0] : (parts[0]||'?')[0].toUpperCase();
+    }
+  }
+  if (acctName)  acctName.textContent  = fbUser ? (fbUser.displayName||'Usuário') : '—';
+  if (acctEmail) acctEmail.textContent = fbUser ? (fbUser.email||'')              : '—';
+
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
   const hint=document.getElementById('prof-first-visit-hint');
   if(hint)hint.style.display=profileSet?'none':'flex';
