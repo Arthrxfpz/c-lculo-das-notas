@@ -47,6 +47,14 @@
   let _syncTimer = null;
   let _currentUid = null;
 
+  /* ── Remove a tela de splash com fade ── */
+  window._hideSplash = function() {
+    const splash = document.getElementById('app-splash');
+    if (!splash) return;
+    splash.style.opacity = '0';
+    setTimeout(() => splash.remove(), 380);
+  };
+
   /* ── Salva tudo no Firestore (debounced 800ms) ── */
   window._fbSaveAll = function() {
     if (!_currentUid) return;
@@ -92,6 +100,7 @@
 
   /* ── Carrega dados do Firestore ── */
   async function _fbLoadAll(uid) {
+    _showSyncBadge('checking');
     try {
       const snap = await getDoc(doc(db, 'users', uid));
       if (snap.exists()) {
@@ -108,11 +117,17 @@
           if (d.theme)     localStorage.setItem('t205_theme',     d.theme);
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           location.reload();
-          return;
+          return; // splash fica visível durante o reload
         }
         _showSyncBadge('ok');
+      } else {
+        _showSyncBadge('idle');
       }
-    } catch(e) { console.error('Firebase load error:', e); }
+    } catch(e) {
+      _showSyncBadge('err');
+      console.error('Firebase load error:', e);
+    }
+    _hideSplash();
   }
 
   /* ── Preenche o perfil com dados do Google ── */
@@ -146,7 +161,9 @@
     _updateAuthUI(user);
     if (user) {
       _applyGoogleProfile(user);
-      await _fbLoadAll(user.uid);
+      await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
+    } else {
+      _hideSplash(); // sessão expirada ou não logado — libera o splash
     }
   });
 
@@ -411,10 +428,17 @@
   width:7px;height:7px;border-radius:50%;flex-shrink:0;
   transition:background .3s,box-shadow .3s;
 }
-.fb-sync-idle{background:var(--green);opacity:.45}
-.fb-sync-ok  {background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
-.fb-sync-live{background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
-.fb-sync-err {background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
+.fb-sync-idle    {background:var(--green);opacity:.45}
+.fb-sync-ok      {background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
+.fb-sync-live    {background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
+.fb-sync-err     {background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
+.fb-sync-checking{
+  background:transparent;opacity:1;
+  border:2px solid var(--blue);border-top-color:transparent;
+  width:9px;height:9px;margin:-1px;
+  animation:fb-spin .7s linear infinite;
+}
+@keyframes fb-spin{to{transform:rotate(360deg)}}
 
 /* ── POPUP DE LOGOUT ── */
 .fb-logout-overlay{
@@ -4906,6 +4930,26 @@ input, textarea, select {
 
 </style>
 <body>
+
+<!-- ── Splash de carregamento ── -->
+<div id="app-splash" style="
+  position:fixed;inset:0;z-index:99999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:#08090E;
+  transition:opacity .35s ease;
+">
+  <div style="
+    width:36px;height:36px;border-radius:50%;
+    border:3px solid rgba(255,214,10,.18);
+    border-top-color:#FFD60A;
+    animation:splash-spin .7s linear infinite;
+  "></div>
+  <span style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-size:13px;color:rgba(220,220,245,.4);letter-spacing:.02em;">Carregando</span>
+</div>
+<style>
+@keyframes splash-spin{to{transform:rotate(360deg)}}
+</style>
+
 <div class="shell">
 
 <!-- iOS Exam Toast -->
@@ -10038,12 +10082,8 @@ window.addEventListener('load',()=>{
   fetchWeather(true);
   render(null);
   updateExamBadge();
-  // check pending notifications on load
   checkPendingNotifs();
-  // toast de prova amanhã
   setTimeout(checkExamToasts, 1200);
-  // primeira visita: não abre modal automaticamente
-  // fecha o subject picker ao clicar fora
   document.addEventListener('click',e=>{
     const wrap=document.querySelector('.subj-picker-wrap');
     if(wrap&&!wrap.contains(e.target)){
@@ -10053,6 +10093,9 @@ window.addEventListener('load',()=>{
       if(btn)btn.classList.remove('open');
     }
   });
+  // Firebase sempre remove o splash (logado ou não) via onAuthStateChanged
+  // Fallback: se Firebase não responder em 4s, remove o splash de qualquer forma
+  setTimeout(() => { if(window._hideSplash) _hideSplash(); }, 4000);
 });
 setInterval(updateGreeting,60000);
 setInterval(checkExamToasts,60000);
