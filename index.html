@@ -96,8 +96,20 @@
       const snap = await getDoc(doc(db, 'users', uid));
       if (snap.exists()) {
         const d = snap.data();
-        if (d.updatedAt) localStorage.setItem('t205_updatedAt', String(d.updatedAt));
-        _applyCloudData(d);
+        const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
+        const remoteTs = d.updatedAt || 0;
+        if (remoteTs > localTs) {
+          // Dado mais novo em outro dispositivo — aplica no localStorage e recarrega
+          if (d.grades)    localStorage.setItem('t205_grades',    JSON.stringify(d.grades));
+          if (d.exams)     localStorage.setItem('t205_exams',     JSON.stringify(d.exams));
+          if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
+          if (d.notes)     localStorage.setItem('t205_notes',     JSON.stringify(d.notes));
+          if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
+          if (d.theme)     localStorage.setItem('t205_theme',     d.theme);
+          localStorage.setItem('t205_updatedAt', String(remoteTs));
+          location.reload();
+          return;
+        }
         _showSyncBadge('ok');
       }
     } catch(e) { console.error('Firebase load error:', e); }
@@ -127,28 +139,6 @@
       if (typeof updateGreeting === 'function') updateGreeting();
     }
   }
-
-  /* ── Verifica se há dados mais novos no Firestore e aplica se tiver ── */
-  async function _fbCheckUpdates() {
-    if (!_currentUid) return;
-    try {
-      const snap = await getDoc(doc(db, 'users', _currentUid));
-      if (!snap.exists()) return;
-      const d = snap.data();
-      const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
-      const remoteTs = d.updatedAt || 0;
-      if (remoteTs <= localTs) return;
-      localStorage.setItem('t205_updatedAt', String(remoteTs));
-      _applyCloudData(d);
-      _showSyncBadge('live');
-    } catch(e) { console.error('Firebase check error:', e); }
-  }
-  window._fbCheckUpdates = _fbCheckUpdates;
-
-  /* ── Quando a aba volta ao foco, verifica atualizações de outros dispositivos ── */
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') _fbCheckUpdates();
-  });
 
   /* ── Observer: login / logout ── */
   onAuthStateChanged(auth, async (user) => {
