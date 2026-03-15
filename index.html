@@ -59,6 +59,7 @@
   window._fbSaveAll = function() {
     if (!_currentUid) return;
     clearTimeout(_syncTimer);
+    _showSyncBadge('saving');
     _syncTimer = setTimeout(async () => {
       try {
         const now = Date.now();
@@ -219,12 +220,40 @@
   }
 
   function _showSyncBadge(state) {
-    const dot = document.getElementById('fb-sync-dot');
-    if (!dot) return;
-    dot.className = 'fb-sync-dot fb-sync-' + state;
-    if (state !== 'live') {
+    const dot   = document.getElementById('fb-sync-dot');
+    const chip  = document.getElementById('fb-user-chip');
+    const label = document.getElementById('fb-sync-label');
+
+    // dot state
+    if (dot) {
+      const dotState = state === 'saving' ? 'checking' : state === 'ok' ? 'ok' : state === 'err' ? 'err' : state;
+      dot.className = 'fb-sync-dot fb-sync-' + dotState;
       clearTimeout(dot._t);
-      dot._t = setTimeout(() => { dot.className = 'fb-sync-dot fb-sync-idle'; }, 2500);
+      if (state !== 'live' && state !== 'saving') {
+        dot._t = setTimeout(() => { dot.className = 'fb-sync-dot fb-sync-idle'; }, 2200);
+      }
+    }
+
+    // inline chip label
+    if (!chip || !label) return;
+    clearTimeout(chip._syncT);
+    chip.classList.remove('sync-active', 'sync-ok', 'sync-err');
+
+    if (state === 'saving') {
+      label.textContent = 'Salvando...';
+      chip.classList.add('sync-active');
+    } else if (state === 'ok') {
+      label.textContent = 'Salvo';
+      chip.classList.add('sync-ok');
+      chip._syncT = setTimeout(() => {
+        chip.classList.remove('sync-ok');
+      }, 1800);
+    } else if (state === 'err') {
+      label.textContent = 'Erro';
+      chip.classList.add('sync-err');
+      chip._syncT = setTimeout(() => {
+        chip.classList.remove('sync-err');
+      }, 2800);
     }
   }
 
@@ -461,6 +490,26 @@
   animation:fb-spin .7s linear infinite;
 }
 @keyframes fb-spin{to{transform:rotate(360deg)}}
+
+/* ── SYNC LABEL inline no chip ── */
+#fb-sync-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -.1px;
+  color: var(--t2);
+  white-space: nowrap;
+  max-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width .3s var(--ease-ios),
+    opacity   .2s var(--ease-ios),
+    color     .2s;
+  pointer-events: none;
+}
+.fb-user-chip.sync-active  #fb-sync-label { max-width: 90px; opacity: 1; }
+.fb-user-chip.sync-ok      #fb-sync-label { color: var(--green); max-width: 90px; opacity: 1; }
+.fb-user-chip.sync-err     #fb-sync-label { color: var(--red);   max-width: 90px; opacity: 1; }
 
 /* ── POPUP DE LOGOUT ── */
 .fb-logout-overlay{
@@ -5162,6 +5211,7 @@ input, textarea, select {
         <div class="fb-user-chip" id="fb-user-chip" onclick="window._fbLogoutClick&&window._fbLogoutClick()">
           <img class="fb-chip-photo" id="fb-chip-photo" src="" alt="">
           <span class="fb-chip-name" id="fb-chip-name"></span>
+          <span id="fb-sync-label"></span>
           <div class="fb-sync-dot fb-sync-idle" id="fb-sync-dot"></div>
         </div>
       </div>
