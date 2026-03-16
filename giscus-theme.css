@@ -1,194 +1,772 @@
 /*
-  Giscus custom theme — Cálculo das notas
-  Sobrescreve as variáveis do Primer CSS (sistema do GitHub)
-  que o Giscus usa internamente. Essa é a forma correta.
+  ╔══════════════════════════════════════════════════════════╗
+  ║  Giscus — Custom Theme                                   ║
+  ║  Dark · Gold Accent · iOS-inspired                       ║
+  ╚══════════════════════════════════════════════════════════╝
 */
 
-/* ══════════════════════════════════════════
-   VARIÁVEIS PRIMER — cores base
-══════════════════════════════════════════ */
+/* ─────────────────────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────────────────────── */
 :root {
-  /* Canvas / backgrounds */
-  --color-canvas-default:        #0D0E14;
-  --color-canvas-subtle:         #13141A;
-  --color-canvas-inset:          #08090E;
+  /* Canvas */
+  --bg-base:          #0A0B10;
+  --bg-surface:       #111219;
+  --bg-elevated:      #181922;
+  --bg-overlay:       #1E1F2B;
+  --bg-inset:         #07080D;
 
-  /* Borders */
-  --color-border-default:        rgba(120,122,160,.22);
-  --color-border-muted:          rgba(120,122,160,.14);
+  /* Gold accent */
+  --gold:             #FFD60A;
+  --gold-hover:       #FFE03D;
+  --gold-dim:         rgba(255, 214, 10, .18);
+  --gold-ghost:       rgba(255, 214, 10, .07);
+  --gold-glow:        0 0 0 3px rgba(255, 214, 10, .15);
 
   /* Text */
-  --color-fg-default:            #F0F0FA;
-  --color-fg-muted:              rgba(220,220,245,.52);
-  --color-fg-subtle:             rgba(220,220,245,.30);
-  --color-fg-on-emphasis:        #000000;
+  --text-primary:     #EEEEF5;
+  --text-secondary:   rgba(220, 220, 245, .58);
+  --text-tertiary:    rgba(220, 220, 245, .30);
+  --text-on-gold:     #000000;
 
-  /* Accent (dourado) */
-  --color-accent-fg:             #FFD60A;
-  --color-accent-emphasis:       #FFD60A;
-  --color-accent-muted:          rgba(255,214,10,.18);
-  --color-accent-subtle:         rgba(255,214,10,.08);
+  /* Borders */
+  --border-strong:    rgba(140, 142, 180, .20);
+  --border-subtle:    rgba(140, 142, 180, .11);
+  --border-ghost:     rgba(140, 142, 180, .06);
 
-  /* Neutral */
-  --color-neutral-emphasis-plus: #2A2B36;
-  --color-neutral-emphasis:      #383944;
-  --color-neutral-muted:         rgba(120,122,160,.14);
-  --color-neutral-subtle:        rgba(120,122,160,.08);
+  /* Shadows */
+  --shadow-sm:        0 1px 3px rgba(0,0,0,.40), 0 1px 2px rgba(0,0,0,.30);
+  --shadow-md:        0 4px 16px rgba(0,0,0,.50), 0 1px 4px rgba(0,0,0,.30);
+  --shadow-inset:     inset 0 1px 0 rgba(255,255,255,.04);
 
-  /* Botão primário */
-  --color-btn-primary-bg:              #FFD60A;
-  --color-btn-primary-hover-bg:        #FFE234;
-  --color-btn-primary-disabled-bg:     rgba(255,214,10,.30);
-  --color-btn-primary-text:            #000000;
-  --color-btn-primary-hover-text:      #000000;
-  --color-btn-primary-disabled-text:   rgba(0,0,0,.40);
-  --color-btn-primary-border:          rgba(255,214,10,.00);
+  /* Radii */
+  --r-sm:    8px;
+  --r-md:    12px;
+  --r-lg:    16px;
+  --r-pill:  100px;
+
+  /* Typography */
+  --font-ui: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, monospace;
+
+  /* Transitions */
+  --t-fast:  .12s cubic-bezier(.4, 0, .2, 1);
+  --t-base:  .20s cubic-bezier(.4, 0, .2, 1);
+  --t-slow:  .35s cubic-bezier(.4, 0, .2, 1);
+
+  /* ── Primer/Giscus variable overrides ── */
+  --color-canvas-default:        var(--bg-surface);
+  --color-canvas-subtle:         var(--bg-elevated);
+  --color-canvas-inset:          var(--bg-inset);
+  --color-canvas-overlay:        var(--bg-overlay);
+
+  --color-border-default:        var(--border-strong);
+  --color-border-muted:          var(--border-subtle);
+  --color-border-subtle:         var(--border-ghost);
+
+  --color-fg-default:            var(--text-primary);
+  --color-fg-muted:              var(--text-secondary);
+  --color-fg-subtle:             var(--text-tertiary);
+  --color-fg-on-emphasis:        var(--text-on-gold);
+
+  --color-accent-fg:             var(--gold);
+  --color-accent-emphasis:       var(--gold);
+  --color-accent-muted:          var(--gold-dim);
+  --color-accent-subtle:         var(--gold-ghost);
+
+  --color-neutral-emphasis-plus: var(--bg-overlay);
+  --color-neutral-emphasis:      #282936;
+  --color-neutral-muted:         rgba(140, 142, 180, .12);
+  --color-neutral-subtle:        rgba(140, 142, 180, .06);
+
+  --color-btn-primary-bg:              var(--gold);
+  --color-btn-primary-hover-bg:        var(--gold-hover);
+  --color-btn-primary-disabled-bg:     rgba(255, 214, 10, .28);
+  --color-btn-primary-text:            var(--text-on-gold);
+  --color-btn-primary-hover-text:      var(--text-on-gold);
+  --color-btn-primary-disabled-text:   rgba(0,0,0,.38);
+  --color-btn-primary-border:          transparent;
   --color-btn-primary-shadow:          none;
   --color-btn-primary-inset-shadow:    none;
-  --color-btn-primary-focus-shadow:    0 0 0 3px rgba(255,214,10,.20);
+  --color-btn-primary-focus-shadow:    var(--gold-glow);
 
-  /* Botão padrão */
-  --color-btn-bg:                #1E1F27;
-  --color-btn-hover-bg:          #2A2B36;
-  --color-btn-active-bg:         #13141A;
-  --color-btn-text:              rgba(220,220,245,.80);
-  --color-btn-hover-text:        #F0F0FA;
-  --color-btn-border:            rgba(120,122,160,.22);
+  --color-btn-bg:                var(--bg-elevated);
+  --color-btn-hover-bg:          var(--bg-overlay);
+  --color-btn-active-bg:         var(--bg-inset);
+  --color-btn-text:              var(--text-secondary);
+  --color-btn-hover-text:        var(--text-primary);
+  --color-btn-border:            var(--border-strong);
   --color-btn-shadow:            none;
   --color-btn-inset-shadow:      none;
 
-  /* Input */
-  --color-input-bg:              #13141A;
-  --color-input-disabled-bg:     #08090E;
-  --color-input-contrast:        #08090E;
-  --color-input-border:          rgba(120,122,160,.22);
+  --color-input-bg:              var(--bg-surface);
+  --color-input-disabled-bg:     var(--bg-inset);
+  --color-input-contrast:        var(--bg-inset);
+  --color-input-border:          var(--border-strong);
 
-  /* Social / reações */
-  --color-social-reaction-bg-hover:  rgba(120,122,160,.10);
-  --color-social-reaction-bg-reacted-hover: rgba(255,214,10,.14);
+  --color-social-reaction-bg-hover:           rgba(140,142,180,.10);
+  --color-social-reaction-bg-reacted-hover:   var(--gold-dim);
 
-  /* Header / topbar  */
-  --color-header-bg:             #08090E;
-  --color-header-border:         rgba(120,122,160,.14);
+  --color-header-bg:             var(--bg-inset);
+  --color-header-border:         var(--border-subtle);
 
-  /* Inline code */
   --color-prettylights-syntax-comment:      rgba(220,220,245,.35);
-  --color-prettylights-syntax-keyword:      #FFD60A;
+  --color-prettylights-syntax-constant:     #FF9F0A;
+  --color-prettylights-syntax-entity:       #BF5AF2;
+  --color-prettylights-syntax-entity-tag:   #FF6B6B;
+  --color-prettylights-syntax-keyword:      var(--gold);
   --color-prettylights-syntax-string:       #30D158;
   --color-prettylights-syntax-variable:     #FF9F0A;
-  --color-prettylights-syntax-entity:       #BF5AF2;
-  --color-prettylights-syntax-markup-bold:  #F0F0FA;
+  --color-prettylights-syntax-markup-bold:  var(--text-primary);
+  --color-prettylights-syntax-markup-italic: var(--text-secondary);
 
-  /* Misc */
-  --color-scale-gray-1:          #1E1F27;
-  --color-scale-gray-2:          #2A2B36;
-  --color-scale-gray-3:          #383944;
-  --color-scale-gray-4:          #545564;
+  --color-scale-gray-1:          var(--bg-elevated);
+  --color-scale-gray-2:          var(--bg-overlay);
+  --color-scale-gray-3:          #2E2F3E;
+  --color-scale-gray-4:          #464758;
   --color-scale-gray-5:          #787AA0;
-  --color-scale-blue-2:          rgba(255,214,10,.12);
-  --color-scale-blue-5:          #FFD60A;
+  --color-scale-blue-2:          var(--gold-dim);
+  --color-scale-blue-5:          var(--gold);
 
-  /* Links */
-  --color-anchor-fg:             #FFD60A;
+  --color-anchor-fg:             var(--gold);
 }
 
-/* ══════════════════════════════════════════
-   REFINAMENTOS ADICIONAIS
-══════════════════════════════════════════ */
-
-/* Body base */
+/* ─────────────────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────────────────── */
 body {
   background: transparent !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-}
-
-/* Remove sombras e outlines padrão do GitHub */
-.Box {
-  box-shadow: none !important;
-}
-
-/* Raio de borda consistente com o app */
-.Box,
-.comment-body,
-.gsc-comment-box {
-  border-radius: 13px !important;
-}
-
-/* Textarea de composição */
-textarea {
-  border-radius: 10px !important;
+  font-family: var(--font-ui) !important;
   font-size: 14px !important;
-  line-height: 1.55 !important;
-  transition: border-color .15s, box-shadow .15s !important;
+  line-height: 1.6 !important;
+  color: var(--text-primary) !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  text-rendering: optimizeLegibility !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   BOXES / CARDS
+───────────────────────────────────────────────────────── */
+.Box {
+  background: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-sm), var(--shadow-inset) !important;
+  overflow: hidden !important;
+}
+
+.Box + .Box,
+.Box ~ .Box {
+  margin-top: 8px !important;
+}
+
+.Box-header {
+  background: var(--bg-elevated) !important;
+  border-bottom: 1px solid var(--border-ghost) !important;
+  padding: 12px 16px !important;
+}
+
+.Box-body {
+  padding: 16px !important;
+}
+
+.Box-footer {
+  background: var(--bg-elevated) !important;
+  border-top: 1px solid var(--border-ghost) !important;
+  padding: 10px 16px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   COMENTÁRIOS
+───────────────────────────────────────────────────────── */
+.gsc-comment {
+  border-radius: var(--r-lg) !important;
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: var(--shadow-sm) !important;
+  transition: border-color var(--t-base), box-shadow var(--t-base) !important;
+}
+
+.gsc-comment:hover {
+  border-color: var(--border-strong) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* Comentário do OP — destaque sutil */
+.gsc-comment[data-author-association="OWNER"],
+.gsc-comment[data-author-association="MEMBER"] {
+  border-color: rgba(255, 214, 10, .18) !important;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 214, 10, .03),
+    var(--bg-surface)
+  ) !important;
+}
+
+.gsc-comment-author {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: var(--text-primary) !important;
+}
+
+.gsc-comment-author-text {
+  color: var(--text-primary) !important;
+}
+
+.gsc-comment-content {
+  color: var(--text-primary) !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+}
+
+/* Header de cada comentário */
+.gsc-comment-header {
+  padding: 10px 14px !important;
+  background: var(--bg-elevated) !important;
+  border-bottom: 1px solid var(--border-ghost) !important;
+  border-radius: var(--r-lg) var(--r-lg) 0 0 !important;
+}
+
+/* Corpo do comentário */
+.comment-body {
+  padding: 14px 16px !important;
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+}
+
+/* Badge de associação */
+.Label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 1px 7px !important;
+  border-radius: var(--r-pill) !important;
+  letter-spacing: .2px !important;
+  background: var(--gold-ghost) !important;
+  color: var(--gold) !important;
+  border: 1px solid var(--gold-dim) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   RESPOSTAS
+───────────────────────────────────────────────────────── */
+.gsc-replies {
+  margin-left: 20px !important;
+  border-left: 2px solid var(--border-subtle) !important;
+  padding-left: 14px !important;
+  transition: border-color var(--t-base) !important;
+}
+
+.gsc-replies:hover {
+  border-left-color: var(--border-strong) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CAIXA DE COMENTÁRIO
+───────────────────────────────────────────────────────── */
+.gsc-comment-box {
+  border-radius: var(--r-lg) !important;
+  border: 1px solid var(--border-strong) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: var(--shadow-sm), var(--shadow-inset) !important;
+  overflow: hidden !important;
+  transition: border-color var(--t-base), box-shadow var(--t-base) !important;
+}
+
+.gsc-comment-box:focus-within {
+  border-color: rgba(255, 214, 10, .38) !important;
+  box-shadow: var(--shadow-sm), 0 0 0 3px rgba(255, 214, 10, .08) !important;
+}
+
+.gsc-comment-box-tabs {
+  background: var(--bg-elevated) !important;
+  border-bottom: 1px solid var(--border-ghost) !important;
+  padding: 2px 12px 0 !important;
+  gap: 4px !important;
+}
+
+.gsc-comment-box-tab {
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--text-secondary) !important;
+  padding: 7px 12px !important;
+  border-radius: var(--r-sm) var(--r-sm) 0 0 !important;
+  border: none !important;
+  background: transparent !important;
+  transition: color var(--t-fast), background var(--t-fast) !important;
+}
+
+.gsc-comment-box-tab:hover {
+  color: var(--text-primary) !important;
+  background: var(--border-ghost) !important;
+}
+
+.gsc-comment-box-tab[aria-selected="true"],
+.gsc-comment-box-tab.selected {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  border-bottom: 2px solid var(--gold) !important;
+  background: transparent !important;
+}
+
+.gsc-comment-box-write {
+  padding: 10px 12px !important;
+}
+
+.gsc-comment-box-preview {
+  min-height: 120px !important;
+  padding: 12px 16px !important;
+  color: var(--text-primary) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   TEXTAREA
+───────────────────────────────────────────────────────── */
+textarea {
+  background: var(--bg-inset) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--r-md) !important;
+  font-family: var(--font-ui) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  padding: 10px 12px !important;
+  resize: vertical !important;
+  transition: border-color var(--t-base), box-shadow var(--t-base) !important;
+}
+
+textarea::placeholder {
+  color: var(--text-tertiary) !important;
 }
 
 textarea:focus {
-  border-color: rgba(255,214,10,.45) !important;
-  box-shadow: 0 0 0 3px rgba(255,214,10,.08) !important;
+  outline: none !important;
+  border-color: rgba(255, 214, 10, .40) !important;
+  box-shadow: 0 0 0 3px rgba(255, 214, 10, .07) !important;
 }
 
-/* Botão primário — arredondado igual ao app */
-.btn-primary {
-  border-radius: 10px !important;
-  font-weight: 700 !important;
+/* ─────────────────────────────────────────────────────────
+   BOTÕES
+───────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  border-radius: var(--r-md) !important;
+  font-family: var(--font-ui) !important;
   font-size: 13px !important;
-  letter-spacing: -0.1px !important;
-  transition: opacity .15s, transform .12s !important;
+  font-weight: 600 !important;
+  letter-spacing: -.1px !important;
+  line-height: 1 !important;
+  padding: 7px 14px !important;
+  border: 1px solid var(--border-strong) !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  cursor: pointer !important;
+  transition:
+    background var(--t-fast),
+    color var(--t-fast),
+    border-color var(--t-fast),
+    box-shadow var(--t-fast),
+    transform var(--t-fast) !important;
+}
+
+.btn:hover {
+  background: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-strong) !important;
+}
+
+.btn:active {
+  transform: scale(.96) !important;
+  background: var(--bg-inset) !important;
+}
+
+.btn:focus-visible {
+  outline: none !important;
+  box-shadow: var(--gold-glow) !important;
+}
+
+/* Primário */
+.btn-primary {
+  background: var(--gold) !important;
+  color: var(--text-on-gold) !important;
+  border-color: transparent !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 8px rgba(255, 214, 10, .22) !important;
+}
+
+.btn-primary:hover {
+  background: var(--gold-hover) !important;
+  color: var(--text-on-gold) !important;
+  border-color: transparent !important;
+  box-shadow: 0 2px 16px rgba(255, 214, 10, .30) !important;
 }
 
 .btn-primary:active {
-  transform: scale(.95) !important;
+  background: #E8C000 !important;
+  box-shadow: none !important;
 }
 
-/* Botão padrão */
-.btn {
-  border-radius: 10px !important;
-  font-size: 13px !important;
+.btn-primary:disabled,
+.btn-primary[disabled] {
+  background: rgba(255, 214, 10, .25) !important;
+  color: rgba(0,0,0,.35) !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+}
+
+/* Invisible / link */
+.btn-invisible,
+.btn-link {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+  padding: 4px 8px !important;
+}
+
+.btn-invisible:hover,
+.btn-link:hover {
+  background: var(--border-ghost) !important;
+  color: var(--text-primary) !important;
+  border-color: transparent !important;
+}
+
+/* Botão de login com GitHub */
+.gsc-login button {
+  border-radius: var(--r-md) !important;
   font-weight: 600 !important;
+  font-size: 13px !important;
 }
 
-/* Avatares */
+/* ─────────────────────────────────────────────────────────
+   REAÇÕES
+───────────────────────────────────────────────────────── */
+.gsc-reactions-count {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--text-secondary) !important;
+}
+
+.gsc-social-reaction-button {
+  border-radius: var(--r-pill) !important;
+  border: 1px solid var(--border-subtle) !important;
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  padding: 3px 10px !important;
+  transition:
+    background var(--t-fast),
+    border-color var(--t-fast),
+    color var(--t-fast),
+    transform var(--t-fast) !important;
+}
+
+.gsc-social-reaction-button:hover {
+  background: var(--bg-overlay) !important;
+  border-color: var(--border-strong) !important;
+  color: var(--text-primary) !important;
+  transform: scale(1.04) !important;
+}
+
+.gsc-social-reaction-button-selected-bg,
+.gsc-social-reaction-button[aria-pressed="true"] {
+  background: var(--gold-dim) !important;
+  border-color: rgba(255, 214, 10, .30) !important;
+  color: var(--gold) !important;
+}
+
+.gsc-social-reaction-button-selected-bg:hover,
+.gsc-social-reaction-button[aria-pressed="true"]:hover {
+  background: rgba(255, 214, 10, .22) !important;
+  border-color: rgba(255, 214, 10, .40) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   AVATARES
+───────────────────────────────────────────────────────── */
 img.avatar,
-img.avatar-user {
+img.avatar-user,
+img[class*="avatar"] {
   border-radius: 50% !important;
-  border: 1.5px solid rgba(120,122,160,.22) !important;
+  border: 1.5px solid var(--border-strong) !important;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast) !important;
 }
 
-/* Links */
-a {
-  color: #FFD60A !important;
-  text-decoration: none !important;
+img.avatar:hover,
+img.avatar-user:hover {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 2px var(--gold-ghost) !important;
 }
+
+/* ─────────────────────────────────────────────────────────
+   HEADER / CONTAGEM
+───────────────────────────────────────────────────────── */
+.gsc-header {
+  margin-bottom: 16px !important;
+}
+
+.gsc-comments-count,
+.gsc-count {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: var(--text-primary) !important;
+  letter-spacing: -.3px !important;
+}
+
+.gsc-comments-count-separator {
+  color: var(--text-tertiary) !important;
+  margin: 0 6px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   PAGINAÇÃO
+───────────────────────────────────────────────────────── */
+.gsc-pagination {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  margin-top: 20px !important;
+}
+
+.gsc-pagination .btn {
+  padding: 6px 16px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   LINKS
+───────────────────────────────────────────────────────── */
+a {
+  color: var(--gold) !important;
+  text-decoration: none !important;
+  transition: color var(--t-fast), text-decoration-color var(--t-fast) !important;
+}
+
 a:hover {
+  color: var(--gold-hover) !important;
   text-decoration: underline !important;
   text-underline-offset: 3px !important;
+  text-decoration-thickness: 1px !important;
 }
 
-/* Código inline */
+/* ─────────────────────────────────────────────────────────
+   MARKDOWN — CORPO DO COMENTÁRIO
+───────────────────────────────────────────────────────── */
+.comment-body h1,
+.comment-body h2,
+.comment-body h3,
+.comment-body h4 {
+  color: var(--text-primary) !important;
+  font-weight: 700 !important;
+  letter-spacing: -.3px !important;
+  margin: 1em 0 .4em !important;
+  border-bottom: 1px solid var(--border-ghost) !important;
+  padding-bottom: .3em !important;
+}
+
+.comment-body p {
+  margin: .7em 0 !important;
+  color: var(--text-primary) !important;
+}
+
+.comment-body ul,
+.comment-body ol {
+  padding-left: 20px !important;
+  color: var(--text-primary) !important;
+}
+
+.comment-body blockquote {
+  margin: 10px 0 !important;
+  padding: 8px 14px !important;
+  border-left: 3px solid var(--gold-dim) !important;
+  background: var(--gold-ghost) !important;
+  border-radius: 0 var(--r-sm) var(--r-sm) 0 !important;
+  color: var(--text-secondary) !important;
+}
+
+.comment-body hr {
+  border: none !important;
+  border-top: 1px solid var(--border-subtle) !important;
+  margin: 16px 0 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   CÓDIGO
+───────────────────────────────────────────────────────── */
 code {
-  background: rgba(120,122,160,.14) !important;
+  font-family: var(--font-mono) !important;
+  background: rgba(140, 142, 180, .12) !important;
+  border: 1px solid var(--border-ghost) !important;
   border-radius: 5px !important;
-  font-size: 12px !important;
-  padding: 1px 5px !important;
+  font-size: 12.5px !important;
+  padding: 1.5px 6px !important;
+  color: var(--text-primary) !important;
 }
 
-/* Blocos de código */
 pre {
-  background: #08090E !important;
-  border: 0.5px solid rgba(120,122,160,.18) !important;
-  border-radius: 10px !important;
+  background: var(--bg-inset) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: var(--r-md) !important;
+  padding: 14px 16px !important;
+  overflow-x: auto !important;
+  box-shadow: var(--shadow-inset) !important;
 }
 
-/* Timestamp */
-relative-time,
-time-ago {
-  color: rgba(220,220,245,.30) !important;
+pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   TABELAS
+───────────────────────────────────────────────────────── */
+.comment-body table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+  font-size: 13px !important;
+}
+
+.comment-body table th {
+  background: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  font-weight: 600 !important;
   font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: .5px !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--border-subtle) !important;
 }
 
-/* Scrollbar fina */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(120,122,160,.28); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(120,122,160,.45); }
+.comment-body table td {
+  padding: 8px 12px !important;
+  border: 1px solid var(--border-ghost) !important;
+  color: var(--text-primary) !important;
+}
+
+.comment-body table tr:nth-child(even) td {
+  background: rgba(140, 142, 180, .04) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   TIMESTAMPS
+───────────────────────────────────────────────────────── */
+relative-time,
+time-ago,
+[data-component="relative-time"] {
+  color: var(--text-tertiary) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  letter-spacing: .1px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   LOADING / SKELETON
+───────────────────────────────────────────────────────── */
+.gsc-loading {
+  color: var(--text-tertiary) !important;
+  font-size: 13px !important;
+}
+
+.gsc-loading-image {
+  opacity: .4 !important;
+  filter: sepia(1) saturate(3) hue-rotate(10deg) !important;
+}
+
+/* Skeleton pulse */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: .4; }
+  50%       { opacity: .15; }
+}
+
+.gsc-loading-placeholder {
+  animation: skeleton-pulse 1.8s ease-in-out infinite !important;
+  background: var(--bg-elevated) !important;
+  border-radius: var(--r-sm) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   DROPDOWN / MENU
+───────────────────────────────────────────────────────── */
+.dropdown-menu,
+.SelectMenu-modal {
+  background: var(--bg-overlay) !important;
+  border: 1px solid var(--border-strong) !important;
+  border-radius: var(--r-lg) !important;
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--border-ghost) !important;
+  overflow: hidden !important;
+}
+
+.dropdown-item,
+.SelectMenu-item {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  padding: 8px 14px !important;
+  transition: background var(--t-fast), color var(--t-fast) !important;
+}
+
+.dropdown-item:hover,
+.SelectMenu-item:hover {
+  background: var(--border-ghost) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   FLASH / ALERTAS
+───────────────────────────────────────────────────────── */
+.flash {
+  border-radius: var(--r-md) !important;
+  border: 1px solid var(--border-subtle) !important;
+  font-size: 13px !important;
+}
+
+.flash-warn {
+  background: rgba(255, 159, 10, .10) !important;
+  border-color: rgba(255, 159, 10, .22) !important;
+  color: #FF9F0A !important;
+}
+
+.flash-error {
+  background: rgba(255, 69, 58, .10) !important;
+  border-color: rgba(255, 69, 58, .22) !important;
+  color: #FF453A !important;
+}
+
+.flash-success {
+  background: rgba(48, 209, 88, .10) !important;
+  border-color: rgba(48, 209, 88, .22) !important;
+  color: #30D158 !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   FOCUS GLOBAL
+───────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(255, 214, 10, .55) !important;
+  outline-offset: 2px !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   SCROLLBAR
+───────────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 4px; height: 4px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  {
+  background: rgba(140, 142, 180, .22);
+  border-radius: 4px;
+  transition: background .2s;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(140, 142, 180, .40); }
+
+/* ─────────────────────────────────────────────────────────
+   SELEÇÃO DE TEXTO
+───────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(255, 214, 10, .20) !important;
+  color: var(--text-primary) !important;
+}
