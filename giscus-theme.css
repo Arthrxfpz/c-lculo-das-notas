@@ -1,266 +1,194 @@
 /*
   Giscus custom theme — Cálculo das notas
-  Combina com o design do app (dark: #08090E, gold: #FFD60A)
-  Hospede esse arquivo na raiz do repositório e aponte
-  data-theme para a URL pública dele.
+  Sobrescreve as variáveis do Primer CSS (sistema do GitHub)
+  que o Giscus usa internamente. Essa é a forma correta.
 */
 
-/* ── Base ── */
-.gsc-main,
-main {
-  color: #F0F0FA;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+/* ══════════════════════════════════════════
+   VARIÁVEIS PRIMER — cores base
+══════════════════════════════════════════ */
+:root {
+  /* Canvas / backgrounds */
+  --color-canvas-default:        #0D0E14;
+  --color-canvas-subtle:         #13141A;
+  --color-canvas-inset:          #08090E;
+
+  /* Borders */
+  --color-border-default:        rgba(120,122,160,.22);
+  --color-border-muted:          rgba(120,122,160,.14);
+
+  /* Text */
+  --color-fg-default:            #F0F0FA;
+  --color-fg-muted:              rgba(220,220,245,.52);
+  --color-fg-subtle:             rgba(220,220,245,.30);
+  --color-fg-on-emphasis:        #000000;
+
+  /* Accent (dourado) */
+  --color-accent-fg:             #FFD60A;
+  --color-accent-emphasis:       #FFD60A;
+  --color-accent-muted:          rgba(255,214,10,.18);
+  --color-accent-subtle:         rgba(255,214,10,.08);
+
+  /* Neutral */
+  --color-neutral-emphasis-plus: #2A2B36;
+  --color-neutral-emphasis:      #383944;
+  --color-neutral-muted:         rgba(120,122,160,.14);
+  --color-neutral-subtle:        rgba(120,122,160,.08);
+
+  /* Botão primário */
+  --color-btn-primary-bg:              #FFD60A;
+  --color-btn-primary-hover-bg:        #FFE234;
+  --color-btn-primary-disabled-bg:     rgba(255,214,10,.30);
+  --color-btn-primary-text:            #000000;
+  --color-btn-primary-hover-text:      #000000;
+  --color-btn-primary-disabled-text:   rgba(0,0,0,.40);
+  --color-btn-primary-border:          rgba(255,214,10,.00);
+  --color-btn-primary-shadow:          none;
+  --color-btn-primary-inset-shadow:    none;
+  --color-btn-primary-focus-shadow:    0 0 0 3px rgba(255,214,10,.20);
+
+  /* Botão padrão */
+  --color-btn-bg:                #1E1F27;
+  --color-btn-hover-bg:          #2A2B36;
+  --color-btn-active-bg:         #13141A;
+  --color-btn-text:              rgba(220,220,245,.80);
+  --color-btn-hover-text:        #F0F0FA;
+  --color-btn-border:            rgba(120,122,160,.22);
+  --color-btn-shadow:            none;
+  --color-btn-inset-shadow:      none;
+
+  /* Input */
+  --color-input-bg:              #13141A;
+  --color-input-disabled-bg:     #08090E;
+  --color-input-contrast:        #08090E;
+  --color-input-border:          rgba(120,122,160,.22);
+
+  /* Social / reações */
+  --color-social-reaction-bg-hover:  rgba(120,122,160,.10);
+  --color-social-reaction-bg-reacted-hover: rgba(255,214,10,.14);
+
+  /* Header / topbar  */
+  --color-header-bg:             #08090E;
+  --color-header-border:         rgba(120,122,160,.14);
+
+  /* Inline code */
+  --color-prettylights-syntax-comment:      rgba(220,220,245,.35);
+  --color-prettylights-syntax-keyword:      #FFD60A;
+  --color-prettylights-syntax-string:       #30D158;
+  --color-prettylights-syntax-variable:     #FF9F0A;
+  --color-prettylights-syntax-entity:       #BF5AF2;
+  --color-prettylights-syntax-markup-bold:  #F0F0FA;
+
+  /* Misc */
+  --color-scale-gray-1:          #1E1F27;
+  --color-scale-gray-2:          #2A2B36;
+  --color-scale-gray-3:          #383944;
+  --color-scale-gray-4:          #545564;
+  --color-scale-gray-5:          #787AA0;
+  --color-scale-blue-2:          rgba(255,214,10,.12);
+  --color-scale-blue-5:          #FFD60A;
+
+  /* Links */
+  --color-anchor-fg:             #FFD60A;
 }
 
-/* ── Área principal ── */
-.gsc-comments,
-.gsc-header,
-.gsc-replies {
-  background: transparent;
+/* ══════════════════════════════════════════
+   REFINAMENTOS ADICIONAIS
+══════════════════════════════════════════ */
+
+/* Body base */
+body {
+  background: transparent !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif !important;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── Caixa de composição ── */
+/* Remove sombras e outlines padrão do GitHub */
+.Box {
+  box-shadow: none !important;
+}
+
+/* Raio de borda consistente com o app */
+.Box,
+.comment-body,
 .gsc-comment-box {
-  background: #1E1F27;
-  border: 0.5px solid rgba(120,122,160,.28) !important;
-  border-radius: 14px !important;
-  overflow: hidden;
+  border-radius: 13px !important;
 }
 
-.gsc-comment-box-tabs {
-  background: #13141A;
-  border-bottom: 0.5px solid rgba(120,122,160,.18) !important;
-  padding: 0 12px;
-}
-
-.gsc-comment-box-tab-link {
-  color: rgba(220,220,245,.45) !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  padding: 10px 12px !important;
-  border-bottom: 2px solid transparent !important;
-  transition: color .15s, border-color .15s;
-}
-
-.gsc-comment-box-tab-link.active,
-.gsc-comment-box-tab-link[aria-selected="true"] {
-  color: #FFD60A !important;
-  border-bottom-color: #FFD60A !important;
-}
-
-.gsc-comment-box-main {
-  padding: 12px !important;
-}
-
-.gsc-comment-box-textarea {
-  background: #13141A !important;
-  border: 0.5px solid rgba(120,122,160,.22) !important;
+/* Textarea de composição */
+textarea {
   border-radius: 10px !important;
-  color: #F0F0FA !important;
   font-size: 14px !important;
   line-height: 1.55 !important;
-  padding: 10px 12px !important;
-  resize: vertical;
-  min-height: 80px;
+  transition: border-color .15s, box-shadow .15s !important;
 }
 
-.gsc-comment-box-textarea:focus {
-  border-color: rgba(255,214,10,.50) !important;
-  outline: none !important;
+textarea:focus {
+  border-color: rgba(255,214,10,.45) !important;
   box-shadow: 0 0 0 3px rgba(255,214,10,.08) !important;
 }
 
-.gsc-comment-box-textarea::placeholder {
-  color: rgba(220,220,245,.28) !important;
-}
-
-/* ── Preview da composição ── */
-.gsc-comment-box-preview {
-  background: #13141A !important;
-  border: 0.5px solid rgba(120,122,160,.22) !important;
+/* Botão primário — arredondado igual ao app */
+.btn-primary {
   border-radius: 10px !important;
-  color: #F0F0FA !important;
-  font-size: 14px !important;
-  padding: 10px 12px !important;
-  min-height: 80px;
-}
-
-/* ── Footer da caixa (login / botão enviar) ── */
-.gsc-comment-box-bottom {
-  background: #13141A !important;
-  border-top: 0.5px solid rgba(120,122,160,.14) !important;
-  padding: 10px 12px !important;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ── Botão enviar ── */
-.gsc-comment-box-bottom .btn-primary,
-button.btn-primary {
-  background: #FFD60A !important;
-  color: #000 !important;
-  border: none !important;
-  border-radius: 10px !important;
-  font-size: 13px !important;
   font-weight: 700 !important;
-  padding: 7px 16px !important;
-  cursor: pointer;
-  transition: opacity .15s, transform .12s;
-}
-
-.gsc-comment-box-bottom .btn-primary:hover,
-button.btn-primary:hover {
-  opacity: .88;
-}
-
-.gsc-comment-box-bottom .btn-primary:active,
-button.btn-primary:active {
-  transform: scale(.95);
-}
-
-.gsc-comment-box-bottom .btn-primary:disabled,
-button.btn-primary:disabled {
-  background: rgba(255,214,10,.30) !important;
-  color: rgba(0,0,0,.45) !important;
-  cursor: not-allowed;
-}
-
-/* ── Botão login GitHub ── */
-.gsc-login,
-.gsc-social-reaction-summary-item {
-  color: rgba(220,220,245,.55) !important;
   font-size: 13px !important;
+  letter-spacing: -0.1px !important;
+  transition: opacity .15s, transform .12s !important;
 }
 
-.gsc-login a,
-.gsc-login-link {
-  color: #FFD60A !important;
+.btn-primary:active {
+  transform: scale(.95) !important;
+}
+
+/* Botão padrão */
+.btn {
+  border-radius: 10px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
-  text-decoration: none !important;
 }
 
-/* ── Cards de comentário ── */
-.gsc-comment {
-  background: #1E1F27 !important;
-  border: 0.5px solid rgba(120,122,160,.22) !important;
-  border-radius: 14px !important;
-  margin-bottom: 10px !important;
-  overflow: hidden;
+/* Avatares */
+img.avatar,
+img.avatar-user {
+  border-radius: 50% !important;
+  border: 1.5px solid rgba(120,122,160,.22) !important;
 }
 
-.gsc-comment-header {
-  background: #13141A !important;
-  border-bottom: 0.5px solid rgba(120,122,160,.14) !important;
-  padding: 10px 14px !important;
-}
-
-.gsc-comment-author {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  color: #F0F0FA !important;
-}
-
-.gsc-comment-author-association,
-.gsc-comment-content a.color-text-secondary {
-  color: rgba(220,220,245,.40) !important;
-  font-size: 11px !important;
-}
-
-.gsc-comment-body {
-  padding: 12px 14px !important;
-  color: rgba(220,220,245,.88) !important;
-  font-size: 14px !important;
-  line-height: 1.6 !important;
-}
-
-/* ── Replies ── */
-.gsc-replies {
-  background: #13141A !important;
-  border-top: 0.5px solid rgba(120,122,160,.14) !important;
-  padding: 10px 14px !important;
-}
-
-.gsc-reply {
-  border-top: 0.5px solid rgba(120,122,160,.10) !important;
-  padding-top: 10px !important;
-  margin-top: 10px !important;
-}
-
-.gsc-reply:first-child {
-  border-top: none !important;
-  margin-top: 0 !important;
-  padding-top: 0 !important;
-}
-
-/* ── Reações (emojis) ── */
-.gsc-reactions-menu,
-.gsc-social-reaction-summary {
-  background: #13141A !important;
-  border: 0.5px solid rgba(120,122,160,.22) !important;
-  border-radius: 10px !important;
-}
-
-.gsc-direct-reaction-button,
-.gsc-social-reaction-summary-item {
-  background: transparent !important;
-  color: rgba(220,220,245,.55) !important;
-  border-radius: 8px !important;
-  transition: background .15s;
-}
-
-.gsc-direct-reaction-button:hover,
-.gsc-social-reaction-summary-item:hover {
-  background: rgba(120,122,160,.12) !important;
-}
-
-.gsc-direct-reaction-button[aria-pressed="true"],
-.gsc-social-reaction-summary-item.active {
-  background: rgba(255,214,10,.12) !important;
-  color: #FFD60A !important;
-  border: 1px solid rgba(255,214,10,.26) !important;
-}
-
-/* ── Links ── */
+/* Links */
 a {
   color: #FFD60A !important;
+  text-decoration: none !important;
 }
-
 a:hover {
-  text-decoration: underline;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
 }
 
-/* ── Timestamps ── */
-.gsc-comment-author relative-time,
-relative-time {
-  color: rgba(220,220,245,.35) !important;
+/* Código inline */
+code {
+  background: rgba(120,122,160,.14) !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+  padding: 1px 5px !important;
+}
+
+/* Blocos de código */
+pre {
+  background: #08090E !important;
+  border: 0.5px solid rgba(120,122,160,.18) !important;
+  border-radius: 10px !important;
+}
+
+/* Timestamp */
+relative-time,
+time-ago {
+  color: rgba(220,220,245,.30) !important;
   font-size: 12px !important;
 }
 
-/* ── "Load more" / paginação ── */
-.gsc-pagination button,
-.gsc-pagination .btn {
-  background: #1E1F27 !important;
-  color: rgba(220,220,245,.65) !important;
-  border: 0.5px solid rgba(120,122,160,.22) !important;
-  border-radius: 10px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  padding: 8px 16px !important;
-  transition: background .15s;
-}
-
-.gsc-pagination button:hover {
-  background: #2A2B36 !important;
-}
-
-/* ── Header de contagem ── */
-.gsc-header-count {
-  color: rgba(220,220,245,.45) !important;
-  font-size: 13px !important;
-}
-
-/* ── Scrollbar ── */
+/* Scrollbar fina */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(120,122,160,.30); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(120,122,160,.28); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(120,122,160,.45); }
