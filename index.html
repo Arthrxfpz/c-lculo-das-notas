@@ -1598,6 +1598,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .sched-break-line{flex:1;height:1px;background:var(--amberbd)}
 .sched-break-txt{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.8px;white-space:nowrap}
 .sched-break.current{background:var(--amberbg)}
+/* sched-update-notice */
+.sched-update-notice{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;margin-bottom:12px;background:rgba(99,102,241,.10);border:1px solid rgba(99,102,241,.30);border-radius:14px;}
+[data-theme="light"] .sched-update-notice{background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.22);}
+.sched-update-notice-icon{font-size:16px;line-height:1.4;flex-shrink:0}
+.sched-update-notice-text{display:flex;flex-direction:column;gap:2px}
+.sched-update-notice-title{font-size:12px;font-weight:700;color:#818CF8;letter-spacing:.3px}
+.sched-update-notice-sub{font-size:12px;color:var(--t3);line-height:1.4}
 
 /* ═══════════════════════════════
    PROVAS (EXAM SCHEDULER)
@@ -5775,11 +5782,11 @@ const PERIODS=[
   {n:'6ª aula',s:[17,40],e:[18,30]},
 ];
 const SCHED={
-  1:[{subj:'Biologia',prof:'Iara'},{subj:'Física',prof:'Pedro'},{subj:'Biologia',prof:'Iara'},{subj:'Educação Financeira',prof:'Simone'},{subj:'Educação Física',prof:'Leani'},{subj:'Língua Espanhola',prof:'Jorge'}],
-  2:[{subj:'Língua Portuguesa',prof:'André'},{subj:'História',prof:'Felipe'},{subj:'Literatura',prof:'André'},{subj:'Química',prof:'Jaque'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Física',prof:'Pedro'}],
-  3:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Química',prof:'Jaque'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Sociologia',prof:'Felipe'}],
-  4:[{subj:'Geografia',prof:'Thiago'},{subj:'Educação Física',prof:'Leani'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Matemática',prof:'Veridiana'},{subj:'Artes Integradas',prof:'Max'},{subj:'Língua Portuguesa',prof:'André'}],
-  5:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Escrita Criativa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Língua Inglesa',prof:'Giovana'},{subj:'Ensino Religioso',prof:'Deise'}],
+  1:[{subj:'Biologia',prof:'Iara'},{subj:'Educação Física',prof:'Leani'},{subj:'Artes Integradas',prof:'Max'},{subj:'Física',prof:'Pedro'},{subj:'Educação Financeira',prof:'Simone'},{subj:'Biologia',prof:'Iara'}],
+  2:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Inglesa',prof:'Giovana'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Sociologia',prof:'Felipe'}],
+  3:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Química',prof:'Jaque'},{subj:'Ensino Religioso',prof:'Deise'},{subj:'Química',prof:'Jaque'},{subj:'Geografia',prof:'Thiago'}],
+  4:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Escrita Criativa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Língua Espanhola',prof:'Jorge'}],
+  5:[{subj:'História',prof:'Felipe'},{subj:'Literatura',prof:'André'},{subj:'Física',prof:'Pedro'},{subj:'Matemática',prof:'Veridiana'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Educação Física',prof:'Leani'}],
 };
 const SUBJ_COLORS={'Biologia':'#34D399','Física':'#60A5FA','Educação Financeira':'#E8B84B','Educação Física':'#4ADE80','Língua Espanhola':'#FCA5A5','Língua Portuguesa':'#6EE7B7','Literatura':'#6EE7B7','História':'#FCD34D','Química':'#F472B6','Proj. Integrador Mat.':'#818CF8','Matemática':'#A78BFA','Sociologia':'#86EFAC','Geografia':'#67E8F9','Artes Integradas':'#FB923C','Escrita Criativa':'#F9A8D4','Língua Inglesa':'#93C5FD','Ensino Religioso':'#C4B5FD'};
 const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -7291,6 +7298,12 @@ function renderHorarios(el){
     }
   }
 
+  // ── Aviso de horários atualizados (16/03 00:00 → 20/03 00:00) ──
+  const _noticeStart=new Date('2026-03-16T00:00:00').getTime();
+  const _noticeEnd  =new Date('2026-03-20T00:00:00').getTime();
+  const _nowTs=Date.now();
+  const schedNotice=(_nowTs>=_noticeStart&&_nowTs<_noticeEnd)?`<div class="sched-update-notice"><div class="sched-update-notice-text"><div class="sched-update-notice-title">Horários atualizados</div><div class="sched-update-notice-sub">A grade de aulas foi atualizada — confira as mudanças desta semana.</div></div></div>`:'';
+
   let daySel='<div class="day-selector">';
   [1,2,3,4,5].forEach(d=>{
     const isToday=d===todayDow,isActive=d===schedDay;
@@ -7331,7 +7344,7 @@ function renderHorarios(el){
   });
   list+='</div>';
 
-  el.innerHTML=banner+daySel+list;
+  el.innerHTML=banner+schedNotice+daySel+list;
 }
 
 /* ═══════════════════════════════
