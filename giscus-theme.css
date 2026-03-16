@@ -1,0 +1,266 @@
+/*
+  Giscus custom theme — Cálculo das notas
+  Combina com o design do app (dark: #08090E, gold: #FFD60A)
+  Hospede esse arquivo na raiz do repositório e aponte
+  data-theme para a URL pública dele.
+*/
+
+/* ── Base ── */
+.gsc-main,
+main {
+  color: #F0F0FA;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+}
+
+/* ── Área principal ── */
+.gsc-comments,
+.gsc-header,
+.gsc-replies {
+  background: transparent;
+}
+
+/* ── Caixa de composição ── */
+.gsc-comment-box {
+  background: #1E1F27;
+  border: 0.5px solid rgba(120,122,160,.28) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+
+.gsc-comment-box-tabs {
+  background: #13141A;
+  border-bottom: 0.5px solid rgba(120,122,160,.18) !important;
+  padding: 0 12px;
+}
+
+.gsc-comment-box-tab-link {
+  color: rgba(220,220,245,.45) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 10px 12px !important;
+  border-bottom: 2px solid transparent !important;
+  transition: color .15s, border-color .15s;
+}
+
+.gsc-comment-box-tab-link.active,
+.gsc-comment-box-tab-link[aria-selected="true"] {
+  color: #FFD60A !important;
+  border-bottom-color: #FFD60A !important;
+}
+
+.gsc-comment-box-main {
+  padding: 12px !important;
+}
+
+.gsc-comment-box-textarea {
+  background: #13141A !important;
+  border: 0.5px solid rgba(120,122,160,.22) !important;
+  border-radius: 10px !important;
+  color: #F0F0FA !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+  padding: 10px 12px !important;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.gsc-comment-box-textarea:focus {
+  border-color: rgba(255,214,10,.50) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(255,214,10,.08) !important;
+}
+
+.gsc-comment-box-textarea::placeholder {
+  color: rgba(220,220,245,.28) !important;
+}
+
+/* ── Preview da composição ── */
+.gsc-comment-box-preview {
+  background: #13141A !important;
+  border: 0.5px solid rgba(120,122,160,.22) !important;
+  border-radius: 10px !important;
+  color: #F0F0FA !important;
+  font-size: 14px !important;
+  padding: 10px 12px !important;
+  min-height: 80px;
+}
+
+/* ── Footer da caixa (login / botão enviar) ── */
+.gsc-comment-box-bottom {
+  background: #13141A !important;
+  border-top: 0.5px solid rgba(120,122,160,.14) !important;
+  padding: 10px 12px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ── Botão enviar ── */
+.gsc-comment-box-bottom .btn-primary,
+button.btn-primary {
+  background: #FFD60A !important;
+  color: #000 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 7px 16px !important;
+  cursor: pointer;
+  transition: opacity .15s, transform .12s;
+}
+
+.gsc-comment-box-bottom .btn-primary:hover,
+button.btn-primary:hover {
+  opacity: .88;
+}
+
+.gsc-comment-box-bottom .btn-primary:active,
+button.btn-primary:active {
+  transform: scale(.95);
+}
+
+.gsc-comment-box-bottom .btn-primary:disabled,
+button.btn-primary:disabled {
+  background: rgba(255,214,10,.30) !important;
+  color: rgba(0,0,0,.45) !important;
+  cursor: not-allowed;
+}
+
+/* ── Botão login GitHub ── */
+.gsc-login,
+.gsc-social-reaction-summary-item {
+  color: rgba(220,220,245,.55) !important;
+  font-size: 13px !important;
+}
+
+.gsc-login a,
+.gsc-login-link {
+  color: #FFD60A !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+/* ── Cards de comentário ── */
+.gsc-comment {
+  background: #1E1F27 !important;
+  border: 0.5px solid rgba(120,122,160,.22) !important;
+  border-radius: 14px !important;
+  margin-bottom: 10px !important;
+  overflow: hidden;
+}
+
+.gsc-comment-header {
+  background: #13141A !important;
+  border-bottom: 0.5px solid rgba(120,122,160,.14) !important;
+  padding: 10px 14px !important;
+}
+
+.gsc-comment-author {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #F0F0FA !important;
+}
+
+.gsc-comment-author-association,
+.gsc-comment-content a.color-text-secondary {
+  color: rgba(220,220,245,.40) !important;
+  font-size: 11px !important;
+}
+
+.gsc-comment-body {
+  padding: 12px 14px !important;
+  color: rgba(220,220,245,.88) !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* ── Replies ── */
+.gsc-replies {
+  background: #13141A !important;
+  border-top: 0.5px solid rgba(120,122,160,.14) !important;
+  padding: 10px 14px !important;
+}
+
+.gsc-reply {
+  border-top: 0.5px solid rgba(120,122,160,.10) !important;
+  padding-top: 10px !important;
+  margin-top: 10px !important;
+}
+
+.gsc-reply:first-child {
+  border-top: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* ── Reações (emojis) ── */
+.gsc-reactions-menu,
+.gsc-social-reaction-summary {
+  background: #13141A !important;
+  border: 0.5px solid rgba(120,122,160,.22) !important;
+  border-radius: 10px !important;
+}
+
+.gsc-direct-reaction-button,
+.gsc-social-reaction-summary-item {
+  background: transparent !important;
+  color: rgba(220,220,245,.55) !important;
+  border-radius: 8px !important;
+  transition: background .15s;
+}
+
+.gsc-direct-reaction-button:hover,
+.gsc-social-reaction-summary-item:hover {
+  background: rgba(120,122,160,.12) !important;
+}
+
+.gsc-direct-reaction-button[aria-pressed="true"],
+.gsc-social-reaction-summary-item.active {
+  background: rgba(255,214,10,.12) !important;
+  color: #FFD60A !important;
+  border: 1px solid rgba(255,214,10,.26) !important;
+}
+
+/* ── Links ── */
+a {
+  color: #FFD60A !important;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* ── Timestamps ── */
+.gsc-comment-author relative-time,
+relative-time {
+  color: rgba(220,220,245,.35) !important;
+  font-size: 12px !important;
+}
+
+/* ── "Load more" / paginação ── */
+.gsc-pagination button,
+.gsc-pagination .btn {
+  background: #1E1F27 !important;
+  color: rgba(220,220,245,.65) !important;
+  border: 0.5px solid rgba(120,122,160,.22) !important;
+  border-radius: 10px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  transition: background .15s;
+}
+
+.gsc-pagination button:hover {
+  background: #2A2B36 !important;
+}
+
+/* ── Header de contagem ── */
+.gsc-header-count {
+  color: rgba(220,220,245,.45) !important;
+  font-size: 13px !important;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(120,122,160,.30); border-radius: 4px; }
