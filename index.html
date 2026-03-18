@@ -1052,23 +1052,34 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .eval-error-msg svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;flex-shrink:0}
 @keyframes errPop{from{opacity:0;transform:translateY(-4px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 
-/* ── tipo segmented control (Prova / Trabalho) ── */
+/* ── tipo card selector (Prova / Trabalho) ── */
 .tipo-seg{
-  display:flex;gap:0;background:var(--bg2);border:1px solid var(--line2);
-  border-radius:11px;padding:3px;overflow:hidden;margin-bottom:14px;
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;
 }
 .tipo-seg-btn{
-  flex:1;padding:8px 10px;font-size:13px;font-weight:600;letter-spacing:-0.15px;
-  border:none;background:transparent;color:var(--t2);cursor:pointer;border-radius:9px;
-  transition:background .18s var(--ease-ios),color .18s,box-shadow .18s;font-family:inherit;
-  display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:13px 10px 12px;
+  border:1.5px solid var(--line2);background:var(--bg2);color:var(--t3);
+  cursor:pointer;border-radius:14px;font-family:inherit;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  transition:border-color .15s,background .15s,color .15s,box-shadow .15s;
+  -webkit-tap-highlight-color:transparent;
 }
-.tipo-seg-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tipo-seg-btn:active{opacity:.75;transform:scale(.97)}
+.tipo-seg-btn-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg3);transition:background .15s;
+}
+.tipo-seg-btn-icon svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tipo-seg-btn-lbl{font-size:13px;font-weight:700;letter-spacing:-.2px}
+.tipo-seg-btn-sub{font-size:10px;font-weight:500;color:var(--t4);letter-spacing:.1px}
 .tipo-seg-btn.active{
-  background:var(--bg1);color:var(--t1);font-weight:700;
-  box-shadow:0 1px 6px rgba(0,0,0,.18),0 0 0 0.5px rgba(0,0,0,.08);
+  border-color:var(--gold);background:var(--goldbg);color:var(--t1);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 18%,transparent);
 }
-[data-theme="dark"] .tipo-seg-btn.active{background:var(--bg3);box-shadow:0 1px 6px rgba(0,0,0,.4),0 0 0 0.5px rgba(255,255,255,.06)}
+.tipo-seg-btn.active .tipo-seg-btn-icon{background:var(--gold)}
+.tipo-seg-btn.active .tipo-seg-btn-icon svg{stroke:var(--accent-text,#000)}
+.tipo-seg-btn.active .tipo-seg-btn-sub{color:var(--t3)}
 
 /* exam tipo chip na lista */
 .exam-tipo-chip{
@@ -1091,6 +1102,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   font-family:var(--ffm);white-space:nowrap;
 }
 .exam-info-badge svg{width:10px;height:10px;stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.exam-dow-label{font-weight:700;color:var(--t1);letter-spacing:-.1px}
+.exam-dow-label::after{content:'·';margin:0 4px;color:var(--t4);font-weight:400}
 .exam-info-badge-tipo{display:none}
 .exam-info-badge-meta{font-family:var(--ffm);font-size:11px;font-weight:600;color:var(--t2)}
 
@@ -7749,8 +7762,8 @@ function renderProvas(el){
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </div>
       <div>
-        <div class="aec-header-title">Nova Prova</div>
-        <div class="aec-header-sub">Toque para adicionar ao calendário</div>
+        <div class="aec-header-title" id="aec-form-header-title">Nova Prova</div>
+        <div class="aec-header-sub" id="aec-form-header-sub">Toque para adicionar ao calendário</div>
       </div>
       <div class="aec-header-right">
         <div class="aec-header-badge">+ Adicionar</div>
@@ -7764,12 +7777,14 @@ function renderProvas(el){
         <div class="aec-body">
           <div class="tipo-seg" id="ex-tipo-seg">
             <button class="tipo-seg-btn active" id="tipo-btn-prova" type="button" onclick="setExamTipo('prova')">
-              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              Prova
+              <div class="tipo-seg-btn-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="tipo-seg-btn-lbl">Prova</div>
+              <div class="tipo-seg-btn-sub">Avaliação</div>
             </button>
             <button class="tipo-seg-btn" id="tipo-btn-trabalho" type="button" onclick="setExamTipo('trabalho')">
-              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              Trabalho
+              <div class="tipo-seg-btn-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+              <div class="tipo-seg-btn-lbl">Trabalho</div>
+              <div class="tipo-seg-btn-sub">Entrega</div>
             </button>
           </div>
           <input type="hidden" id="ex-tipo" value="prova">
@@ -7786,7 +7801,7 @@ function renderProvas(el){
             <input type="hidden" id="ex-subj">
           </div>
           <div class="aec-step">
-            <div class="aec-step-lbl"><span>2</span>Título <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <div class="aec-step-lbl" id="ex-title-step-lbl"><span>2</span>Título da prova <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
             <input class="aec-input" type="text" id="ex-title" placeholder="Título da prova">
           </div>
           <div id="ex-slot-wrap" style="display:none">
@@ -7843,8 +7858,10 @@ function renderProvas(el){
       // extrai só o horário de início (ex: "07:00 – 07:50" → "07:00")
       const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
       const metaTxt=timeStart?`${fmtDateBR(e.examDate)} · ${timeStart}`:fmtDateBR(e.examDate);
+      const _DOW_ABBR=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+      const dowLabel=_DOW_ABBR[new Date(e.examDate+'T00:00:00').getDay()];
       const dateSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-      const infoBadge=`<div class="exam-info-badge">${dateSvg}${metaTxt}</div>`;
+      const infoBadge=`<div class="exam-info-badge">${dateSvg}<span class="exam-dow-label">${dowLabel}</span>${metaTxt}</div>`;
       
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
       const notifScheduled=getExamNotif(e.id);
@@ -8025,6 +8042,12 @@ function setExamTipo(tipo){
   if(titleInp)titleInp.placeholder=tipo==='trabalho'?'Título do trabalho':'Título da prova';
   const lbl=document.getElementById('add-exam-btn-lbl');
   if(lbl)lbl.textContent=tipo==='trabalho'?'Adicionar Trabalho':'Adicionar Prova';
+  // Atualiza título do header do formulário
+  const headerTitle=document.getElementById('aec-form-header-title');
+  if(headerTitle)headerTitle.textContent=tipo==='trabalho'?'Novo Trabalho':'Nova Prova';
+  // Atualiza label do step de título
+  const titleStepLbl=document.getElementById('ex-title-step-lbl');
+  if(titleStepLbl){const opt='<span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span>';titleStepLbl.innerHTML='<span>2</span>'+(tipo==="trabalho"?"Título do trabalho ":"Título da prova ")+opt;}
 }
 
 function addExam(){
