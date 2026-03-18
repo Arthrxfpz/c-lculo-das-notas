@@ -2110,6 +2110,73 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .ps2-val{font-family:var(--ffm);font-size:22px;font-weight:700;line-height:1}
 .ps2-lbl{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
 
+/* ─── AVISO ANTECIPADO — seletor + preview ─── */
+.aviso-seg{
+  display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;
+}
+.aviso-btn{
+  flex:0 0 auto;padding:8px 14px;
+  border:1.5px solid var(--line2);background:var(--bg2);
+  border-radius:22px;font-size:12px;font-weight:600;color:var(--t3);
+  cursor:pointer;font-family:inherit;
+  transition:all .15s var(--ease-ios);
+  -webkit-tap-highlight-color:transparent;
+}
+.aviso-btn:active{transform:scale(.93)}
+.aviso-btn.active{
+  border-color:var(--gold);background:var(--goldbg);color:var(--t1);
+  box-shadow:0 0 0 3px rgba(255,214,10,.12);
+}
+.aviso-none-btn{color:var(--t4)}
+.aviso-none-btn.active{
+  border-color:var(--line);background:var(--bg3);color:var(--t2);
+  box-shadow:none;
+}
+
+/* preview do toast */
+.aviso-preview{
+  border-radius:16px;
+  padding:11px 12px;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.75);
+  border:1px solid rgba(0,0,0,.07);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 4px 16px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  margin-top:2px;
+  transition:opacity .25s var(--ease-ios),transform .25s var(--ease-ios);
+  overflow:hidden;position:relative;
+}
+[data-theme="dark"] .aviso-preview{
+  background:rgba(26,26,26,.75);
+  border-color:rgba(255,255,255,.09);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 20px rgba(0,0,0,.4);
+}
+.aviso-preview.hidden{
+  opacity:0;transform:translateY(6px) scale(.97);pointer-events:none;
+}
+.aviso-preview-icon{
+  width:36px;height:36px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:var(--redbg);color:var(--red);
+  transition:background .2s,color .2s;
+}
+.aviso-preview-icon svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.aviso-preview-body{flex:1;min-width:0}
+.aviso-preview-label{font-size:9.5px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px}
+.aviso-preview-title{font-size:12.5px;font-weight:700;color:var(--t1);letter-spacing:-.15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aviso-preview-sub{font-size:11px;color:var(--t3);margin-top:1px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.aviso-preview-bar{
+  position:absolute;bottom:0;left:0;width:60%;height:2px;
+  border-radius:0 2px 2px 0;opacity:.5;
+}
+.aviso-preview-tag{
+  font-size:10px;font-weight:700;flex-shrink:0;
+  padding:3px 8px;border-radius:20px;
+  background:var(--goldbg);color:var(--gold);
+  border:1px solid var(--goldbd);
+  white-space:nowrap;
+}
+
 /* ─── FILTER CHIPS ─── */
 .provas-filter{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-bottom:14px;padding-bottom:2px}
 .provas-filter::-webkit-scrollbar{display:none}
@@ -2310,78 +2377,87 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 ═══════════════════════════════ */
 .exam-toast{
   position:fixed;
-  top:calc(env(safe-area-inset-top) + 10px);
-  left:50%;transform:translateX(-50%) translateY(-120%);
-  width:calc(100% - 32px);max-width:448px;
+  top:calc(env(safe-area-inset-top) + 12px);
+  left:50%;
+  transform:translateX(-50%) translateY(calc(-100% - 20px)) scale(.92);
+  width:calc(100% - 28px);max-width:440px;
   z-index:9999;
-  background:var(--bg1);
-  border-radius:20px;
-  padding:14px 16px;
-  display:flex;align-items:center;gap:13px;
-  box-shadow:0 8px 32px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.12);
-  border:1px solid var(--goldbd);
+  background:rgba(255,255,255,.88);
+  border-radius:22px;
+  padding:14px 14px 14px 14px;
+  display:flex;align-items:center;gap:12px;
+  box-shadow:0 2px 0 rgba(255,255,255,.6) inset,
+             0 12px 40px rgba(0,0,0,.14),
+             0 2px 8px rgba(0,0,0,.06);
+  border:1px solid rgba(0,0,0,.07);
   cursor:pointer;
-  transition:transform .48s cubic-bezier(0.32,0.72,0,1),
-             opacity .48s cubic-bezier(0.32,0.72,0,1);
   opacity:0;
   pointer-events:none;
-  backdrop-filter:saturate(180%) blur(24px);
-  -webkit-backdrop-filter:saturate(180%) blur(24px);
+  backdrop-filter:saturate(200%) blur(32px);
+  -webkit-backdrop-filter:saturate(200%) blur(32px);
+  transition:transform .5s cubic-bezier(0.34,1.3,0.64,1),
+             opacity .3s cubic-bezier(0.25,0.46,0.45,0.94);
+  will-change:transform,opacity;
+  overflow:hidden;
 }
 [data-theme="dark"] .exam-toast{
-  background:rgba(44,44,46,.96);
-  box-shadow:0 10px 40px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.3),0 0 0 1px var(--goldbd);
+  background:rgba(26,26,26,.82);
+  border-color:rgba(255,255,255,.09);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),
+             0 16px 48px rgba(0,0,0,.6),
+             0 2px 8px rgba(0,0,0,.3);
 }
 .exam-toast.show{
-  transform:translateX(-50%) translateY(0);
+  transform:translateX(-50%) translateY(0) scale(1);
   opacity:1;
   pointer-events:auto;
 }
 .exam-toast.hide{
-  transform:translateX(-50%) translateY(-120%);
+  transform:translateX(-50%) translateY(calc(-100% - 20px)) scale(.94);
   opacity:0;
   pointer-events:none;
-  transition:transform .36s cubic-bezier(0.4,0,1,1),
+  transition:transform .38s cubic-bezier(0.55,0,1,0.45),
              opacity .28s ease;
 }
 
-/* ícone colorido */
+/* ícone */
 .et-icon{
-  width:40px;height:40px;border-radius:12px;
+  width:42px;height:42px;border-radius:13px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  background:var(--redbg);
 }
-.et-icon svg{width:20px;height:20px;stroke:var(--red);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.et-icon svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* texto */
-.et-body{flex:1;min-width:0}
-.et-app{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
-.et-title{font-size:14px;font-weight:700;color:var(--t1);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.et-sub{font-size:12px;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.et-body{flex:1;min-width:0;padding-right:28px}
+.et-app{font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px}
+.et-title{font-size:13.5px;font-weight:700;color:var(--t1);line-height:1.35;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.et-sub{font-size:11.5px;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
 
-/* barra de cor da matéria */
-.et-accent{width:3px;height:36px;border-radius:2px;flex-shrink:0}
+/* barra de cor — faixa lateral */
+.et-accent{display:none}
 
-/* barra de progresso de auto-dismiss */
+/* barra de progresso */
 .et-progress{
-  position:absolute;bottom:0;left:0;right:0;height:2.5px;
-  background:transparent;border-radius:0 0 20px 20px;overflow:hidden;
+  position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:transparent;overflow:hidden;border-radius:0 0 22px 22px;
 }
-.et-progress-fill{height:100%;border-radius:0 0 20px 20px;width:100%;
-  transition:width linear;}
+.et-progress-fill{height:100%;width:100%;border-radius:0 0 22px 22px;
+  opacity:.55;transition:width linear;}
 
-/* botão "não lembrar mais" */
+/* botão fechar — X no canto */
 .et-dismiss-btn{
-  position:absolute;top:10px;right:12px;
-  display:flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:600;color:var(--t4);
+  position:absolute;top:50%;right:14px;transform:translateY(-50%);
+  width:26px;height:26px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:600;color:var(--t3);
   background:var(--bg3);border:1px solid var(--line2);
-  border-radius:20px;padding:4px 9px;cursor:pointer;
-  transition:color .15s,background .15s;
-  white-space:nowrap;
+  border-radius:50%;padding:0;cursor:pointer;
+  transition:color .15s,background .15s,opacity .15s;
+  flex-shrink:0;
 }
-.et-dismiss-btn:hover{color:var(--t2);background:var(--bg4)}
-.et-dismiss-btn:active{opacity:.6}
+.et-dismiss-btn::before{content:'✕';font-size:10px;line-height:1}
+.et-dismiss-btn:hover{color:var(--t1);background:var(--bg4)}
+.et-dismiss-btn:active{opacity:.6;transform:translateY(-50%) scale(.9)}
 
 /* ═══════════════════════════════
    BLOCO DE NOTAS — SISTEMA DE CORES
@@ -3249,7 +3325,12 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   .subj-sheet-overlay,
   .exam-sheet-overlay { left:264px; }
   .note-editor-overlay { left:264px; }
-  .exam-toast { left:calc(264px + 16px); right:16px; transform:none; max-width:460px; }
+  .exam-toast {
+    left:calc(264px + 16px); right:16px; max-width:460px;
+    transform:translateY(calc(-100% - 20px)) scale(.92);
+  }
+  .exam-toast.show { transform:translateY(0) scale(1); }
+  .exam-toast.hide { transform:translateY(calc(-100% - 20px)) scale(.94); }
 
   /* exam sheet: centered modal on desktop - handled below in sheet section */
 
@@ -4410,15 +4491,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* ══════════════════════════════════════
    TOAST — refinado
 ══════════════════════════════════════ */
-.exam-toast {
-  border-radius: 18px;
-  border: 1.5px solid var(--goldbd);
-  box-shadow: 0 8px 32px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.12);
-}
-[data-theme="dark"] .exam-toast {
-  background: var(--bg2);
-  box-shadow: 0 10px 40px rgba(0,0,0,.55), 0 2px 8px rgba(0,0,0,.3), 0 0 0 1px var(--goldbd);
-}
+/* exam-toast styles in base CSS */
 
 /* ── Day buttons ── */
 .day-btn {
@@ -5298,7 +5371,7 @@ input, textarea, select {
     <div class="et-title" id="et-title">Falta 1 dia para a prova!</div>
     <div class="et-sub" id="et-sub"></div>
   </div>
-  <button class="et-dismiss-btn" id="et-dismiss-btn" onclick="event.stopPropagation();openToastDismissConfirm()">Não lembrar mais</button>
+  <button class="et-dismiss-btn" id="et-dismiss-btn" onclick="event.stopPropagation();openToastDismissConfirm()" title="Não lembrar mais"></button>
   <div class="et-progress"><div class="et-progress-fill" id="et-progress-fill"></div></div>
 </div>
 
@@ -7504,6 +7577,7 @@ function pickSubj(name,color){
   if(btn)btn.classList.remove('open');
   // dispara mudança
   onExSubjChange();
+  if(typeof _updateAvisoPreview==="function")_updateAvisoPreview();
 }
 
 function selectSlot(sl,btn){
@@ -7575,6 +7649,7 @@ function selectDateCard(btn,dateStr){
   if(hidden)hidden.value=dateStr;
   const reveal=document.getElementById('ex-custom-reveal');
   if(reveal)reveal.classList.remove('open');
+  if(typeof _updateAvisoPreview==="function")_updateAvisoPreview();
 }
 
 function toggleCustomDate(){
@@ -7797,7 +7872,7 @@ function renderProvas(el){
           </div>
           <div class="aec-step">
             <div class="aec-step-lbl" id="ex-title-step-lbl"><span>2</span>Título da prova <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
-            <input class="aec-input" type="text" id="ex-title" placeholder="Título da prova">
+            <input class="aec-input" type="text" id="ex-title" placeholder="Título da prova" oninput="_updateAvisoPreview&&_updateAvisoPreview()">
           </div>
           <div id="ex-slot-wrap" style="display:none">
             <div class="aec-step-lbl" style="margin-top:0;margin-bottom:7px"><span>3</span>Dia da aula</div>
@@ -7811,6 +7886,30 @@ function renderProvas(el){
           <div class="aec-step" style="margin-top:14px">
             <div class="aec-step-lbl"><span>5</span>Conteúdo <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
             <textarea class="aec-input" id="ex-conteudo" rows="3" placeholder="Conteúdo..." style="resize:none;line-height:1.55;min-height:80px"></textarea>
+          </div>
+          <div class="aec-step" style="margin-top:14px">
+            <div class="aec-step-lbl"><span>6</span>Aviso antecipado <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <div class="aviso-seg" id="ex-aviso-seg">
+              <button class="aviso-btn aviso-none-btn" type="button" data-dias="0" onclick="setAvisoDias(0)">Nenhum</button>
+              <button class="aviso-btn" type="button" data-dias="1" onclick="setAvisoDias(1)">1 dia antes</button>
+              <button class="aviso-btn" type="button" data-dias="2" onclick="setAvisoDias(2)">2 dias antes</button>
+              <button class="aviso-btn" type="button" data-dias="3" onclick="setAvisoDias(3)">3 dias antes</button>
+              <button class="aviso-btn" type="button" data-dias="4" onclick="setAvisoDias(4)">4 dias antes</button>
+            </div>
+            <input type="hidden" id="ex-aviso-dias" value="1">
+            <!-- preview do aviso -->
+            <div class="aviso-preview" id="aviso-preview">
+              <div class="aviso-preview-icon" id="aviso-preview-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div class="aviso-preview-body">
+                <div class="aviso-preview-label">Turma 205 · Provas</div>
+                <div class="aviso-preview-title" id="aviso-preview-title">Falta 1 dia para a prova!</div>
+                <div class="aviso-preview-sub" id="aviso-preview-sub">Selecione a matéria e a data</div>
+              </div>
+              <div class="aviso-preview-tag" id="aviso-preview-tag">1 dia</div>
+              <div class="aviso-preview-bar" id="aviso-preview-bar" style="background:var(--gold)"></div>
+            </div>
           </div>
           <div class="aec-dup-banner" id="aec-dup-banner">
             <span class="aec-dup-banner-icon">⚠️</span>
@@ -7912,6 +8011,13 @@ function renderProvas(el){
     const card=document.getElementById('add-exam-card');
     if(card)card.classList.add('open');
   }
+  // inicializa aviso padrão = 1 dia
+  setTimeout(()=>{
+    if(typeof setAvisoDias==='function'){
+      const inp=document.getElementById('ex-aviso-dias');
+      if(inp)setAvisoDias(inp.value?parseInt(inp.value):1);
+    }
+  },0);
   updateExamBadge();
 }
 /* ─── EXAM DETAIL SHEET ─── */
@@ -8043,6 +8149,66 @@ function setExamTipo(tipo){
   // Atualiza label do step de título
   const titleStepLbl=document.getElementById('ex-title-step-lbl');
   if(titleStepLbl){const opt='<span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span>';titleStepLbl.innerHTML='<span>2</span>'+(tipo==="trabalho"?"Título do trabalho ":"Título da prova ")+opt;}
+  if(typeof _updateAvisoPreview==='function')_updateAvisoPreview();
+}
+
+function setAvisoDias(dias){
+  // atualiza hidden input
+  const inp=document.getElementById('ex-aviso-dias');
+  if(inp)inp.value=dias;
+  // atualiza pills
+  document.querySelectorAll('.aviso-btn').forEach(b=>{
+    b.classList.toggle('active', parseInt(b.dataset.dias)===dias);
+  });
+  _updateAvisoPreview();
+}
+
+function _updateAvisoPreview(){
+  const dias=parseInt(document.getElementById('ex-aviso-dias')?.value||'1');
+  const subj=document.getElementById('ex-subj')?.value||'';
+  const title=document.getElementById('ex-title')?.value?.trim()||'';
+  const examDate=document.getElementById('ex-date')?.value||'';
+  const tipo=document.getElementById('ex-tipo')?.value||'prova';
+  const preview=document.getElementById('aviso-preview');
+  const previewTitle=document.getElementById('aviso-preview-title');
+  const previewSub=document.getElementById('aviso-preview-sub');
+  const previewTag=document.getElementById('aviso-preview-tag');
+  const previewBar=document.getElementById('aviso-preview-bar');
+  const previewIcon=document.getElementById('aviso-preview-icon');
+  if(!preview)return;
+
+  if(dias===0){
+    preview.classList.add('hidden');
+    return;
+  }
+  preview.classList.remove('hidden');
+
+  // ícone por tipo
+  const svgProva='<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  const svgTrabalho='<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
+  if(previewIcon)previewIcon.innerHTML=tipo==='trabalho'?svgTrabalho:svgProva;
+
+  // cor da matéria
+  const color=subj?(SUBJECTS.find(s=>s.name===subj)?.color||SUBJ_COLORS[subj]||'var(--red)'):'var(--red)';
+  if(previewIcon){previewIcon.style.background=color+'1E';previewIcon.style.color=color;}
+  if(previewBar)previewBar.style.background=color;
+
+  // textos
+  const tipoLabel=tipo==='trabalho'?'trabalho':'prova';
+  const nomeSubj=subj||'matéria';
+  const txtDias=dias===1?'Falta 1 dia':`Faltam ${dias} dias`;
+  if(previewTitle)previewTitle.textContent=`${txtDias} para ${tipoLabel} de ${nomeSubj}!`;
+  if(previewTag)previewTag.textContent=dias===1?'1 dia':`${dias} dias`;
+
+  let subTxt='';
+  if(title)subTxt+=`"${title}"`;
+  if(examDate){
+    const d=new Date(examDate+'T00:00:00');
+    const DOW=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const fmt=d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    subTxt+=(subTxt?' · ':'')+DOW[d.getDay()]+', '+fmt;
+  }
+  if(previewSub)previewSub.textContent=subTxt||'Selecione matéria e data';
 }
 
 function addExam(){
@@ -8094,8 +8260,9 @@ function addExam(){
     return;
   }
 
+  const reminderDays=parseInt(document.getElementById('ex-aviso-dias')?.value||'1');
   const id='ex_'+Date.now();
-  exams.push({id,subj,examDate,title,valor,examTime,conteudo,tipo});
+  exams.push({id,subj,examDate,title,valor,examTime,conteudo,tipo,reminderDays});
   window._exSlotDow=null;window._exSlotTime=null;
   hideDup();
   saveExams();
@@ -9882,11 +10049,14 @@ function showExamToast(exam){
   const fill=document.getElementById('et-progress-fill');
   if(!toast||!title||!sub)return;
 
-  title.textContent=`Falta 1 dia para a prova de ${exam.subj}!`;
+  const rd=exam.reminderDays!=null?parseInt(exam.reminderDays):1;
+  const tipoLabel=exam.tipo==='trabalho'?'trabalho':'prova';
+  const txtDias=rd===1?'Falta 1 dia':`Faltam ${rd} dias`;
+  title.textContent=`${txtDias} para ${tipoLabel} de ${exam.subj}!`;
   sub.textContent=exam.title?`"${exam.title}" · ${fmtDateBR(exam.examDate)}`:fmtDateBR(exam.examDate);
   accent.style.background=color;
-  icon.style.background=color+'22';
-  icon.querySelector('svg').style.stroke=color;
+  icon.style.background=color+'1E';
+  icon.style.color=color;
   fill.style.background=color;
 
   // reset animação do progresso
@@ -9945,10 +10115,13 @@ function confirmToastDismissForever(){
 }
 
 function checkExamToasts(){
-  const tomorrow=exams.filter(e=>daysDiff(e.examDate)===1);
-  if(!tomorrow.length)return;
-  // mostra o mais urgente que ainda não foi mostrado nesta sessão e não foi dispensado permanentemente
-  for(const e of tomorrow){
+  // agrupa provas cujo aviso deve disparar hoje (reminderDays dias antes)
+  const toAlert=exams.filter(e=>{
+    const rd=e.reminderDays!=null?parseInt(e.reminderDays):1;
+    return rd>0 && daysDiff(e.examDate)===rd;
+  });
+  if(!toAlert.length)return;
+  for(const e of toAlert){
     if(!_shownToastIds.has(e.id)&&!_permanentlyDismissedToasts.has(e.id)){
       _shownToastIds.add(e.id);
       showExamToast(e);
@@ -10851,6 +11024,8 @@ function toggleExamForm(){
   const card=document.getElementById('add-exam-card');
   if(!card)return;
   card.classList.toggle('open');
+  // inicializa aviso padrão
+  if(typeof setAvisoDias==="function"){const inp=document.getElementById("ex-aviso-dias");if(inp&&inp.value==="")setAvisoDias(1);}
 }
 </script>
 <!-- POPUP LOGOUT GOOGLE -->
