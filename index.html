@@ -1751,23 +1751,22 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .field-wrap input::placeholder{color:var(--t3)}
 
 /* exam list */
-.exam-list{display:flex;flex-direction:column;gap:7px}
+.exam-list{display:flex;flex-direction:column;gap:8px}
 .exam-item{
   background:var(--bg1);
-  border:1px solid var(--line2);
-  border-left:3.5px solid var(--gold);
-  border-radius:14px;
-  padding:13px 14px 12px;
-  display:flex;flex-direction:column;gap:8px;
+  border:1.5px solid var(--line2);
+  border-radius:16px;
+  padding:14px 15px 12px;
+  display:flex;flex-direction:column;gap:9px;
   transition:background .14s var(--ease-ios),border-color .14s;
   animation:fadeIn .22s var(--ease-ios) both;
   overflow:hidden;cursor:default;
 }
 .exam-item[onclick]{cursor:pointer}
 .exam-item:active{background:var(--bg2)}
-.exam-item.done{opacity:.52;border-left-color:var(--t4)!important;filter:saturate(.5)}
-.exam-item.soon{border-color:var(--amberbd);border-left-color:var(--amber)}
-.exam-item.today-exam{border-color:var(--redbd);border-left-color:var(--red);background:var(--redbg)}
+.exam-item.done{opacity:.45;filter:saturate(.4)}
+.exam-item.soon{border-color:var(--amberbd)}
+.exam-item.today-exam{border-color:var(--redbd);background:var(--redbg)}
 .exam-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .exam-item-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
 .exam-tipo-pill{letter-spacing:.2px;
@@ -4283,7 +4282,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .exam-item {
   border-radius: var(--r-lg);
   border: 1.5px solid var(--line2);
-  border-left: 3.5px solid var(--gold);
   box-shadow: var(--shadow-card);
 }
 [data-theme="dark"] .exam-item {
@@ -7781,32 +7779,129 @@ function validateExDate(){return true;}
 
 /* filter state */
 let provasFilter='all';
+let provasSortAZ=false;
 function setProvasFilter(val){provasFilter=val;render(null);}
+function toggleProvasSort(){provasSortAZ=!provasSortAZ;render(null);}
 
 function renderProvas(el){
   const upcoming=exams.filter(e=>!isExamPast(e));
   const done=exams.filter(e=>isExamPast(e));
   const soon=exams.filter(e=>{const d=daysDiff(e.examDate);return !isExamPast(e)&&d>=0&&d<=7;});
   const totalValor=upcoming.reduce((a,e)=>a+(parseFloat(e.valor)||0),0);
+  const _DOW_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const sortedUp=[...upcoming].sort((a,b)=>a.examDate.localeCompare(b.examDate));
+
+  /* ── Hero: próxima prova ── */
+  let heroHtml='';
+  if(sortedUp.length>0){
+    const nx=sortedUp[0];
+    const nxColor=SUBJECTS.find(s=>s.name===nx.subj)?.color||SUBJ_COLORS[nx.subj]||'var(--gold)';
+    const diff=daysDiff(nx.examDate);
+    const ms=msUntilExam(nx.examDate,nx.examTime);
+    const cd=fmtCd(ms);
+    const isToday=diff===0;
+    const isTomorrow=diff===1;
+    const tipoLabel=nx.tipo==='trabalho'?'Próximo Trabalho':'Próxima Prova';
+    const tipoSvg=nx.tipo==='trabalho'
+      ?`<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
+      :`<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+
+    /* Status label: Hoje / Amanhã / Xd */
+    let statusTxt, statusColor, statusBg;
+    if(isToday){statusTxt='HOJE';statusColor='var(--red)';statusBg='var(--redbg)';}
+    else if(isTomorrow){statusTxt='Amanhã';statusColor='var(--amber)';statusBg='var(--amberbg)';}
+    else if(diff<=7){statusTxt=`${diff}d`;statusColor='var(--amber)';statusBg='var(--amberbg)';}
+    else{statusTxt=`${diff}d`;statusColor=nxColor;statusBg=nxColor+'22';}
+
+    /* Dia, data e hora formatados */
+    const _DIAS_COMPLETO=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const _MESES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const nxDate=new Date(nx.examDate+'T00:00:00');
+    const dowFull=_DIAS_COMPLETO[nxDate.getDay()];
+    const dia=nxDate.getDate();
+    const mes=_MESES[nxDate.getMonth()];
+    const timeStart=nx.examTime?nx.examTime.split(/[–\-]/)[0].trim():'';
+    const dateBlock=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px">
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);background:var(--bg2);border:1px solid var(--line2);padding:5px 10px;border-radius:8px">
+        <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ${dowFull}, ${dia} de ${mes}
+      </span>
+      ${timeStart?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);background:var(--bg2);border:1px solid var(--line2);padding:5px 10px;border-radius:8px">
+        <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        ${timeStart}
+      </span>`:''}
+    </div>`;
+
+    /* Conteúdo da prova */
+    const conteudoBlock=nx.conteudo?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:5px">
+      ${nx.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span style="font-size:11px;font-weight:500;color:var(--t3);background:var(--bg2);border:1px solid var(--line2);padding:3px 8px;border-radius:6px">${escHtml(t)}</span>`).join('')}
+    </div>`:'';
+
+    /* Barra de urgência */
+    const pct=Math.max(0,Math.min(100,Math.round((1-Math.min(diff,14)/14)*100)));
+    const barColor=isToday?'var(--red)':diff<=3?'var(--amber)':nxColor;
+
+    /* Cronômetro ao vivo só aparece quando ≤ 3 dias */
+    const cdBlock=(diff<=3&&!isToday)
+      ?`<div style="display:flex;gap:0;align-items:baseline;margin-top:10px" class="neh-cd">
+          <div class="neh-cd-block"><span class="neh-cd-num">${cd.h}</span><span class="neh-cd-lbl">Horas</span></div>
+          <span class="neh-cd-sep">:</span>
+          <div class="neh-cd-block"><span class="neh-cd-num">${cd.m}</span><span class="neh-cd-lbl">Min</span></div>
+          <span class="neh-cd-sep">:</span>
+          <div class="neh-cd-block"><span class="neh-cd-num">${cd.s}</span><span class="neh-cd-lbl">Seg</span></div>
+        </div>`
+      :isToday
+      ?`<div style="display:flex;gap:0;align-items:baseline;margin-top:10px" class="neh-cd">
+          <div class="neh-cd-block"><span class="neh-cd-num" style="color:var(--red)">${cd.h}</span><span class="neh-cd-lbl">Horas</span></div>
+          <span class="neh-cd-sep">:</span>
+          <div class="neh-cd-block"><span class="neh-cd-num" style="color:var(--red)">${cd.m}</span><span class="neh-cd-lbl">Min</span></div>
+          <span class="neh-cd-sep">:</span>
+          <div class="neh-cd-block"><span class="neh-cd-num" style="color:var(--red)">${cd.s}</span><span class="neh-cd-lbl">Seg</span></div>
+        </div>`
+      :'';
+
+    const valorBadge=nx.valor?`<div class="neh-valor">${parseFloat(nx.valor).toFixed(1)} pts</div>`:'';
+
+    heroHtml=`<div class="next-exam-hero" style="--accent-color:${nxColor};border-left-color:${nxColor}" onclick="openExamDetail('${nx.id}')">
+      ${valorBadge}
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div style="min-width:0;flex:1">
+          <div class="neh-eyebrow" style="color:${nxColor}">${tipoSvg}<span class="dot" style="background:${nxColor}"></span>${tipoLabel}</div>
+          <div class="neh-subj">${escHtml(nx.subj)}</div>
+          ${nx.title?`<div class="neh-title">${escHtml(nx.title)}</div>`:''}
+        </div>
+        <div style="flex-shrink:0;padding:5px 12px;border-radius:10px;background:${statusBg};color:${statusColor};font-size:13px;font-weight:800;font-family:var(--ffm);letter-spacing:-.3px;white-space:nowrap;margin-top:2px">${statusTxt}</div>
+      </div>
+      ${dateBlock}
+      ${conteudoBlock}
+      ${cdBlock}
+      <div style="height:3px;background:var(--line);border-radius:2px;margin-top:14px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:2px;transition:width .6s var(--ease-ios)"></div></div>
+    </div>`;
+  }
+
+  /* ── todayExams (usado nas stats) ── */
+  const todayExams=upcoming.filter(e=>daysDiff(e.examDate)===0);
+  let todayAlertHtml='';
 
   let statsHtml='';
   if(exams.length>0){
+    const todayCount=todayExams.length;
     statsHtml=`<div class="provas-stats-v2">
       <div class="ps2-card">
         <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${upcoming.length}</div><div class="ps2-lbl">Pr\u00f3ximas</div></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${upcoming.length}</div><div class="ps2-lbl">Próximas</div></div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${soon.length}</div><div class="ps2-lbl">Esta semana</div></div>
+        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--amber)">${soon.length}</div><div class="ps2-lbl">Esta semana</div>${todayCount>0?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">${todayCount} hoje</div>`:''}</div>
       </div>
       <div class="ps2-card">
         <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${totalValor>0?totalValor.toFixed(1):'\u2014'}</div><div class="ps2-lbl">Pts em aberto</div></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${totalValor>0?totalValor.toFixed(1):'—'}</div><div class="ps2-lbl">Pts em jogo</div></div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--bg3)"><svg viewBox="0 0 24 24" style="stroke:var(--t3)"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--t3)">${done.length}</div><div class="ps2-lbl">Realizadas</div></div>
+        <div class="ps2-icon" style="background:var(--greenbg)"><svg viewBox="0 0 24 24" style="stroke:var(--green)"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--green)">${done.length}</div><div class="ps2-lbl">Realizadas</div></div>
       </div>
     </div>`;
   }
@@ -7814,12 +7909,15 @@ function renderProvas(el){
   const examSubjs=[...new Set(exams.map(e=>e.subj))];
   let filterHtml='';
   if(examSubjs.length>1){
-    filterHtml=`<div class="provas-filter">
-      <div class="pf-chip${provasFilter==='all'?' active':''}" onclick="setProvasFilter('all')">Todas</div>
-      ${examSubjs.map(s=>{
-        const act=provasFilter===s;
-        return`<div class="pf-chip${act?' active':''}" onclick="setProvasFilter('${s.replace(/'/g,"\\'")}')">${escHtml(s)}</div>`;
-      }).join('')}
+    filterHtml=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <div class="provas-filter" style="flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0;padding-bottom:2px">
+        <div class="pf-chip${provasFilter==='all'?' active':''}" onclick="setProvasFilter('all')">Todas</div>
+        ${examSubjs.map(s=>{const act=provasFilter===s;return`<div class="pf-chip${act?' active':''}" onclick="setProvasFilter('${s.replace(/'/g,"\\'")}')">${escHtml(s)}</div>`;}).join('')}
+      </div>
+      <button onclick="toggleProvasSort()" style="flex-shrink:0;display:flex;align-items:center;gap:5px;padding:7px 12px;border:1.5px solid var(--line2);background:var(--bg2);border-radius:20px;font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;font-family:inherit;white-space:nowrap">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+        ${provasSortAZ?'A–Z':'Data'}
+      </button>
     </div>`;
   }
 
@@ -7925,42 +8023,49 @@ function renderProvas(el){
   </div>`;
 
   const filtered=provasFilter==='all'?[...exams]:exams.filter(e=>e.subj===provasFilter);
-  const sorted=[...filtered].sort((a,b)=>a.examDate.localeCompare(b.examDate));
+  let sorted;
+  if(provasSortAZ){
+    sorted=[...filtered].sort((a,b)=>{if(a.subj<b.subj)return -1;if(a.subj>b.subj)return 1;return a.examDate.localeCompare(b.examDate);});
+  }else{
+    sorted=[...filtered].sort((a,b)=>a.examDate.localeCompare(b.examDate));
+  }
 
   let listHtml='';
   if(exams.length===0){
-    listHtml=`<div class="exam-empty"><strong>Nenhuma prova marcada</strong>Use o formul\u00e1rio acima para marcar suas pr\u00f3ximas provas.</div>`;
+    listHtml=`<div class="exam-empty"><strong>Nenhuma prova marcada</strong>Use o formulário para marcar suas próximas provas e trabalhos.</div>`;
   }else if(sorted.length===0){
-    listHtml=`<div class="exam-empty" style="padding:28px 16px"><strong>Nenhuma prova desta mat\u00e9ria</strong>Selecione outra mat\u00e9ria no filtro.</div>`;
+    listHtml=`<div class="exam-empty" style="padding:28px 16px"><strong>Nenhuma prova desta matéria</strong>Selecione outra matéria no filtro.</div>`;
   }else{
     const upcomingExams=sorted.filter(e=>!isExamPast(e));
     const doneExams=sorted.filter(e=>isExamPast(e)).reverse();
+    const _DOW_COMPAT=_DOW_PT; // alias
+
     const buildItem=(e)=>{
       const diff=daysDiff(e.examDate);
-      const isPast=isExamPast(e);const isToday=diff===0&&!isPast;const isSoon=diff>0&&diff<=3&&!isPast;
+      const isPast=isExamPast(e);
+      const isToday=diff===0&&!isPast;
+      const isSoon=diff>0&&diff<=3&&!isPast;
       let badgeCls,badgeTxt,itemCls;
       if(isPast){badgeCls='done-badge';badgeTxt='Realizada';itemCls='done';}
       else if(isToday){badgeCls='today-badge';badgeTxt='HOJE';itemCls='today-exam';}
-      else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff}d`;itemCls='soon';}
+      else if(diff===1){badgeCls='soon-badge';badgeTxt='Amanhã';itemCls='soon';}
+      else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff} dias`;itemCls='soon';}
       else{badgeCls='future-badge';badgeTxt=`${diff}d`;itemCls='';}
-      const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'#505050';
+      const subjColor=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'var(--gold)';
       const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
       const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
       const tipoIcon=e.tipo==='trabalho'
         ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
         :`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
-      // extrai só o horário de início (ex: "07:00 – 07:50" → "07:00")
       const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
       const metaTxt=timeStart?`${fmtDateBR(e.examDate)} · ${timeStart}`:fmtDateBR(e.examDate);
-      const _DOW_ABBR=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-      const dowLabel=_DOW_ABBR[new Date(e.examDate+'T00:00:00').getDay()];
+      const dowLabel=_DOW_PT[new Date(e.examDate+'T00:00:00').getDay()];
       const dateSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
       const infoBadge=`<div class="exam-info-badge">${dateSvg}<span class="exam-dow-label">${dowLabel}</span>${metaTxt}</div>`;
-      
       const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
       const notifScheduled=getExamNotif(e.id);
       const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--gold)" stroke="var(--gold)"/>':''}</svg></button>`;
-      const conteudoHtml=(!isPast&&e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
+      const conteudoHtml=(e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
       return`<div class="exam-item ${itemCls}" ${clickAttr}>
         <div class="exam-item-head">
           <div class="exam-item-head-left">
@@ -7985,13 +8090,50 @@ function renderProvas(el){
         </div>
       </div>`;
     };
-    if(upcomingExams.length>0){
-      listHtml+=`<div class="section-label">Pr\u00f3ximas provas</div><div class="exam-list">`;
-      upcomingExams.forEach(e=>{listHtml+=buildItem(e);});
-      listHtml+='</div>';
+
+    // Agrupa por período
+    const todayList=upcomingExams.filter(e=>daysDiff(e.examDate)===0);
+    const urgList=upcomingExams.filter(e=>{const d=daysDiff(e.examDate);return d===1||d===2||d===3;});
+    const now=new Date();now.setHours(0,0,0,0);
+    const endOfWeek=new Date(now);endOfWeek.setDate(now.getDate()+(6-now.getDay()));
+    const weekList=upcomingExams.filter(e=>{
+      const d=daysDiff(e.examDate);
+      if(d<=3||d===0)return false;
+      const ed=new Date(e.examDate+'T00:00:00');
+      return ed<=endOfWeek;
+    });
+    const startNextWeek=new Date(endOfWeek);startNextWeek.setDate(endOfWeek.getDate()+1);
+    const endNextWeek=new Date(startNextWeek);endNextWeek.setDate(startNextWeek.getDate()+6);
+    const nextWeekList=upcomingExams.filter(e=>{
+      const ed=new Date(e.examDate+'T00:00:00');
+      return ed>endOfWeek&&ed<=endNextWeek;
+    });
+    const laterList=upcomingExams.filter(e=>{
+      const ed=new Date(e.examDate+'T00:00:00');
+      return ed>endNextWeek;
+    });
+
+    const secLabel=(txt,items,color)=>{
+      const n=items.length;
+      const dot=color?`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${color};margin-right:5px;flex-shrink:0;vertical-align:middle"></span>`:'';
+      return`<div class="section-label" style="color:${color||'var(--t3)'};display:flex;align-items:center">${dot}${txt}<span style="margin-left:6px;font-size:11px;font-weight:700;background:var(--bg3);color:${color||'var(--t4)'};padding:1px 7px;border-radius:10px">${n}</span></div>`;
+    };
+
+    if(provasSortAZ){
+      if(upcomingExams.length>0){
+        listHtml+=secLabel('Próximas',upcomingExams,'')+`<div class="exam-list">`;
+        upcomingExams.forEach(e=>{listHtml+=buildItem(e);});
+        listHtml+='</div>';
+      }
+    }else{
+      if(todayList.length>0){listHtml+=secLabel('Hoje',todayList,'var(--red)')+`<div class="exam-list">`;todayList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(urgList.length>0){listHtml+=secLabel('Próximos 3 dias',urgList,'var(--amber)')+`<div class="exam-list">`;urgList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(weekList.length>0){listHtml+=secLabel('Esta semana',weekList,'')+`<div class="exam-list">`;weekList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(nextWeekList.length>0){listHtml+=secLabel('Semana que vem',nextWeekList,'')+`<div class="exam-list">`;nextWeekList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(laterList.length>0){listHtml+=secLabel('Em breve',laterList,'')+`<div class="exam-list">`;laterList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
     }
     if(doneExams.length>0){
-      listHtml+=`<div class="section-label">Provas realizadas</div><div class="exam-list">`;
+      listHtml+=secLabel('Realizadas',doneExams,'')+`<div class="exam-list">`;
       doneExams.forEach(e=>{listHtml+=buildItem(e);});
       listHtml+='</div>';
     }
@@ -8001,11 +8143,11 @@ function renderProvas(el){
   const isDesktop=window.innerWidth>=768;
   let inner;
   if(hasExams){
-    inner=`<div class="provas-2col">`+formHtml+`<div class="provas-list-col">`+listHtml+`</div></div>`;
+    inner=`<div class="provas-2col">`+formHtml+`<div class="provas-list-col">`+filterHtml+listHtml+`</div></div>`;
   }else{
-    inner=`<div class="provas-form-centered">` +formHtml+`</div>`;
+    inner=`<div class="provas-form-centered">`+formHtml+`</div>`;
   }
-  el.innerHTML=`<div class="provas-page-wrap">`+statsHtml+filterHtml+inner+`</div>`;
+  el.innerHTML=`<div class="provas-page-wrap">`+heroHtml+todayAlertHtml+statsHtml+(hasExams?'':filterHtml)+inner+`</div>`;
   // Desktop: força o form sempre aberto
   if(isDesktop){
     const card=document.getElementById('add-exam-card');
