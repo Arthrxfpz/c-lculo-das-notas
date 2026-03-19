@@ -48,12 +48,34 @@
   let _syncTimer = null;
   let _currentUid = null;
 
-  /* ── Remove a tela de splash com fade ── */
+  /* ── Controle do splash com progresso ── */
+  let _splashSlowTimer = null;
+
+  function _setSplashProgress(pct, label) {
+    const bar   = document.getElementById('splash-bar');
+    const pctEl = document.getElementById('splash-pct');
+    const lbl   = document.getElementById('splash-label');
+    if (bar)   bar.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+    if (lbl && label) lbl.textContent = label;
+  }
+  window._setSplashProgress = _setSplashProgress;
+
+  function _showSplashSlow() {
+    const el = document.getElementById('splash-slow');
+    if (el) el.style.display = 'flex';
+  }
+
   window._hideSplash = function() {
-    const splash = document.getElementById('app-splash');
-    if (!splash) return;
-    splash.style.opacity = '0';
-    setTimeout(() => splash.remove(), 380);
+    clearTimeout(_splashSlowTimer);
+    _setSplashProgress(100, 'Tudo certo!');
+    // Pequena pausa para o usuário ver 100% antes de sumir
+    setTimeout(() => {
+      const splash = document.getElementById('app-splash');
+      if (!splash) return;
+      splash.style.opacity = '0';
+      setTimeout(() => splash.remove(), 400);
+    }, 320);
   };
 
   /* ── Salva tudo no Firestore (debounced 800ms) ── */
@@ -102,15 +124,23 @@
 
   /* ── Carrega dados do Firestore ── */
   async function _fbLoadAll(uid) {
+    _setSplashProgress(20, 'Conectando ao servidor…');
     _showSyncBadge('checking');
+
+    // Aviso de conexão lenta após 3s
+    _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
+
     try {
+      _setSplashProgress(40, 'Verificando dados…');
       const snap = await getDoc(doc(db, 'users', uid));
+      clearTimeout(_splashSlowTimer);
+
       if (snap.exists()) {
         const d = snap.data();
         const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
         const remoteTs = d.updatedAt || 0;
         if (remoteTs > localTs) {
-          // Dado mais novo em outro dispositivo — aplica no localStorage e recarrega
+          _setSplashProgress(65, 'Sincronizando dados…');
           if (d.grades)    localStorage.setItem('t205_grades',    JSON.stringify(d.grades));
           if (d.exams)     localStorage.setItem('t205_exams',     JSON.stringify(d.exams));
           if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
@@ -118,18 +148,24 @@
           if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
           if (d.theme)     localStorage.setItem('t205_theme',     d.theme);
           localStorage.setItem('t205_updatedAt', String(remoteTs));
-          location.reload();
+          _setSplashProgress(90, 'Aplicando atualizações…');
+          setTimeout(() => location.reload(), 200);
           return; // splash fica visível durante o reload
         }
+        _setSplashProgress(85, 'Dados atualizados!');
         _showSyncBadge('ok');
       } else {
+        _setSplashProgress(85, 'Pronto!');
         _showSyncBadge('idle');
       }
     } catch(e) {
+      clearTimeout(_splashSlowTimer);
+      _setSplashProgress(85, 'Erro de conexão');
       _showSyncBadge('err');
       console.error('Firebase load error:', e);
     }
-    _hideSplash();
+    _setSplashProgress(95, 'Carregando interface…');
+    setTimeout(_hideSplash, 150);
   }
 
   /* ── Preenche o perfil com dados do Google ── */
@@ -159,20 +195,30 @@
 
   /* ── Observer: login / logout ── */
   onAuthStateChanged(auth, async (user) => {
+    clearTimeout(_splashSlowTimer);
     _currentUid = user ? user.uid : null;
     _updateAuthUI(user);
     if (user) {
+      _setSplashProgress(10, 'Verificando sessão…');
+      // Aviso de conexão lenta só quando há tentativa de sync com servidor
+      _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
       _applyGoogleProfile(user);
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
     } else {
-      _hideSplash(); // sessão expirada ou não logado — libera o splash
-      // Mostra o prompt de login se o usuário ainda não dispensou
+      // Sem login — pula direto pra 100% sem animação
+      const bar = document.getElementById('splash-bar');
+      const pctEl = document.getElementById('splash-pct');
+      if (bar) { bar.style.transition = 'none'; bar.style.width = '100%'; }
+      if (pctEl) pctEl.textContent = '100%';
       setTimeout(() => {
-        if (!localStorage.getItem('t205_skip_login_prompt')) {
-          const el = document.getElementById('login-prompt-overlay');
-          if (el) el.classList.add('open');
-        }
-      }, 420);
+        _hideSplash();
+        setTimeout(() => {
+          if (!localStorage.getItem('t205_skip_login_prompt')) {
+            const el = document.getElementById('login-prompt-overlay');
+            if (el) el.classList.add('open');
+          }
+        }, 420);
+      }, 80);
     }
   });
 
@@ -5316,17 +5362,65 @@ input, textarea, select {
 <!-- ── Splash de carregamento ── -->
 <div id="app-splash" style="
   position:fixed;inset:0;z-index:99999;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
   background:#000000;
-  transition:opacity .35s ease;
+  transition:opacity .4s ease;
 ">
+  <!-- Spinner -->
   <div style="
-    width:36px;height:36px;border-radius:50%;
-    border:3px solid rgba(255,214,10,.18);
+    width:34px;height:34px;border-radius:50%;
+    border:2.5px solid rgba(255,214,10,.15);
     border-top-color:#FFD60A;
-    animation:splash-spin .7s linear infinite;
+    animation:splash-spin .75s linear infinite;
+    margin-bottom:22px;
   "></div>
-  <span style="font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;font-size:13px;color:rgba(220,220,245,.4);letter-spacing:.02em;">Carregando</span>
+
+  <!-- Label fixa -->
+  <div id="splash-label" style="
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+    font-size:13px;font-weight:600;
+    color:rgba(255,255,255,.55);
+    letter-spacing:.01em;
+    margin-bottom:18px;
+  ">Carregando</div>
+
+  <!-- Barra de progresso -->
+  <div style="width:160px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:10px">
+    <div id="splash-bar" style="
+      height:100%;width:0%;
+      background:#FFD60A;
+      border-radius:2px;
+      transition:width .35s ease;
+    "></div>
+  </div>
+
+  <!-- Percentual -->
+  <div id="splash-pct" style="
+    font-family:ui-monospace,'SF Mono',monospace;
+    font-size:11px;font-weight:700;
+    color:rgba(255,214,10,.45);
+    letter-spacing:.05em;
+  ">0%</div>
+
+  <!-- Aviso de conexão lenta (oculto por padrão) -->
+  <div id="splash-slow" style="
+    margin-top:22px;
+    display:none;
+    align-items:center;gap:7px;
+    background:rgba(255,159,10,.1);
+    border:1px solid rgba(255,159,10,.25);
+    border-radius:10px;
+    padding:8px 14px;
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+    font-size:11px;font-weight:600;
+    color:rgba(255,159,10,.8);
+  ">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M1 6s4-2 11-2 11 2 11 2"/><path d="M5 10s2.5-1 7-1 7 1 7 1"/>
+      <path d="M9 14s1.5-.5 3-.5 3 .5 3 .5"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+    </svg>
+    Conexão lenta…
+  </div>
 </div>
 <style>
 @keyframes splash-spin{to{transform:rotate(360deg)}}
@@ -10938,8 +11032,13 @@ window.addEventListener('load',()=>{
     }
   });
   // Firebase sempre remove o splash (logado ou não) via onAuthStateChanged
-  // Fallback: se Firebase não responder em 4s, remove o splash de qualquer forma
-  setTimeout(() => { if(window._hideSplash) _hideSplash(); }, 4000);
+  // Fallback: se Firebase não responder em 6s, remove o splash de qualquer forma
+  setTimeout(() => { 
+    if(document.getElementById('app-splash')) {
+      if(window._setSplashProgress) window._setSplashProgress(100, 'Tempo esgotado');
+      if(window._hideSplash) window._hideSplash();
+    }
+  }, 6000);
 });
 setInterval(updateGreeting,60000);
 setInterval(checkExamToasts,60000);
