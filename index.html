@@ -5157,139 +5157,155 @@ input, textarea, select {
 /* ══════════════════════════════════════════
    CALENDÁRIO
 ══════════════════════════════════════════ */
-.cal-wrap{padding:0 16px 36px}
-.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:14px 0 18px;gap:8px}
-.cal-nav-title{font-size:20px;font-weight:700;color:var(--t1);letter-spacing:-.6px;text-align:center;flex:1}
+.cal-wrap{padding:0 0 40px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 20px;gap:8px}
+.cal-nav-title{font-size:22px;font-weight:800;color:var(--t1);letter-spacing:-.7px;text-align:center;flex:1}
+.cal-nav-title span{color:var(--t3);font-weight:500;font-size:18px;margin-left:5px}
 /* slide animations */
-@keyframes calSlideInRight{from{opacity:0;transform:translateX(48px)}to{opacity:1;transform:translateX(0)}}
-@keyframes calSlideInLeft{from{opacity:0;transform:translateX(-48px)}to{opacity:1;transform:translateX(0)}}
-.cal-grid-wrap{overflow:hidden}
-.cal-grid-wrap.slide-right{animation:calSlideInRight .26s var(--ease-ios)}
-.cal-grid-wrap.slide-left{animation:calSlideInLeft .26s var(--ease-ios)}
+@keyframes calSlideInRight{from{opacity:0;transform:translateX(32px)}to{opacity:1;transform:translateX(0)}}
+@keyframes calSlideInLeft{from{opacity:0;transform:translateX(-32px)}to{opacity:1;transform:translateX(0)}}
+.cal-grid-wrap{overflow:hidden;padding:0 14px}
+.cal-grid-wrap.slide-right{animation:calSlideInRight .22s var(--ease-ios)}
+.cal-grid-wrap.slide-left{animation:calSlideInLeft .22s var(--ease-ios)}
 .cal-nav-btn{
-  width:36px;height:36px;
-  background:var(--bg2);border:1px solid var(--line2);border-radius:12px;
+  width:38px;height:38px;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:13px;
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;transition:background .15s,opacity .15s,transform .1s;flex-shrink:0;
 }
 .cal-nav-btn:active{opacity:.6;transform:scale(.88)}
-.cal-nav-btn svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.cal-nav-btn:disabled{opacity:.22;pointer-events:none}
-.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:6px}
-.cal-wd{text-align:center;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;padding:3px 0 7px}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-nav-btn svg{width:15px;height:15px;stroke:var(--t1);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.cal-nav-btn:disabled{opacity:.2;pointer-events:none}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);padding:0 14px;margin-bottom:4px}
+.cal-wd{text-align:center;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;padding:2px 0 9px}
+.cal-wd:first-child{color:var(--red);opacity:.7}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
 .cal-day{
   aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border-radius:12px;cursor:pointer;position:relative;
+  border-radius:11px;cursor:pointer;position:relative;
   transition:background .12s var(--ease-ios),transform .1s;
   -webkit-tap-highlight-color:transparent;
+  padding-bottom:2px;
 }
+.cal-day:hover:not(.empty){background:var(--bg2)}
 .cal-day:active:not(.empty){background:var(--bg3);transform:scale(.88)}
 .cal-day.empty{cursor:default;pointer-events:none}
-.cal-day-num{font-size:14px;font-weight:500;color:var(--t1);line-height:1;z-index:1;letter-spacing:-.2px}
-.cal-day.sunday .cal-day-num{color:var(--red)}
+.cal-day-num{font-size:14px;font-weight:500;color:var(--t2);line-height:1;z-index:1;letter-spacing:-.2px;transition:color .12s}
+.cal-day.has-exam .cal-day-num{color:var(--t1);font-weight:700}
+.cal-day.sunday .cal-day-num{color:var(--red);opacity:.8}
 /* hoje — círculo accent */
 .cal-day.today .cal-day-num{
-  width:30px;height:30px;border-radius:50%;
-  background:var(--accent,var(--gold));color:var(--accent-text,#000);
+  width:32px;height:32px;border-radius:50%;
+  background:var(--gold);color:var(--accent-text,#000);
   display:flex;align-items:center;justify-content:center;
   font-weight:800;font-size:14px;
 }
 .cal-day.today.sunday .cal-day-num{color:var(--accent-text,#000)}
-/* dots */
-.cal-day-dots{display:flex;gap:3px;margin-top:4px;height:5px;align-items:center}
-.cal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
-/* feriado — traço âmbar embaixo do número */
-.cal-day.feriado .cal-day-num{text-decoration:underline;text-decoration-color:var(--amber);text-underline-offset:3px;text-decoration-thickness:2px}
-.cal-day.today.feriado .cal-day-num{text-decoration:none}
-.cal-day.today.feriado::after{
+/* dots - redesigned as a thin bar */
+.cal-day-dots{display:flex;gap:2px;margin-top:5px;height:4px;align-items:center;justify-content:center}
+.cal-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
+/* feriado — pontinho âmbar embaixo */
+.cal-day.feriado .cal-day-num{color:var(--amber)}
+.cal-day.today.feriado .cal-day-num{color:var(--accent-text,#000)}
+.cal-day.feriado:not(.today)::after{
   content:'';position:absolute;bottom:5px;left:50%;transform:translateX(-50%);
-  width:5px;height:5px;border-radius:50%;background:var(--amber);
+  width:3px;height:3px;border-radius:50%;background:var(--amber);
 }
 
 /* ── Cal Day Sheet ── */
 .cal-day-sheet-overlay{
   display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.52);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  background:rgba(0,0,0,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   z-index:610;align-items:flex-end;justify-content:center;
 }
 .cal-day-sheet-overlay.open{display:flex}
 .cal-day-sheet{
   background:var(--bg1);border-radius:28px 28px 0 0;
-  width:100%;max-width:480px;max-height:80dvh;
+  width:100%;max-width:480px;max-height:82dvh;
   display:flex;flex-direction:column;
   animation:slideUp .38s var(--ease-sheet);
 }
-.cal-day-sheet-handle-row{padding:10px 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.cal-day-sheet-handle{width:36px;height:4px;background:var(--line);border-radius:4px}
+.cal-day-sheet-handle-row{padding:12px 20px 0;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cal-day-sheet-handle{width:36px;height:4px;background:var(--bg4);border-radius:4px}
 .cal-day-sheet-head{
-  flex-shrink:0;padding:16px 20px 14px;
-  border-bottom:0.5px solid var(--line3);
+  flex-shrink:0;padding:14px 20px 14px;
+  border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:12px;
 }
-.cal-day-sheet-date{font-size:22px;font-weight:700;color:var(--t1);letter-spacing:-.5px}
-.cal-day-sheet-dow{font-size:13px;font-weight:500;color:var(--t3);margin-top:2px}
-.cal-day-sheet-body{flex:1;overflow-y:auto;padding:14px 20px 28px;display:flex;flex-direction:column;gap:10px}
+.cal-day-sheet-date-block{flex:1}
+.cal-day-sheet-date{font-size:24px;font-weight:800;color:var(--t1);letter-spacing:-.6px;line-height:1}
+.cal-day-sheet-dow{font-size:13px;font-weight:500;color:var(--t3);margin-top:3px}
+.cal-day-sheet-body{flex:1;overflow-y:auto;padding:14px 18px 28px;display:flex;flex-direction:column;gap:8px}
 /* feriado pill */
 .cal-feriado-pill{
   display:flex;align-items:center;gap:10px;
-  background:var(--amberbg);border:1px solid var(--amberbd);border-radius:12px;
-  padding:12px 14px;
+  background:var(--amberbg);border:1.5px solid var(--amberbd);border-radius:14px;
+  padding:13px 15px;
 }
 .cal-feriado-pill svg{width:16px;height:16px;stroke:var(--amber);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .cal-feriado-name{font-size:13px;font-weight:700;color:var(--amber)}
-/* exam card in day sheet */
+/* exam card in day sheet - redesigned */
 .cal-exam-card{
-  display:flex;align-items:center;gap:12px;
-  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
-  padding:13px 14px;cursor:pointer;
-  transition:background .15s;
+  display:flex;align-items:center;gap:0;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:16px;
+  overflow:hidden;cursor:pointer;
+  transition:background .15s,transform .1s;
 }
-.cal-exam-card:active{background:var(--bg3)}
-.cal-exam-color{width:4px;border-radius:2px;align-self:stretch;flex-shrink:0;min-height:36px}
+.cal-exam-card:active{background:var(--bg3);transform:scale(.99)}
+.cal-exam-color{width:5px;border-radius:0;align-self:stretch;flex-shrink:0}
+.cal-exam-inner{flex:1;min-width:0;padding:13px 14px;display:flex;align-items:center;gap:10px}
 .cal-exam-info{flex:1;min-width:0}
-.cal-exam-subj{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
-.cal-exam-title{font-size:14px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-exam-time{font-size:11px;font-weight:500;color:var(--t4);margin-top:2px}
-.cal-exam-chevron{width:18px;height:18px;flex-shrink:0;opacity:.4}
+.cal-exam-tipo{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.cal-exam-subj{font-size:15px;font-weight:800;color:var(--t1);letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-exam-title{font-size:12px;font-weight:500;color:var(--t3);margin-top:2px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-exam-time{font-size:11px;font-weight:600;color:var(--t3);margin-top:4px;display:flex;align-items:center;gap:4px}
+.cal-exam-time svg{width:11px;height:11px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
+.cal-exam-chevron{width:18px;height:18px;flex-shrink:0;opacity:.3}
 .cal-exam-chevron svg{width:18px;height:18px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cal-day-empty-state{text-align:center;padding:28px 0 12px;color:var(--t4);font-size:13px;font-weight:500}
 /* close btn */
 .cal-day-sheet-close{
-  margin:0 20px 24px;padding:14px;background:var(--bg3);border:1px solid var(--line2);
-  border-radius:14px;font-size:15px;font-weight:600;color:var(--t2);cursor:pointer;
+  margin:0 18px 24px;padding:15px;
+  background:var(--bg2);border:1.5px solid var(--line2);
+  border-radius:16px;font-size:15px;font-weight:600;color:var(--t2);cursor:pointer;
   text-align:center;flex-shrink:0;
   transition:background .15s;
 }
-.cal-day-sheet-close:active{background:var(--bg4)}
+.cal-day-sheet-close:active{background:var(--bg3)}
+
 /* ── Cal disclaimer ── */
 .cal-disclaimer{
   display:flex;align-items:flex-start;gap:9px;
-  margin:0 0 14px;padding:11px 13px;
+  margin:0 14px 14px;padding:11px 13px;
   background:var(--bg2);border:1px solid var(--line2);border-radius:12px;
 }
 .cal-disclaimer svg{width:14px;height:14px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
 .cal-disclaimer-text{font-size:11px;font-weight:500;color:var(--t3);line-height:1.5}
 
-/* ── Cal event list (below grid) ── */
-.cal-event-list{display:flex;flex-direction:column;gap:7px;margin-top:22px}
+/* ── Cal event list (below grid) - redesigned ── */
+.cal-event-list{display:flex;flex-direction:column;gap:8px;margin-top:24px;padding:0 14px}
+.cal-event-list-title{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;padding-left:2px}
 .cal-event-row{
-  display:flex;align-items:center;gap:12px;
-  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
-  padding:12px 14px;cursor:pointer;transition:background .15s,opacity .15s;
+  display:flex;align-items:center;gap:0;
+  background:var(--bg1);border:1.5px solid var(--line2);border-radius:16px;
+  overflow:hidden;cursor:pointer;transition:background .15s,transform .1s;
 }
-.cal-event-row:active{background:var(--bg3)}
-.cal-event-row-left{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:34px;flex-shrink:0}
-.cal-event-row-day{font-size:20px;font-weight:800;color:var(--t1);line-height:1;font-family:var(--ffm)}
-.cal-event-row-dow{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
-.cal-event-row-divider{width:0.5px;align-self:stretch;background:var(--line2);flex-shrink:0}
-.cal-event-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.cal-event-row:active{background:var(--bg2);transform:scale(.99)}
+.cal-event-row-date-col{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-width:52px;padding:14px 0;background:var(--bg2);flex-shrink:0;
+}
+.cal-event-row-day{font-size:22px;font-weight:800;color:var(--t1);line-height:1;font-family:var(--ffm);letter-spacing:-.5px}
+.cal-event-row-dow{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+.cal-event-row-divider{width:1px;align-self:stretch;background:var(--line2);flex-shrink:0}
+.cal-event-row-info{flex:1;min-width:0;padding:12px 14px;display:flex;flex-direction:column;gap:5px}
 .cal-event-row-feriado{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--amber)}
 .cal-event-row-feriado svg{width:11px;height:11px;stroke:var(--amber);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.cal-event-row-exam{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-event-row-exam-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.cal-event-row-chevron{opacity:.3;flex-shrink:0}
+.cal-event-row-exam{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-event-row-exam-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.cal-event-row-chevron{opacity:.25;flex-shrink:0;padding-right:14px}
 .cal-event-row-chevron svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.cal-event-row.past{opacity:.35}
+.cal-event-row.past{opacity:.4}
 
 /* collapsed desktop */
 .cal-day-sheet-overlay.collapsed{left:264px}
@@ -5525,8 +5541,10 @@ input, textarea, select {
     <div class="cal-day-sheet" id="cal-day-sheet">
       <div class="cal-day-sheet-handle-row"><div class="cal-day-sheet-handle"></div></div>
       <div class="cal-day-sheet-head">
-        <div class="cal-day-sheet-date" id="cal-day-sheet-date">—</div>
-        <div class="cal-day-sheet-dow" id="cal-day-sheet-dow"></div>
+        <div class="cal-day-sheet-date-block">
+          <div class="cal-day-sheet-date" id="cal-day-sheet-date">—</div>
+          <div class="cal-day-sheet-dow" id="cal-day-sheet-dow"></div>
+        </div>
       </div>
       <div class="cal-day-sheet-body" id="cal-day-sheet-body"></div>
       <div class="cal-day-sheet-close" onclick="closeCalDaySheet()">Fechar</div>
@@ -7842,35 +7860,30 @@ function renderProvas(el){
     const barColor=isToday?'var(--red)':diff<=3?'var(--amber)':nxColor;
 
     /* Cronômetro ao vivo só aparece quando ≤ 3 dias */
-    const cdBlock=(diff<=3&&!isToday)
+    const cdColor=(diff<=3&&!isToday)?'var(--t1)':'var(--red)';
+    const cdBlock=(diff<=3||isToday)
       ?`<div style="display:flex;gap:0;align-items:baseline;margin-top:10px" class="neh-cd">
-          <div class="neh-cd-block"><span class="neh-cd-num">${cd.h}</span><span class="neh-cd-lbl">Horas</span></div>
+          <div class="neh-cd-block"><span class="neh-cd-num" id="hero-cd-h" style="color:${cdColor}">${cd.h}</span><span class="neh-cd-lbl">Horas</span></div>
           <span class="neh-cd-sep">:</span>
-          <div class="neh-cd-block"><span class="neh-cd-num">${cd.m}</span><span class="neh-cd-lbl">Min</span></div>
+          <div class="neh-cd-block"><span class="neh-cd-num" id="hero-cd-m" style="color:${cdColor}">${cd.m}</span><span class="neh-cd-lbl">Min</span></div>
           <span class="neh-cd-sep">:</span>
-          <div class="neh-cd-block"><span class="neh-cd-num">${cd.s}</span><span class="neh-cd-lbl">Seg</span></div>
-        </div>`
-      :isToday
-      ?`<div style="display:flex;gap:0;align-items:baseline;margin-top:10px" class="neh-cd">
-          <div class="neh-cd-block"><span class="neh-cd-num" style="color:var(--red)">${cd.h}</span><span class="neh-cd-lbl">Horas</span></div>
-          <span class="neh-cd-sep">:</span>
-          <div class="neh-cd-block"><span class="neh-cd-num" style="color:var(--red)">${cd.m}</span><span class="neh-cd-lbl">Min</span></div>
-          <span class="neh-cd-sep">:</span>
-          <div class="neh-cd-block"><span class="neh-cd-num" style="color:var(--red)">${cd.s}</span><span class="neh-cd-lbl">Seg</span></div>
+          <div class="neh-cd-block"><span class="neh-cd-num" id="hero-cd-s" style="color:${cdColor}">${cd.s}</span><span class="neh-cd-lbl">Seg</span></div>
         </div>`
       :'';
 
-    const valorBadge=nx.valor?`<div class="neh-valor">${parseFloat(nx.valor).toFixed(1)} pts</div>`:'';
+    const valorBadge=nx.valor?`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:4px 10px;border-radius:8px;white-space:nowrap;margin-top:2px">${parseFloat(nx.valor).toFixed(1)} pts</span>`:'';
 
     heroHtml=`<div class="next-exam-hero" style="--accent-color:${nxColor};border-left-color:${nxColor}" onclick="openExamDetail('${nx.id}')">
-      ${valorBadge}
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div style="min-width:0;flex:1">
           <div class="neh-eyebrow" style="color:${nxColor}">${tipoSvg}<span class="dot" style="background:${nxColor}"></span>${tipoLabel}</div>
           <div class="neh-subj">${escHtml(nx.subj)}</div>
           ${nx.title?`<div class="neh-title">${escHtml(nx.title)}</div>`:''}
         </div>
-        <div style="flex-shrink:0;padding:5px 12px;border-radius:10px;background:${statusBg};color:${statusColor};font-size:13px;font-weight:800;font-family:var(--ffm);letter-spacing:-.3px;white-space:nowrap;margin-top:2px">${statusTxt}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
+          <div style="padding:5px 12px;border-radius:10px;background:${statusBg};color:${statusColor};font-size:13px;font-weight:800;font-family:var(--ffm);letter-spacing:-.3px;white-space:nowrap">${statusTxt}</div>
+          ${valorBadge}
+        </div>
       </div>
       ${dateBlock}
       ${conteudoBlock}
@@ -7978,15 +7991,15 @@ function renderProvas(el){
           </div>
           <div id="ex-date-wrap" style="display:none;margin-top:14px"></div>
           <div class="aec-step" style="margin-top:14px">
-            <div class="aec-step-lbl"><span>4</span>Valor em pontos <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
-            <input class="aec-input" type="number" id="ex-valor" min="0" step="0.5" placeholder="Pontos">
+            <div class="aec-step-lbl"><span>4</span>Valor em pontos <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional · 0,1 a 10</span></div>
+            <input class="aec-input" type="number" id="ex-valor" min="0.1" max="10" step="0.1" placeholder="Ex: 3.0">
           </div>
           <div class="aec-step" style="margin-top:14px">
-            <div class="aec-step-lbl"><span>5</span>Conteúdo <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <div class="aec-step-lbl"><span>6</span>Conteúdo <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
             <textarea class="aec-input" id="ex-conteudo" rows="3" placeholder="Conteúdo..." style="resize:none;line-height:1.55;min-height:80px"></textarea>
           </div>
           <div class="aec-step" style="margin-top:14px">
-            <div class="aec-step-lbl"><span>6</span>Aviso antecipado <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+            <div class="aec-step-lbl"><span>7</span>Aviso antecipado <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
             <div class="aviso-seg" id="ex-aviso-seg">
               <button class="aviso-btn aviso-none-btn" type="button" data-dias="0" onclick="setAvisoDias(0)">Nenhum</button>
               <button class="aviso-btn" type="button" data-dias="1" onclick="setAvisoDias(1)">1 dia antes</button>
@@ -8152,6 +8165,26 @@ function renderProvas(el){
   if(isDesktop){
     const card=document.getElementById('add-exam-card');
     if(card)card.classList.add('open');
+  }
+  // ── Timer ao vivo do hero (atualiza a cada segundo) ──
+  if(window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
+  if(sortedUp.length>0){
+    const _nx=sortedUp[0];
+    const _diff=daysDiff(_nx.examDate);
+    if(_diff<=3){
+      window._heroTimer=setInterval(()=>{
+        const _h=document.getElementById('hero-cd-h');
+        const _m=document.getElementById('hero-cd-m');
+        const _s=document.getElementById('hero-cd-s');
+        if(!_h){clearInterval(window._heroTimer);window._heroTimer=null;return;}
+        const _ms=msUntilExam(_nx.examDate,_nx.examTime);
+        if(_ms<=0){clearInterval(window._heroTimer);window._heroTimer=null;return;}
+        const _cd=fmtCd(_ms);
+        _h.textContent=_cd.h;
+        _m.textContent=_cd.m;
+        _s.textContent=_cd.s;
+      },1000);
+    }
   }
   // inicializa aviso padrão = 1 dia
   setTimeout(()=>{
@@ -8353,6 +8386,21 @@ function _updateAvisoPreview(){
   if(previewSub)previewSub.textContent=subTxt||'Selecione matéria e data';
 }
 
+function setExamDif(val){
+  const inp=document.getElementById('ex-dif');
+  if(inp){
+    const cur=parseInt(inp.value||'0');
+    // toggle off if same
+    inp.value=(cur===val)?'':val;
+  }
+  document.querySelectorAll('.aec-dif-btn').forEach(b=>{
+    const active=parseInt(b.dataset.dif)===val&&inp&&inp.value!=='';
+    b.style.borderColor=active?'var(--gold)':'var(--line2)';
+    b.style.background=active?'var(--goldbg)':'var(--bg2)';
+    b.style.color=active?'var(--t1)':'var(--t3)';
+  });
+}
+
 function addExam(){
   const subj=document.getElementById('ex-subj').value;
   const examDate=document.getElementById('ex-date')?.value||'';
@@ -8385,6 +8433,12 @@ function addExam(){
     const [hh,mm]=examTime.split(':').map(Number);
     const examDtFull=new Date(examDate+'T'+examTime+':00');
     if(new Date()>examDtFull){showDup('Este horário já passou. Não é possível adicionar uma prova no passado.');return;}
+  }
+
+  // valida range do valor
+  if(valor!==''){
+    const v=parseFloat(valor);
+    if(isNaN(v)||v<0.1||v>10){showDup('O valor deve ser entre 0,1 e 10 pontos.');return;}
   }
 
   // ── Verificação de duplicata ──
@@ -9195,6 +9249,8 @@ function switchTab(tab,btn){
 function setPage(page,btn){
   if(curPage===page)return;
   if(btn)iosHaptic(btn);
+  // Limpa timer do hero ao sair da aba de provas
+  if(curPage==='provas'&&window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
   const pi=PAGE_ORDER.indexOf(curPage);
   const ci=PAGE_ORDER.indexOf(page);
   const dir=ci>=pi?'push':'pop';
@@ -10948,7 +11004,7 @@ function _buildCalHtml(){
       <button class="cal-nav-btn" onclick="calNavMonth(-1)"${canPrev?'':' disabled'}>
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
-      <div class="cal-nav-title">${CAL_MONTHS_PT[mo]} 2026</div>
+      <div class="cal-nav-title">${CAL_MONTHS_PT[mo]}<span>2026</span></div>
       <button class="cal-nav-btn" onclick="calNavMonth(1)"${canNext?'':' disabled'}>
         <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
       </button>
@@ -10974,6 +11030,7 @@ function _buildCalHtml(){
     if(isSun) cls+=' sunday';
     if(isToday) cls+=' today';
     if(isFeriado) cls+=' feriado';
+    if(dayExams.length) cls+=' has-exam';
 
     let dotsHtml='';
     if(dayExams.length){
@@ -11022,7 +11079,7 @@ function _buildCalEventListHtml(mo){
     });
 
     rows+=`<div class="cal-event-row${isPast?' past':''}" onclick="calDayClick('${dateStr}')">
-      <div class="cal-event-row-left">
+      <div class="cal-event-row-date-col">
         <div class="cal-event-row-day">${d}</div>
         <div class="cal-event-row-dow">${dowLbl}</div>
       </div>
@@ -11065,7 +11122,7 @@ function calNavMonth(dir){
     const isSun=dow===0,isToday=(todayY===2026&&todayM===mo&&todayD===d),isFeriado=!!FERIADOS_2026[dateStr];
     const dayExams=exams.filter(e=>e.examDate===dateStr);
     let cls='cal-day';
-    if(isSun)cls+=' sunday';if(isToday)cls+=' today';if(isFeriado)cls+=' feriado';
+    if(isSun)cls+=' sunday';if(isToday)cls+=' today';if(isFeriado)cls+=' feriado';if(dayExams.length)cls+=' has-exam';
     let dots='';
     if(dayExams.length){
       dots='<div class="cal-day-dots">';
@@ -11115,17 +11172,21 @@ function calDayClick(dateStr){
   }
   if(dayExams.length){
     dayExams.forEach(e=>{
-      const color=SUBJ_COLORS[e.subj]||'var(--red)';
-      const timeTxt=e.examTime?`<div class="cal-exam-time">🕐 ${e.examTime}</div>`:'';
-      const titleTxt=e.title||e.subj;
+      const color=SUBJECTS.find(s=>s.name===e.subj)?.color||SUBJ_COLORS[e.subj]||'var(--gold)';
+      const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
+      const timeSvg=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+      const timeTxt=e.examTime?`<div class="cal-exam-time">${timeSvg}${e.examTime}</div>`:'';
       body+=`<div class="cal-exam-card" onclick="closeCalDaySheet();setTimeout(()=>openExamDetail('${e.id}'),220)">
         <div class="cal-exam-color" style="background:${color}"></div>
-        <div class="cal-exam-info">
-          <div class="cal-exam-subj">${e.subj}</div>
-          <div class="cal-exam-title">${titleTxt}</div>
-          ${timeTxt}
+        <div class="cal-exam-inner">
+          <div class="cal-exam-info">
+            <div class="cal-exam-tipo">${tipoLabel}</div>
+            <div class="cal-exam-subj">${escHtml(e.subj)}</div>
+            ${e.title?`<div class="cal-exam-title">${escHtml(e.title)}</div>`:''}
+            ${timeTxt}
+          </div>
+          <div class="cal-exam-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
         </div>
-        <div class="cal-exam-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>`;
     });
   }
