@@ -399,11 +399,19 @@
   }
 
   async function _getDeviceCity() {
+    // ip-api.com nao funciona em HTTPS (mixed content) -- usamos ipapi.co
     try {
-      const r = await fetch('https://ip-api.com/json/?fields=city,status', { signal: AbortSignal.timeout(4000) });
+      const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
       const d = await r.json();
-      return (d.status === 'success' && d.city) ? d.city : 'Cidade desconhecida';
-    } catch { return 'Cidade desconhecida'; }
+      if (d.city) return d.city;
+    } catch {}
+    // fallback: geoplugin
+    try {
+      const r2 = await fetch('https://www.geoplugin.net/json.gp', { signal: AbortSignal.timeout(5000) });
+      const d2 = await r2.json();
+      if (d2.geoplugin_city) return d2.geoplugin_city;
+    } catch {}
+    return '';
   }
 
   let _devicesUnsubscribe = null;
@@ -416,32 +424,30 @@
     const { device, browser } = _getDeviceInfo();
     const city = await _getDeviceCity();
     const deviceRef = doc(db, 'users', uid, 'devices', deviceId);
-
-    // Dados locais do dispositivo atual - usados como fallback imediato
     const _thisDevice = { id: deviceId, device, browser, city, lastAccess: Date.now(), createdAt: Date.now() };
 
-    // Mostra o dispositivo atual IMEDIATAMENTE, sem esperar o Firestore responder
+    // Mostra o dispositivo atual IMEDIATAMENTE na UI sem esperar o Firestore
     window._connectedDevices = [_thisDevice];
     if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices([_thisDevice]);
 
-    // Registra no Firestore com try/catch (regras podem negar)
+    // Registra no Firestore (com tratamento de erro)
     try {
       await setDoc(deviceRef, _thisDevice, { merge: true });
-    } catch(e) {
-      console.warn('Devices: setDoc falhou (verifique regras do Firestore):', e);
-    }
+    } catch(e) { console.warn('Devices setDoc:', e); }
 
+    // Heartbeat a cada 2 minutos para manter lastAccess atualizado
     clearInterval(_heartbeatInterval);
     _heartbeatInterval = setInterval(async () => {
       if (!_currentUid) return;
       try { await setDoc(deviceRef, { lastAccess: Date.now() }, { merge: true }); } catch {}
     }, 120000);
 
+    // Listener em tempo real: mostra TODOS os dispositivos da conta
+    // Quando um dispositivo sai (deleteDoc), o snapshot atualiza automaticamente
     if (_devicesUnsubscribe) _devicesUnsubscribe();
     _devicesUnsubscribe = onSnapshot(
       collection(db, 'users', uid, 'devices'),
       (snap) => {
-        // Sucesso: monta lista de dispositivos
         const devices = [];
         let found = false;
         snap.forEach(d => {
@@ -449,21 +455,21 @@
           devices.push(data);
           if (data.id === deviceId) found = true;
         });
-        // Race condition: dispositivo ainda nao propagou no Firestore - usa dados locais
+        // Race condition: snapshot chegou antes do setDoc propagar -- injeta dispositivo local
         if (!found) devices.push({ ..._thisDevice, lastAccess: Date.now() });
-        devices.sort((a,b) => {
+        devices.sort((a, b) => {
           if (a.id === deviceId) return -1;
           if (b.id === deviceId) return 1;
-          return (b.lastAccess||0) - (a.lastAccess||0);
+          return (b.lastAccess || 0) - (a.lastAccess || 0);
         });
         window._connectedDevices = devices;
-        // CRITICO: usa window. pois esta funcao esta em escopo de modulo ES
+        // CRITICO: window. obrigatorio -- esta funcao esta em escopo de modulo ES
         if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(devices);
       },
       (err) => {
-        // Erro do Firestore (ex: regras de seguranca nao configuradas)
-        console.warn('Devices: onSnapshot erro (verifique regras do Firestore):', err);
-        // Mostra pelo menos o dispositivo atual com dados locais
+        // Erro Firestore (ex: regras de seguranca bloqueando subcollection devices)
+        // Verifique as Firestore Rules -- adicione: match /devices/{d} { allow read, write: if request.auth.uid == uid; }
+        console.warn('Devices onSnapshot erro:', err.code, err.message);
         const fallback = [{ ..._thisDevice, lastAccess: Date.now() }];
         window._connectedDevices = fallback;
         if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(fallback);
@@ -9673,11 +9679,7 @@ function switchProfTab(tab) {
   const panelEl = document.getElementById('prof-panel-' + tab);
   if (tabEl) tabEl.classList.add('active');
   if (panelEl) panelEl.classList.add('active');
-  if (tab === 'dispositivos') {
-    // Se ainda nao tem dados mas esta logado, mostra estado de carregando e espera o snapshot
-    const devData = window._connectedDevices || null;
-    _renderConnectedDevices(devData);
-  }
+  if (tab === 'dispositivos') _renderConnectedDevices(window._connectedDevices || null);
 }
 
 function _fmtDeviceTime(ts) {
@@ -9734,7 +9736,8 @@ function _renderConnectedDevices(devices) {
     html += '<div class="device-icon">' + _getDeviceIcon(dev.device) + '</div>';
     html += '<div class="device-info">';
     html += '<div class="device-name">' + _escHtml(dev.device || 'Dispositivo') + ' · ' + _escHtml(dev.browser || '') + '</div>';
-    html += '<div class="device-meta">' + _escHtml(dev.city || '—') + ' · Último acesso: ' + _fmtDeviceTime(dev.lastAccess) + '</div>';
+    const cityPart = dev.city ? _escHtml(dev.city) + ' · ' : '';
+    html += '<div class="device-meta">' + cityPart + 'Último acesso: ' + _fmtDeviceTime(dev.lastAccess) + '</div>';
     html += '</div>';
     if (isMe) {
       html += '<span class="device-badge">Este</span>';
@@ -9748,7 +9751,7 @@ function _renderConnectedDevices(devices) {
   html += '</div>';
   wrap.innerHTML = html;
 }
-// Expoe em window para o modulo ES conseguir chamar
+// CRITICO: expoe em window para o modulo ES conseguir chamar
 window._renderConnectedDevices = _renderConnectedDevices;
 
 function _escHtml(str) {
