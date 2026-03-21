@@ -18,7 +18,7 @@
   import { getAnalytics }    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, deleteDoc, getDocs }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -209,6 +209,7 @@
       _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
       _applyGoogleProfile(user);
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
+      _registerAndListenDevices(user.uid); // registra este dispositivo
     } else {
       // Sem login — pula direto pra 100% sem animação
       const bar = document.getElementById('splash-bar');
@@ -354,12 +355,134 @@
   };
 
   window._fbConfirmLogout = async () => {
+    // Remove dispositivo do Firestore antes de sair
+    if (_currentUid) await _unregisterDevice(_currentUid);
     // _fbSignOut seta _intentionalLogout=true; o observer cuida do reload
     await window._fbSignOut();
   };
 
   window._fbIsSyncing   = () => !!_currentUid;
   window._fbCurrentUser = () => auth.currentUser;
+
+  /* ════════════════════════════════════════════════
+     DISPOSITIVOS CONECTADOS
+     ════════════════════════════════════════════════ */
+
+  function _getOrCreateDeviceId() {
+    let id = localStorage.getItem('t205_device_id');
+    if (!id) {
+      id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+      localStorage.setItem('t205_device_id', id);
+    }
+    return id;
+  }
+
+  function _getDeviceInfo() {
+    const ua = navigator.userAgent;
+    let device = 'Computador';
+    if (/iPhone/i.test(ua))               device = 'iPhone';
+    else if (/iPad/i.test(ua))            device = 'iPad';
+    else if (/Android.*Mobile/i.test(ua)) device = 'Android (celular)';
+    else if (/Android/i.test(ua))         device = 'Android (tablet)';
+    else if (/Macintosh/i.test(ua))       device = 'Mac';
+    else if (/Windows/i.test(ua))         device = 'Windows PC';
+    else if (/Linux/i.test(ua))           device = 'Linux';
+
+    let browser = 'Navegador';
+    if (/Edg\//i.test(ua))    browser = 'Edge';
+    else if (/OPR\//i.test(ua)) browser = 'Opera';
+    else if (/Chrome\//i.test(ua)) browser = 'Chrome';
+    else if (/Safari\//i.test(ua)) browser = 'Safari';
+    else if (/Firefox\//i.test(ua)) browser = 'Firefox';
+
+    return { device, browser };
+  }
+
+  async function _getDeviceCity() {
+    try {
+      const r = await fetch('https://ip-api.com/json/?fields=city,status', { signal: AbortSignal.timeout(4000) });
+      const d = await r.json();
+      return (d.status === 'success' && d.city) ? d.city : 'Cidade desconhecida';
+    } catch { return 'Cidade desconhecida'; }
+  }
+
+  let _devicesUnsubscribe = null;
+  let _heartbeatInterval  = null;
+  window._currentDeviceId = null;
+
+  async function _registerAndListenDevices(uid) {
+    const deviceId = _getOrCreateDeviceId();
+    window._currentDeviceId = deviceId;
+    const { device, browser } = _getDeviceInfo();
+    const city = await _getDeviceCity();
+    const deviceRef = doc(db, 'users', uid, 'devices', deviceId);
+
+    // Dados locais do dispositivo atual - usados como fallback imediato
+    const _thisDevice = { id: deviceId, device, browser, city, lastAccess: Date.now(), createdAt: Date.now() };
+
+    // Mostra o dispositivo atual IMEDIATAMENTE, sem esperar o Firestore responder
+    window._connectedDevices = [_thisDevice];
+    if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices([_thisDevice]);
+
+    // Registra no Firestore com try/catch (regras podem negar)
+    try {
+      await setDoc(deviceRef, _thisDevice, { merge: true });
+    } catch(e) {
+      console.warn('Devices: setDoc falhou (verifique regras do Firestore):', e);
+    }
+
+    clearInterval(_heartbeatInterval);
+    _heartbeatInterval = setInterval(async () => {
+      if (!_currentUid) return;
+      try { await setDoc(deviceRef, { lastAccess: Date.now() }, { merge: true }); } catch {}
+    }, 120000);
+
+    if (_devicesUnsubscribe) _devicesUnsubscribe();
+    _devicesUnsubscribe = onSnapshot(
+      collection(db, 'users', uid, 'devices'),
+      (snap) => {
+        // Sucesso: monta lista de dispositivos
+        const devices = [];
+        let found = false;
+        snap.forEach(d => {
+          const data = d.data();
+          devices.push(data);
+          if (data.id === deviceId) found = true;
+        });
+        // Race condition: dispositivo ainda nao propagou no Firestore - usa dados locais
+        if (!found) devices.push({ ..._thisDevice, lastAccess: Date.now() });
+        devices.sort((a,b) => {
+          if (a.id === deviceId) return -1;
+          if (b.id === deviceId) return 1;
+          return (b.lastAccess||0) - (a.lastAccess||0);
+        });
+        window._connectedDevices = devices;
+        // CRITICO: usa window. pois esta funcao esta em escopo de modulo ES
+        if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(devices);
+      },
+      (err) => {
+        // Erro do Firestore (ex: regras de seguranca nao configuradas)
+        console.warn('Devices: onSnapshot erro (verifique regras do Firestore):', err);
+        // Mostra pelo menos o dispositivo atual com dados locais
+        const fallback = [{ ..._thisDevice, lastAccess: Date.now() }];
+        window._connectedDevices = fallback;
+        if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(fallback);
+      }
+    );
+  }
+
+  window._fbRemoveDevice = async function(targetDeviceId) {
+    if (!_currentUid) return;
+    try { await deleteDoc(doc(db, 'users', _currentUid, 'devices', targetDeviceId)); }
+    catch(e) { console.error('Erro ao remover dispositivo:', e); }
+  };
+
+  async function _unregisterDevice(uid) {
+    clearInterval(_heartbeatInterval);
+    if (_devicesUnsubscribe) { _devicesUnsubscribe(); _devicesUnsubscribe = null; }
+    try { await deleteDoc(doc(db, 'users', uid, 'devices', _getOrCreateDeviceId())); } catch {}
+  }
+  window._fbUnregisterDevice = _unregisterDevice;
 
   window._closeLoginPrompt = function() {
     const el = document.getElementById('login-prompt-overlay');
@@ -4921,6 +5044,118 @@ input, textarea, select {
 }
 .prof-signout-btn:active { opacity: .7; transform: scale(.95); }
 [data-fb-auth="in"] .prof-signout-btn { display: block; }
+/* ── Aba Dispositivos Conectados ── */
+.prof-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  background: var(--bg2);
+  border-radius: 12px;
+  padding: 4px;
+}
+.prof-tab {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--t3);
+  cursor: pointer;
+  transition: all .2s var(--ease-ios);
+  font-family: var(--ff);
+  letter-spacing: -.2px;
+  white-space: nowrap;
+}
+.prof-tab.active {
+  background: var(--bg0);
+  color: var(--t1);
+  box-shadow: 0 1px 6px rgba(0,0,0,.18);
+}
+[data-theme="light"] .prof-tab.active {
+  box-shadow: 0 1px 6px rgba(0,0,0,.10);
+}
+.prof-tab:active { opacity: .7; }
+.prof-panel { display: none; }
+.prof-panel.active { display: block; }
+
+/* Cards de dispositivo */
+.device-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.device-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 16px;
+  transition: opacity .2s;
+}
+.device-card.current-device {
+  border-color: var(--gold);
+  background: var(--goldbg,rgba(255,214,10,.07));
+}
+.device-icon {
+  width: 42px; height: 42px;
+  border-radius: 12px;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: var(--t2);
+}
+.device-icon svg { width: 22px; height: 22px; }
+.device-card.current-device .device-icon { background: var(--gold); color: #000; }
+.device-info { flex: 1; min-width: 0; }
+.device-name {
+  font-size: 14px; font-weight: 600;
+  color: var(--t1); letter-spacing: -.25px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.device-meta {
+  font-size: 11.5px; color: var(--t3);
+  letter-spacing: -.1px; margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.device-badge {
+  font-size: 10px; font-weight: 700;
+  color: var(--gold);
+  background: rgba(255,214,10,.12);
+  border: 0.5px solid rgba(255,214,10,.3);
+  border-radius: 6px;
+  padding: 2px 7px;
+  letter-spacing: .3px;
+  flex-shrink: 0;
+}
+.device-remove-btn {
+  flex-shrink: 0;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(255,69,58,.1);
+  border: 0.5px solid rgba(255,69,58,.2);
+  color: #FF453A;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: opacity .18s, transform .18s;
+}
+.device-remove-btn:active { opacity: .6; transform: scale(.88); }
+.device-remove-btn svg { width: 14px; height: 14px; }
+.devices-loading {
+  text-align: center;
+  padding: 28px 0;
+  color: var(--t3);
+  font-size: 14px;
+  letter-spacing: -.2px;
+}
+.devices-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--t3);
+  font-size: 14px;
+  letter-spacing: -.2px;
+  line-height: 1.5;
+}
+
 
 .prof-section-label {
   font-size: 11px; font-weight: 700;
@@ -5792,74 +6027,90 @@ input, textarea, select {
       </div>
     </div>
 
-    <!-- SEÇÃO: Informações -->
-    <div class="prof-section-label">Informações</div>
-    <div class="field-group"><label class="field-label">Nome completo</label><input class="field-input" id="m-nome" type="text" placeholder="Digite seu nome..." oninput="updateProfileHero()"/></div>
-    <div class="field-group"><label class="field-label">Escola / Instituição</label><input class="field-input" id="m-escola" type="text" placeholder="Nome da escola..." oninput="updateProfileHero()"/></div>
-
-    <div class="field-group"><label class="field-label">Turma / Sala</label><input class="field-input" id="m-turma" type="text" placeholder="Ex: 205"/></div>
-
-    <!-- SEÇÃO: Cor do app -->
-    <div class="prof-section-label">Cor do aplicativo</div>
-    <div class="prof-accent-grid" id="prof-accent-grid">
-      <button class="prof-accent-btn" data-key="gold" onclick="setAccent('gold',this)">
-        <span class="prof-accent-swatch" style="background:#FFD60A"></span>
-        <span class="prof-accent-name">Dourado</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="blue" onclick="setAccent('blue',this)">
-        <span class="prof-accent-swatch" style="background:#0A84FF"></span>
-        <span class="prof-accent-name">Azul</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="green" onclick="setAccent('green',this)">
-        <span class="prof-accent-swatch" style="background:#30D158"></span>
-        <span class="prof-accent-name">Verde</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="violet" onclick="setAccent('violet',this)">
-        <span class="prof-accent-swatch" style="background:#BF5AF2"></span>
-        <span class="prof-accent-name">Roxo</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="red" onclick="setAccent('red',this)">
-        <span class="prof-accent-swatch" style="background:#FF453A"></span>
-        <span class="prof-accent-name">Vermelho</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="orange" onclick="setAccent('orange',this)">
-        <span class="prof-accent-swatch" style="background:#FF9F0A"></span>
-        <span class="prof-accent-name">Laranja</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="pink" onclick="setAccent('pink',this)">
-        <span class="prof-accent-swatch" style="background:#FF2D55"></span>
-        <span class="prof-accent-name">Rosa</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="cyan" onclick="setAccent('cyan',this)">
-        <span class="prof-accent-swatch" style="background:#32ADE6"></span>
-        <span class="prof-accent-name">Ciano</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="indigo" onclick="setAccent('indigo',this)">
-        <span class="prof-accent-swatch" style="background:#5E5CE6"></span>
-        <span class="prof-accent-name">Índigo</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="teal" onclick="setAccent('teal',this)">
-        <span class="prof-accent-swatch" style="background:#30B0C7"></span>
-        <span class="prof-accent-name">Teal</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="mint" onclick="setAccent('mint',this)">
-        <span class="prof-accent-swatch" style="background:#00C7BE"></span>
-        <span class="prof-accent-name">Menta</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
+    <!-- ABAS DO PERFIL -->
+    <div class="prof-tabs">
+      <button class="prof-tab active" id="prof-tab-perfil" onclick="switchProfTab('perfil')">Perfil</button>
+      <button class="prof-tab" id="prof-tab-dispositivos" onclick="switchProfTab('dispositivos')">Dispositivos</button>
     </div>
 
-    <button class="modal-save-btn" onclick="saveStudent()">Salvar perfil</button>
+    <!-- PAINEL: Perfil -->
+    <div class="prof-panel active" id="prof-panel-perfil">
+      <!-- SEÇÃO: Informações -->
+      <div class="prof-section-label">Informações</div>
+      <div class="field-group"><label class="field-label">Nome completo</label><input class="field-input" id="m-nome" type="text" placeholder="Digite seu nome..." oninput="updateProfileHero()"/></div>
+      <div class="field-group"><label class="field-label">Escola / Instituição</label><input class="field-input" id="m-escola" type="text" placeholder="Nome da escola..." oninput="updateProfileHero()"/></div>
+      <div class="field-group"><label class="field-label">Turma / Sala</label><input class="field-input" id="m-turma" type="text" placeholder="Ex: 205"/></div>
+
+      <!-- SEÇÃO: Cor do app -->
+      <div class="prof-section-label">Cor do aplicativo</div>
+      <div class="prof-accent-grid" id="prof-accent-grid">
+        <button class="prof-accent-btn" data-key="gold" onclick="setAccent('gold',this)">
+          <span class="prof-accent-swatch" style="background:#FFD60A"></span>
+          <span class="prof-accent-name">Dourado</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="blue" onclick="setAccent('blue',this)">
+          <span class="prof-accent-swatch" style="background:#0A84FF"></span>
+          <span class="prof-accent-name">Azul</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="green" onclick="setAccent('green',this)">
+          <span class="prof-accent-swatch" style="background:#30D158"></span>
+          <span class="prof-accent-name">Verde</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="violet" onclick="setAccent('violet',this)">
+          <span class="prof-accent-swatch" style="background:#BF5AF2"></span>
+          <span class="prof-accent-name">Roxo</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="red" onclick="setAccent('red',this)">
+          <span class="prof-accent-swatch" style="background:#FF453A"></span>
+          <span class="prof-accent-name">Vermelho</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="orange" onclick="setAccent('orange',this)">
+          <span class="prof-accent-swatch" style="background:#FF9F0A"></span>
+          <span class="prof-accent-name">Laranja</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="pink" onclick="setAccent('pink',this)">
+          <span class="prof-accent-swatch" style="background:#FF2D55"></span>
+          <span class="prof-accent-name">Rosa</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="cyan" onclick="setAccent('cyan',this)">
+          <span class="prof-accent-swatch" style="background:#32ADE6"></span>
+          <span class="prof-accent-name">Ciano</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="indigo" onclick="setAccent('indigo',this)">
+          <span class="prof-accent-swatch" style="background:#5E5CE6"></span>
+          <span class="prof-accent-name">Índigo</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="teal" onclick="setAccent('teal',this)">
+          <span class="prof-accent-swatch" style="background:#30B0C7"></span>
+          <span class="prof-accent-name">Teal</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+        <button class="prof-accent-btn" data-key="mint" onclick="setAccent('mint',this)">
+          <span class="prof-accent-swatch" style="background:#00C7BE"></span>
+          <span class="prof-accent-name">Menta</span>
+          <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+        </button>
+      </div>
+      <button class="modal-save-btn" onclick="saveStudent()">Salvar perfil</button>
+    </div>
+
+    <!-- PAINEL: Dispositivos -->
+    <div class="prof-panel" id="prof-panel-dispositivos">
+      <div class="prof-section-label">Dispositivos conectados</div>
+      <div id="devices-list-wrap">
+        <div class="devices-loading">Carregando dispositivos…</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -9406,9 +9657,137 @@ function openModal(){
     b.classList.toggle('active',b.dataset.key===(stu.accentKey||'gold'));
   });
 
+  // Sempre volta à aba Perfil ao abrir
+  switchProfTab('perfil');
   document.getElementById('modal-overlay').classList.add('open');
 }
 function modalOvClick(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');}
+
+/* ══════════════════════════════════════════
+   ABAS DO PERFIL + DISPOSITIVOS CONECTADOS
+   ══════════════════════════════════════════ */
+function switchProfTab(tab) {
+  document.querySelectorAll('.prof-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.prof-panel').forEach(p => p.classList.remove('active'));
+  const tabEl = document.getElementById('prof-tab-' + tab);
+  const panelEl = document.getElementById('prof-panel-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  if (panelEl) panelEl.classList.add('active');
+  if (tab === 'dispositivos') {
+    // Se ainda nao tem dados mas esta logado, mostra estado de carregando e espera o snapshot
+    const devData = window._connectedDevices || null;
+    _renderConnectedDevices(devData);
+  }
+}
+
+function _fmtDeviceTime(ts) {
+  if (!ts) return 'Nunca';
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff / 60000);
+  const h   = Math.floor(diff / 3600000);
+  const d   = Math.floor(diff / 86400000);
+  if (min < 1)  return 'Agora';
+  if (min < 60) return 'Há ' + min + ' min';
+  if (h < 24)   return 'Há ' + h + ' h';
+  if (d < 30)   return 'Há ' + d + ' dia' + (d > 1 ? 's' : '');
+  return new Date(ts).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+function _getDeviceIcon(deviceName) {
+  const d = (deviceName || '').toLowerCase();
+  if (d.includes('iphone') || d.includes('android (celular)')) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5"/></svg>';
+  }
+  if (d.includes('ipad') || d.includes('tablet')) {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5"/></svg>';
+  }
+  // desktop/mac/windows/linux
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/><line x1="8" y1="21" x2="16" y2="21"/></svg>';
+}
+
+function _renderConnectedDevices(devices) {
+  const wrap = document.getElementById('devices-list-wrap');
+  if (!wrap) return;
+
+  // Não logado
+  if (!window._fbCurrentUser || !window._fbCurrentUser()) {
+    wrap.innerHTML = '<div class="devices-empty">Entre com o Google para ver seus dispositivos conectados.</div>';
+    return;
+  }
+
+  // Ainda carregando
+  if (!devices) {
+    wrap.innerHTML = '<div class="devices-loading">Carregando dispositivos…</div>';
+    return;
+  }
+
+  if (devices.length === 0) {
+    wrap.innerHTML = '<div class="devices-empty">Nenhum dispositivo conectado encontrado.</div>';
+    return;
+  }
+
+  const myId = window._currentDeviceId;
+  let html = '<div class="device-list">';
+  devices.forEach(dev => {
+    const isMe = dev.id === myId;
+    html += '<div class="device-card' + (isMe ? ' current-device' : '') + '">';
+    html += '<div class="device-icon">' + _getDeviceIcon(dev.device) + '</div>';
+    html += '<div class="device-info">';
+    html += '<div class="device-name">' + _escHtml(dev.device || 'Dispositivo') + ' · ' + _escHtml(dev.browser || '') + '</div>';
+    html += '<div class="device-meta">' + _escHtml(dev.city || '—') + ' · Último acesso: ' + _fmtDeviceTime(dev.lastAccess) + '</div>';
+    html += '</div>';
+    if (isMe) {
+      html += '<span class="device-badge">Este</span>';
+    } else {
+      html += '<button class="device-remove-btn" data-devid="' + _escHtml(dev.id) + '" onclick="_confirmRemoveDevice(this.dataset.devid,this)" title="Remover dispositivo">';
+      html += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+      html += '</button>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+// Expoe em window para o modulo ES conseguir chamar
+window._renderConnectedDevices = _renderConnectedDevices;
+
+function _escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function _confirmRemoveDevice(deviceId, btn) {
+  if (!btn) return;
+  const card = btn.closest('.device-card');
+  if (!card) return;
+  const deviceName = card.querySelector('.device-name') ? card.querySelector('.device-name').textContent : 'este dispositivo';
+  // Confirmação inline no card
+  btn.disabled = true;
+  btn.style.opacity = '0.4';
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#FF453A" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  btn.title = 'Confirmar remoção';
+  btn._confirming = true;
+  btn.onclick = null;
+  btn.disabled = false;
+  btn.style.opacity = '';
+  // segundo clique = confirma
+  btn.onclick = async function() {
+    btn.disabled = true;
+    card.style.opacity = '0.4';
+    card.style.pointerEvents = 'none';
+    await window._fbRemoveDevice(deviceId);
+  };
+  // cancela após 3s
+  setTimeout(() => {
+    if (btn._confirming) {
+      btn._confirming = false;
+      btn.innerHTML = orig;
+      btn.onclick = function() { _confirmRemoveDevice(deviceId, btn); };
+      btn.disabled = false;
+    }
+  }, 3000);
+}
+
 function saveStudent(){
   stu.nome=document.getElementById('m-nome').value.trim();
   stu.escola=document.getElementById('m-escola').value.trim();
