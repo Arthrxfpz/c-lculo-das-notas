@@ -261,20 +261,12 @@
       if (loginLabel) loginLabel.style.display = 'none';
     } else {
       if (window._intentionalLogout) {
-        // Logout intencional: apaga todos os dados do app e recarrega do zero
+        // Logout intencional: UI e localStorage ja foram limpos em _fbConfirmLogout
         window._intentionalLogout = false;
-        try {
-          const theme = localStorage.getItem('t205_theme'); // mantém só o tema
-          ['t205_fb_user','t205_grades','t205_exams','t205_stu',
-           't205_notes','t205_notifs','t205_updatedAt','t205_skip_login_prompt',
-           't205_dismissed_toasts'].forEach(k => localStorage.removeItem(k));
-          if (theme) localStorage.setItem('t205_theme', theme);
-        } catch(e) {}
-        location.reload();
-        return; // não continua
+        return; // nada mais a fazer
       }
 
-      // Sem sessão (carregamento inicial ou expirada) — só limpa cache do usuário
+      // Sessao expirada ou primeiro acesso sem login
       try { localStorage.removeItem('t205_fb_user'); } catch(e) {}
       document.documentElement.setAttribute('data-fb-auth', 'out');
 
@@ -354,11 +346,35 @@
     document.getElementById('fb-logout-overlay').classList.remove('open');
   };
 
-  window._fbConfirmLogout = async () => {
-    // Remove dispositivo do Firestore antes de sair
-    if (_currentUid) await _unregisterDevice(_currentUid);
-    // _fbSignOut seta _intentionalLogout=true; o observer cuida do reload
-    await window._fbSignOut();
+  window._fbConfirmLogout = () => {
+    // 1. Fecha o sheet imediatamente
+    const overlay = document.getElementById('fb-logout-overlay');
+    if (overlay) overlay.classList.remove('open');
+
+    // 2. Marca logout intencional ANTES de qualquer async
+    window._intentionalLogout = true;
+
+    // 3. Limpa UI e localStorage AGORA, sem esperar o Firebase
+    try {
+      const theme = localStorage.getItem('t205_theme');
+      ['t205_fb_user','t205_grades','t205_exams','t205_stu',
+       't205_notes','t205_notifs','t205_updatedAt','t205_skip_login_prompt',
+       't205_dismissed_toasts'].forEach(k => localStorage.removeItem(k));
+      if (theme) localStorage.setItem('t205_theme', theme);
+    } catch(e) {}
+    _updateAuthUI(null);
+
+    // 4. Para heartbeat e listener de dispositivos
+    clearInterval(_heartbeatInterval);
+    if (_devicesUnsubscribe) { _devicesUnsubscribe(); _devicesUnsubscribe = null; }
+
+    // 5. Remove dispositivo + signOut em background (nao bloqueia a UI)
+    const uid = _currentUid;
+    _currentUid = null;
+    Promise.all([
+      uid ? deleteDoc(doc(db, 'users', uid, 'devices', _getOrCreateDeviceId())).catch(()=>{}) : Promise.resolve(),
+      signOut(auth).catch(()=>{})
+    ]);
   };
 
   window._fbIsSyncing   = () => !!_currentUid;
@@ -399,18 +415,15 @@
   }
 
   async function _getDeviceCity() {
-    // ip-api.com nao funciona em HTTPS (mixed content) -- usamos ipapi.co
-    try {
-      const r = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(5000) });
-      const d = await r.json();
-      if (d.city) return d.city;
-    } catch {}
-    // fallback: geoplugin
-    try {
-      const r2 = await fetch('https://www.geoplugin.net/json.gp', { signal: AbortSignal.timeout(5000) });
-      const d2 = await r2.json();
-      if (d2.geoplugin_city) return d2.geoplugin_city;
-    } catch {}
+    // ip-api.com usa HTTP puro -- bloqueado como mixed-content em paginas HTTPS
+    const apis = [
+      () => fetch('https://ipapi.co/json/',            { signal: AbortSignal.timeout(5000) }).then(r=>r.json()).then(d=>d.city||''),
+      () => fetch('https://freeipapi.com/api/json',    { signal: AbortSignal.timeout(5000) }).then(r=>r.json()).then(d=>d.cityName||''),
+      () => fetch('https://ipwho.is/',                 { signal: AbortSignal.timeout(5000) }).then(r=>r.json()).then(d=>d.city||''),
+    ];
+    for (const fn of apis) {
+      try { const city = await fn(); if (city) return city; } catch {}
+    }
     return '';
   }
 
@@ -418,60 +431,99 @@
   let _heartbeatInterval  = null;
   window._currentDeviceId = null;
 
+  /* Remove o documento deste dispositivo ao fechar/recarregar a aba */
+  window.addEventListener('beforeunload', () => {
+    if (!_currentUid || !window._currentDeviceId) return;
+    try {
+      // navigator.sendBeacon nao funciona com Firestore REST direto,
+      // mas o deleteDoc sincrono ainda dispara antes do unload na maioria dos browsers
+      const deviceRef = doc(db, 'users', _currentUid, 'devices', window._currentDeviceId);
+      deleteDoc(deviceRef);
+    } catch {}
+  });
+
   async function _registerAndListenDevices(uid) {
     const deviceId = _getOrCreateDeviceId();
     window._currentDeviceId = deviceId;
     const { device, browser } = _getDeviceInfo();
     const city = await _getDeviceCity();
     const deviceRef = doc(db, 'users', uid, 'devices', deviceId);
-    const _thisDevice = { id: deviceId, device, browser, city, lastAccess: Date.now(), createdAt: Date.now() };
+    const _thisDevice = { id: deviceId, device, browser, city: city||'', lastAccess: Date.now(), createdAt: Date.now() };
 
-    // Mostra o dispositivo atual IMEDIATAMENTE na UI sem esperar o Firestore
-    window._connectedDevices = [_thisDevice];
-    if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices([_thisDevice]);
-
-    // Registra no Firestore (com tratamento de erro)
+    // 1. Registra este dispositivo no Firestore
     try {
       await setDoc(deviceRef, _thisDevice, { merge: true });
-    } catch(e) { console.warn('Devices setDoc:', e); }
+      console.log('[Devices] Dispositivo registrado:', deviceId);
+    } catch(e) {
+      console.error('[Devices] setDoc FALHOU. Verifique as Firestore Security Rules:', e.code);
+      console.info('[Devices] Regra necessaria:\n' +
+        'match /users/{uid}/devices/{d} {\n' +
+        '  allow read, write: if request.auth.uid == uid;\n}');
+    }
 
-    // Heartbeat a cada 2 minutos para manter lastAccess atualizado
+    // 2. Heartbeat a cada 2min para manter lastAccess atualizado
     clearInterval(_heartbeatInterval);
     _heartbeatInterval = setInterval(async () => {
       if (!_currentUid) return;
       try { await setDoc(deviceRef, { lastAccess: Date.now() }, { merge: true }); } catch {}
     }, 120000);
 
-    // Listener em tempo real: mostra TODOS os dispositivos da conta
-    // Quando um dispositivo sai (deleteDoc), o snapshot atualiza automaticamente
+    // 3. Listener em tempo real para TODOS os dispositivos da conta
+    //    Quando outro dispositivo registra ou sai, a lista atualiza automaticamente.
+    //    REQUISITO: Firestore Rules devem permitir list na subcollection devices:
+    //    match /users/{uid}/devices/{d} { allow read, write: if request.auth.uid == uid; }
     if (_devicesUnsubscribe) _devicesUnsubscribe();
     _devicesUnsubscribe = onSnapshot(
       collection(db, 'users', uid, 'devices'),
       (snap) => {
+        // Deduplicar por id (snap pode ter docs repetidos em cache)
+        const seen = new Set();
         const devices = [];
         let found = false;
         snap.forEach(d => {
           const data = d.data();
+          if (!data.id || seen.has(data.id)) return;
+          seen.add(data.id);
           devices.push(data);
           if (data.id === deviceId) found = true;
         });
-        // Race condition: snapshot chegou antes do setDoc propagar -- injeta dispositivo local
-        if (!found) devices.push({ ..._thisDevice, lastAccess: Date.now() });
+        // Race condition: setDoc ainda nao propagou -- injeta dados locais
+        if (!found) {
+          devices.push({ ..._thisDevice, lastAccess: Date.now() });
+        }
         devices.sort((a, b) => {
           if (a.id === deviceId) return -1;
           if (b.id === deviceId) return 1;
           return (b.lastAccess || 0) - (a.lastAccess || 0);
         });
         window._connectedDevices = devices;
-        // CRITICO: window. obrigatorio -- esta funcao esta em escopo de modulo ES
-        if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(devices);
+        console.log('[Devices] Snapshot recebido:', devices.length, 'dispositivo(s)');
+        // CRITICO: window. obrigatorio -- callback roda dentro do modulo ES
+        if (typeof window._renderConnectedDevices === 'function') {
+          window._renderConnectedDevices(devices);
+        } else {
+          // _renderConnectedDevices ainda nao definida (improvavel) -- tenta em 300ms
+          setTimeout(() => {
+            if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(devices);
+          }, 300);
+        }
       },
       (err) => {
-        // Erro Firestore (ex: regras de seguranca bloqueando subcollection devices)
-        // Verifique as Firestore Rules -- adicione: match /devices/{d} { allow read, write: if request.auth.uid == uid; }
-        console.warn('Devices onSnapshot erro:', err.code, err.message);
+        // ERRO: provavelmente Firestore Security Rules nao configuradas para a subcollection
+        console.error('[Devices] onSnapshot ERRO:', err.code, '-', err.message);
+        console.info(
+          '[Devices] Para mostrar todos os dispositivos, adicione esta regra no Firebase Console\n' +
+          '(Firestore Database > Rules):\n\n' +
+          'match /users/{uid} {\n' +
+          '  allow read, write: if request.auth.uid == uid;\n' +
+          '  match /devices/{d} {\n' +
+          '    allow read, write: if request.auth.uid == uid;\n' +
+          '  }\n}'
+        );
+        // Mostra pelo menos o dispositivo atual + aviso de regras na UI
         const fallback = [{ ..._thisDevice, lastAccess: Date.now() }];
         window._connectedDevices = fallback;
+        window._devicesRulesError = true;
         if (typeof window._renderConnectedDevices === 'function') window._renderConnectedDevices(fallback);
       }
     );
@@ -9711,33 +9763,49 @@ function _renderConnectedDevices(devices) {
   const wrap = document.getElementById('devices-list-wrap');
   if (!wrap) return;
 
-  // Não logado
   if (!window._fbCurrentUser || !window._fbCurrentUser()) {
     wrap.innerHTML = '<div class="devices-empty">Entre com o Google para ver seus dispositivos conectados.</div>';
     return;
   }
 
-  // Ainda carregando
   if (!devices) {
-    wrap.innerHTML = '<div class="devices-loading">Carregando dispositivos…</div>';
+    wrap.innerHTML = '<div class="devices-loading">Carregando dispositivos\u2026</div>';
     return;
   }
 
+  // Aviso de Firestore Rules (onSnapshot deu erro de permissao)
+  if (window._devicesRulesError) {
+    const rulesWarn = '<div style="background:rgba(255,159,10,.1);border:0.5px solid rgba(255,159,10,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:12px;line-height:1.5;color:rgba(255,159,10,.9)">'
+      + '<b>\u26a0\ufe0f Firestore Rules n\u00e3o configuradas</b><br>'
+      + 'Para ver todos os dispositivos, adicione no Firebase Console <b>(Firestore \u2192 Rules)</b>:<br>'
+      + '<code style="font-family:monospace;font-size:11px;opacity:.85">match /users/{uid}/devices/{d} {<br>'
+      + '&nbsp;&nbsp;allow read, write: if request.auth.uid == uid;<br>}</code>'
+      + '</div>';
+    wrap.innerHTML = rulesWarn;
+    // ainda mostra dispositivo atual abaixo do aviso
+  } else {
+    wrap.innerHTML = '';
+  }
+
   if (devices.length === 0) {
-    wrap.innerHTML = '<div class="devices-empty">Nenhum dispositivo conectado encontrado.</div>';
+    wrap.innerHTML += '<div class="devices-empty">Nenhum dispositivo conectado encontrado.</div>';
     return;
   }
 
   const myId = window._currentDeviceId;
+  // Deduplicar por id antes de renderizar
+  const seen = new Set();
+  const uniq = devices.filter(d => { if (seen.has(d.id)) return false; seen.add(d.id); return true; });
+
   let html = '<div class="device-list">';
-  devices.forEach(dev => {
+  uniq.forEach(dev => {
     const isMe = dev.id === myId;
     html += '<div class="device-card' + (isMe ? ' current-device' : '') + '">';
     html += '<div class="device-icon">' + _getDeviceIcon(dev.device) + '</div>';
     html += '<div class="device-info">';
-    html += '<div class="device-name">' + _escHtml(dev.device || 'Dispositivo') + ' · ' + _escHtml(dev.browser || '') + '</div>';
-    const cityPart = dev.city ? _escHtml(dev.city) + ' · ' : '';
-    html += '<div class="device-meta">' + cityPart + 'Último acesso: ' + _fmtDeviceTime(dev.lastAccess) + '</div>';
+    html += '<div class="device-name">' + _escHtml(dev.device || 'Dispositivo') + ' \u00b7 ' + _escHtml(dev.browser || '') + '</div>';
+    const _cityTxt = dev.city ? _escHtml(dev.city) + ' \u00b7 ' : '';
+    html += '<div class="device-meta">' + _cityTxt + '\u00daltimo acesso: ' + _fmtDeviceTime(dev.lastAccess) + '</div>';
     html += '</div>';
     if (isMe) {
       html += '<span class="device-badge">Este</span>';
@@ -9749,9 +9817,9 @@ function _renderConnectedDevices(devices) {
     html += '</div>';
   });
   html += '</div>';
-  wrap.innerHTML = html;
+  wrap.innerHTML += html;
 }
-// CRITICO: expoe em window para o modulo ES conseguir chamar
+// CRITICO: expoe em window -- modulo ES nao acessa globais de scripts normais por nome
 window._renderConnectedDevices = _renderConnectedDevices;
 
 function _escHtml(str) {
