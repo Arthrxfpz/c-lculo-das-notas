@@ -5358,6 +5358,74 @@ input, textarea, select {
 .cal-event-row-chevron svg{width:16px;height:16px;stroke:var(--t2);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .cal-event-row.past{opacity:.4}
 
+/* ── Divisor "Já passaram" no calendário ── */
+.cal-past-divider{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 16px 10px;
+}
+.cal-past-divider-line{
+  flex:1;height:1px;background:var(--line2);
+}
+.cal-past-divider-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.6px;
+  text-transform:uppercase;color:var(--t4);
+  white-space:nowrap;flex-shrink:0;
+}
+
+/* ── Acordeão de provas realizadas ── */
+.done-accordion{
+  margin-top:10px;
+  border-radius:var(--r);
+  border:1px solid var(--line2);
+  background:var(--bg1);
+  overflow:hidden;
+}
+.done-accordion-toggle{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:13px 14px;
+  background:none;border:none;cursor:pointer;
+  font-family:var(--ff);
+  transition:background .15s;
+  gap:10px;
+}
+.done-accordion-toggle:active{background:var(--bg2);}
+.done-accordion-toggle-left{
+  display:flex;align-items:center;gap:8px;
+}
+.done-accordion-icon{
+  width:24px;height:24px;border-radius:8px;
+  background:var(--greenbg);border:1px solid var(--greenbd);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.done-accordion-title{
+  font-size:13px;font-weight:700;color:var(--t2);
+  letter-spacing:-.1px;
+}
+.done-accordion-count{
+  font-size:11px;font-weight:700;
+  background:var(--bg3);color:var(--t4);
+  padding:2px 8px;border-radius:10px;
+}
+.done-accordion-chevron{
+  transition:transform .28s var(--ease-ios);
+  display:flex;align-items:center;flex-shrink:0;
+}
+.done-accordion.open .done-accordion-chevron{
+  transform:rotate(180deg);
+}
+.done-accordion-body{
+  max-height:0;overflow:hidden;
+  transition:max-height .35s var(--ease-ios);
+}
+.done-accordion.open .done-accordion-body{
+  max-height:4000px;
+}
+.done-exam-list{
+  padding:0 12px 12px;
+  border-top:1px solid var(--line2);
+}
+
 /* collapsed desktop */
 .cal-day-sheet-overlay.collapsed{left:264px}
 
@@ -8245,9 +8313,25 @@ function renderProvas(el){
       if(laterList.length>0){listHtml+=secLabel('Em breve',laterList,'')+`<div class="exam-list">`;laterList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
     }
     if(doneExams.length>0){
-      listHtml+=secLabel('Realizadas',doneExams,'')+`<div class="exam-list">`;
+      const doneId='done-accordion-'+Date.now();
+      listHtml+=`
+      <div class="done-accordion" id="${doneId}">
+        <button class="done-accordion-toggle" onclick="toggleDoneAccordion('${doneId}')">
+          <div class="done-accordion-toggle-left">
+            <div class="done-accordion-icon">
+              <svg viewBox="0 0 24 24" width="14" height="14" style="stroke:var(--green);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <span class="done-accordion-title">Realizadas</span>
+            <span class="done-accordion-count">${doneExams.length}</span>
+          </div>
+          <div class="done-accordion-chevron">
+            <svg viewBox="0 0 24 24" width="16" height="16" style="stroke:var(--t3);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+        </button>
+        <div class="done-accordion-body">
+          <div class="exam-list done-exam-list">`;
       doneExams.forEach(e=>{listHtml+=buildItem(e);});
-      listHtml+='</div>';
+      listHtml+=`</div></div></div>`;
     }
   }
 
@@ -8294,6 +8378,13 @@ function renderProvas(el){
   },0);
   updateExamBadge();
 }
+/* ─── DONE ACCORDION ─── */
+function toggleDoneAccordion(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.toggle('open');
+}
+
 /* ─── EXAM DETAIL SHEET ─── */
 function openExamDetail(examId){
   const e=exams.find(x=>x.id===examId);
@@ -11163,7 +11254,10 @@ function _buildCalEventListHtml(mo){
   const daysInMonth=new Date(2026,mo+1,0).getDate();
   const PT_WD_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
   const today=new Date();today.setHours(0,0,0,0);
-  let rows='';
+
+  const upcomingRows=[];
+  const pastRows=[];
+
   for(let d=1;d<=daysInMonth;d++){
     const dateStr=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const feriado=FERIADOS_2026[dateStr];
@@ -11182,7 +11276,7 @@ function _buildCalEventListHtml(mo){
       infoHtml+=`<div class="cal-event-row-exam"><div class="cal-event-row-exam-dot" style="background:${color}"></div>${lbl}</div>`;
     });
 
-    rows+=`<div class="cal-event-row${isPast?' past':''}" onclick="calDayClick('${dateStr}')">
+    const rowHtml=`<div class="cal-event-row${isPast?' past':''}" onclick="calDayClick('${dateStr}')">
       <div class="cal-event-row-date-col">
         <div class="cal-event-row-day">${d}</div>
         <div class="cal-event-row-dow">${dowLbl}</div>
@@ -11191,9 +11285,29 @@ function _buildCalEventListHtml(mo){
       <div class="cal-event-row-info">${infoHtml}</div>
       <div class="cal-event-row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
     </div>`;
+
+    if(isPast) pastRows.push(rowHtml);
+    else upcomingRows.push(rowHtml);
   }
-  if(!rows) return '';
-  return `<div class="cal-event-list">${rows}</div>`;
+
+  if(!upcomingRows.length&&!pastRows.length) return '';
+
+  let html='<div class="cal-event-list">';
+  html+=upcomingRows.join('');
+
+  if(pastRows.length>0){
+    if(upcomingRows.length>0){
+      html+=`<div class="cal-past-divider">
+        <div class="cal-past-divider-line"></div>
+        <span class="cal-past-divider-lbl">Já passaram</span>
+        <div class="cal-past-divider-line"></div>
+      </div>`;
+    }
+    html+=pastRows.join('');
+  }
+
+  html+='</div>';
+  return html;
 }
 
 function calNavMonth(dir){
