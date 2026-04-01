@@ -68,7 +68,7 @@
 
   window._hideSplash = function() {
     clearTimeout(_splashSlowTimer);
-    _setSplashProgress(100, 'Tudo certo!');
+    _setSplashProgress(100, 'Concluído');
     // Pequena pausa para o usuário ver 100% antes de sumir
     setTimeout(() => {
       const splash = document.getElementById('app-splash');
@@ -1685,13 +1685,49 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .sched-break-line{flex:1;height:1px;background:var(--amberbd)}
 .sched-break-txt{font-size:11px;font-weight:700;color:var(--amber);letter-spacing:.8px;white-space:nowrap}
 .sched-break.current{background:var(--amberbg)}
-/* sched-update-notice */
-.sched-update-notice{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;margin-bottom:12px;background:rgba(99,102,241,.10);border:1px solid rgba(99,102,241,.30);border-radius:14px;}
-[data-theme="light"] .sched-update-notice{background:rgba(99,102,241,.07);border-color:rgba(99,102,241,.22);}
-.sched-update-notice-icon{font-size:16px;line-height:1.4;flex-shrink:0}
-.sched-update-notice-text{display:flex;flex-direction:column;gap:2px}
-.sched-update-notice-title{font-size:12px;font-weight:700;color:#818CF8;letter-spacing:.3px}
-.sched-update-notice-sub{font-size:12px;color:var(--t3);line-height:1.4}
+/* ── app-update-banner — faixa fixa dentro do top-fixed, acima da topbar ── */
+.app-update-banner{
+  display:none; /* controlado via JS */
+  align-items:center;gap:10px;
+  padding:8px 16px 8px;
+  background:rgba(99,102,241,.13);
+  border-bottom:0.5px solid rgba(99,102,241,.28);
+  overflow:hidden;
+  transition:height .3s var(--ease-ios), opacity .3s var(--ease-ios);
+  will-change:height,opacity;
+}
+[data-theme="light"] .app-update-banner{
+  background:rgba(99,102,241,.09);
+  border-bottom-color:rgba(99,102,241,.2);
+}
+.app-update-banner-icon{
+  font-size:14px;line-height:1;flex-shrink:0;
+}
+.app-update-banner-body{
+  flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;
+}
+.app-update-banner-title{
+  font-size:11.5px;font-weight:700;color:#818CF8;letter-spacing:.25px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+[data-theme="light"] .app-update-banner-title{color:#4F46E5;}
+.app-update-banner-sub{
+  font-size:11px;color:var(--t3);line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.app-update-banner-close{
+  flex-shrink:0;
+  width:22px;height:22px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(99,102,241,.14);
+  border:none;border-radius:50%;
+  cursor:pointer;padding:0;
+  color:#818CF8;
+  font-size:11px;font-weight:700;line-height:1;
+  transition:background .18s,opacity .15s,transform .12s;
+}
+[data-theme="light"] .app-update-banner-close{background:rgba(99,102,241,.11);color:#4F46E5;}
+.app-update-banner-close:active{opacity:.65;transform:scale(.88);}
 
 /* ═══════════════════════════════
    PROVAS (EXAM SCHEDULER)
@@ -5429,75 +5465,81 @@ input, textarea, select {
 /* collapsed desktop */
 .cal-day-sheet-overlay.collapsed{left:264px}
 
+
 </style>
 <body>
 
 <!-- ── Splash de carregamento ── -->
+<style>
+@keyframes splash-spin { to { transform: rotate(360deg); } }
+</style>
 <div id="app-splash" style="
   position:fixed;inset:0;z-index:99999;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-  background:#000000;
-  transition:opacity .4s ease;
+  background:#000;
+  transition:opacity .45s ease;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
 ">
-  <!-- Spinner -->
-  <div style="
-    width:34px;height:34px;border-radius:50%;
-    border:2.5px solid rgba(255,214,10,.15);
-    border-top-color:#FFD60A;
-    animation:splash-spin .75s linear infinite;
-    margin-bottom:22px;
-  "></div>
 
-  <!-- Label fixa -->
+  <!-- Spinner elegante -->
+  <div style="position:relative;width:44px;height:44px;margin-bottom:24px;flex-shrink:0;">
+    <div style="
+      position:absolute;inset:0;border-radius:50%;
+      border:1.8px solid rgba(255,255,255,.06);
+    "></div>
+    <div style="
+      position:absolute;inset:0;border-radius:50%;
+      border:1.8px solid transparent;
+      border-top-color:#FFD60A;
+      animation:splash-spin .85s linear infinite;
+    "></div>
+  </div>
+
+  <!-- Label -->
   <div id="splash-label" style="
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
-    font-size:13px;font-weight:600;
-    color:rgba(255,255,255,.55);
-    letter-spacing:.01em;
-    margin-bottom:18px;
-  ">Carregando</div>
+    font-size:13px;font-weight:500;
+    color:rgba(255,255,255,.38);
+    letter-spacing:-.1px;
+    margin-bottom:20px;
+  ">Carregando…</div>
 
   <!-- Barra de progresso -->
-  <div style="width:160px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;margin-bottom:10px">
+  <div style="width:120px;height:2px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:8px;">
     <div id="splash-bar" style="
       height:100%;width:0%;
       background:#FFD60A;
       border-radius:2px;
-      transition:width .35s ease;
+      transition:width .38s cubic-bezier(0.25,0.46,0.45,0.94);
     "></div>
   </div>
 
   <!-- Percentual -->
   <div id="splash-pct" style="
     font-family:ui-monospace,'SF Mono',monospace;
-    font-size:11px;font-weight:700;
-    color:rgba(255,214,10,.45);
-    letter-spacing:.05em;
+    font-size:10px;font-weight:600;
+    color:rgba(255,214,10,.35);
+    letter-spacing:.06em;
   ">0%</div>
 
-  <!-- Aviso de conexão lenta (oculto por padrão) -->
+  <!-- Aviso de conexão lenta -->
   <div id="splash-slow" style="
-    margin-top:22px;
-    display:none;
-    align-items:center;gap:7px;
-    background:rgba(255,159,10,.1);
-    border:1px solid rgba(255,159,10,.25);
-    border-radius:10px;
-    padding:8px 14px;
-    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+    position:absolute;bottom:44px;left:50%;transform:translateX(-50%);
+    display:none;white-space:nowrap;
+    align-items:center;gap:6px;
+    background:rgba(255,159,10,.08);
+    border:1px solid rgba(255,159,10,.18);
+    border-radius:20px;padding:7px 14px;
     font-size:11px;font-weight:600;
-    color:rgba(255,159,10,.8);
+    color:rgba(255,159,10,.7);
   ">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M1 6s4-2 11-2 11 2 11 2"/><path d="M5 10s2.5-1 7-1 7 1 7 1"/>
       <path d="M9 14s1.5-.5 3-.5 3 .5 3 .5"/><line x1="12" y1="20" x2="12.01" y2="20"/>
     </svg>
     Conexão lenta…
   </div>
+
 </div>
-<style>
-@keyframes splash-spin{to{transform:rotate(360deg)}}
-</style>
 
 <!-- ── Prompt de login Google (mostra apenas 1x, se não estiver logado) ── -->
 <div class="login-prompt-overlay" id="login-prompt-overlay" onclick="if(event.target===this)_closeLoginPrompt()">
@@ -5574,6 +5616,21 @@ input, textarea, select {
 </div>
 
   <div class="top-fixed" id="top-fixed">
+
+    <!-- ── Faixa de aviso de atualização — acima de tudo, dentro do top-fixed ── -->
+    <div id="app-update-banner" class="app-update-banner" role="status" aria-live="polite" data-update-id="">
+      <span class="app-update-banner-icon" id="app-update-banner-icon">📢</span>
+      <div class="app-update-banner-body">
+        <span class="app-update-banner-title" id="app-update-banner-title"></span>
+        <span class="app-update-banner-sub"   id="app-update-banner-sub"></span>
+      </div>
+      <button class="app-update-banner-close" onclick="dismissUpdateBanner()" aria-label="Fechar aviso">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
+        </svg>
+      </button>
+    </div>
+
     <div class="topbar">
       <!-- Hambúrguer: só aparece no desktop quando sidebar está colapsada -->
       <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleSidebar()" title="Abrir menu">
@@ -6356,6 +6413,85 @@ function getTrimesterRecovery(sid){
 /* ══════════════════════════════════════════
    LAYOUT SYNC
 ══════════════════════════════════════════ */
+/* ══════════════════════════════════════════
+   APP UPDATE BANNER — faixa fixa no topo
+   Para adicionar um aviso: inclua um objeto no array UPDATES abaixo.
+   id:    identificador único (qualquer string)
+   start: data de início no formato 'YYYY-MM-DD'
+   end:   data de fim   no formato 'YYYY-MM-DD' (inclusive)
+   title: título em negrito (curto)
+   sub:   subtítulo descritivo
+   icon:  emoji opcional (padrão '📢')
+══════════════════════════════════════════ */
+const UPDATES = [
+  // Exemplo — descomente e edite para exibir um aviso:
+  // { id: 'sched-v2', start: '2026-04-01', end: '2026-04-05',
+  //   title: 'Horários atualizados', icon: '📅',
+  //   sub: 'A grade de aulas foi atualizada — confira as mudanças desta semana.' },
+];
+
+function checkUpdateBanner() {
+  const banner = document.getElementById('app-update-banner');
+  if (!banner) return;
+
+  const now = Date.now();
+  const active = UPDATES.find(u => {
+    if (localStorage.getItem('t205_dismissed_update_' + u.id)) return false;
+    const start = new Date(u.start + 'T00:00:00').getTime();
+    const end   = new Date(u.end   + 'T23:59:59').getTime();
+    return now >= start && now <= end;
+  });
+
+  if (active) {
+    const titleEl = document.getElementById('app-update-banner-title');
+    const subEl   = document.getElementById('app-update-banner-sub');
+    const iconEl  = document.getElementById('app-update-banner-icon');
+    if (titleEl) titleEl.textContent = active.title || '';
+    if (subEl)   subEl.textContent   = active.sub   || '';
+    if (iconEl)  iconEl.textContent  = active.icon  || '📢';
+    banner.setAttribute('data-update-id', active.id);
+    banner.style.display    = 'flex';
+    banner.style.height     = '';
+    banner.style.opacity    = '';
+    banner.style.overflow   = '';
+    banner.style.transition = '';
+  } else {
+    banner.style.display = 'none';
+    banner.removeAttribute('data-update-id');
+  }
+  // Notifica syncLayout para recalcular padding do conteúdo
+  if (typeof syncLayout === 'function') syncLayout();
+}
+
+function dismissUpdateBanner() {
+  const banner = document.getElementById('app-update-banner');
+  if (!banner) return;
+  const id = banner.getAttribute('data-update-id');
+  if (id) {
+    try { localStorage.setItem('t205_dismissed_update_' + id, '1'); } catch(e) {}
+  }
+  // Anima o fechamento
+  const h = banner.offsetHeight;
+  banner.style.overflow   = 'hidden';
+  banner.style.height     = h + 'px';
+  banner.style.opacity    = '1';
+  banner.style.transition = 'height .28s cubic-bezier(0.25,0.46,0.45,0.94), opacity .22s ease';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      banner.style.height  = '0';
+      banner.style.opacity = '0';
+    });
+  });
+  setTimeout(() => {
+    banner.style.display    = 'none';
+    banner.style.height     = '';
+    banner.style.opacity    = '';
+    banner.style.overflow   = '';
+    banner.style.transition = '';
+    if (typeof syncLayout === 'function') syncLayout();
+  }, 300);
+}
+
 function syncLayout(){
   const h=document.getElementById('top-fixed').getBoundingClientRect().height;
   const pt=(h+10)+'px';
@@ -7571,12 +7707,6 @@ function renderHorarios(el){
     }
   }
 
-  // ── Aviso de horários atualizados (16/03 00:00 → 20/03 00:00) ──
-  const _noticeStart=new Date('2026-03-16T00:00:00').getTime();
-  const _noticeEnd  =new Date('2026-03-20T00:00:00').getTime();
-  const _nowTs=Date.now();
-  const schedNotice=(_nowTs>=_noticeStart&&_nowTs<_noticeEnd)?`<div class="sched-update-notice"><div class="sched-update-notice-text"><div class="sched-update-notice-title">Horários atualizados</div><div class="sched-update-notice-sub">A grade de aulas foi atualizada — confira as mudanças desta semana.</div></div></div>`:'';
-
   let daySel='<div class="day-selector">';
   [1,2,3,4,5].forEach(d=>{
     const isToday=d===todayDow,isActive=d===schedDay;
@@ -7617,7 +7747,7 @@ function renderHorarios(el){
   });
   list+='</div>';
 
-  el.innerHTML=banner+schedNotice+daySel+list;
+  el.innerHTML=banner+daySel+list;
 }
 
 /* ═══════════════════════════════
@@ -11112,6 +11242,7 @@ window.addEventListener('load',()=>{
   loadGrades();
   loadExams();
   loadNotes();
+  checkUpdateBanner();
   syncLayout();
   fetchWeather(true);
   render(null);
@@ -11638,5 +11769,7 @@ window.addEventListener('online',async()=>{
     </div>
   </div>
 </div>
+
+
 
 
