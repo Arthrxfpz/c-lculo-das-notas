@@ -93,7 +93,6 @@
           student: JSON.parse(localStorage.getItem('t205_stu')     || 'null'),
           notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
           notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
-          theme:   localStorage.getItem('t205_theme') || 'system',
           updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
@@ -112,7 +111,6 @@
     if (d.student) localStorage.setItem('t205_stu',    JSON.stringify(d.student));
     if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
     if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
-    if (d.theme)   localStorage.setItem('t205_theme',  d.theme);
     if (typeof loadGrades       === 'function') loadGrades();
     if (typeof loadExams        === 'function') loadExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
@@ -146,7 +144,6 @@
           if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
           if (d.notes)     localStorage.setItem('t205_notes',     JSON.stringify(d.notes));
           if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
-          if (d.theme)     localStorage.setItem('t205_theme',     d.theme);
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           _setSplashProgress(90, 'Aplicando atualizações…');
           setTimeout(() => location.reload(), 200);
