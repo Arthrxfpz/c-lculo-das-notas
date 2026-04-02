@@ -93,7 +93,7 @@
           student: JSON.parse(localStorage.getItem('t205_stu')     || 'null'),
           notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
           notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
-          theme:   localStorage.getItem('t205_theme') || 'dark',
+          theme:   localStorage.getItem('t205_theme') || 'system',
           updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
@@ -400,9 +400,12 @@
   try{
     var t=localStorage.getItem('t205_theme');
     if(t==='light'||t==='dark'){document.documentElement.setAttribute('data-theme',t);return;}
+    // 'system' or null: follow OS
   }catch(e){}
   if(window.matchMedia&&!window.matchMedia('(prefers-color-scheme: dark)').matches)
     document.documentElement.setAttribute('data-theme','light');
+  else
+    document.documentElement.setAttribute('data-theme','dark');
 })();
 </script>
 <script>
@@ -1977,6 +1980,95 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 [data-theme="dark"] .theme-btn .icon-sun{opacity:0;transform:rotate(-90deg) scale(.4)}
 [data-theme="light"] .theme-btn .icon-sun{opacity:1;transform:rotate(0deg) scale(1)}
 [data-theme="light"] .theme-btn .icon-moon{opacity:0;transform:rotate(90deg) scale(.4)}
+
+/* ── Theme Popover ── */
+.theme-popover-backdrop{
+  position:fixed;inset:0;z-index:9990;
+  background:transparent;
+}
+.theme-popover{
+  position:fixed;z-index:9991;
+  background:var(--bg1);
+  border:1px solid var(--line2);
+  border-radius:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.14);
+  padding:6px;
+  min-width:192px;
+  opacity:0;
+  transform:scale(.88) translateY(-6px);
+  transform-origin:top right;
+  transition:opacity .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+}
+.theme-popover.open{
+  opacity:1;transform:scale(1) translateY(0);pointer-events:all;
+}
+/* arrow/tail pointing up-right */
+.theme-popover::before{
+  content:'';
+  position:absolute;
+  top:-7px;right:10px;
+  width:13px;height:7px;
+  background:var(--bg1);
+  clip-path:polygon(50% 0%,100% 100%,0% 100%);
+  border-left:1px solid var(--line2);
+  border-right:1px solid var(--line2);
+  border-top:1px solid var(--line2);
+}
+.theme-popover-item{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 13px;
+  border-radius:11px;
+  cursor:pointer;
+  transition:background .12s;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.theme-popover-item:active{background:var(--bg3)!important;}
+.theme-popover-item:hover{background:var(--bg2);}
+.theme-popover-item.active{background:var(--bg2);}
+.theme-popover-icon{
+  width:28px;height:28px;
+  border-radius:8px;
+  background:var(--bg3);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:background .15s;
+}
+.theme-popover-item.active .theme-popover-icon{
+  background:var(--gold);
+}
+.theme-popover-icon svg{
+  width:15px;height:15px;
+  stroke:var(--t2);fill:none;
+  stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .15s;
+}
+.theme-popover-item.active .theme-popover-icon svg{
+  stroke:#000;
+}
+.theme-popover-label{
+  font-size:14px;font-weight:500;color:var(--t1);
+  letter-spacing:-.2px;flex:1;
+  line-height:1.2;
+}
+.theme-popover-item.active .theme-popover-label{
+  font-weight:600;
+}
+.theme-popover-check{
+  width:16px;height:16px;
+  opacity:0;
+  flex-shrink:0;
+  transition:opacity .15s;
+}
+.theme-popover-item.active .theme-popover-check{
+  opacity:1;
+}
+.theme-popover-check svg{
+  width:16px;height:16px;
+  stroke:var(--gold);fill:none;
+  stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
+}
 
 .topbar-right{display:flex;align-items:center;gap:6px}
 
@@ -5472,66 +5564,78 @@ input, textarea, select {
 <!-- ── Splash de carregamento ── -->
 <style>
 @keyframes splash-spin { to { transform: rotate(360deg); } }
-</style>
-<div id="app-splash" style="
+#app-splash {
   position:fixed;inset:0;z-index:99999;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
-  background:#000;
+  background:var(--bg0);
   transition:opacity .45s ease;
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
-">
+}
+#splash-spinner-track {
+  position:absolute;inset:0;border-radius:50%;
+  border:1.8px solid var(--line2);
+}
+#splash-spinner-arc {
+  position:absolute;inset:0;border-radius:50%;
+  border:1.8px solid transparent;
+  border-top-color:var(--gold);
+  animation:splash-spin .85s linear infinite;
+}
+#splash-label {
+  font-size:13px;font-weight:500;
+  color:var(--t3);
+  letter-spacing:-.1px;
+  margin-bottom:20px;
+}
+#splash-bar-track {
+  width:120px;height:2px;
+  background:var(--line2);
+  border-radius:2px;overflow:hidden;margin-bottom:8px;
+}
+#splash-bar {
+  height:100%;width:0%;
+  background:var(--gold);
+  border-radius:2px;
+  transition:width .38s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+#splash-pct {
+  font-family:ui-monospace,'SF Mono',monospace;
+  font-size:10px;font-weight:600;
+  color:var(--goldbd);
+  letter-spacing:.06em;
+}
+#splash-slow {
+  position:absolute;bottom:44px;left:50%;transform:translateX(-50%);
+  display:none;white-space:nowrap;
+  align-items:center;gap:6px;
+  background:rgba(255,159,10,.08);
+  border:1px solid rgba(255,159,10,.22);
+  border-radius:20px;padding:7px 14px;
+  font-size:11px;font-weight:600;
+  color:rgba(255,159,10,.8);
+}
+</style>
+<div id="app-splash">
 
   <!-- Spinner elegante -->
   <div style="position:relative;width:44px;height:44px;margin-bottom:24px;flex-shrink:0;">
-    <div style="
-      position:absolute;inset:0;border-radius:50%;
-      border:1.8px solid rgba(255,255,255,.06);
-    "></div>
-    <div style="
-      position:absolute;inset:0;border-radius:50%;
-      border:1.8px solid transparent;
-      border-top-color:#FFD60A;
-      animation:splash-spin .85s linear infinite;
-    "></div>
+    <div id="splash-spinner-track"></div>
+    <div id="splash-spinner-arc"></div>
   </div>
 
   <!-- Label -->
-  <div id="splash-label" style="
-    font-size:13px;font-weight:500;
-    color:rgba(255,255,255,.38);
-    letter-spacing:-.1px;
-    margin-bottom:20px;
-  ">Carregando…</div>
+  <div id="splash-label">Carregando…</div>
 
   <!-- Barra de progresso -->
-  <div style="width:120px;height:2px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-bottom:8px;">
-    <div id="splash-bar" style="
-      height:100%;width:0%;
-      background:#FFD60A;
-      border-radius:2px;
-      transition:width .38s cubic-bezier(0.25,0.46,0.45,0.94);
-    "></div>
+  <div id="splash-bar-track">
+    <div id="splash-bar"></div>
   </div>
 
   <!-- Percentual -->
-  <div id="splash-pct" style="
-    font-family:ui-monospace,'SF Mono',monospace;
-    font-size:10px;font-weight:600;
-    color:rgba(255,214,10,.35);
-    letter-spacing:.06em;
-  ">0%</div>
+  <div id="splash-pct">0%</div>
 
   <!-- Aviso de conexão lenta -->
-  <div id="splash-slow" style="
-    position:absolute;bottom:44px;left:50%;transform:translateX(-50%);
-    display:none;white-space:nowrap;
-    align-items:center;gap:6px;
-    background:rgba(255,159,10,.08);
-    border:1px solid rgba(255,159,10,.18);
-    border-radius:20px;padding:7px 14px;
-    font-size:11px;font-weight:600;
-    color:rgba(255,159,10,.7);
-  ">
+  <div id="splash-slow">
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M1 6s4-2 11-2 11 2 11 2"/><path d="M5 10s2.5-1 7-1 7 1 7 1"/>
       <path d="M9 14s1.5-.5 3-.5 3 .5 3 .5"/><line x1="12" y1="20" x2="12.01" y2="20"/>
@@ -5678,7 +5782,7 @@ input, textarea, select {
             <span style="font-size:9px;font-weight:600;color:var(--t3);letter-spacing:0.1px;line-height:1">Rio Grande, RS</span>
           </div>
         </div>
-        <div class="theme-btn" id="theme-btn" onclick="toggleTheme()">
+        <div class="theme-btn" id="theme-btn" onclick="openThemePopover(event)">
           <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
         </div>
@@ -10517,23 +10621,31 @@ function iosHaptic(btn){
 /* ─── THEME ─── */
 
 function applyTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
+  const actual=(t==='system')
+    ?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')
+    :t;
+  document.documentElement.setAttribute('data-theme',actual);
   try{localStorage.setItem('t205_theme',t);}catch(e){}
-  // reapply avatar so colors stay correct for new theme
   requestAnimationFrame(()=>{ if(typeof applyAvatar==='function') applyAvatar(); if(typeof _drawMainChart==='function') _drawMainChart(); });
-}
-function toggleTheme(){
-  const cur=document.documentElement.getAttribute('data-theme');
-  applyTheme(cur==='light'?'dark':'light');
+  _updateThemePopoverChecks(t);
 }
 function loadTheme(){
   try{
     const saved=localStorage.getItem('t205_theme');
-    if(saved==='light'||saved==='dark'){applyTheme(saved);return;}
+    if(saved==='light'||saved==='dark'||saved==='system'){applyTheme(saved);return;}
   }catch(e){}
-  // auto-detect system preference
-  const prefersDark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(prefersDark?'dark':'light');
+  applyTheme('system');
+}
+var applyThemeFromLS=loadTheme;
+
+/* ── Sistema: acompanha mudança do OS quando em modo 'system' ── */
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{
+    try{
+      const saved=localStorage.getItem('t205_theme');
+      if(!saved||saved==='system') applyTheme('system');
+    }catch(e){}
+  });
 }
 
 /* ─── INIT ─── */
@@ -11581,6 +11693,55 @@ function toggleExamForm(){
 }
 
 /* ══════════════════════════════════════════
+   THEME POPOVER
+══════════════════════════════════════════ */
+function openThemePopover(e){
+  e && e.stopPropagation();
+  const pop=document.getElementById('theme-popover');
+  const btn=document.getElementById('theme-btn');
+  const bk=document.getElementById('theme-popover-backdrop');
+  if(!pop||!btn)return;
+
+  // já aberto → fecha
+  if(pop.classList.contains('open')){closeThemePopover();return;}
+
+  // atualiza checkmarks com preferência atual
+  const saved=localStorage.getItem('t205_theme')||'system';
+  _updateThemePopoverChecks(saved);
+
+  // posiciona relativo ao botão
+  const r=btn.getBoundingClientRect();
+  pop.style.top=(r.bottom+8)+'px';
+  // alinha à direita do botão
+  const pw=pop.offsetWidth||200;
+  pop.style.right=(window.innerWidth-r.right)+'px';
+  pop.style.left='auto';
+
+  bk.style.display='block';
+  requestAnimationFrame(()=>{
+    pop.classList.add('open');
+  });
+}
+function closeThemePopover(){
+  const pop=document.getElementById('theme-popover');
+  const bk=document.getElementById('theme-popover-backdrop');
+  if(pop) pop.classList.remove('open');
+  if(bk) setTimeout(()=>{bk.style.display='none';},180);
+}
+function setThemePref(pref){
+  applyTheme(pref);
+  if(typeof window._fbSaveAll==='function') window._fbSaveAll();
+  closeThemePopover();
+}
+function _updateThemePopoverChecks(saved){
+  const pref=saved||'system';
+  ['system','light','dark'].forEach(k=>{
+    const el=document.getElementById('tp-'+k);
+    if(el) el.classList.toggle('active', k===pref);
+  });
+}
+
+/* ══════════════════════════════════════════
    DETECÇÃO DE CONEXÃO (offline / lenta)
 ══════════════════════════════════════════ */
 let _slowBannerTimer=null;
@@ -11751,6 +11912,33 @@ window.addEventListener('online',async()=>{
     <line x1="12" y1="20" x2="12.01" y2="20"/>
   </svg>
   <span id="slow-banner-txt">Conexão lenta</span>
+</div>
+
+<!-- THEME POPOVER -->
+<div class="theme-popover-backdrop" id="theme-popover-backdrop" onclick="closeThemePopover()" style="display:none"></div>
+<div class="theme-popover" id="theme-popover" role="menu" aria-label="Tema">
+  <div class="theme-popover-item" id="tp-system" onclick="setThemePref('system')">
+    <div class="theme-popover-icon">
+      <!-- device/auto icon -->
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+    <span class="theme-popover-label">Definido pelo sistema</span>
+    <span class="theme-popover-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+  </div>
+  <div class="theme-popover-item" id="tp-light" onclick="setThemePref('light')">
+    <div class="theme-popover-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </div>
+    <span class="theme-popover-label">Claro</span>
+    <span class="theme-popover-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+  </div>
+  <div class="theme-popover-item" id="tp-dark" onclick="setThemePref('dark')">
+    <div class="theme-popover-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </div>
+    <span class="theme-popover-label">Escuro</span>
+    <span class="theme-popover-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>
+  </div>
 </div>
 
 <!-- POPUP LOGOUT GOOGLE -->
