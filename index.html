@@ -1895,6 +1895,90 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .exam-rm-btn:active{opacity:.5}
 .exam-rm-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
 
+/* ── Botão lápis (editar prova) ── */
+.exam-edit-btn{
+  width:26px;height:26px;background:var(--goldbg);border:none;border-radius:50%;
+  color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:opacity .15s var(--ease-ios),transform .12s var(--ease-spring);
+  flex-shrink:0;
+}
+.exam-edit-btn:active{opacity:.5;transform:scale(.88)}
+.exam-edit-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ── Modal de edição de prova ── */
+.exam-edit-overlay{
+  position:fixed;inset:0;z-index:9000;
+  background:rgba(0,0,0,.55);
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;
+  transition:opacity .28s var(--ease-ios);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+}
+.exam-edit-overlay.open{opacity:1;pointer-events:all;}
+.exam-edit-sheet{
+  width:100%;max-width:520px;
+  background:var(--bg1);
+  border-radius:22px 22px 0 0;
+  padding:0 0 env(safe-area-inset-bottom,0);
+  max-height:92dvh;
+  overflow-y:auto;
+  transform:translateY(100%);
+  transition:transform .32s var(--ease-sheet);
+  -webkit-overflow-scrolling:touch;
+}
+.exam-edit-overlay.open .exam-edit-sheet{transform:translateY(0);}
+.exam-edit-sheet-handle{
+  width:36px;height:4px;border-radius:2px;
+  background:var(--line);margin:12px auto 4px;flex-shrink:0;
+}
+.exam-edit-sheet-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px 14px;border-bottom:0.5px solid var(--line2);
+}
+.exam-edit-sheet-title{font-size:16px;font-weight:700;color:var(--t1);letter-spacing:-.3px;}
+.exam-edit-close-btn{
+  width:30px;height:30px;border-radius:50%;border:none;
+  background:var(--bg3);color:var(--t2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,transform .12s var(--ease-spring);
+}
+.exam-edit-close-btn:active{background:var(--bg4);transform:scale(.88)}
+.exam-edit-close-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+.exam-edit-body{padding:18px 20px 24px;display:flex;flex-direction:column;gap:14px;}
+.exam-edit-label{font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;}
+.exam-edit-input{
+  width:100%;padding:11px 14px;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:var(--rsm);
+  font-size:15px;color:var(--t1);font-family:var(--ff);outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  box-sizing:border-box;
+}
+.exam-edit-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(255,214,10,.15);}
+.exam-edit-input::placeholder{color:var(--t4);}
+select.exam-edit-input{cursor:pointer;color-scheme:var(--cs);}
+textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
+.exam-edit-tipo-seg{display:flex;gap:8px;margin-bottom:2px;}
+.exam-edit-tipo-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:10px 8px;border-radius:12px;border:1.5px solid var(--line2);
+  background:var(--bg2);color:var(--t2);cursor:pointer;
+  font-size:13px;font-weight:600;font-family:var(--ff);
+  transition:background .15s,border-color .15s,color .15s;
+}
+.exam-edit-tipo-btn.active{
+  background:var(--goldbg);border-color:var(--goldbd);color:var(--gold);
+}
+.exam-edit-tipo-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.exam-edit-save-btn{
+  width:100%;padding:15px;border-radius:14px;border:none;
+  background:var(--gold);color:var(--accent-text,#000);
+  font-size:15px;font-weight:700;font-family:var(--ff);cursor:pointer;
+  letter-spacing:-.2px;
+  transition:opacity .15s,transform .12s var(--ease-spring);
+  margin-top:4px;
+}
+.exam-edit-save-btn:active{opacity:.82;transform:scale(.97);}
+
 .exam-empty{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;line-height:1.8}
 .exam-empty strong{display:block;font-size:16px;font-weight:700;color:var(--t4);margin-bottom:6px}
 
@@ -8497,6 +8581,7 @@ function renderProvas(el){
         </div>
         <div class="exam-item-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:-2px">
           ${bellBtn}
+          ${isPast?'':`<button class="exam-edit-btn" onclick="event.stopPropagation();openEditExam('${e.id}')" title="Editar prova"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`}
           <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         </div>
       </div>`;
@@ -8901,6 +8986,348 @@ function rmExam(id){
       saveExams();render(null);syncLayout();
     }
   });
+}
+
+/* ═══════════════════════════════
+   EDITAR PROVA (popup)
+═══════════════════════════════ */
+let _editingExamId=null;
+window._eedSlotDow=null;
+window._eedSlotTime=null;
+window._eedValidDows=[];
+
+function openEditExam(id){
+  const exam=exams.find(e=>e.id===id);
+  if(!exam)return;
+  _editingExamId=id;
+
+  // Reset estado do picker
+  window._eedSlotDow=null;window._eedSlotTime=null;window._eedValidDows=[];
+
+  const overlay=document.getElementById('exam-edit-overlay');
+  const sheet=document.getElementById('exam-edit-sheet-inner');
+  if(!overlay||!sheet)return;
+
+  // Cor da matéria
+  const subjObj=SUBJECTS.find(s=>s.name===exam.subj)||{};
+  const subjColor=subjObj.color||'var(--gold)';
+
+  sheet.innerHTML=`
+    <div class="exam-edit-sheet-handle"></div>
+    <div class="exam-edit-sheet-header">
+      <div class="exam-edit-sheet-title">Editar ${exam.tipo==='trabalho'?'Trabalho':'Prova'}</div>
+      <button class="exam-edit-close-btn" onclick="closeEditExam()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="exam-edit-body">
+      <!-- Tipo -->
+      <div>
+        <div class="exam-edit-label">Tipo</div>
+        <div class="exam-edit-tipo-seg">
+          <button class="exam-edit-tipo-btn${exam.tipo!=='trabalho'?' active':''}" id="eed-btn-prova" type="button" onclick="_eedSetTipo('prova')">
+            <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Prova
+          </button>
+          <button class="exam-edit-tipo-btn${exam.tipo==='trabalho'?' active':''}" id="eed-btn-trabalho" type="button" onclick="_eedSetTipo('trabalho')">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Trabalho
+          </button>
+        </div>
+        <input type="hidden" id="eed-tipo" value="${escHtml(exam.tipo||'prova')}">
+      </div>
+      <!-- Matéria (somente leitura) -->
+      <div>
+        <div class="exam-edit-label">Matéria <span style="font-size:9px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--t4)">não editável</span></div>
+        <div style="padding:11px 14px;background:var(--bg3);border:1.5px solid var(--line2);border-radius:var(--rsm);font-size:14px;font-weight:600;color:var(--t1);display:flex;align-items:center;gap:9px;opacity:.82">
+          <span style="width:8px;height:8px;border-radius:50%;background:${escHtml(subjColor)};flex-shrink:0;display:inline-block"></span>
+          ${escHtml(exam.subj)}
+        </div>
+        <input type="hidden" id="eed-subj" value="${escHtml(exam.subj)}">
+      </div>
+      <!-- Título -->
+      <div>
+        <div class="exam-edit-label">Título <span style="font-size:9px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--t4)">opcional</span></div>
+        <input class="exam-edit-input" type="text" id="eed-title" placeholder="Título da prova" value="${escHtml(exam.title||'')}">
+      </div>
+      <!-- Slot picker (horário) -->
+      <div id="eed-slot-wrap" style="display:none">
+        <div class="exam-edit-label">Horário da aula</div>
+        <div class="slot-option-grid" id="eed-slot-grid"></div>
+      </div>
+      <!-- Date picker -->
+      <div id="eed-date-wrap" style="display:none"></div>
+      <!-- Valor -->
+      <div>
+        <div class="exam-edit-label">Valor em pontos <span style="font-size:9px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--t4)">opcional · 0,1 a 10</span></div>
+        <input class="exam-edit-input" type="number" id="eed-valor" min="0.1" max="10" step="0.1" placeholder="Ex: 3.0" value="${escHtml(String(exam.valor||''))}">
+      </div>
+      <!-- Conteúdo -->
+      <div>
+        <div class="exam-edit-label">Conteúdo <span style="font-size:9px;text-transform:none;letter-spacing:0;font-weight:400;color:var(--t4)">opcional</span></div>
+        <textarea class="exam-edit-input" id="eed-conteudo" rows="3" placeholder="Conteúdo...">${escHtml(exam.conteudo||'')}</textarea>
+      </div>
+      <!-- Erro -->
+      <div id="eed-error" style="display:none;padding:10px 14px;background:var(--redbg);border:1px solid var(--redbd);border-radius:10px;font-size:13px;font-weight:600;color:var(--red)"></div>
+      <!-- Salvar -->
+      <button class="exam-edit-save-btn" onclick="saveEditExam()">Salvar alterações</button>
+    </div>`;
+
+  overlay.classList.add('open');
+  overlay.onclick=function(ev){if(ev.target===overlay)closeEditExam();};
+
+  // Inicializa slots e datas com base na matéria da prova
+  _eedInitSlots(exam);
+}
+
+function _eedInitSlots(exam){
+  const subjName=exam.subj;
+  const slotWrap=document.getElementById('eed-slot-wrap');
+  const slotGrid=document.getElementById('eed-slot-grid');
+
+  const slots=getSubjSlots(subjName);
+
+  if(!slots.length){
+    // Matéria sem horário fixo: input de data livre
+    if(slotWrap)slotWrap.style.display='none';
+    _eedPopulateDateStripFree(exam.examDate);
+    return;
+  }
+
+  // Mostra slot picker
+  if(slotWrap)slotWrap.style.display='';
+  if(!slotGrid)return;
+  slotGrid.innerHTML='';
+
+  slots.forEach((sl)=>{
+    const btn=document.createElement('button');
+    btn.className='slot-btn';btn.type='button';
+    btn.innerHTML=`<span class="slot-btn-day">${PT_WEEKDAYS[sl.dow]}</span><span class="slot-btn-time">${fmtHM(sl.s)} \u2013 ${fmtHM(sl.e)}</span><span class="slot-btn-period">${sl.period}</span>`;
+    btn.onclick=()=>_eedSelectSlot(sl,btn,slots,null);
+    slotGrid.appendChild(btn);
+  });
+
+  // Determina qual slot pré-selecionar com base no horário ou dia da data salva
+  let targetSlot=null;
+  let targetBtn=null;
+  const btns=[...slotGrid.querySelectorAll('.slot-btn')];
+
+  if(exam.examTime){
+    const idx=slots.findIndex(sl=>(fmtHM(sl.s)+' \u2013 '+fmtHM(sl.e))===exam.examTime);
+    if(idx>=0){targetSlot=slots[idx];targetBtn=btns[idx];}
+  }
+  if(!targetSlot&&exam.examDate){
+    const examDow=new Date(exam.examDate+'T00:00:00').getDay();
+    const idx=slots.findIndex(sl=>sl.dow===examDow);
+    if(idx>=0){targetSlot=slots[idx];targetBtn=btns[idx];}
+  }
+  if(!targetSlot){targetSlot=slots[0];targetBtn=btns[0];}
+
+  if(targetSlot&&targetBtn){
+    _eedSelectSlot(targetSlot,targetBtn,slots,exam.examDate);
+  }
+}
+
+function _eedSelectSlot(sl,btn,allSlots,preselectDate){
+  document.querySelectorAll('#eed-slot-grid .slot-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  window._eedSlotDow=sl.dow;
+  window._eedSlotTime=fmtHM(sl.s)+' \u2013 '+fmtHM(sl.e);
+  window._eedValidDows=[...new Set(allSlots.map(s=>s.dow))];
+  _eedPopulateDateStrip(sl.dow,window._eedValidDows,preselectDate);
+}
+
+function _eedPopulateDateStrip(dow,validDows,preselectDate){
+  const wrap=document.getElementById('eed-date-wrap');
+  if(!wrap)return;
+  const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const DOW_SHORT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const dates=[];
+  const today=new Date();today.setHours(0,0,0,0);
+  let d=new Date(today);
+  while(dates.length<8){d=new Date(d);d.setDate(d.getDate()+1);if(d.getDay()===dow)dates.push(d.toISOString().split('T')[0]);}
+
+  let cardsHtml='';
+  dates.forEach(dateStr=>{
+    const dd=new Date(dateStr+'T00:00:00');
+    const diff=daysDiff(dateStr);
+    const distTxt=diff===0?'hoje':diff===1?'amanhã':`${diff}d`;
+    const isPresel=preselectDate===dateStr;
+    cardsHtml+=`<button class="date-card${isPresel?' selected':''}" type="button" data-date="${dateStr}" onclick="_eedSelectDateCard(this,'${dateStr}')"><div class="date-card-dow">${DOW_SHORT[dd.getDay()]}</div><div class="date-card-num">${dd.getDate()}</div><div class="date-card-mon">${MONTHS[dd.getMonth()]}</div><div class="date-card-dist">${distTxt}</div></button>`;
+  });
+  cardsHtml+=`<button class="date-card custom-card" type="button" id="eed-custom-card" onclick="_eedToggleCustomDate()"><svg class="date-card-custom-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div class="date-card-custom-lbl">Personalizada</div></button>`;
+
+  const vd=validDows||[dow];
+  const dayChipsHtml=vd.map(dw=>`<button class="valid-day-chip" type="button" data-dow="${dw}" onclick="_eedQuickFillDay(${dw},this)">${PT_WEEKDAYS[dw]}</button>`).join('');
+  const chipSection=vd.length>1
+    ?`<div class="valid-days-label">Dias com aula nesta matéria — toque para preencher</div><div class="valid-days-row" id="eed-valid-days-row">${dayChipsHtml}</div>`
+    :`<div class="custom-date-note">Esta matéria tem aula na <strong>${PT_WEEKDAYS[vd[0]]}</strong></div>`;
+
+  // Valor inicial do input hidden: data pré-selecionada se estiver no strip, senão vazio
+  const hiddenVal=(preselectDate&&dates.includes(preselectDate))?preselectDate:'';
+
+  wrap.innerHTML=`<label style="display:block;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Data da prova</label>
+<div class="date-strip-outer">
+  <div class="date-nav-row">
+    <span class="date-nav-row-label">Selecione a data</span>
+    <div class="date-nav-btns">
+      <button class="date-nav-btn" type="button" onclick="_eedScrollDateStrip(-1)" title="Anterior"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="date-nav-btn" type="button" onclick="_eedScrollDateStrip(1)" title="Próximo"><svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg></button>
+    </div>
+  </div>
+  <div class="date-strip-wrap"><div class="date-strip" id="eed-date-strip">${cardsHtml}</div></div>
+</div>
+<div class="custom-date-reveal" id="eed-custom-reveal">${chipSection}<input type="date" id="eed-date-custom-inp" min="${todayStr()}" style="width:100%;padding:12px 14px;background:var(--bg3);border:1.5px solid var(--line2);border-radius:var(--rsm);font-size:15px;color:var(--t1);outline:none;color-scheme:var(--cs);transition:box-shadow .2s var(--ease-ios)" onchange="_eedOnCustomDateChange()"><div class="custom-date-hint" id="eed-custom-hint"></div></div>
+<input type="hidden" id="eed-date" value="${escHtml(hiddenVal)}">`;
+
+  wrap.style.display='';
+
+  // Se a data salva não está nos 8 cards (é uma data personalizada futura), abre a seção custom
+  if(preselectDate&&!dates.includes(preselectDate)){
+    const selD=new Date(preselectDate+'T00:00:00');
+    if(selD>=today){
+      const reveal=document.getElementById('eed-custom-reveal');
+      const card=document.getElementById('eed-custom-card');
+      const inp=document.getElementById('eed-date-custom-inp');
+      const hidden=document.getElementById('eed-date');
+      if(reveal)reveal.classList.add('open');
+      if(card)card.classList.add('selected');
+      if(inp)inp.value=preselectDate;
+      if(hidden)hidden.value=preselectDate;
+    }
+  }
+
+  // Scroll suave até o card selecionado
+  setTimeout(()=>{
+    const sel=wrap.querySelector('.date-card.selected:not(.custom-card)');
+    if(sel)sel.scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'});
+  },60);
+}
+
+function _eedPopulateDateStripFree(preselectDate){
+  const wrap=document.getElementById('eed-date-wrap');
+  if(!wrap)return;
+  wrap.innerHTML=`<label style="display:block;font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Data da prova</label><input type="date" id="eed-date-custom-inp" min="${todayStr()}" value="${escHtml(preselectDate||'')}" style="width:100%;padding:12px 14px;background:var(--bg3);border:1.5px solid var(--line2);border-radius:var(--rsm);font-size:15px;color:var(--t1);outline:none;color-scheme:var(--cs);transition:box-shadow .2s var(--ease-ios)" onchange="_eedOnCustomDateChange()"><div class="custom-date-hint" id="eed-custom-hint"></div><input type="hidden" id="eed-date" value="${escHtml(preselectDate||'')}">`;
+  wrap.style.display='';
+}
+
+function _eedSelectDateCard(btn,dateStr){
+  document.querySelectorAll('#eed-date-strip .date-card').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  const hidden=document.getElementById('eed-date');
+  if(hidden)hidden.value=dateStr;
+  const reveal=document.getElementById('eed-custom-reveal');
+  if(reveal)reveal.classList.remove('open');
+}
+
+function _eedScrollDateStrip(dir){
+  const strip=document.getElementById('eed-date-strip');
+  if(!strip)return;
+  const cardW=strip.querySelector('.date-card')?.offsetWidth||72;
+  strip.scrollBy({left:dir*(cardW+7)*3,behavior:'smooth'});
+}
+
+function _eedToggleCustomDate(){
+  const reveal=document.getElementById('eed-custom-reveal');
+  const card=document.getElementById('eed-custom-card');
+  if(!reveal||!card)return;
+  const opening=!reveal.classList.contains('open');
+  document.querySelectorAll('#eed-date-strip .date-card:not(.custom-card)').forEach(b=>b.classList.remove('selected'));
+  card.classList.toggle('selected',opening);
+  reveal.classList.toggle('open',opening);
+  if(!opening){
+    const hidden=document.getElementById('eed-date');
+    if(hidden)hidden.value='';
+    const inp=document.getElementById('eed-date-custom-inp');
+    if(inp){inp.value='';inp.style.boxShadow='';}
+    const hint=document.getElementById('eed-custom-hint');
+    if(hint)hint.textContent='';
+  }
+}
+
+function _eedOnCustomDateChange(){
+  const inp=document.getElementById('eed-date-custom-inp');
+  const hint=document.getElementById('eed-custom-hint');
+  const hidden=document.getElementById('eed-date');
+  if(!inp)return;
+  const val=inp.value;
+  inp.style.boxShadow='';
+  if(!val){if(hint)hint.textContent='';if(hidden)hidden.value='';return;}
+  const today=new Date();today.setHours(0,0,0,0);
+  const sel=new Date(val+'T00:00:00');
+  if(sel<today){
+    inp.style.boxShadow='0 0 0 3px rgba(255,69,58,.35)';
+    if(hint){hint.textContent='Data no passado — escolha uma data futura';hint.style.color='var(--red)';}
+    if(hidden)hidden.value='';
+    return;
+  }
+  if(hint){hint.textContent='';hint.style.color='';}
+  if(hidden)hidden.value=val;
+}
+
+function _eedQuickFillDay(dow,chipBtn){
+  const today=new Date();today.setHours(0,0,0,0);
+  let d=new Date(today);let attempts=0;
+  do{d=new Date(d);d.setDate(d.getDate()+1);attempts++;}while(d.getDay()!==dow&&attempts<14);
+  const dateStr=d.toISOString().split('T')[0];
+  const inp=document.getElementById('eed-date-custom-inp');
+  if(inp)inp.value=dateStr;
+  document.querySelectorAll('#eed-valid-days-row .valid-day-chip').forEach(b=>b.classList.remove('hit'));
+  if(chipBtn)chipBtn.classList.add('hit');
+  _eedOnCustomDateChange();
+}
+
+function _eedSetTipo(tipo){
+  const hidden=document.getElementById('eed-tipo');
+  if(hidden)hidden.value=tipo;
+  document.getElementById('eed-btn-prova')?.classList.toggle('active',tipo!=='trabalho');
+  document.getElementById('eed-btn-trabalho')?.classList.toggle('active',tipo==='trabalho');
+}
+
+function closeEditExam(){
+  const overlay=document.getElementById('exam-edit-overlay');
+  if(overlay)overlay.classList.remove('open');
+  _editingExamId=null;
+  window._eedSlotDow=null;
+  window._eedSlotTime=null;
+  window._eedValidDows=[];
+}
+
+function saveEditExam(){
+  if(!_editingExamId)return;
+  const idx=exams.findIndex(e=>e.id===_editingExamId);
+  if(idx===-1){closeEditExam();return;}
+
+  const subj=document.getElementById('eed-subj')?.value||'';
+  const title=(document.getElementById('eed-title')?.value||'').trim();
+  const examDate=document.getElementById('eed-date')?.value||'';
+  const valor=document.getElementById('eed-valor')?.value||'';
+  const conteudo=(document.getElementById('eed-conteudo')?.value||'').trim();
+  const tipo=document.getElementById('eed-tipo')?.value||'prova';
+  const examTime=window._eedSlotTime||null;
+
+  const errEl=document.getElementById('eed-error');
+  function showErr(msg){if(errEl){errEl.textContent=msg;errEl.style.display='block';errEl.scrollIntoView({behavior:'smooth',block:'nearest'});}}
+  if(errEl)errEl.style.display='none';
+
+  if(!subj){showErr('Matéria não identificada.');return;}
+  if(!examDate){showErr('Selecione a data da prova.');return;}
+
+  const today=new Date();today.setHours(0,0,0,0);
+  const sel=new Date(examDate+'T00:00:00');
+  if(sel<today){showErr('Não é possível salvar uma prova em data passada.');return;}
+
+  if(valor!==''){
+    const v=parseFloat(valor);
+    if(isNaN(v)||v<0.1||v>10){showErr('O valor deve ser entre 0,1 e 10 pontos.');return;}
+  }
+
+  const orig=exams[idx];
+  exams[idx]={...orig,subj,title,examDate,valor,conteudo,tipo,examTime};
+  saveExams();
+  render(null);
+  syncLayout();
+  closeEditExam();
 }
 
 /* ═══════════════════════════════
@@ -11727,7 +12154,6 @@ function closeThemePopover(){
 }
 function setThemePref(pref){
   applyTheme(pref);
-  if(typeof window._fbSaveAll==='function') window._fbSaveAll();
   closeThemePopover();
 }
 function _updateThemePopoverChecks(saved){
@@ -11850,6 +12276,11 @@ window.addEventListener('online',async()=>{
   if(ok) location.reload();
 });
 </script>
+<!-- ── Modal: Editar Prova ── -->
+<div id="exam-edit-overlay" class="exam-edit-overlay">
+  <div class="exam-edit-sheet" id="exam-edit-sheet-inner"></div>
+</div>
+
 <!-- ── Overlay: sem conexão ── -->
 <div id="offline-overlay" style="
   display:none;opacity:0;
