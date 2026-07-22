@@ -5260,6 +5260,178 @@ input, textarea, select {
   stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;
 }
 
+/* ── Current color summary (Cor do aplicativo) ── */
+.prof-color-current {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px 14px;
+  background: var(--bg2);
+  border: 1.5px solid var(--line2);
+  border-radius: 14px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  font-family: var(--ff);
+  transition: all .2s var(--ease-ios);
+}
+.prof-color-current:active { transform: scale(.98); opacity: .85; }
+.prof-color-current-swatch {
+  width: 30px; height: 30px; border-radius: 50%;
+  flex-shrink: 0; box-shadow: 0 1px 6px rgba(0,0,0,.25);
+  background: var(--gold);
+}
+.prof-color-current-info { flex: 1; text-align: left; display: flex; flex-direction: column; gap: 1px; }
+.prof-color-current-label { font-size: 11px; color: var(--t3); font-weight: 600; }
+.prof-color-current-name { font-size: 14px; color: var(--t1); font-weight: 700; letter-spacing: -.2px; }
+.prof-color-current-btn {
+  font-size: 12.5px; font-weight: 700;
+  color: var(--gold);
+  background: var(--goldbg);
+  border: 1px solid var(--goldbd);
+  padding: 7px 12px; border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* ── Color picker popup ── */
+.color-picker-box { max-height: 86dvh; overflow-y: auto; }
+.cp-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.cp-title { font-size: 18px; font-weight: 800; color: var(--t1); letter-spacing: -.3px; }
+.cp-close-btn {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bg3); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.cp-close-btn svg { width: 15px; height: 15px; stroke: var(--t2); fill: none; stroke-width: 2.3; stroke-linecap: round; }
+.cp-close-btn:active { opacity: .6; }
+
+.cp-preview {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 16px; margin-bottom: 18px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: 16px;
+}
+.cp-preview-badge {
+  font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 20px;
+  background: var(--goldbg); color: var(--gold); border: 1px solid var(--goldbd);
+}
+.cp-preview-btn {
+  font-size: 13px; font-weight: 700; padding: 9px 16px; border-radius: 12px;
+  background: var(--gold); color: var(--accent-text);
+}
+.cp-preview-ring {
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 3px solid var(--gold); box-shadow: 0 0 0 3px var(--goldbg);
+}
+
+.cp-group { margin-bottom: 6px; }
+.cp-group-label {
+  font-size: 12px; font-weight: 700; color: var(--t3);
+  text-transform: uppercase; letter-spacing: .4px;
+  margin: 16px 2px 8px;
+}
+.cp-group:first-of-type .cp-group-label { margin-top: 0; }
+
+/* ── Botão "Editar horários" na página de Horários ── */
+.sched-toprow {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 14px;
+}
+.sched-toprow .day-selector { margin-bottom: 0; flex: 1; }
+.sched-edit-open-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 13px;
+  background: var(--bg2); border: 1.5px solid var(--line2);
+  border-radius: 12px; cursor: pointer;
+  font-family: var(--ff); font-size: 12.5px; font-weight: 700;
+  color: var(--t2); white-space: nowrap; flex-shrink: 0;
+}
+.sched-edit-open-btn svg { width: 15px; height: 15px; }
+.sched-edit-open-btn:active { transform: scale(.94); opacity: .7; }
+
+/* ── Modal de edição de horários ── */
+.sched-edit-box { max-height: 88dvh; overflow-y: auto; }
+.se-hint {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--goldbg); border: 1px solid var(--goldbd);
+  color: var(--gold); border-radius: 12px;
+  padding: 10px 12px; font-size: 12px; font-weight: 600;
+  margin-bottom: 16px; line-height: 1.4;
+}
+.se-hint svg { flex-shrink: 0; }
+
+.se-period-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: 13px; padding: 10px; margin-bottom: 8px;
+}
+.se-period-row.is-break { background: var(--goldbg); border-color: var(--goldbd); }
+.se-period-name {
+  flex: 1.1; min-width: 0;
+  padding: 9px 10px; background: var(--bg1); border: 0.5px solid var(--line);
+  border-radius: 10px; font-size: 12.5px; font-weight: 600; color: var(--t1);
+  font-family: var(--ff);
+}
+.se-period-time {
+  width: 84px; flex-shrink: 0;
+  padding: 9px 8px; background: var(--bg1); border: 0.5px solid var(--line);
+  border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--t1);
+  font-family: var(--ff);
+}
+.se-period-dash { color: var(--t3); font-size: 12px; flex-shrink: 0; }
+.se-period-del {
+  width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: 9px; background: var(--redbg); border: 1px solid var(--redbd);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.se-period-del svg { width: 14px; height: 14px; stroke: var(--red); fill: none; stroke-width: 2.2; stroke-linecap: round; }
+.se-period-del:active { opacity: .6; }
+
+.se-add-row { display: flex; gap: 8px; margin-bottom: 8px; }
+.se-add-btn {
+  flex: 1; padding: 10px; border-radius: 12px;
+  background: var(--bg2); border: 1.5px dashed var(--line);
+  color: var(--t2); font-size: 12.5px; font-weight: 700;
+  font-family: var(--ff); cursor: pointer;
+}
+.se-add-btn:active { opacity: .6; }
+.se-add-break { color: var(--gold); border-color: var(--goldbd); }
+
+.se-daytabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.se-daytab {
+  padding: 8px 14px; border-radius: 10px;
+  background: var(--bg2); border: 1.5px solid var(--line2);
+  font-size: 12.5px; font-weight: 700; color: var(--t2);
+  font-family: var(--ff); cursor: pointer;
+}
+.se-daytab.active { background: var(--gold); color: var(--accent-text); border-color: var(--gold); }
+.se-daytab:active { transform: scale(.94); }
+
+.se-subj-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: 13px; padding: 10px; margin-bottom: 8px;
+}
+.se-subj-label {
+  width: 62px; flex-shrink: 0; font-size: 11px; font-weight: 700;
+  color: var(--t3); line-height: 1.25;
+}
+.se-subj-input {
+  flex: 1; min-width: 0;
+  padding: 9px 10px; background: var(--bg1); border: 0.5px solid var(--line);
+  border-radius: 10px; font-size: 13px; font-weight: 500; color: var(--t1);
+  font-family: var(--ff);
+}
+
+.se-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.se-reset-btn {
+  width: 100%; padding: 13px; border-radius: 14px;
+  background: var(--redbg); border: 1px solid var(--redbd);
+  color: var(--red); font-size: 14px; font-weight: 700;
+  font-family: var(--ff); cursor: pointer;
+}
+.se-reset-btn:active { opacity: .7; }
+
 /* ── Desktop modal centered ── */
 @media (min-width:768px) {
   .profile-box {
@@ -5342,6 +5514,193 @@ input, textarea, select {
   --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
   --accent-text: #000000; --bg-grid-line: rgba(0,199,190,.018);
 }
+/* ── Paleta estendida — cores personalizadas (Verde/Azul/Roxo/Vermelho/Marrom/Amarelo/Cinza) ── */
+[data-accent="verde"] {
+  --gold: #408C5D; --goldl: #408C5D;
+  --goldbg: rgba(64,140,93,.1); --goldbd: rgba(64,140,93,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(64,140,93,.018);
+}
+[data-accent="verde_escuro"] {
+  --gold: #438967; --goldl: #438967;
+  --goldbg: rgba(67,137,103,.1); --goldbd: rgba(67,137,103,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(67,137,103,.018);
+}
+[data-accent="verde_oliva"] {
+  --gold: #5E7557; --goldl: #5E7557;
+  --goldbg: rgba(94,117,87,.1); --goldbd: rgba(94,117,87,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(94,117,87,.018);
+}
+[data-accent="verde_oliva_escuro"] {
+  --gold: #607359; --goldl: #607359;
+  --goldbg: rgba(96,115,89,.1); --goldbd: rgba(96,115,89,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(96,115,89,.018);
+}
+[data-accent="verde_agua"] {
+  --gold: #3B9188; --goldl: #3B9188;
+  --goldbg: rgba(59,145,136,.1); --goldbd: rgba(59,145,136,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(59,145,136,.018);
+}
+[data-accent="verde_petroleo"] {
+  --gold: #3C8E90; --goldl: #3C8E90;
+  --goldbg: rgba(60,142,144,.1); --goldbd: rgba(60,142,144,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(60,142,144,.018);
+}
+[data-accent="verde_turquesa"] {
+  --gold: #3E8E7A; --goldl: #3E8E7A;
+  --goldbg: rgba(62,142,122,.1); --goldbd: rgba(62,142,122,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(62,142,122,.018);
+}
+[data-accent="verde_limao"] {
+  --gold: #6D923A; --goldl: #6D923A;
+  --goldbg: rgba(109,146,58,.1); --goldbd: rgba(109,146,58,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(109,146,58,.018);
+}
+[data-accent="verde_musgo"] {
+  --gold: #6F903C; --goldl: #6F903C;
+  --goldbg: rgba(111,144,60,.1); --goldbd: rgba(111,144,60,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(111,144,60,.018);
+}
+[data-accent="azul2"] {
+  --gold: #1F56AD; --goldl: #1F56AD;
+  --goldbg: rgba(31,86,173,.1); --goldbd: rgba(31,86,173,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(31,86,173,.018);
+}
+[data-accent="azul_marinho"] {
+  --gold: #2556A7; --goldl: #2556A7;
+  --goldbg: rgba(37,86,167,.1); --goldbd: rgba(37,86,167,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(37,86,167,.018);
+}
+[data-accent="azul_petroleo"] {
+  --gold: #2A66A2; --goldl: #2A66A2;
+  --goldbg: rgba(42,102,162,.1); --goldbd: rgba(42,102,162,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(42,102,162,.018);
+}
+[data-accent="azul_petroleo_escuro"] {
+  --gold: #2A6DA2; --goldl: #2A6DA2;
+  --goldbg: rgba(42,109,162,.1); --goldbd: rgba(42,109,162,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(42,109,162,.018);
+}
+[data-accent="roxo2"] {
+  --gold: #413597; --goldl: #413597;
+  --goldbg: rgba(65,53,151,.1); --goldbd: rgba(65,53,151,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(65,53,151,.018);
+}
+[data-accent="roxo_escuro"] {
+  --gold: #43408C; --goldl: #43408C;
+  --goldbg: rgba(67,64,140,.1); --goldbd: rgba(67,64,140,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(67,64,140,.018);
+}
+[data-accent="roxo_claro"] {
+  --gold: #783993; --goldl: #783993;
+  --goldbg: rgba(120,57,147,.1); --goldbd: rgba(120,57,147,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(120,57,147,.018);
+}
+[data-accent="roxo_vinho"] {
+  --gold: #753993; --goldl: #753993;
+  --goldbg: rgba(117,57,147,.1); --goldbd: rgba(117,57,147,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(117,57,147,.018);
+}
+[data-accent="vermelho_vinho"] {
+  --gold: #A72542; --goldl: #A72542;
+  --goldbg: rgba(167,37,66,.1); --goldbd: rgba(167,37,66,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(167,37,66,.018);
+}
+[data-accent="bordo"] {
+  --gold: #9E2E48; --goldl: #9E2E48;
+  --goldbg: rgba(158,46,72,.1); --goldbd: rgba(158,46,72,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(158,46,72,.018);
+}
+[data-accent="rosa2"] {
+  --gold: #B0335B; --goldl: #B0335B;
+  --goldbg: rgba(176,51,91,.1); --goldbd: rgba(176,51,91,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(176,51,91,.018);
+}
+[data-accent="vinho"] {
+  --gold: #913B61; --goldl: #913B61;
+  --goldbg: rgba(145,59,97,.1); --goldbd: rgba(145,59,97,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(145,59,97,.018);
+}
+[data-accent="marrom_avermelhado"] {
+  --gold: #9B4C31; --goldl: #9B4C31;
+  --goldbg: rgba(155,76,49,.1); --goldbd: rgba(155,76,49,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(155,76,49,.018);
+}
+[data-accent="marrom_escuro"] {
+  --gold: #875345; --goldl: #875345;
+  --goldbg: rgba(135,83,69,.1); --goldbd: rgba(135,83,69,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(135,83,69,.018);
+}
+[data-accent="marrom"] {
+  --gold: #895F43; --goldl: #895F43;
+  --goldbg: rgba(137,95,67,.1); --goldbd: rgba(137,95,67,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(137,95,67,.018);
+}
+[data-accent="marrom_cafe"] {
+  --gold: #7F654D; --goldl: #7F654D;
+  --goldbg: rgba(127,101,77,.1); --goldbd: rgba(127,101,77,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(127,101,77,.018);
+}
+[data-accent="marrom_acinzentado"] {
+  --gold: #766756; --goldl: #766756;
+  --goldbg: rgba(118,103,86,.1); --goldbd: rgba(118,103,86,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(118,103,86,.018);
+}
+[data-accent="bege"] {
+  --gold: #7B6A51; --goldl: #7B6A51;
+  --goldbg: rgba(123,106,81,.1); --goldbd: rgba(123,106,81,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(123,106,81,.018);
+}
+[data-accent="amarelo_dourado"] {
+  --gold: #B19D2F; --goldl: #B19D2F;
+  --goldbg: rgba(177,157,47,.1); --goldbd: rgba(177,157,47,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(177,157,47,.018);
+}
+[data-accent="mostarda_escuro"] {
+  --gold: #A79625; --goldl: #A79625;
+  --goldbg: rgba(167,150,37,.1); --goldbd: rgba(167,150,37,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(167,150,37,.018);
+}
+[data-accent="cinza2"] {
+  --gold: #666666; --goldl: #666666;
+  --goldbg: rgba(102,102,102,.1); --goldbd: rgba(102,102,102,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(102,102,102,.018);
+}
+[data-accent="cinza_escuro2"] {
+  --gold: #5A6272; --goldl: #5A6272;
+  --goldbg: rgba(90,98,114,.1); --goldbd: rgba(90,98,114,.28);
+  --shadow-gold: 0 2px 10px rgba(0,0,0,.18);
+  --accent-text: #ffffff; --bg-grid-line: rgba(90,98,114,.018);
+}
 /* ── Dark mode: grid line sempre neutro, independente do accent ── */
 [data-theme="dark"][data-accent="blue"],
 [data-theme="dark"][data-accent="green"],
@@ -5353,7 +5712,38 @@ input, textarea, select {
 [data-theme="dark"][data-accent="cyan"],
 [data-theme="dark"][data-accent="indigo"],
 [data-theme="dark"][data-accent="teal"],
-[data-theme="dark"][data-accent="mint"] {
+[data-theme="dark"][data-accent="mint"],
+[data-theme="dark"][data-accent="verde"],
+[data-theme="dark"][data-accent="verde_escuro"],
+[data-theme="dark"][data-accent="verde_oliva"],
+[data-theme="dark"][data-accent="verde_oliva_escuro"],
+[data-theme="dark"][data-accent="verde_agua"],
+[data-theme="dark"][data-accent="verde_petroleo"],
+[data-theme="dark"][data-accent="verde_turquesa"],
+[data-theme="dark"][data-accent="verde_limao"],
+[data-theme="dark"][data-accent="verde_musgo"],
+[data-theme="dark"][data-accent="azul2"],
+[data-theme="dark"][data-accent="azul_marinho"],
+[data-theme="dark"][data-accent="azul_petroleo"],
+[data-theme="dark"][data-accent="azul_petroleo_escuro"],
+[data-theme="dark"][data-accent="roxo2"],
+[data-theme="dark"][data-accent="roxo_escuro"],
+[data-theme="dark"][data-accent="roxo_claro"],
+[data-theme="dark"][data-accent="roxo_vinho"],
+[data-theme="dark"][data-accent="vermelho_vinho"],
+[data-theme="dark"][data-accent="bordo"],
+[data-theme="dark"][data-accent="rosa2"],
+[data-theme="dark"][data-accent="vinho"],
+[data-theme="dark"][data-accent="marrom_avermelhado"],
+[data-theme="dark"][data-accent="marrom_escuro"],
+[data-theme="dark"][data-accent="marrom"],
+[data-theme="dark"][data-accent="marrom_cafe"],
+[data-theme="dark"][data-accent="marrom_acinzentado"],
+[data-theme="dark"][data-accent="bege"],
+[data-theme="dark"][data-accent="amarelo_dourado"],
+[data-theme="dark"][data-accent="mostarda_escuro"],
+[data-theme="dark"][data-accent="cinza2"],
+[data-theme="dark"][data-accent="cinza_escuro2"] {
   --bg-grid-line: rgba(255,255,255,.012);
 }
 /* ── Light mode accent overrides — apenas cor de destaque, sem tinte de superfície ── */
@@ -5389,6 +5779,100 @@ input, textarea, select {
 }
 [data-theme="light"][data-accent="mint"] {
   --gold:#007460; --goldl:#005848; --goldbg:rgba(0,116,96,.09); --goldbd:rgba(0,116,96,.26); --accent-text:#ffffff;
+}
+/* ── Paleta estendida — tema claro ── */
+[data-theme="light"][data-accent="verde"] {
+  --gold:#346D4A; --goldl:#346D4A; --goldbg:rgba(52,109,74,.08); --goldbd:rgba(52,109,74,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_escuro"] {
+  --gold:#264B39; --goldl:#264B39; --goldbg:rgba(38,75,57,.08); --goldbd:rgba(38,75,57,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_oliva"] {
+  --gold:#404F3C; --goldl:#404F3C; --goldbg:rgba(64,79,60,.08); --goldbd:rgba(64,79,60,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_oliva_escuro"] {
+  --gold:#2B3328; --goldl:#2B3328; --goldbg:rgba(43,51,40,.08); --goldbd:rgba(43,51,40,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_agua"] {
+  --gold:#275C56; --goldl:#275C56; --goldbg:rgba(39,92,86,.08); --goldbd:rgba(39,92,86,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_petroleo"] {
+  --gold:#1B3D3E; --goldl:#1B3D3E; --goldbg:rgba(27,61,62,.08); --goldbd:rgba(27,61,62,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_turquesa"] {
+  --gold:#347162; --goldl:#347162; --goldbg:rgba(52,113,98,.08); --goldbd:rgba(52,113,98,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_limao"] {
+  --gold:#5D7A33; --goldl:#5D7A33; --goldbg:rgba(93,122,51,.08); --goldbd:rgba(93,122,51,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="verde_musgo"] {
+  --gold:#32401C; --goldl:#32401C; --goldbg:rgba(50,64,28,.08); --goldbd:rgba(50,64,28,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="azul2"] {
+  --gold:#1C478B; --goldl:#1C478B; --goldbg:rgba(28,71,139,.08); --goldbd:rgba(28,71,139,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="azul_marinho"] {
+  --gold:#152E57; --goldl:#152E57; --goldbg:rgba(21,46,87,.08); --goldbd:rgba(21,46,87,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="azul_petroleo"] {
+  --gold:#214B75; --goldl:#214B75; --goldbg:rgba(33,75,117,.08); --goldbd:rgba(33,75,117,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="azul_petroleo_escuro"] {
+  --gold:#15334B; --goldl:#15334B; --goldbg:rgba(21,51,75,.08); --goldbd:rgba(21,51,75,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="roxo2"] {
+  --gold:#382F7F; --goldl:#382F7F; --goldbg:rgba(56,47,127,.08); --goldbd:rgba(56,47,127,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="roxo_escuro"] {
+  --gold:#2C2A59; --goldl:#2C2A59; --goldbg:rgba(44,42,89,.08); --goldbd:rgba(44,42,89,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="roxo_claro"] {
+  --gold:#65337B; --goldl:#65337B; --goldbg:rgba(101,51,123,.08); --goldbd:rgba(101,51,123,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="roxo_vinho"] {
+  --gold:#452356; --goldl:#452356; --goldbg:rgba(69,35,86,.08); --goldbd:rgba(69,35,86,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="vermelho_vinho"] {
+  --gold:#711C2F; --goldl:#711C2F; --goldbg:rgba(113,28,47,.08); --goldbd:rgba(113,28,47,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="bordo"] {
+  --gold:#4C1824; --goldl:#4C1824; --goldbg:rgba(76,24,36,.08); --goldbd:rgba(76,24,36,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="rosa2"] {
+  --gold:#842946; --goldl:#842946; --goldbg:rgba(132,41,70,.08); --goldbd:rgba(132,41,70,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="vinho"] {
+  --gold:#4F2236; --goldl:#4F2236; --goldbg:rgba(79,34,54,.08); --goldbd:rgba(79,34,54,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="marrom_avermelhado"] {
+  --gold:#7C3F2A; --goldl:#7C3F2A; --goldbg:rgba(124,63,42,.08); --goldbd:rgba(124,63,42,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="marrom_escuro"] {
+  --gold:#482D26; --goldl:#482D26; --goldbg:rgba(72,45,38,.08); --goldbd:rgba(72,45,38,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="marrom"] {
+  --gold:#573D2C; --goldl:#573D2C; --goldbg:rgba(87,61,44,.08); --goldbd:rgba(87,61,44,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="marrom_cafe"] {
+  --gold:#32281F; --goldl:#32281F; --goldbg:rgba(50,40,31,.08); --goldbd:rgba(50,40,31,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="marrom_acinzentado"] {
+  --gold:#3B342C; --goldl:#3B342C; --goldbg:rgba(59,52,44,.08); --goldbd:rgba(59,52,44,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="bege"] {
+  --gold:#685A46; --goldl:#685A46; --goldbg:rgba(104,90,70,.08); --goldbd:rgba(104,90,70,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="amarelo_dourado"] {
+  --gold:#877827; --goldl:#877827; --goldbg:rgba(135,120,39,.08); --goldbd:rgba(135,120,39,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="mostarda_escuro"] {
+  --gold:#5A5116; --goldl:#5A5116; --goldbg:rgba(90,81,22,.08); --goldbd:rgba(90,81,22,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="cinza2"] {
+  --gold:#4C4C4C; --goldl:#4C4C4C; --goldbg:rgba(76,76,76,.08); --goldbd:rgba(76,76,76,.26); --accent-text:#ffffff;
+}
+[data-theme="light"][data-accent="cinza_escuro2"] {
+  --gold:#0C0D0F; --goldl:#0C0D0F; --goldbg:rgba(12,13,15,.08); --goldbd:rgba(12,13,15,.26); --accent-text:#ffffff;
 }
 
 /* ══════════════════════════════════════════
@@ -6160,65 +6644,72 @@ input, textarea, select {
 
     <!-- SEÇÃO: Cor do app -->
     <div class="prof-section-label">Cor do aplicativo</div>
-    <div class="prof-accent-grid" id="prof-accent-grid">
-      <button class="prof-accent-btn" data-key="gold" onclick="setAccent('gold',this)">
-        <span class="prof-accent-swatch" style="background:#FFD60A"></span>
-        <span class="prof-accent-name">Dourado</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="blue" onclick="setAccent('blue',this)">
-        <span class="prof-accent-swatch" style="background:#0A84FF"></span>
-        <span class="prof-accent-name">Azul</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="green" onclick="setAccent('green',this)">
-        <span class="prof-accent-swatch" style="background:#30D158"></span>
-        <span class="prof-accent-name">Verde</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="violet" onclick="setAccent('violet',this)">
-        <span class="prof-accent-swatch" style="background:#BF5AF2"></span>
-        <span class="prof-accent-name">Roxo</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="red" onclick="setAccent('red',this)">
-        <span class="prof-accent-swatch" style="background:#FF453A"></span>
-        <span class="prof-accent-name">Vermelho</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="orange" onclick="setAccent('orange',this)">
-        <span class="prof-accent-swatch" style="background:#FF9F0A"></span>
-        <span class="prof-accent-name">Laranja</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="pink" onclick="setAccent('pink',this)">
-        <span class="prof-accent-swatch" style="background:#FF2D55"></span>
-        <span class="prof-accent-name">Rosa</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="cyan" onclick="setAccent('cyan',this)">
-        <span class="prof-accent-swatch" style="background:#32ADE6"></span>
-        <span class="prof-accent-name">Ciano</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="indigo" onclick="setAccent('indigo',this)">
-        <span class="prof-accent-swatch" style="background:#5E5CE6"></span>
-        <span class="prof-accent-name">Índigo</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="teal" onclick="setAccent('teal',this)">
-        <span class="prof-accent-swatch" style="background:#30B0C7"></span>
-        <span class="prof-accent-name">Teal</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
-      </button>
-      <button class="prof-accent-btn" data-key="mint" onclick="setAccent('mint',this)">
-        <span class="prof-accent-swatch" style="background:#00C7BE"></span>
-        <span class="prof-accent-name">Menta</span>
-        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <button class="prof-color-current" id="prof-color-current" onclick="openColorPicker()">
+      <span class="prof-color-current-swatch" id="prof-color-current-swatch"></span>
+      <span class="prof-color-current-info">
+        <span class="prof-color-current-label">Cor selecionada</span>
+        <span class="prof-color-current-name" id="prof-color-current-name">Dourado</span>
+      </span>
+      <span class="prof-color-current-btn">Escolher cor</span>
+    </button>
+
+    <button class="modal-save-btn" onclick="saveStudent()">Salvar perfil</button>
+  </div>
+</div>
+
+<!-- MODAL — Escolher cor do aplicativo -->
+<div class="modal-overlay" id="color-picker-overlay" onclick="colorPickerOvClick(event)">
+  <div class="modal-box color-picker-box">
+    <div class="modal-handle"></div>
+    <div class="cp-header">
+      <div class="cp-title">Escolher cor</div>
+      <button class="cp-close-btn" onclick="closeColorPicker()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
 
-    <button class="modal-save-btn" onclick="saveStudent()">Salvar perfil</button>
+    <!-- PREVIEW ao vivo -->
+    <div class="cp-preview" id="cp-preview">
+      <div class="cp-preview-badge" id="cp-preview-badge">Prova hoje</div>
+      <div class="cp-preview-btn" id="cp-preview-btn">Botão de exemplo</div>
+      <div class="cp-preview-ring" id="cp-preview-ring"></div>
+    </div>
+
+    <div id="cp-groups"></div>
+  </div>
+</div>
+
+<!-- MODAL — Editar horários -->
+<div class="modal-overlay" id="sched-edit-overlay" onclick="schedEditOvClick(event)">
+  <div class="modal-box sched-edit-box">
+    <div class="modal-handle"></div>
+    <div class="cp-header">
+      <div class="cp-title">Editar horários</div>
+      <button class="cp-close-btn" onclick="closeScheduleEditor()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="se-hint">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>Ao mudar o fim de uma aula, o início da próxima se ajusta automaticamente.</span>
+    </div>
+
+    <div class="prof-section-label" style="margin-top:0">Horários das aulas</div>
+    <div id="se-periods"></div>
+    <div class="se-add-row">
+      <button class="se-add-btn" onclick="addPeriodRow(false)">+ Adicionar aula</button>
+      <button class="se-add-btn se-add-break" onclick="addPeriodRow(true)">+ Adicionar intervalo</button>
+    </div>
+
+    <div class="prof-section-label">Matérias por dia</div>
+    <div class="se-daytabs" id="se-daytabs"></div>
+    <div id="se-subjects"></div>
+
+    <div class="se-actions">
+      <button class="se-reset-btn" onclick="confirmResetSchedule()">Resetar para o padrão</button>
+      <button class="modal-save-btn" onclick="closeScheduleEditor()">Concluído</button>
+    </div>
   </div>
 </div>
 
@@ -6336,7 +6827,7 @@ input, textarea, select {
 /* ══════════════════════════════════════════
    SCHEDULE DATA
 ══════════════════════════════════════════ */
-const PERIODS=[
+const DEFAULT_PERIODS=[
   {n:'1ª aula',s:[13,30],e:[14,20]},
   {n:'2ª aula',s:[14,20],e:[15,10]},
   {n:'3ª aula',s:[15,10],e:[15,50]},
@@ -6345,13 +6836,36 @@ const PERIODS=[
   {n:'5ª aula',s:[16,50],e:[17,40]},
   {n:'6ª aula',s:[17,40],e:[18,30]},
 ];
-const SCHED={
+const DEFAULT_SCHED={
   1:[{subj:'Educação Física',prof:'Leani'},{subj:'Educação Financeira',prof:'Simone'},{subj:'Artes Integradas',prof:'Max'},{subj:'Biologia',prof:'Iara'},{subj:'Física',prof:'Pedro'},{subj:'Biologia',prof:'Iara'}],
   2:[{subj:'Língua Portuguesa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Espanhola',prof:'Jorge'}],
   3:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Química',prof:'Jaque'},{subj:'Ensino Religioso',prof:'Deise'},{subj:'Química',prof:'Jaque'},{subj:'Geografia',prof:'Thiago'}],
   4:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Inglesa',prof:'Giovana'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Escrita Criativa',prof:'André'},{subj:'Educação Física',prof:'Leani'}],
   5:[{subj:'História',prof:'Felipe'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Sociologia',prof:'Felipe'},{subj:'Física',prof:'Pedro'},{subj:'Literatura',prof:'André'},{subj:'Matemática',prof:'Veridiana'}],
 };
+/* horários ativos — podem ser sobrescritos pelo usuário e persistidos */
+let PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
+let SCHED=JSON.parse(JSON.stringify(DEFAULT_SCHED));
+function saveSchedule(){
+  try{
+    localStorage.setItem('t205_periods',JSON.stringify(PERIODS));
+    localStorage.setItem('t205_sched',JSON.stringify(SCHED));
+  }catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadSchedule(){
+  try{
+    const p=localStorage.getItem('t205_periods');
+    const s=localStorage.getItem('t205_sched');
+    if(p)PERIODS=JSON.parse(p);
+    if(s)SCHED=JSON.parse(s);
+  }catch(e){}
+}
+function resetSchedule(){
+  PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
+  SCHED=JSON.parse(JSON.stringify(DEFAULT_SCHED));
+  saveSchedule();
+}
 const SUBJ_COLORS={'Biologia':'#34D399','Física':'#60A5FA','Educação Financeira':'#E8B84B','Educação Física':'#4ADE80','Língua Espanhola':'#FCA5A5','Língua Portuguesa':'#6EE7B7','Literatura':'#6EE7B7','História':'#FCD34D','Química':'#F472B6','Proj. Integrador Mat.':'#818CF8','Matemática':'#A78BFA','Sociologia':'#86EFAC','Geografia':'#67E8F9','Artes Integradas':'#FB923C','Escrita Criativa':'#F9A8D4','Língua Inglesa':'#93C5FD','Ensino Religioso':'#C4B5FD'};
 const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
@@ -6550,9 +7064,83 @@ const ACCENT_MAPS={
   cyan:{dark:'#32ADE6',light:'#0070C0'},
   indigo:{dark:'#5E5CE6',light:'#3634AC'},
   teal:{dark:'#30B0C7',light:'#007A92'},
-  mint:{dark:'#00C7BE',light:'#00896F'}
+  mint:{dark:'#00C7BE',light:'#00896F'},
+  verde:{dark:'#408C5D',light:'#346D4A'},
+  verde_escuro:{dark:'#438967',light:'#264B39'},
+  verde_oliva:{dark:'#5E7557',light:'#404F3C'},
+  verde_oliva_escuro:{dark:'#607359',light:'#2B3328'},
+  verde_agua:{dark:'#3B9188',light:'#275C56'},
+  verde_petroleo:{dark:'#3C8E90',light:'#1B3D3E'},
+  verde_turquesa:{dark:'#3E8E7A',light:'#347162'},
+  verde_limao:{dark:'#6D923A',light:'#5D7A33'},
+  verde_musgo:{dark:'#6F903C',light:'#32401C'},
+  azul2:{dark:'#1F56AD',light:'#1C478B'},
+  azul_marinho:{dark:'#2556A7',light:'#152E57'},
+  azul_petroleo:{dark:'#2A66A2',light:'#214B75'},
+  azul_petroleo_escuro:{dark:'#2A6DA2',light:'#15334B'},
+  roxo2:{dark:'#413597',light:'#382F7F'},
+  roxo_escuro:{dark:'#43408C',light:'#2C2A59'},
+  roxo_claro:{dark:'#783993',light:'#65337B'},
+  roxo_vinho:{dark:'#753993',light:'#452356'},
+  vermelho_vinho:{dark:'#A72542',light:'#711C2F'},
+  bordo:{dark:'#9E2E48',light:'#4C1824'},
+  rosa2:{dark:'#B0335B',light:'#842946'},
+  vinho:{dark:'#913B61',light:'#4F2236'},
+  marrom_avermelhado:{dark:'#9B4C31',light:'#7C3F2A'},
+  marrom_escuro:{dark:'#875345',light:'#482D26'},
+  marrom:{dark:'#895F43',light:'#573D2C'},
+  marrom_cafe:{dark:'#7F654D',light:'#32281F'},
+  marrom_acinzentado:{dark:'#766756',light:'#3B342C'},
+  bege:{dark:'#7B6A51',light:'#685A46'},
+  amarelo_dourado:{dark:'#B19D2F',light:'#877827'},
+  mostarda_escuro:{dark:'#A79625',light:'#5A5116'},
+  cinza2:{dark:'#666666',light:'#4C4C4C'},
+  cinza_escuro2:{dark:'#5A6272',light:'#0C0D0F'}
 };
 const ACCENT_NEEDS_DARK_TEXT=new Set(['gold','green','orange','cyan','teal','mint']);
+/* Metadados para o popup "Escolher cor" — nome exibido + grupo/categoria */
+const ACCENT_META=[
+  {group:'Clássicas',items:[
+    {key:'gold',name:'Dourado'},{key:'blue',name:'Azul'},{key:'green',name:'Verde'},
+    {key:'violet',name:'Roxo'},{key:'red',name:'Vermelho'},{key:'orange',name:'Laranja'},
+    {key:'pink',name:'Rosa'},{key:'cyan',name:'Ciano'},{key:'indigo',name:'Índigo'},
+    {key:'teal',name:'Teal'},{key:'mint',name:'Menta'},
+  ]},
+  {group:'Verdes',items:[
+    {key:'verde',name:'Verde'},{key:'verde_escuro',name:'Verde escuro'},
+    {key:'verde_oliva',name:'Verde oliva'},{key:'verde_oliva_escuro',name:'Verde oliva escuro'},
+    {key:'verde_agua',name:'Verde água'},{key:'verde_petroleo',name:'Verde petróleo'},
+    {key:'verde_turquesa',name:'Verde turquesa'},{key:'verde_limao',name:'Verde limão'},
+    {key:'verde_musgo',name:'Verde musgo'},
+  ]},
+  {group:'Azuis',items:[
+    {key:'azul2',name:'Azul'},{key:'azul_marinho',name:'Azul marinho'},
+    {key:'azul_petroleo',name:'Azul petróleo'},{key:'azul_petroleo_escuro',name:'Azul petróleo escuro'},
+  ]},
+  {group:'Roxos',items:[
+    {key:'roxo2',name:'Roxo'},{key:'roxo_escuro',name:'Roxo escuro'},
+    {key:'roxo_claro',name:'Roxo claro'},{key:'roxo_vinho',name:'Roxo vinho'},
+  ]},
+  {group:'Vermelhos e rosas',items:[
+    {key:'vermelho_vinho',name:'Vermelho vinho'},{key:'bordo',name:'Bordô'},
+    {key:'rosa2',name:'Rosa'},{key:'vinho',name:'Vinho'},
+  ]},
+  {group:'Marrons e bege',items:[
+    {key:'marrom_avermelhado',name:'Marrom avermelhado'},{key:'marrom_escuro',name:'Marrom escuro'},
+    {key:'marrom',name:'Marrom'},{key:'marrom_cafe',name:'Marrom café'},
+    {key:'marrom_acinzentado',name:'Marrom acinzentado'},{key:'bege',name:'Bege'},
+  ]},
+  {group:'Amarelos',items:[
+    {key:'amarelo_dourado',name:'Amarelo dourado'},{key:'mostarda_escuro',name:'Mostarda escuro'},
+  ]},
+  {group:'Cinzas',items:[
+    {key:'cinza2',name:'Cinza'},{key:'cinza_escuro2',name:'Cinza muito escuro'},
+  ]},
+];
+function _accentDisplayName(key){
+  for(const g of ACCENT_META){for(const it of g.items){if(it.key===key)return it.name;}}
+  return 'Dourado';
+}
 function _getAccentColor(){
   const theme=document.documentElement.getAttribute('data-theme')||'dark';
   const key=stu.accentKey||'gold';
@@ -7942,12 +8530,12 @@ function renderHorarios(el){
     }
   }
 
-  let daySel='<div class="day-selector">';
+  let daySel='<div class="sched-toprow"><div class="day-selector">';
   [1,2,3,4,5].forEach(d=>{
     const isToday=d===todayDow,isActive=d===schedDay;
     daySel+=`<div class="day-btn${isActive?' active':''}${isToday&&!isActive?' today':''}" onclick="setSchedDay(${d})"><span class="day-name">${DAY_NAMES[d]}</span>${isToday?'<span class="day-short">hoje</span>':''}</div>`;
   });
-  daySel+='</div>';
+  daySel+='</div><button class="sched-edit-open-btn" onclick="openScheduleEditor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Editar horários</span></button></div>';
 
   // ── Lista de aulas — só apaga se o dia selecionado for feriado em dia útil ──
   const schedDayDate=(()=>{
@@ -7983,6 +8571,169 @@ function renderHorarios(el){
   list+='</div>';
 
   el.innerHTML=banner+daySel+list;
+}
+
+/* ══════════════════════════════════════════
+   EDITOR DE HORÁRIOS — modificar aulas, horários e resetar
+══════════════════════════════════════════ */
+let seCurrentDay=1;
+
+function fmtTimeInput(t){return String(t[0]).padStart(2,'0')+':'+String(t[1]).padStart(2,'0');}
+function parseTimeInput(str){
+  const m=String(str||'').match(/^(\d{1,2}):(\d{1,2})$/);
+  if(!m)return null;
+  const h=Math.min(23,Math.max(0,parseInt(m[1],10)));
+  const mi=Math.min(59,Math.max(0,parseInt(m[2],10)));
+  return [h,mi];
+}
+
+function renderPeriodsEditor(){
+  const wrap=document.getElementById('se-periods');
+  if(!wrap)return;
+  let html='';
+  PERIODS.forEach((p,pi)=>{
+    html+=`<div class="se-period-row${p.break?' is-break':''}">
+      <input class="se-period-name" type="text" value="${(p.n||'').replace(/"/g,'&quot;')}" oninput="onPeriodNameChange(${pi},this.value)">
+      <input class="se-period-time" type="time" value="${fmtTimeInput(p.s)}" onchange="onPeriodTimeChange(${pi},'s',this.value)">
+      <span class="se-period-dash">–</span>
+      <input class="se-period-time" type="time" value="${fmtTimeInput(p.e)}" onchange="onPeriodTimeChange(${pi},'e',this.value)">
+      <button class="se-period-del" onclick="removePeriodRow(${pi})" title="Remover">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      </button>
+    </div>`;
+  });
+  wrap.innerHTML=html;
+}
+
+function onPeriodNameChange(pi,value){
+  if(!PERIODS[pi])return;
+  PERIODS[pi].n=value;
+  saveSchedule();
+}
+
+/* Sistema inteligente: ao alterar o fim de uma aula, o início da próxima
+   é ajustado automaticamente para manter a grade contínua, sem buracos. */
+function onPeriodTimeChange(pi,field,value){
+  const t=parseTimeInput(value);
+  if(!t||!PERIODS[pi])return;
+  PERIODS[pi][field]=t;
+  if(field==='e'&&PERIODS[pi+1]){
+    PERIODS[pi+1].s=t.slice();
+  }
+  if(field==='s'&&pi>0&&PERIODS[pi-1]){
+    PERIODS[pi-1].e=t.slice();
+  }
+  saveSchedule();
+  renderPeriodsEditor();
+  renderCurrentPageIfHorarios();
+}
+
+function addPeriodRow(isBreak){
+  const last=PERIODS[PERIODS.length-1];
+  const startFrom=last?last.e.slice():[13,30];
+  const endTo=[startFrom[0],startFrom[1]+45];
+  if(endTo[1]>=60){endTo[0]+=Math.floor(endTo[1]/60);endTo[1]=endTo[1]%60;}
+  PERIODS.push({n:isBreak?'Intervalo':('Aula '+(PERIODS.filter(p=>!p.break).length+1)),s:startFrom,e:endTo,break:!!isBreak});
+  if(!isBreak){
+    [1,2,3,4,5].forEach(d=>{ if(SCHED[d]) SCHED[d].push({subj:'Nova matéria',prof:'Professor'}); });
+  }
+  saveSchedule();
+  renderPeriodsEditor();
+  renderSubjectsEditor();
+  renderCurrentPageIfHorarios();
+}
+
+function removePeriodRow(pi){
+  const p=PERIODS[pi];
+  if(!p)return;
+  if(!p.break){
+    // calcula o índice correspondente em SCHED (só conta períodos que não são intervalo)
+    let ci=0;
+    for(let i=0;i<pi;i++){ if(!PERIODS[i].break) ci++; }
+    [1,2,3,4,5].forEach(d=>{ if(SCHED[d]&&SCHED[d][ci]!==undefined) SCHED[d].splice(ci,1); });
+  }
+  PERIODS.splice(pi,1);
+  saveSchedule();
+  renderPeriodsEditor();
+  renderSubjectsEditor();
+  renderCurrentPageIfHorarios();
+}
+
+function renderDayTabsEditor(){
+  const wrap=document.getElementById('se-daytabs');
+  if(!wrap)return;
+  let html='';
+  [1,2,3,4,5].forEach(d=>{
+    html+=`<button class="se-daytab${d===seCurrentDay?' active':''}" onclick="switchEditDay(${d})">${DAY_NAMES[d]}</button>`;
+  });
+  wrap.innerHTML=html;
+}
+function switchEditDay(d){
+  seCurrentDay=d;
+  renderDayTabsEditor();
+  renderSubjectsEditor();
+}
+
+function renderSubjectsEditor(){
+  const wrap=document.getElementById('se-subjects');
+  if(!wrap)return;
+  const dd=SCHED[seCurrentDay]||[];
+  let html='<datalist id="se-subj-list">'+SUBJECTS.map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}">`).join('')+'</datalist>';
+  let ci=0;
+  PERIODS.forEach(p=>{
+    if(p.break)return;
+    const cls=dd[ci]||{subj:'',prof:''};
+    html+=`<div class="se-subj-row">
+      <div class="se-subj-label">${p.n||('Aula '+(ci+1))}</div>
+      <input class="se-subj-input" type="text" list="se-subj-list" placeholder="Matéria" value="${(cls.subj||'').replace(/"/g,'&quot;')}" oninput="onSubjectFieldChange(${seCurrentDay},${ci},'subj',this.value)">
+      <input class="se-subj-input" type="text" placeholder="Professor(a)" value="${(cls.prof||'').replace(/"/g,'&quot;')}" oninput="onSubjectFieldChange(${seCurrentDay},${ci},'prof',this.value)">
+    </div>`;
+    ci++;
+  });
+  wrap.innerHTML=html;
+}
+
+function onSubjectFieldChange(day,ci,field,value){
+  if(!SCHED[day])return;
+  if(!SCHED[day][ci])SCHED[day][ci]={subj:'',prof:''};
+  SCHED[day][ci][field]=value;
+  saveSchedule();
+  renderCurrentPageIfHorarios();
+}
+
+function renderCurrentPageIfHorarios(){
+  if(curPage==='horarios'&&typeof render==='function')render(null);
+}
+
+function openScheduleEditor(){
+  seCurrentDay=todayDow>=1&&todayDow<=5?todayDow:1;
+  renderPeriodsEditor();
+  renderDayTabsEditor();
+  renderSubjectsEditor();
+  document.getElementById('sched-edit-overlay').classList.add('open');
+}
+function closeScheduleEditor(){
+  document.getElementById('sched-edit-overlay').classList.remove('open');
+  renderCurrentPageIfHorarios();
+}
+function schedEditOvClick(e){
+  if(e.target===document.getElementById('sched-edit-overlay'))closeScheduleEditor();
+}
+function confirmResetSchedule(){
+  showConfirm({
+    title:'Resetar horários',
+    msg:'Isso vai apagar todas as suas alterações e voltar aos horários e matérias padrão. Essa ação não pode ser desfeita.',
+    okLabel:'Resetar',
+    danger:true,
+    onOk:()=>{
+      resetSchedule();
+      seCurrentDay=todayDow>=1&&todayDow<=5?todayDow:1;
+      renderPeriodsEditor();
+      renderDayTabsEditor();
+      renderSubjectsEditor();
+      renderCurrentPageIfHorarios();
+    }
+  });
 }
 
 /* ═══════════════════════════════
@@ -10204,6 +10955,7 @@ function openModal(){
   document.querySelectorAll('.prof-accent-btn').forEach(b=>{
     b.classList.toggle('active',b.dataset.key===(stu.accentKey||'gold'));
   });
+  syncColorSummary();
 
   document.getElementById('modal-overlay').classList.add('open');
 }
@@ -10245,9 +10997,59 @@ function setAccent(key,btn){
   applyAccent(key);
   applyAvatar();
   syncProfilePreview();
+  syncColorSummary();
+  saveStudentLS();
 }
 function toggleAvatarPicker(){}
 function setAvatarColor(color,btn){}
+
+/* ══════════════════════════════════════════
+   POPUP — "Escolher cor" (cor do aplicativo)
+══════════════════════════════════════════ */
+function syncColorSummary(){
+  const sw=document.getElementById('prof-color-current-swatch');
+  const nm=document.getElementById('prof-color-current-name');
+  if(!sw||!nm)return;
+  const {color}=_getAccentColor();
+  sw.style.background=color;
+  nm.textContent=_accentDisplayName(stu.accentKey||'gold');
+}
+function renderColorPickerGrid(){
+  const wrap=document.getElementById('cp-groups');
+  if(!wrap)return;
+  const theme=document.documentElement.getAttribute('data-theme')||'dark';
+  const activeKey=stu.accentKey||'gold';
+  let html='';
+  ACCENT_META.forEach(g=>{
+    html+=`<div class="cp-group"><div class="cp-group-label">${g.group}</div><div class="prof-accent-grid">`;
+    g.items.forEach(it=>{
+      const map=ACCENT_MAPS[it.key]||ACCENT_MAPS.gold;
+      const swatchColor=map[theme]||map.dark;
+      const isActive=it.key===activeKey;
+      html+=`<button class="prof-accent-btn${isActive?' active':''}" data-key="${it.key}" onclick="pickColor('${it.key}',this)">
+        <span class="prof-accent-swatch" style="background:${swatchColor}"></span>
+        <span class="prof-accent-name">${it.name}</span>
+        <div class="prof-accent-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </button>`;
+    });
+    html+='</div></div>';
+  });
+  wrap.innerHTML=html;
+}
+function pickColor(key,btn){
+  setAccent(key,btn);
+  document.querySelectorAll('#cp-groups .prof-accent-btn').forEach(b=>b.classList.toggle('active',b.dataset.key===key));
+}
+function openColorPicker(){
+  renderColorPickerGrid();
+  document.getElementById('color-picker-overlay').classList.add('open');
+}
+function closeColorPicker(){
+  document.getElementById('color-picker-overlay').classList.remove('open');
+}
+function colorPickerOvClick(e){
+  if(e.target===document.getElementById('color-picker-overlay'))closeColorPicker();
+}
 function tickTimer(){
   /* horarios page timer */
   if(curPage==='horarios'){
@@ -11822,6 +12624,7 @@ function toggleSidebar(){
 window.addEventListener('load',()=>{
   loadTheme();
   loadStudentLS();
+  loadSchedule();
   applyAccent(stu.accentKey||'gold');
   applyAvatar();
   updateGreeting();
