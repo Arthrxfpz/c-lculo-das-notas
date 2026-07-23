@@ -5332,12 +5332,11 @@ input, textarea, select {
 }
 .cp-group:first-of-type .cp-group-label { margin-top: 0; }
 
-/* ── Botão "Editar horários" na página de Horários ── */
+/* ── Botão "Editar horários" na página de Horários (acima do status) ── */
 .sched-toprow {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 10px; margin-bottom: 14px;
+  display: flex; justify-content: flex-end;
+  margin-bottom: 12px;
 }
-.sched-toprow .day-selector { margin-bottom: 0; flex: 1; }
 .sched-edit-open-btn {
   display: flex; align-items: center; gap: 6px;
   padding: 9px 13px;
@@ -5348,6 +5347,7 @@ input, textarea, select {
 }
 .sched-edit-open-btn svg { width: 15px; height: 15px; }
 .sched-edit-open-btn:active { transform: scale(.94); opacity: .7; }
+.se-manage-subj-btn { width: 100%; justify-content: center; margin: 4px 0 18px; padding: 11px 13px; }
 
 /* ── Modal de edição de horários ── */
 .sched-edit-box { max-height: 88dvh; overflow-y: auto; }
@@ -5421,6 +5421,23 @@ input, textarea, select {
   padding: 9px 10px; background: var(--bg1); border: 0.5px solid var(--line);
   border-radius: 10px; font-size: 13px; font-weight: 500; color: var(--t1);
   font-family: var(--ff);
+}
+.se-subj-select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+
+.se-master-row {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: 13px; padding: 10px; margin-bottom: 8px;
+}
+.se-master-dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  flex-shrink: 0; cursor: pointer; box-shadow: 0 1px 5px rgba(0,0,0,.25);
+  border: 2px solid var(--bg1);
+}
+.se-master-dot:active { transform: scale(.88); }
+.se-empty-hint {
+  text-align: center; padding: 16px; color: var(--t3);
+  font-size: 12.5px; font-weight: 600;
 }
 
 .se-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
@@ -6705,10 +6722,38 @@ input, textarea, select {
     <div class="prof-section-label">Matérias por dia</div>
     <div class="se-daytabs" id="se-daytabs"></div>
     <div id="se-subjects"></div>
+    <button class="sched-edit-open-btn se-manage-subj-btn" onclick="openSubjectManager()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      <span>Editar matérias (nome, professor, cor)</span>
+    </button>
 
     <div class="se-actions">
       <button class="se-reset-btn" onclick="confirmResetSchedule()">Resetar para o padrão</button>
       <button class="modal-save-btn" onclick="closeScheduleEditor()">Concluído</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Editar matérias (compartilhado entre Horários e Notas) -->
+<div class="modal-overlay" id="subject-manager-overlay" onclick="subjectManagerOvClick(event)">
+  <div class="modal-box sched-edit-box">
+    <div class="modal-handle"></div>
+    <div class="cp-header">
+      <div class="cp-title">Editar matérias</div>
+      <button class="cp-close-btn" onclick="closeSubjectManager()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="se-hint">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>Editar uma matéria aqui atualiza ela em Notas, Horários e Provas de uma vez — inclusive o EAC e os cálculos de média.</span>
+    </div>
+    <div id="se-master-subjects"></div>
+    <button class="se-add-btn" onclick="addNewSubject()">+ Nova matéria</button>
+
+    <div class="se-actions">
+      <button class="se-reset-btn" onclick="confirmResetSchedule()">Resetar para o padrão</button>
+      <button class="modal-save-btn" onclick="closeSubjectManager()">Concluído</button>
     </div>
   </div>
 </div>
@@ -6825,7 +6870,69 @@ input, textarea, select {
 
 <script>
 /* ══════════════════════════════════════════
-   SCHEDULE DATA
+   MATÉRIAS — registro central (nome, professor, cor)
+   Cada aula no horário referencia o ID de uma matéria aqui.
+   Isso faz a MESMA aula em dias diferentes ficar sempre "linkada":
+   editar o nome/professor/cor em UM lugar atualiza tudo — horário,
+   status ao vivo, provas e badges — de uma vez só.
+══════════════════════════════════════════ */
+const DEFAULT_SUBJECTS=[
+  {id:'edu_fin',name:'Educação Financeira',   prof:'Simone',   color:'#E8B84B'},
+  {id:'mat',    name:'Matemática',            prof:'Veridiana',color:'#A78BFA'},
+  {id:'bio',    name:'Biologia',              prof:'Iara',     color:'#34D399'},
+  {id:'fis',    name:'Física',                prof:'Pedro',    color:'#60A5FA'},
+  {id:'qui',    name:'Química',               prof:'Jaque',    color:'#F472B6'},
+  {id:'artes',  name:'Artes Integradas',      prof:'Max',      color:'#FB923C'},
+  {id:'ed_fis', name:'Educação Física',       prof:'Leani',    color:'#4ADE80'},
+  {id:'esc_cri',name:'Escrita Criativa',      prof:'André',    color:'#F9A8D4'},
+  {id:'esp',    name:'Língua Espanhola',      prof:'Jorge',    color:'#FCA5A5'},
+  {id:'ing',    name:'Língua Inglesa',        prof:'Giovana',  color:'#93C5FD'},
+  {id:'port',   name:'Língua Portuguesa',     prof:'André',    color:'#6EE7B7'},
+  {id:'lit',    name:'Literatura',            prof:'André',    color:'#6EE7B7'},
+  {id:'rel',    name:'Ensino Religioso',      prof:'Deise',    color:'#C4B5FD'},
+  {id:'geo',    name:'Geografia',             prof:'Thiago',   color:'#67E8F9'},
+  {id:'hist',   name:'História',              prof:'Felipe',   color:'#FCD34D'},
+  {id:'soc',    name:'Sociologia',            prof:'Felipe',   color:'#86EFAC'},
+  {id:'proj',   name:'Proj. Integrador Mat.', prof:'Deise',    color:'#818CF8'},
+];
+let SUBJECTS=JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+const ALL_TABS=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC','resultado'];
+const SUBJECT_COLOR_PALETTE=['#A78BFA','#34D399','#60A5FA','#F472B6','#FB923C','#4ADE80','#F9A8D4','#FCA5A5','#93C5FD','#6EE7B7','#C4B5FD','#67E8F9','#FCD34D','#86EFAC','#818CF8','#FDBA74'];
+
+function saveSubjects(){
+  try{localStorage.setItem('t205_subjects',JSON.stringify(SUBJECTS));}catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadSubjects(){
+  try{
+    const s=localStorage.getItem('t205_subjects');
+    if(s)SUBJECTS=JSON.parse(s);
+  }catch(e){}
+  // garante que toda matéria (inclusive as adicionadas depois) tenha uma entrada em Notas
+  SUBJECTS.forEach(s=>{ if(!G[s.id]){G[s.id]={};ALL_TABS.forEach(t=>G[s.id][t]=[]);} });
+}
+function findSubjectById(id){return id?(SUBJECTS.find(s=>s.id===id)||null):null;}
+function slugifySubjectName(name){
+  let base=(name||'materia').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'materia';
+  let id=base,n=1;
+  while(findSubjectById(id)){id=base+'_'+(++n);}
+  return id;
+}
+function nextSubjectColor(){
+  const used=new Set(SUBJECTS.map(s=>s.color));
+  return SUBJECT_COLOR_PALETTE.find(c=>!used.has(c))||SUBJECT_COLOR_PALETTE[SUBJECTS.length%SUBJECT_COLOR_PALETTE.length];
+}
+/* resolve o id salvo em um slot do horário para os dados atuais da matéria */
+function resolveClass(subjId){
+  const s=findSubjectById(subjId);
+  if(!s)return{subj:'Vago',prof:'—',color:'#767680',subjId:null};
+  return{subj:s.name,prof:s.prof||'—',color:s.color,subjId:s.id};
+}
+
+/* ══════════════════════════════════════════
+   SCHEDULE DATA — cada slot é o ID de uma matéria (ou null = vago)
 ══════════════════════════════════════════ */
 const DEFAULT_PERIODS=[
   {n:'1ª aula',s:[13,30],e:[14,20]},
@@ -6837,11 +6944,11 @@ const DEFAULT_PERIODS=[
   {n:'6ª aula',s:[17,40],e:[18,30]},
 ];
 const DEFAULT_SCHED={
-  1:[{subj:'Educação Física',prof:'Leani'},{subj:'Educação Financeira',prof:'Simone'},{subj:'Artes Integradas',prof:'Max'},{subj:'Biologia',prof:'Iara'},{subj:'Física',prof:'Pedro'},{subj:'Biologia',prof:'Iara'}],
-  2:[{subj:'Língua Portuguesa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Espanhola',prof:'Jorge'}],
-  3:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Química',prof:'Jaque'},{subj:'Ensino Religioso',prof:'Deise'},{subj:'Química',prof:'Jaque'},{subj:'Geografia',prof:'Thiago'}],
-  4:[{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Língua Inglesa',prof:'Giovana'},{subj:'Proj. Integrador Mat.',prof:'Deise'},{subj:'Matemática',prof:'Veridiana'},{subj:'Escrita Criativa',prof:'André'},{subj:'Educação Física',prof:'Leani'}],
-  5:[{subj:'História',prof:'Felipe'},{subj:'Língua Portuguesa',prof:'André'},{subj:'Sociologia',prof:'Felipe'},{subj:'Física',prof:'Pedro'},{subj:'Literatura',prof:'André'},{subj:'Matemática',prof:'Veridiana'}],
+  1:['ed_fis','edu_fin','artes','bio','fis','bio'],
+  2:['port','proj','proj','port','proj','esp'],
+  3:['proj','mat','qui','rel','qui','geo'],
+  4:['proj','ing','proj','mat','esc_cri','ed_fis'],
+  5:['hist','port','soc','fis','lit','mat'],
 };
 /* horários ativos — podem ser sobrescritos pelo usuário e persistidos */
 let PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
@@ -6864,35 +6971,18 @@ function loadSchedule(){
 function resetSchedule(){
   PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
   SCHED=JSON.parse(JSON.stringify(DEFAULT_SCHED));
+  SUBJECTS=JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+  G={};
+  SUBJECTS.forEach(s=>{G[s.id]={};ALL_TABS.forEach(t=>G[s.id][t]=[]);});
   saveSchedule();
+  saveSubjects();
+  if(typeof saveGrades==='function')saveGrades();
 }
-const SUBJ_COLORS={'Biologia':'#34D399','Física':'#60A5FA','Educação Financeira':'#E8B84B','Educação Física':'#4ADE80','Língua Espanhola':'#FCA5A5','Língua Portuguesa':'#6EE7B7','Literatura':'#6EE7B7','História':'#FCD34D','Química':'#F472B6','Proj. Integrador Mat.':'#818CF8','Matemática':'#A78BFA','Sociologia':'#86EFAC','Geografia':'#67E8F9','Artes Integradas':'#FB923C','Escrita Criativa':'#F9A8D4','Língua Inglesa':'#93C5FD','Ensino Religioso':'#C4B5FD'};
 const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
 /* ══════════════════════════════════════════
    GRADES DATA
 ══════════════════════════════════════════ */
-const SUBJECTS=[
-  {id:'edu_fin',name:'Educação Financeira',color:'#E8B84B'},
-  {id:'mat',    name:'Matemática',         color:'#A78BFA'},
-  {id:'bio',    name:'Biologia',           color:'#34D399'},
-  {id:'fis',    name:'Física',             color:'#60A5FA'},
-  {id:'qui',    name:'Química',            color:'#F472B6'},
-  {id:'artes',  name:'Artes Integradas',   color:'#FB923C'},
-  {id:'ed_fis', name:'Educação Física',    color:'#4ADE80'},
-  {id:'esc_cri',name:'Escrita Criativa',   color:'#F9A8D4'},
-  {id:'esp',    name:'Língua Espanhola',   color:'#FCA5A5'},
-  {id:'ing',    name:'Língua Inglesa',     color:'#93C5FD'},
-  {id:'port',   name:'Língua Portuguesa',  color:'#6EE7B7'},
-  {id:'lit',    name:'Literatura',         color:'#6EE7B7'},
-  {id:'rel',    name:'Ensino Religioso',   color:'#C4B5FD'},
-  {id:'geo',    name:'Geografia',          color:'#67E8F9'},
-  {id:'hist',   name:'História',           color:'#FCD34D'},
-  {id:'soc',    name:'Sociologia',         color:'#86EFAC'},
-  {id:'proj',   name:'Proj. Integrador Mat.',color:'#818CF8'},
-];
-const ALL_TABS=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC','resultado'];
-
 /* state */
 let G={};
 SUBJECTS.forEach(s=>{G[s.id]={};ALL_TABS.forEach(t=>G[s.id][t]=[]);});
@@ -7420,6 +7510,7 @@ function renderNotasTab(el){
   const isEAC=curTab.includes('EAC');
   const base=isEAC?curTab.replace('-EAC',''):null;
   let h='';
+  h+=`<div class="sched-toprow"><button class="sched-edit-open-btn" onclick="openSubjectManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Editar matérias</span></button></div>`;
   if(isEAC)h+=`<div class="notice"><div class="notice-title">Avaliação Complementar — EAC</div><div class="notice-body">Insira as notas da recuperação. O sistema usa a maior nota entre o trimestre e o EAC.</div></div>`;
 
   h+='<div class="subj-list">';
@@ -7469,6 +7560,7 @@ function renderNotasTab(el){
     </div>`;
   });
   h+='</div>';
+  if(SUBJECTS.length===0)h+='<div class="se-empty-hint">Nenhuma matéria cadastrada. Toque em "Editar matérias" para adicionar.</div>';
   el.innerHTML=h;
 }
 
@@ -8442,24 +8534,24 @@ function fmtCountdown(m){
 function getSchedStatus(){
   const now=nowMins();const dow=new Date().getDay();
   if(dow<1||dow>5)return{type:'weekend'};
-  const dd=SCHED[dow];
+  const dd=SCHED[dow]||[];
   let ci=0;
   for(let pi=0;pi<PERIODS.length;pi++){
     const p=PERIODS[pi];const ps=toMins(p.s),pe=toMins(p.e);
     if(p.break){
-      if(now>=ps&&now<pe){const next=dd[ci];return{type:'break',remaining:pe-now,next};}
+      if(now>=ps&&now<pe){const next=dd[ci]?resolveClass(dd[ci]):null;return{type:'break',remaining:pe-now,next};}
       continue;
     }
     if(now>=ps&&now<pe){
       let next=null;let ni=ci+1;
-      while(ni<dd.length){if(dd[ni]){next=dd[ni];break;}ni++;}
-      return{type:'in-class',cls:dd[ci],period:p,remaining:pe-now,duration:pe-ps,elapsed:now-ps,next};
+      while(ni<dd.length){if(dd[ni]){next=resolveClass(dd[ni]);break;}ni++;}
+      return{type:'in-class',cls:resolveClass(dd[ci]),period:p,remaining:pe-now,duration:pe-ps,elapsed:now-ps,next};
     }
     ci++;
   }
   // before first
   const fp=PERIODS[0];const fs=toMins(fp.s);
-  if(now<fs)return{type:'before',first:dd[0],remaining:fs-now};
+  if(now<fs)return{type:'before',first:dd[0]?resolveClass(dd[0]):null,remaining:fs-now};
   return{type:'after'};
 }
 
@@ -8530,12 +8622,14 @@ function renderHorarios(el){
     }
   }
 
-  let daySel='<div class="sched-toprow"><div class="day-selector">';
+  let editBtnRow='<div class="sched-toprow"><button class="sched-edit-open-btn" onclick="openScheduleEditor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Editar horários</span></button></div>';
+
+  let daySel='<div class="day-selector">';
   [1,2,3,4,5].forEach(d=>{
     const isToday=d===todayDow,isActive=d===schedDay;
     daySel+=`<div class="day-btn${isActive?' active':''}${isToday&&!isActive?' today':''}" onclick="setSchedDay(${d})"><span class="day-name">${DAY_NAMES[d]}</span>${isToday?'<span class="day-short">hoje</span>':''}</div>`;
   });
-  daySel+='</div><button class="sched-edit-open-btn" onclick="openScheduleEditor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Editar horários</span></button></div>';
+  daySel+='</div>';
 
   // ── Lista de aulas — só apaga se o dia selecionado for feriado em dia útil ──
   const schedDayDate=(()=>{
@@ -8547,14 +8641,14 @@ function renderHorarios(el){
   })();
   const feriadoNoDiaSelecionado=FERIADOS_2026[schedDayDate];
 
-  const dd=SCHED[schedDay];const now=nowMins();const isTd=schedDay===todayDow;
+  const dd=SCHED[schedDay]||[];const now=nowMins();const isTd=schedDay===todayDow;
   let list=`<div class="schedule-list${feriadoNoDiaSelecionado?' feriado-day':''}">`;
   let ci=0;
   PERIODS.forEach((p,pi)=>{
     const ps=toMins(p.s),pe=toMins(p.e);
     const isCur=isTd&&now>=ps&&now<pe;const isPast=isTd&&now>=pe;
     if(p.break){list+=`<div class="sched-break${isCur?' current':''}" data-ps="${ps}" data-pe="${pe}"><div class="sched-break-line"></div><div class="sched-break-txt">${fmtHM(p.s)} — RECREIO</div><div class="sched-break-line"></div></div>`;return;}
-    const cls=dd[ci];const color=SUBJ_COLORS[cls.subj]||'#505050';
+    const cls=resolveClass(dd[ci]);const color=cls.color;
     const safeSubj=cls.subj.replace(/'/g,"\\'");const safeProf=cls.prof.replace(/'/g,"\\'");const safeCol=color.replace(/'/g,"\\'");
     const hasExamToday=isTd&&exams.some(e=>e.examDate===todayStr()&&e.subj===cls.subj&&!isExamPast(e));
     const examToday=hasExamToday?exams.find(e=>e.examDate===todayStr()&&e.subj===cls.subj&&!isExamPast(e)):null;
@@ -8570,7 +8664,7 @@ function renderHorarios(el){
   });
   list+='</div>';
 
-  el.innerHTML=banner+daySel+list;
+  el.innerHTML=editBtnRow+banner+daySel+list;
 }
 
 /* ══════════════════════════════════════════
@@ -8635,7 +8729,7 @@ function addPeriodRow(isBreak){
   if(endTo[1]>=60){endTo[0]+=Math.floor(endTo[1]/60);endTo[1]=endTo[1]%60;}
   PERIODS.push({n:isBreak?'Intervalo':('Aula '+(PERIODS.filter(p=>!p.break).length+1)),s:startFrom,e:endTo,break:!!isBreak});
   if(!isBreak){
-    [1,2,3,4,5].forEach(d=>{ if(SCHED[d]) SCHED[d].push({subj:'Nova matéria',prof:'Professor'}); });
+    [1,2,3,4,5].forEach(d=>{ if(SCHED[d]) SCHED[d].push(null); });
   }
   saveSchedule();
   renderPeriodsEditor();
@@ -8674,31 +8768,139 @@ function switchEditDay(d){
   renderSubjectsEditor();
 }
 
+function _subjectOptionsHtml(selectedId){
+  let html=`<option value=""${selectedId?'':' selected'}>— Vago —</option>`;
+  SUBJECTS.forEach(s=>{
+    html+=`<option value="${s.id}"${s.id===selectedId?' selected':''}>${(s.name||'').replace(/"/g,'&quot;')}${s.prof?(' — '+s.prof.replace(/"/g,'&quot;')):''}</option>`;
+  });
+  return html;
+}
+
+/* Cada slot aqui é apenas um SELECT apontando pra uma matéria do registro central.
+   Por isso a mesma aula (ex: Matemática com a Veridiana) aparece IDÊNTICA em
+   qualquer dia em que for usada — e editar a matéria uma vez (na seção "Todas
+   as matérias" abaixo) atualiza automaticamente todos os dias que a usam. */
 function renderSubjectsEditor(){
   const wrap=document.getElementById('se-subjects');
   if(!wrap)return;
   const dd=SCHED[seCurrentDay]||[];
-  let html='<datalist id="se-subj-list">'+SUBJECTS.map(s=>`<option value="${s.name.replace(/"/g,'&quot;')}">`).join('')+'</datalist>';
+  let html='';
   let ci=0;
   PERIODS.forEach(p=>{
     if(p.break)return;
-    const cls=dd[ci]||{subj:'',prof:''};
+    const curId=dd[ci]||'';
     html+=`<div class="se-subj-row">
-      <div class="se-subj-label">${p.n||('Aula '+(ci+1))}</div>
-      <input class="se-subj-input" type="text" list="se-subj-list" placeholder="Matéria" value="${(cls.subj||'').replace(/"/g,'&quot;')}" oninput="onSubjectFieldChange(${seCurrentDay},${ci},'subj',this.value)">
-      <input class="se-subj-input" type="text" placeholder="Professor(a)" value="${(cls.prof||'').replace(/"/g,'&quot;')}" oninput="onSubjectFieldChange(${seCurrentDay},${ci},'prof',this.value)">
+      <div class="se-subj-label">${(p.n||('Aula '+(ci+1))).replace(/</g,'&lt;')}</div>
+      <select class="se-subj-input se-subj-select" onchange="onSlotSubjectChange(${seCurrentDay},${ci},this.value)">
+        ${_subjectOptionsHtml(curId)}
+      </select>
     </div>`;
     ci++;
   });
   wrap.innerHTML=html;
 }
 
-function onSubjectFieldChange(day,ci,field,value){
+function onSlotSubjectChange(day,ci,value){
   if(!SCHED[day])return;
-  if(!SCHED[day][ci])SCHED[day][ci]={subj:'',prof:''};
-  SCHED[day][ci][field]=value;
+  SCHED[day][ci]=value||null;
   saveSchedule();
   renderCurrentPageIfHorarios();
+}
+
+/* ── "Todas as matérias" — cadastro central: editar nome/professor/cor,
+   adicionar nova matéria ou excluir uma existente (removendo-a de onde
+   estiver no horário, sem quebrar a grade). ── */
+function renderMasterSubjects(){
+  const wrap=document.getElementById('se-master-subjects');
+  if(!wrap)return;
+  if(!SUBJECTS.length){ wrap.innerHTML='<div class="se-empty-hint">Nenhuma matéria cadastrada ainda.</div>'; return; }
+  let html='';
+  SUBJECTS.forEach(s=>{
+    html+=`<div class="se-master-row">
+      <span class="se-master-dot" style="background:${s.color}" onclick="cycleSubjectColor('${s.id}')" title="Toque para mudar a cor"></span>
+      <input class="se-subj-input" type="text" placeholder="Matéria" value="${(s.name||'').replace(/"/g,'&quot;')}" oninput="onMasterSubjectChange('${s.id}','name',this.value)">
+      <input class="se-subj-input" type="text" placeholder="Professor(a)" value="${(s.prof||'').replace(/"/g,'&quot;')}" oninput="onMasterSubjectChange('${s.id}','prof',this.value)">
+      <button class="se-period-del" onclick="confirmDeleteSubject('${s.id}')" title="Excluir matéria">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      </button>
+    </div>`;
+  });
+  wrap.innerHTML=html;
+}
+
+function onMasterSubjectChange(id,field,value){
+  const s=findSubjectById(id);
+  if(!s)return;
+  if(field==='name'){
+    const oldName=s.name;
+    s.name=value;
+    // mantém provas já marcadas linkadas ao novo nome da matéria
+    if(oldName!==value&&typeof exams!=='undefined'&&Array.isArray(exams)){
+      let changed=false;
+      exams.forEach(e=>{ if(e.subj===oldName){e.subj=value;changed=true;} });
+      if(changed&&typeof saveExams==='function')saveExams();
+    }
+  }else if(field==='prof'){
+    s.prof=value;
+  }
+  saveSubjects();
+  refreshAfterSubjectChange();
+}
+
+function cycleSubjectColor(id){
+  const s=findSubjectById(id);
+  if(!s)return;
+  const idx=SUBJECT_COLOR_PALETTE.indexOf(s.color);
+  s.color=SUBJECT_COLOR_PALETTE[(idx+1+SUBJECT_COLOR_PALETTE.length)%SUBJECT_COLOR_PALETTE.length];
+  saveSubjects();
+  refreshAfterSubjectChange();
+}
+
+function addNewSubject(){
+  const id=slugifySubjectName('nova_materia_'+Date.now());
+  SUBJECTS.push({id,name:'Nova matéria',prof:'',color:nextSubjectColor()});
+  if(!G[id]){G[id]={};ALL_TABS.forEach(t=>G[id][t]=[]);}
+  saveSubjects();
+  if(typeof saveGrades==='function')saveGrades();
+  refreshAfterSubjectChange();
+}
+
+function confirmDeleteSubject(id){
+  const s=findSubjectById(id);
+  if(!s)return;
+  const hasGrades=G[id]&&Object.values(G[id]).some(arr=>Array.isArray(arr)&&arr.length>0);
+  let usedSlots=0;
+  [1,2,3,4,5].forEach(d=>{ (SCHED[d]||[]).forEach(sid=>{ if(sid===id)usedSlots++; }); });
+  let msg=`Isso vai remover "${s.name}" de todo o horário`;
+  msg+= usedSlots?` (${usedSlots} aula${usedSlots>1?'s ficarão':' ficará'} marcada${usedSlots>1?'s':''} como vaga).`:'.';
+  if(hasGrades)msg+=' Essa matéria já tem notas lançadas — elas também serão apagadas.';
+  msg+=' Essa ação não pode ser desfeita.';
+  showConfirm({
+    title:'Excluir matéria',
+    msg,
+    okLabel:'Excluir',
+    danger:true,
+    onOk:()=>{
+      [1,2,3,4,5].forEach(d=>{ if(SCHED[d])SCHED[d]=SCHED[d].map(sid=>sid===id?null:sid); });
+      SUBJECTS=SUBJECTS.filter(x=>x.id!==id);
+      delete G[id];
+      saveSchedule();
+      saveSubjects();
+      if(typeof saveGrades==='function')saveGrades();
+      refreshAfterSubjectChange();
+    }
+  });
+}
+
+/* Atualiza tudo que depende do registro de matérias: o editor de horários
+   (se estiver aberto), a página de Horários, e a página de Notas/Resultado
+   (EAC, somas e médias já usam SUBJECTS/G ao vivo, então refletem sozinhas). */
+function refreshAfterSubjectChange(){
+  renderMasterSubjects();
+  const schedOverlay=document.getElementById('sched-edit-overlay');
+  if(schedOverlay&&schedOverlay.classList.contains('open'))renderSubjectsEditor();
+  renderCurrentPageIfHorarios();
+  if((curPage==='notas'||curPage==='resultado')&&typeof render==='function')render(null);
 }
 
 function renderCurrentPageIfHorarios(){
@@ -8719,10 +8921,23 @@ function closeScheduleEditor(){
 function schedEditOvClick(e){
   if(e.target===document.getElementById('sched-edit-overlay'))closeScheduleEditor();
 }
+
+function openSubjectManager(){
+  renderMasterSubjects();
+  document.getElementById('subject-manager-overlay').classList.add('open');
+}
+function closeSubjectManager(){
+  document.getElementById('subject-manager-overlay').classList.remove('open');
+  refreshAfterSubjectChange();
+}
+function subjectManagerOvClick(e){
+  if(e.target===document.getElementById('subject-manager-overlay'))closeSubjectManager();
+}
+
 function confirmResetSchedule(){
   showConfirm({
-    title:'Resetar horários',
-    msg:'Isso vai apagar todas as suas alterações e voltar aos horários e matérias padrão. Essa ação não pode ser desfeita.',
+    title:'Resetar para o padrão',
+    msg:'Isso vai apagar todas as suas alterações e voltar os horários, as matérias e as notas ao estado original. Essa ação não pode ser desfeita.',
     okLabel:'Resetar',
     danger:true,
     onOk:()=>{
@@ -8731,7 +8946,7 @@ function confirmResetSchedule(){
       renderPeriodsEditor();
       renderDayTabsEditor();
       renderSubjectsEditor();
-      renderCurrentPageIfHorarios();
+      refreshAfterSubjectChange();
     }
   });
 }
@@ -8792,12 +9007,14 @@ window._exValidDows=[];
 
 function getSubjSlots(subjName){
   const slots=[];
+  const subjEntry=SUBJECTS.find(s=>s.name===subjName);
+  const subjId=subjEntry?subjEntry.id:null;
   [1,2,3,4,5].forEach(day=>{
-    const dd=SCHED[day];let ci=0;
+    const dd=SCHED[day]||[];let ci=0;
     PERIODS.forEach(p=>{
       if(p.break)return;
-      if(dd[ci]&&dd[ci].subj===subjName)
-        slots.push({dow:day,period:p.n,s:p.s,e:p.e,prof:dd[ci].prof});
+      if(subjId&&dd[ci]===subjId)
+        slots.push({dow:day,period:p.n,s:p.s,e:p.e,prof:resolveClass(dd[ci]).prof});
       ci++;
     });
   });
@@ -9023,10 +9240,12 @@ function _renderCustomSlotPicker(subjName, dow){
   const slots=[];
   const dd=SCHED[dow];
   if(!dd){sec.style.display='none';return;}
+  const subjEntry=SUBJECTS.find(s=>s.name===subjName);
+  const subjId=subjEntry?subjEntry.id:null;
   let ci=0;
   PERIODS.forEach(p=>{
     if(p.break){return;}
-    if(dd[ci]&&dd[ci].subj===subjName)
+    if(subjId&&dd[ci]===subjId)
       slots.push({period:p.n,s:p.s,e:p.e});
     ci++;
   });
@@ -11149,11 +11368,11 @@ function openSubjSheet(subjName, prof, color){
   const weekSlots=[];
   let totalPerWeek=0;
   [1,2,3,4,5].forEach(day=>{
-    const dd=SCHED[day];
+    const dd=SCHED[day]||[];
     let ci=0;
     PERIODS.forEach(p=>{
       if(p.break)return;
-      if(dd[ci]&&dd[ci].subj===subjName){
+      if(sid&&dd[ci]===sid){
         weekSlots.push({day,period:p.n,s:p.s,e:p.e});
         totalPerWeek++;
       }
@@ -12625,6 +12844,7 @@ window.addEventListener('load',()=>{
   loadTheme();
   loadStudentLS();
   loadSchedule();
+  loadSubjects();
   applyAccent(stu.accentKey||'gold');
   applyAvatar();
   updateGreeting();
