@@ -66,15 +66,18 @@
     if (el) el.style.display = 'flex';
   }
 
-  window._hideSplash = function() {
+  window._hideSplash = function(showGreetTransition) {
     clearTimeout(_splashSlowTimer);
     _setSplashProgress(100, 'Concluído');
     // Pequena pausa para o usuário ver 100% antes de sumir
     setTimeout(() => {
       const splash = document.getElementById('app-splash');
-      if (!splash) return;
+      if (!splash) { if (showGreetTransition && window._showHyperGreetTransition) window._showHyperGreetTransition(); return; }
       splash.style.opacity = '0';
-      setTimeout(() => splash.remove(), 400);
+      setTimeout(() => {
+        splash.remove();
+        if (showGreetTransition && window._showHyperGreetTransition) window._showHyperGreetTransition();
+      }, 400);
     }, 320);
   };
 
@@ -178,7 +181,7 @@
       console.error('Firebase load error:', e);
     }
     _setSplashProgress(95, 'Carregando interface…');
-    setTimeout(_hideSplash, 150);
+    setTimeout(() => _hideSplash(true), 150);
   }
 
   /* ── Preenche o perfil com dados do Google ── */
@@ -794,6 +797,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;
   padding:10px 16px 10px;
   gap:10px;
+  position:relative;
 }
 .topbar-avatar{
   width:36px;height:36px;background:var(--bg3);border-radius:50%;
@@ -854,6 +858,61 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:none;
 }
 .topbar-actions{display:flex;align-items:center;gap:7px;flex-shrink:0}
+
+/* ── "Hyper Island" — transição de boas-vindas pós-login (estilo Dynamic/Hyper Island) ──
+   Substitui o conteúdo da topbar por ~3s logo após o carregamento, mostrando
+   foto + "Olá {nome}, {saudação}!", depois recolhe e revela a topbar normal. */
+.topbar > *:not(.hyper-greet){
+  transition:opacity .25s ease;
+}
+.topbar.hyper-active > *:not(.hyper-greet){
+  opacity:0;
+  pointer-events:none;
+}
+.hyper-greet{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) scale(.5);
+  width:40px;height:40px;
+  border-radius:999px;
+  background:#0B0B0F;
+  display:flex;align-items:center;gap:9px;
+  padding:0 16px;
+  opacity:0;
+  overflow:hidden;
+  white-space:nowrap;
+  pointer-events:none;
+  z-index:6;
+  box-shadow:0 10px 34px rgba(0,0,0,.4),0 1px 0 rgba(255,255,255,.04) inset;
+  transition:width .5s cubic-bezier(.32,.72,0,1),
+             height .5s cubic-bezier(.32,.72,0,1),
+             border-radius .5s cubic-bezier(.32,.72,0,1),
+             transform .5s cubic-bezier(.32,.72,0,1),
+             opacity .3s ease;
+}
+.hyper-greet.show{
+  opacity:1;
+  width:min(92%,380px);
+  height:44px;
+  border-radius:22px;
+  transform:translate(-50%,-50%) scale(1);
+}
+.hyper-greet-avatar{
+  width:26px;height:26px;border-radius:50%;flex-shrink:0;
+  background:var(--gold);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+}
+.hyper-greet-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.hyper-greet-avatar-fallback{font-size:11px;font-weight:800;color:#000;letter-spacing:-.3px}
+.hyper-greet-text{
+  font-size:14px;font-weight:600;color:#fff;letter-spacing:-.2px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  opacity:0;transform:translateY(3px);
+  transition:opacity .35s ease .18s,transform .35s ease .18s;
+}
+.hyper-greet.show .hyper-greet-text{opacity:1;transform:translateY(0)}
+
 .topbar-btn{
   width:34px;height:34px;display:flex;align-items:center;justify-content:center;
   background:var(--bg2);border:1px solid var(--line2);border-radius:50%;
@@ -6451,6 +6510,15 @@ input, textarea, select {
         <div class="topbar-meta" id="d-school"></div>
       </div>
 
+      <!-- "Hyper Island" — ilha de saudação pós-login, some sozinha depois de ~3s -->
+      <div class="hyper-greet" id="hyper-greet" aria-hidden="true">
+        <div class="hyper-greet-avatar" id="hyper-greet-avatar">
+          <img id="hyper-greet-photo" src="" alt="" style="display:none">
+          <span class="hyper-greet-avatar-fallback" id="hyper-greet-initials"></span>
+        </div>
+        <div class="hyper-greet-text" id="hyper-greet-text"></div>
+      </div>
+
       <div class="topbar-actions">
         <div class="weather-btn" id="wx-btn" onclick="openWeatherPopup()" title="Previsão do tempo">
           <span class="weather-icon" id="wx-icon"></span>
@@ -7099,6 +7167,59 @@ function updateGreeting(){
   if(gnEl)gnEl.textContent=subtitle;
   if(typeof _fitTopbarGreeting==='function')_fitTopbarGreeting();
 }
+
+/* ── "Hyper Island" — transição de boas-vindas pós-login ──
+   Chamada uma vez, logo depois que a splash screen termina de sumir
+   (só quando a sessão é do Google). Mostra foto + "Olá {nome}, {saudação}!"
+   por cima da topbar durante ~3s e depois recolhe sozinha. */
+let _hyperGreetShown=false;
+function _showHyperGreetTransition(){
+  try{
+    if(_hyperGreetShown) return; // só uma vez por sessão de carregamento
+    const firstName=(stu.nome||'').split(' ')[0];
+    if(!firstName) return; // sem nome configurado ainda, não há o que mostrar
+
+    const island=document.getElementById('hyper-greet');
+    const topbar=document.querySelector('.topbar');
+    const textEl=document.getElementById('hyper-greet-text');
+    const photoEl=document.getElementById('hyper-greet-photo');
+    const initEl=document.getElementById('hyper-greet-initials');
+    if(!island||!topbar||!textEl) return;
+
+    _hyperGreetShown=true;
+
+    const h=new Date().getHours();
+    let line;
+    if(h>=5&&h<12)line='Bom dia';
+    else if(h>=12&&h<19)line='Boa tarde';
+    else if(h>=19)line='Boa noite';
+    else line='Boa madrugada';
+
+    textEl.textContent=`Olá ${firstName}, ${line}!`;
+
+    if(stu.googlePhoto&&photoEl){
+      photoEl.src=stu.googlePhoto;
+      photoEl.style.display='block';
+      if(initEl)initEl.style.display='none';
+    } else if(initEl){
+      photoEl.style.display='none';
+      initEl.style.display='flex';
+      initEl.textContent=getInitials(stu.nome);
+    }
+
+    topbar.classList.add('hyper-active');
+    void island.offsetWidth; // força reflow antes de animar
+    island.classList.add('show');
+
+    // Recolhe sozinha depois de ~2.5s (expansão + espera), some de vez ~3s no total
+    setTimeout(()=>{
+      island.classList.remove('show');
+      setTimeout(()=>{ topbar.classList.remove('hyper-active'); },500);
+    },2500);
+  }catch(e){}
+}
+window._showHyperGreetTransition=_showHyperGreetTransition;
+
 function applyStudent(){
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
   const nameEl=document.getElementById('greeting-name');
