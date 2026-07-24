@@ -865,15 +865,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
-/* Telas estreitas: libera espaço horizontal pra saudação nunca ficar
-   espremida — some com o texto da cidade no clima e afina os espaçamentos. */
-@media (max-width:380px){
-  .topbar{gap:7px;padding:10px 12px 10px}
-  .topbar-actions{gap:5px}
-  .weather-btn{padding:5px 7px}
-  .wx-city-label{display:none}
-  .d-turma-txt{max-width:44px}
-}
+
 
 .tabs-strip{
   display:flex;gap:7px;padding:0 16px 12px;
@@ -7097,6 +7089,7 @@ function updateGreeting(){
   const turmaStr=stu.turma?(' · Turma '+stu.turma):'';
   const subtitle=stu.escola?(stu.escola+turmaStr):(profileSet?turmaStr.trim():'Toque para configurar seu perfil');
   if(gnEl)gnEl.textContent=subtitle;
+  if(typeof _fitTopbarGreeting==='function')_fitTopbarGreeting();
 }
 function applyStudent(){
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
@@ -7467,6 +7460,34 @@ function dismissUpdateBanner() {
   }, 300);
 }
 
+/* ══════════════════════════════════════════
+   AJUSTE DINÂMICO DA TOPBAR — "Bom dia, Fulano!" cortado
+   ══════════════════════════════════════════
+   Em vez de adivinhar uma largura de tela onde o layout quebra (o que falha
+   em aparelhos com DPI/resolução fora do comum), medimos o espaço que a
+   saudação realmente recebeu depois do flexbox distribuir tudo. Se ficou
+   apertado demais pro texto normal, liberamos espaço indo do menos essencial
+   pro mais essencial: 1° some o nome da cidade no clima, 2° enxuga o selo
+   da turma. Roda de novo sempre que o layout muda (resize, rotação, zoom,
+   troca de conta) — então funciona igual em qualquer tela. */
+function _fitTopbarGreeting(){
+  const greetingEl = document.querySelector('.topbar-greeting');
+  const cityLabel  = document.querySelector('.wx-city-label');
+  const turmaTxt   = document.querySelector('.d-turma-txt');
+  if(!greetingEl || greetingEl.style.display==='none') return;
+  const MIN_W = 130; // px confortáveis pra "Boa madrugada" + linha da escola não truncarem
+  // Restaura o estado "cheio" antes de medir de novo — senão nunca saberíamos
+  // se voltou a caber (ex: girou a tela, ou trocou pra uma conta com nome curto).
+  if(cityLabel) cityLabel.style.display='';
+  if(turmaTxt)  turmaTxt.style.maxWidth='';
+  if(greetingEl.clientWidth<MIN_W && cityLabel){
+    cityLabel.style.display='none';
+  }
+  if(greetingEl.clientWidth<MIN_W && turmaTxt){
+    turmaTxt.style.maxWidth='30px';
+  }
+}
+
 function syncLayout(){
   const h=document.getElementById('top-fixed').getBoundingClientRect().height;
   const pt=(h+10)+'px';
@@ -7476,6 +7497,7 @@ function syncLayout(){
     const noteEditor=document.getElementById('note-editor-overlay');
     if(noteEditor) noteEditor.classList.add('collapsed');
   }
+  _fitTopbarGreeting();
 }
 
 /* ══════════════════════════════════════════
