@@ -435,6 +435,14 @@
           if(chip)chip.classList.add('visible');
           if(photo&&cached.photoURL){photo.src=cached.photoURL;photo.style.display='block';}
           if(name)name.textContent=(cached.displayName||'').split(' ')[0]||'Conta';
+          // Mostra a saudação e esconde o avatar genérico já aqui, sem esperar
+          // o callback assíncrono do Firebase (onAuthStateChanged) resolver —
+          // é essa espera (1-3s) que causava o "pulo" visível na topbar
+          var greeting=document.querySelector('.topbar-greeting');
+          var topbarAv=document.querySelector('.topbar-avatar');
+          if(topbarAv)topbarAv.style.display='none';
+          if(greeting)greeting.style.display='';
+          if(typeof updateGreeting==='function')updateGreeting();
         }catch(e){}
       });
     } else {
@@ -13055,7 +13063,7 @@ function _buildCalHtml(){
     if(dayExams.length){
       dotsHtml='<div class="cal-day-dots">';
       dayExams.slice(0,3).forEach(e=>{
-        const color=SUBJ_COLORS[e.subj]||'var(--red)';
+        const color=SUBJECTS.find(s=>s.name===e.subj)?.color||'var(--red)';
         dotsHtml+=`<div class="cal-dot" style="background:${color}"></div>`;
       });
       dotsHtml+='</div>';
@@ -13095,7 +13103,7 @@ function _buildCalEventListHtml(mo){
     let infoHtml='';
     if(feriado) infoHtml+=`<div class="cal-event-row-feriado"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${feriado}</div>`;
     dayExams.forEach(e=>{
-      const color=SUBJ_COLORS[e.subj]||'var(--red)';
+      const color=SUBJECTS.find(s=>s.name===e.subj)?.color||'var(--red)';
       const lbl=e.title?`${e.subj} · ${e.title}`:e.subj;
       infoHtml+=`<div class="cal-event-row-exam"><div class="cal-event-row-exam-dot" style="background:${color}"></div>${lbl}</div>`;
     });
@@ -13168,7 +13176,7 @@ function calNavMonth(dir){
     let dots='';
     if(dayExams.length){
       dots='<div class="cal-day-dots">';
-      dayExams.slice(0,3).forEach(e=>{dots+=`<div class="cal-dot" style="background:${SUBJ_COLORS[e.subj]||'var(--red)'}"></div>`;});
+      dayExams.slice(0,3).forEach(e=>{dots+=`<div class="cal-dot" style="background:${SUBJECTS.find(s=>s.name===e.subj)?.color||'var(--red)'}"></div>`;});
       dots+='</div>';
     }
     gridHtml+=`<div class="${cls}" onclick="calDayClick('${dateStr}')"><div class="cal-day-num">${d}</div>${dots}</div>`;
