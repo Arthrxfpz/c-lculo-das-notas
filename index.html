@@ -88,11 +88,14 @@
         const now = Date.now();
         localStorage.setItem('t205_updatedAt', String(now));
         const payload = {
-          grades:  JSON.parse(localStorage.getItem('t205_grades')  || 'null'),
-          exams:   JSON.parse(localStorage.getItem('t205_exams')   || '[]'),
-          student: JSON.parse(localStorage.getItem('t205_stu')     || 'null'),
-          notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
-          notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
+          grades:   JSON.parse(localStorage.getItem('t205_grades')   || 'null'),
+          exams:    JSON.parse(localStorage.getItem('t205_exams')    || '[]'),
+          student:  JSON.parse(localStorage.getItem('t205_stu')      || 'null'),
+          notes:    JSON.parse(localStorage.getItem('t205_notes')    || '[]'),
+          notifs:   JSON.parse(localStorage.getItem('t205_notifs')   || '[]'),
+          periods:  JSON.parse(localStorage.getItem('t205_periods')  || 'null'),
+          sched:    JSON.parse(localStorage.getItem('t205_sched')    || 'null'),
+          subjects: JSON.parse(localStorage.getItem('t205_subjects') || 'null'),
           updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
@@ -106,15 +109,20 @@
 
   /* ── Aplica dados do Firestore na UI ── */
   function _applyCloudData(d) {
-    if (d.grades)  localStorage.setItem('t205_grades', JSON.stringify(d.grades));
-    if (d.exams)   localStorage.setItem('t205_exams',  JSON.stringify(d.exams));
-    if (d.student) localStorage.setItem('t205_stu',    JSON.stringify(d.student));
-    if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
-    if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
+    if (d.grades)   localStorage.setItem('t205_grades',   JSON.stringify(d.grades));
+    if (d.exams)    localStorage.setItem('t205_exams',    JSON.stringify(d.exams));
+    if (d.student)  localStorage.setItem('t205_stu',      JSON.stringify(d.student));
+    if (d.notes)    localStorage.setItem('t205_notes',    JSON.stringify(d.notes));
+    if (d.notifs)   localStorage.setItem('t205_notifs',   JSON.stringify(d.notifs));
+    if (d.periods)  localStorage.setItem('t205_periods',  JSON.stringify(d.periods));
+    if (d.sched)    localStorage.setItem('t205_sched',    JSON.stringify(d.sched));
+    if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects));
     if (typeof loadGrades       === 'function') loadGrades();
     if (typeof loadExams        === 'function') loadExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
     if (typeof loadNotes        === 'function') loadNotes();
+    if (typeof loadSchedule     === 'function') loadSchedule();
+    if (typeof loadSubjects     === 'function') loadSubjects();
     if (typeof renderCurrentPage === 'function') renderCurrentPage();
     if (typeof updateGreeting    === 'function') updateGreeting();
     if (typeof applyThemeFromLS  === 'function') applyThemeFromLS();
@@ -144,6 +152,9 @@
           if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
           if (d.notes)     localStorage.setItem('t205_notes',     JSON.stringify(d.notes));
           if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
+          if (d.periods)   localStorage.setItem('t205_periods',   JSON.stringify(d.periods));
+          if (d.sched)     localStorage.setItem('t205_sched',     JSON.stringify(d.sched));
+          if (d.subjects)  localStorage.setItem('t205_subjects',  JSON.stringify(d.subjects));
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           _setSplashProgress(90, 'Aplicando atualizações…');
           setTimeout(() => location.reload(), 200);
@@ -841,13 +852,18 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .topbar-btn:active{opacity:.6;transform:scale(.92)}
 .topbar-btn svg{width:15px;height:15px;stroke:var(--t2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-.tabs-strip{display:flex;gap:7px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.tabs-strip{
+  display:flex;gap:6px;padding:0 16px 12px;
+  overflow-x:auto;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 14px,#000 calc(100% - 14px),transparent 100%);
+}
 .tabs-strip::-webkit-scrollbar{display:none}
 .tab-btn{
-  flex:0 0 auto;padding:8px 18px;border:none;
+  flex:0 0 auto;padding:7.5px 13px;border:none;
   background:var(--bg2);border:1px solid var(--line2);
-  font-size:13px;font-weight:500;color:var(--t2);
-  border-radius:22px;cursor:pointer;
+  font-size:12.5px;font-weight:500;color:var(--t2);
+  border-radius:20px;cursor:pointer;
   transition:background .22s var(--ease-spring),color .22s var(--ease-spring),transform .14s var(--ease-spring),border-color .22s,box-shadow .22s;
   white-space:nowrap;letter-spacing:-0.1px;
 }
@@ -4378,8 +4394,8 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   gap: 6px;
 }
 .tab-btn {
-  font-size: 13px; font-weight: 500;
-  padding: 8px 16px;
+  font-size: 12.5px; font-weight: 500;
+  padding: 7.5px 13px;
   border-radius: 20px;
   background: var(--bg2);
   border: 1.5px solid var(--line2);
@@ -5332,22 +5348,45 @@ input, textarea, select {
 }
 .cp-group:first-of-type .cp-group-label { margin-top: 0; }
 
-/* ── Botão "Editar horários" na página de Horários (acima do status) ── */
+/* ── Botão de "Editar horários" / "Editar matérias" ──
+   Discreto: um ícone circular flutuando no canto da página, no mesmo
+   estilo dos botões da topbar. Fica visível e acessível sem brigar
+   com o conteúdo (banner, seletor de dias, lista de matérias etc). ── */
 .sched-toprow {
   display: flex; justify-content: flex-end;
-  margin-bottom: 12px;
+  margin: 0 0 10px;
+  position: relative; z-index: 2;
 }
 .sched-edit-open-btn {
-  display: flex; align-items: center; gap: 6px;
-  padding: 9px 13px;
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; padding: 0; gap: 0;
   background: var(--bg2); border: 1.5px solid var(--line2);
-  border-radius: 12px; cursor: pointer;
-  font-family: var(--ff); font-size: 12.5px; font-weight: 700;
-  color: var(--t2); white-space: nowrap; flex-shrink: 0;
+  border-radius: 50%; cursor: pointer;
+  font-family: var(--ff); color: var(--t2); flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.10);
+  transition: background .18s var(--ease-ios), border-color .18s, transform .12s, opacity .18s;
+}
+.sched-edit-open-btn .sched-edit-open-lbl {
+  /* rótulo escondido na variante compacta — o ícone + title/aria-label bastam */
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
 .sched-edit-open-btn svg { width: 15px; height: 15px; }
-.sched-edit-open-btn:active { transform: scale(.94); opacity: .7; }
-.se-manage-subj-btn { width: 100%; justify-content: center; margin: 4px 0 18px; padding: 11px 13px; }
+.sched-edit-open-btn:active { transform: scale(.9); opacity: .7; background: var(--bg3); }
+.sched-edit-open-btn:hover { border-color: var(--goldbd); color: var(--gold); }
+
+/* Variante usada dentro do modal "Editar horários" (botão "Editar matérias…"),
+   onde faz sentido voltar a ser uma pílula larga com texto visível. */
+.se-manage-subj-btn {
+  width: 100%; height: auto; border-radius: 12px;
+  justify-content: center; gap: 6px;
+  padding: 11px 13px; box-shadow: none;
+}
+.se-manage-subj-btn .sched-edit-open-lbl {
+  position: static; width: auto; height: auto; padding: 0; margin: 0;
+  overflow: visible; clip: auto; white-space: nowrap;
+  font-size: 12.5px; font-weight: 700;
+}
 
 /* ── Modal de edição de horários ── */
 .sched-edit-box { max-height: 88dvh; overflow-y: auto; }
@@ -6408,11 +6447,11 @@ input, textarea, select {
     </div>
 
     <div class="tabs-strip" id="tabs-strip">
-      <button class="tab-btn active" data-tab="1T"      onclick="switchTab('1T',this)">1° Trimestre</button>
+      <button class="tab-btn active" data-tab="1T"      onclick="switchTab('1T',this)">1° Tri</button>
       <button class="tab-btn"        data-tab="1T-EAC"  onclick="switchTab('1T-EAC',this)">EAC 1°</button>
-      <button class="tab-btn"        data-tab="2T"      onclick="switchTab('2T',this)">2° Trimestre</button>
+      <button class="tab-btn"        data-tab="2T"      onclick="switchTab('2T',this)">2° Tri</button>
       <button class="tab-btn"        data-tab="2T-EAC"  onclick="switchTab('2T-EAC',this)">EAC 2°</button>
-      <button class="tab-btn"        data-tab="3T"      onclick="switchTab('3T',this)">3° Trimestre</button>
+      <button class="tab-btn"        data-tab="3T"      onclick="switchTab('3T',this)">3° Tri</button>
       <button class="tab-btn"        data-tab="3T-EAC"  onclick="switchTab('3T-EAC',this)">EAC 3°</button>
 
     </div>
@@ -6724,7 +6763,7 @@ input, textarea, select {
     <div id="se-subjects"></div>
     <button class="sched-edit-open-btn se-manage-subj-btn" onclick="openSubjectManager()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      <span>Editar matérias (nome, professor, cor)</span>
+      <span class="sched-edit-open-lbl">Editar matérias (nome, professor, cor)</span>
     </button>
 
     <div class="se-actions">
@@ -7510,7 +7549,7 @@ function renderNotasTab(el){
   const isEAC=curTab.includes('EAC');
   const base=isEAC?curTab.replace('-EAC',''):null;
   let h='';
-  h+=`<div class="sched-toprow"><button class="sched-edit-open-btn" onclick="openSubjectManager()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Editar matérias</span></button></div>`;
+  h+=`<div class="sched-toprow"><button class="sched-edit-open-btn" onclick="openSubjectManager()" title="Editar matérias" aria-label="Editar matérias"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span class="sched-edit-open-lbl">Editar matérias</span></button></div>`;
   if(isEAC)h+=`<div class="notice"><div class="notice-title">Avaliação Complementar — EAC</div><div class="notice-body">Insira as notas da recuperação. O sistema usa a maior nota entre o trimestre e o EAC.</div></div>`;
 
   h+='<div class="subj-list">';
@@ -8622,7 +8661,7 @@ function renderHorarios(el){
     }
   }
 
-  let editBtnRow='<div class="sched-toprow"><button class="sched-edit-open-btn" onclick="openScheduleEditor()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Editar horários</span></button></div>';
+  let editBtnRow='<div class="sched-toprow"><button class="sched-edit-open-btn" onclick="openScheduleEditor()" title="Editar horários" aria-label="Editar horários"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span class="sched-edit-open-lbl">Editar horários</span></button></div>';
 
   let daySel='<div class="day-selector">';
   [1,2,3,4,5].forEach(d=>{
