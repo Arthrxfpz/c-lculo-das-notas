@@ -715,17 +715,18 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
   margin-right:6px;
 }
 .fb-sync-dot{
-  width:7px;height:7px;border-radius:50%;flex-shrink:0;
-  transition:background .3s,box-shadow .3s,opacity .3s;
+  width:0;height:7px;border-radius:50%;flex-shrink:0;
+  margin-left:0;opacity:0;overflow:hidden;
+  transition:width .3s var(--ease-ios),margin-left .3s var(--ease-ios),background .3s,box-shadow .3s,opacity .3s;
 }
-.fb-sync-idle    {background:var(--green);opacity:0}
-.fb-sync-ok      {background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
-.fb-sync-live    {background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
-.fb-sync-err     {background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
+.fb-sync-idle    {width:0;margin-left:0;background:var(--green);opacity:0}
+.fb-sync-ok      {width:7px;margin-left:6px;background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
+.fb-sync-live    {width:7px;margin-left:6px;background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
+.fb-sync-err     {width:7px;margin-left:6px;background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
 .fb-sync-checking{
   background:transparent;opacity:1;
   border:2px solid var(--blue);border-top-color:transparent;
-  width:9px;height:9px;margin:-1px;
+  width:9px;height:9px;margin-left:6px;
   animation:fb-spin .7s linear infinite;
 }
 @keyframes fb-spin{to{transform:rotate(360deg)}}
@@ -3225,6 +3226,11 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .topbar-auth-slot { order:1; }
   .topbar-actions { order:2; }
 
+  /* desktop, logado com Google e sidebar aberta: nome + foto já aparecem
+     no canto esquerdo (sidebar) — some com a repetição na topbar */
+  [data-fb-auth="in"] .topbar-greeting { display:none; }
+  [data-fb-auth="in"] .fb-user-chip.visible { display:none; }
+
   .tabs-strip {
     padding:0 44px 14px;
     max-width:760px;
@@ -3458,6 +3464,11 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .shell.collapsed .topbar-greeting { pointer-events:auto; cursor:pointer; }
   .shell.collapsed .topbar-greeting-line { font-size:13px; font-weight:500; color:var(--t2); letter-spacing:-0.1px; }
   .shell.collapsed .topbar-greeting-name { display:block; }
+
+  /* sidebar recolhida: não tem mais "canto esquerdo" com as infos —
+     nome + foto voltam a aparecer na topbar */
+  [data-fb-auth="in"] .shell.collapsed .topbar-greeting { display:block; }
+  [data-fb-auth="in"] .shell.collapsed .fb-user-chip.visible { display:flex; }
 
   /* clima aparece de volta */
   .shell.collapsed #wx-btn { display:flex; }
@@ -6034,13 +6045,14 @@ input, textarea, select {
   position:absolute;inset:0;
   display:flex;align-items:center;gap:10px;
   padding:10px 16px 10px;
-  background:var(--nav-bg);
+  background:var(--bg1);
   z-index:5;
   opacity:0;
+  transform:translateY(-3px);
   pointer-events:none;
-  transition:opacity .45s var(--ease-ios);
+  transition:opacity .5s var(--ease-ios),transform .5s var(--ease-ios);
 }
-.topbar-greet-overlay.visible{opacity:1}
+.topbar-greet-overlay.visible{opacity:1;transform:translateY(0)}
 .topbar-greet-avatar{
   flex-shrink:0;width:36px;height:36px;border-radius:50%;overflow:hidden;
   background:var(--bg3);
