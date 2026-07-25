@@ -84,14 +84,20 @@
     }, 320);
   };
 
-  /* ── Ilha de saudação: pílula que expande no topo (estilo Dynamic Island)
-       mostrando "Boa tarde, Nome!" por ~3s e depois recolhe, voltando à navbar normal ── */
+  /* ── Saudação na topbar: cobre o conteúdo normal por ~3s mostrando
+       "Boa tarde, Nome!" e depois some suavemente, revelando a topbar normal ── */
   window._greetIslandShown = false;
   window._showGreetingIsland = function() {
     if (window._greetIslandShown) return;
     window._greetIslandShown = true;
-    const el = document.getElementById('greet-island');
+    const el = document.getElementById('topbar-greet-overlay');
     if (!el) return;
+
+    // Garante que os dados do aluno (nome/foto/escola) já foram sincronizados
+    // do localStorage para a variável global antes de montar a saudação —
+    // isso evita a saudação aparecer "vazia" quando o login do Firebase
+    // resolve mais rápido que o carregamento normal da página.
+    if (typeof loadStudentLS === 'function') loadStudentLS();
 
     const h = new Date().getHours();
     let line;
@@ -100,36 +106,39 @@
     else if (h >= 19) line = 'Boa noite';
     else line = 'Boa madrugada';
 
-    const s = (typeof stu !== 'undefined' && stu) ? stu : {};
+    // Lê direto do localStorage como fonte da verdade — mais confiável do que
+    // depender só da variável global 'stu', que pode ainda não ter sido preenchida.
+    let s = {};
+    try {
+      const raw = localStorage.getItem('t205_stu');
+      if (raw) s = JSON.parse(raw) || {};
+    } catch(e) {}
+    if (!s.nome && typeof stu !== 'undefined' && stu && stu.nome) s = stu;
+
     const firstName = (s.nome || '').split(' ')[0] || '';
     const greetTxt = firstName ? `${line}, ${firstName}!` : `${line}!`;
     const subTxt = s.escola || 'Bem-vindo(a) de volta';
 
-    const lineEl = document.getElementById('greet-island-line');
-    const subEl  = document.getElementById('greet-island-sub');
-    const avEl   = document.getElementById('greet-island-avatar');
+    const lineEl = document.getElementById('topbar-greet-line');
+    const subEl  = document.getElementById('topbar-greet-sub');
+    const avEl   = document.getElementById('topbar-greet-avatar');
     if (lineEl) lineEl.textContent = greetTxt;
     if (subEl)  subEl.textContent  = subTxt;
     if (avEl) {
       const photo = s.googlePhoto || '';
       const initials = (typeof getInitials === 'function') ? getInitials(s.nome) : '?';
       if (photo) {
-        avEl.innerHTML = `<img src="${photo}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;greet-island-avatar-fallback&quot;>${initials}</div>'">`;
+        avEl.innerHTML = `<img src="${photo}" alt="" onerror="this.parentElement.innerHTML='<div class=&quot;topbar-greet-avatar-fallback&quot;>${initials}</div>'">`;
       } else {
-        avEl.innerHTML = `<div class="greet-island-avatar-fallback">${initials}</div>`;
+        avEl.innerHTML = `<div class="topbar-greet-avatar-fallback">${initials}</div>`;
       }
     }
 
     el.classList.add('visible');
-    void el.offsetWidth; // força reflow para garantir a transição de expansão
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => el.classList.add('expanded'));
-    });
 
-    // Fica expandida ~2.6s, depois recolhe (~0.55s) e desaparece
+    // Fica visível ~2.6s e some com um fade calmo, voltando ao conteúdo normal da topbar
     setTimeout(() => {
-      el.classList.remove('expanded');
-      setTimeout(() => { el.classList.remove('visible'); }, 600);
+      el.classList.remove('visible');
     }, 2600);
   };
 
@@ -681,11 +690,12 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
 /* texto sempre visível */
 .fb-login-btn-label{display:inline}
 
-/* Chip do usuário logado */
+/* Chip do usuário logado — sem "gap" no container: cada item controla sua
+   própria margem, assim quando nome/label ficam ocultos não sobra espaço morto */
 .fb-user-chip{
-  display:none;align-items:center;gap:7px;
+  display:none;align-items:center;
   background:var(--bg2);border:1.5px solid var(--line2);
-  border-radius:22px;padding:2px 10px 2px 3px;
+  border-radius:22px;padding:2px 6px 2px 3px;
   cursor:pointer;flex-shrink:0;
   transition:background .18s,transform .12s var(--ease-spring),border-color .18s;
 }
@@ -695,13 +705,14 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
 .fb-chip-photo{
   width:28px;height:28px;border-radius:50%;
   object-fit:cover;border:1.5px solid var(--line2);
-  flex-shrink:0;display:block;
+  flex-shrink:0;display:block;margin-right:6px;
 }
 .fb-chip-name{
   font-size:12px;font-weight:700;color:var(--t1);
   letter-spacing:-0.15px;max-width:90px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  display:none; /* só aparece no desktop */
+  display:none; /* o nome já aparece na saudação da topbar — evita repetir */
+  margin-right:6px;
 }
 .fb-sync-dot{
   width:7px;height:7px;border-radius:50%;flex-shrink:0;
@@ -727,17 +738,19 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
   color: var(--t2);
   white-space: nowrap;
   max-width: 0;
+  margin-right: 0;
   overflow: hidden;
   opacity: 0;
   transition:
     max-width .3s var(--ease-ios),
+    margin-right .3s var(--ease-ios),
     opacity   .2s var(--ease-ios),
     color     .2s;
   pointer-events: none;
 }
-.fb-user-chip.sync-active  #fb-sync-label { max-width: 90px; opacity: 1; }
-.fb-user-chip.sync-ok      #fb-sync-label { color: var(--green); max-width: 90px; opacity: 1; }
-.fb-user-chip.sync-err     #fb-sync-label { color: var(--red);   max-width: 90px; opacity: 1; }
+.fb-user-chip.sync-active  #fb-sync-label { max-width: 90px; margin-right:6px; opacity: 1; }
+.fb-user-chip.sync-ok      #fb-sync-label { color: var(--green); max-width: 90px; margin-right:6px; opacity: 1; }
+.fb-user-chip.sync-err     #fb-sync-label { color: var(--red);   max-width: 90px; margin-right:6px; opacity: 1; }
 
 /* ── POPUP DE LOGOUT ── */
 .fb-logout-overlay{
@@ -917,6 +930,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;
   padding:10px 16px 10px;
   gap:10px;
+  position:relative;
 }
 .topbar-avatar{
   width:36px;height:36px;background:var(--bg3);border-radius:50%;
@@ -3204,8 +3218,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .topbar-greeting-name { display:none; }
   .topbar-meta { display:none; }
 
-  /* desktop: chip mostra nome, label some */
-  .fb-chip-name { display:block; }
+  /* desktop: nome já aparece na saudação — chip fica só com foto, sem repetir */
   .fb-login-label { display:none !important; }
   /* desktop: reordena auth slot para depois da saudação */
   .topbar-greeting { order:0; }
@@ -6015,73 +6028,44 @@ input, textarea, select {
 }
 </style>
 
-<!-- ── Ilha de saudação (transição estilo Dynamic Island após login) ── -->
+<!-- ── Saudação embutida na topbar (substitui o conteúdo normal por ~3s após o login e volta suavemente) ── -->
 <style>
-.greet-island{
-  position:fixed;
-  top:calc(env(safe-area-inset-top) + 10px);
-  left:50%;
-  transform:translateX(-50%);
-  z-index:99995;
-  display:flex;align-items:center;
-  height:36px;width:112px;
-  background:var(--bg1);
-  border:1px solid var(--line);
-  border-radius:20px;
-  overflow:hidden;
+.topbar-greet-overlay{
+  position:absolute;inset:0;
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px 10px;
+  background:var(--nav-bg);
+  z-index:5;
   opacity:0;
   pointer-events:none;
-  box-shadow:0 10px 30px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.14);
-  transition:
-    width .55s cubic-bezier(0.36,1.4,0.4,1),
-    height .55s cubic-bezier(0.36,1.4,0.4,1),
-    border-radius .55s cubic-bezier(0.36,1.4,0.4,1),
-    opacity .3s var(--ease-ios);
-  will-change:width,height;
+  transition:opacity .45s var(--ease-ios);
 }
-.greet-island.visible{opacity:1}
-.greet-island.expanded{
-  width:min(82vw,320px);
-  height:54px;
-  border-radius:27px;
-}
-.greet-island-avatar{
-  flex-shrink:0;width:0;height:0;margin:0;border-radius:50%;overflow:hidden;
+.topbar-greet-overlay.visible{opacity:1}
+.topbar-greet-avatar{
+  flex-shrink:0;width:36px;height:36px;border-radius:50%;overflow:hidden;
   background:var(--bg3);
-  transition:
-    width .45s cubic-bezier(0.34,1.56,0.64,1) .1s,
-    height .45s cubic-bezier(0.34,1.56,0.64,1) .1s,
-    margin .45s cubic-bezier(0.34,1.56,0.64,1) .1s;
 }
-.greet-island.expanded .greet-island-avatar{width:38px;height:38px;margin:0 0 0 8px}
-.greet-island-avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.greet-island-avatar-fallback{
+.topbar-greet-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.topbar-greet-avatar-fallback{
   width:100%;height:100%;display:flex;align-items:center;justify-content:center;
   font-size:13px;font-weight:800;color:var(--accent-text);background:var(--gold);
 }
-.greet-island-text{
-  flex:1;min-width:0;overflow:hidden;white-space:nowrap;
-  opacity:0;transform:translateY(3px);
-  transition:opacity .32s ease .2s,transform .32s ease .2s;
-  padding:0 14px 0 10px;
-}
-.greet-island.expanded .greet-island-text{opacity:1;transform:translateY(0)}
-.greet-island-line{
-  font-size:13.5px;font-weight:700;color:var(--t1);letter-spacing:-.2px;
+.topbar-greet-text{flex:1;min-width:0;overflow:hidden}
+.topbar-greet-line{
+  font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-.2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.greet-island-sub{
-  font-size:11px;font-weight:500;color:var(--t2);
+.topbar-greet-sub{
+  font-size:11.5px;font-weight:500;color:var(--t2);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;
 }
+@media (min-width:768px){
+  .topbar-greet-overlay{padding:14px 44px 10px}
+  .topbar-greet-avatar{display:none}
+  .topbar-greet-line{font-size:17px;letter-spacing:-.4px}
+  .topbar-greet-sub{display:none}
+}
 </style>
-<div class="greet-island" id="greet-island" aria-hidden="true">
-  <div class="greet-island-avatar" id="greet-island-avatar"></div>
-  <div class="greet-island-text">
-    <div class="greet-island-line" id="greet-island-line"></div>
-    <div class="greet-island-sub" id="greet-island-sub"></div>
-  </div>
-</div>
 <div id="app-splash">
 
   <!-- Spinner elegante -->
@@ -6203,6 +6187,15 @@ input, textarea, select {
     </div>
 
     <div class="topbar">
+      <!-- Saudação: cobre a topbar por alguns segundos após o login e depois some, revelando o conteúdo normal -->
+      <div class="topbar-greet-overlay" id="topbar-greet-overlay" aria-hidden="true">
+        <div class="topbar-greet-avatar" id="topbar-greet-avatar"></div>
+        <div class="topbar-greet-text">
+          <div class="topbar-greet-line" id="topbar-greet-line"></div>
+          <div class="topbar-greet-sub" id="topbar-greet-sub"></div>
+        </div>
+      </div>
+
       <!-- Hambúrguer: só aparece no desktop quando sidebar está colapsada -->
       <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleSidebar()" title="Abrir menu">
         <span></span><span></span><span></span>
