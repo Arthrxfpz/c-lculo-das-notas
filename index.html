@@ -134,9 +134,13 @@
     // Dispara a animação estilo "Dynamic Island": nasce como uma pílula
     // pequena, expande com efeito de mola, segura o conteúdo no ar por um
     // instante e recolhe de volta sozinha — tudo numa única animação CSS.
+    // Enquanto isso, o conteúdo normal da topbar some, e volta ao final.
+    const topbarEl = el.closest('.topbar');
+    if (topbarEl) topbarEl.classList.add('greet-active');
     el.classList.add('visible');
     el.addEventListener('animationend', () => {
       el.classList.remove('visible');
+      if (topbarEl) topbarEl.classList.remove('greet-active');
     }, { once: true });
   };
 
@@ -6083,6 +6087,17 @@ input, textarea, select {
   transition:opacity .3s ease .16s,transform .3s var(--ease-ios) .16s;
 }
 .topbar-greet-overlay.visible .topbar-greet-line{opacity:1;transform:translateY(0)}
+
+/* Conteúdo normal da topbar: some enquanto a saudação estiver visível e
+   volta suavemente assim que ela termina ── */
+.topbar-main{
+  display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+  transition:opacity .35s ease;
+}
+.topbar.greet-active .topbar-main{
+  opacity:0;
+  pointer-events:none;
+}
 @keyframes islandGreetPop{
   0%   { width:44px; height:44px; padding:0;             transform:translateX(-50%) scale(.5); opacity:0; }
   10%  { width:44px; height:44px; padding:0;             transform:translateX(-50%) scale(1);  opacity:1; }
@@ -6221,6 +6236,8 @@ input, textarea, select {
         </div>
       </div>
 
+      <!-- Conteúdo normal da topbar: some enquanto a saudação estiver visível ── -->
+      <div class="topbar-main" id="topbar-main">
       <!-- Hambúrguer: só aparece no desktop quando sidebar está colapsada -->
       <button class="topbar-hamburger" id="topbar-hamburger" onclick="toggleSidebar()" title="Abrir menu">
         <span></span><span></span><span></span>
@@ -6273,6 +6290,7 @@ input, textarea, select {
         <div class="theme-btn" id="gear-btn" onclick="openGearPopover(event)" title="Configurações">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82V15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
         </div>
+      </div>
       </div>
     </div>
 
