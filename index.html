@@ -705,9 +705,9 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
 }
 .fb-sync-dot{
   width:7px;height:7px;border-radius:50%;flex-shrink:0;
-  transition:background .3s,box-shadow .3s;
+  transition:background .3s,box-shadow .3s,opacity .3s;
 }
-.fb-sync-idle    {background:var(--green);opacity:.45}
+.fb-sync-idle    {background:var(--green);opacity:0}
 .fb-sync-ok      {background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
 .fb-sync-live    {background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
 .fb-sync-err     {background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
@@ -6791,10 +6791,10 @@ function saveStudentLS(){try{localStorage.setItem('t205_stu',JSON.stringify(stu)
 function loadStudentLS(){try{const d=localStorage.getItem('t205_stu');if(d){stu=JSON.parse(d);applyStudent();}else{_isFirstVisit=true;}}catch(e){_isFirstVisit=true;}}
 function updateGreeting(){
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
-  const nome=stu.nome||'';
+  const firstName=(stu.nome||'').trim().split(' ')[0]||'';
   const grEl=document.getElementById('greeting-line');
   const gnEl=document.getElementById('greeting-name');
-  if(grEl)grEl.textContent=nome||(profileSet?'Seu nome':'Toque para configurar seu perfil');
+  if(grEl)grEl.textContent=firstName||(profileSet?'Seu nome':'Toque para configurar seu perfil');
   if(gnEl)gnEl.textContent=stu.turma?('Turma '+stu.turma):'';
 }
 function applyStudent(){
@@ -10883,30 +10883,40 @@ function switchTab(tab,btn){
 }
 
 /* ─── Drag-to-scroll (mouse) para strips horizontais — o touch/dedo já
-   funciona nativamente via overflow-x:auto, isso soma suporte a mouse ─── */
+   funciona nativamente via overflow-x:auto; isso soma suporte a mouse,
+   e nunca interfere com toque (evita travar os tabs no mobile) ─── */
 function enableDragScroll(elId){
   const el=document.getElementById(elId);
   if(!el||el._dragScrollBound)return;
   el._dragScrollBound=true;
   let isDown=false,startX=0,scrollStart=0,moved=false;
-  el.addEventListener('mousedown',e=>{
+  el.addEventListener('pointerdown',e=>{
+    if(e.pointerType!=='mouse')return; // toque/caneta: deixa o scroll nativo cuidar
     isDown=true;moved=false;
-    startX=e.pageX;scrollStart=el.scrollLeft;
-    el.classList.add('dragging');
+    startX=e.clientX;scrollStart=el.scrollLeft;
   });
-  window.addEventListener('mouseup',()=>{
+  el.addEventListener('pointermove',e=>{
+    if(!isDown||e.pointerType!=='mouse')return;
+    const dx=e.clientX-startX;
+    if(Math.abs(dx)>3){
+      if(!moved){moved=true;el.classList.add('dragging');}
+      el.scrollLeft=scrollStart-dx;
+    }
+  });
+  function endDrag(e){
+    if(e&&e.pointerType&&e.pointerType!=='mouse')return;
     isDown=false;
     el.classList.remove('dragging');
-  });
-  window.addEventListener('mousemove',e=>{
-    if(!isDown)return;
-    const dx=e.pageX-startX;
-    if(Math.abs(dx)>3)moved=true;
-    if(moved){el.scrollLeft=scrollStart-dx;e.preventDefault();}
-  });
-  // impede que um drag vire clique acidental num tab-btn
+  }
+  el.addEventListener('pointerup',endDrag);
+  el.addEventListener('pointercancel',endDrag);
+  el.addEventListener('pointerleave',endDrag);
+  window.addEventListener('pointerup',endDrag);
+  window.addEventListener('blur',()=>{isDown=false;el.classList.remove('dragging');});
+  // impede que um drag de mouse vire clique acidental num tab-btn
   el.addEventListener('click',e=>{
-    if(moved){e.stopPropagation();e.preventDefault();moved=false;}
+    if(moved){e.stopPropagation();e.preventDefault();}
+    moved=false;
   },true);
 }
 
@@ -11307,6 +11317,43 @@ function openSubjSheet(subjName, prof, color){
 
 function escHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ─── CUSTOM CONFIRM POPUP ─── */
+function showConfirm(opts){
+  // opts: { title, msg, okLabel, danger, iconSvg, onOk }
+  const overlay=document.getElementById('confirm-overlay');
+  const titleEl=document.getElementById('confirm-title');
+  const msgEl=document.getElementById('confirm-msg');
+  const okBtn=document.getElementById('confirm-ok');
+  const cancelBtn=document.getElementById('confirm-cancel');
+  const iconEl=document.getElementById('confirm-icon');
+
+  titleEl.textContent=opts.title||'Confirmação';
+  msgEl.textContent=opts.msg||'Tem certeza?';
+  okBtn.textContent=opts.okLabel||'Confirmar';
+  const isDanger=opts.danger!==false;
+  okBtn.className='confirm-ok'+(isDanger?'':' safe');
+  iconEl.className='confirm-icon '+(isDanger?'danger':'warn');
+
+  // Ícone dinâmico: lixeira para danger, alerta para warn
+  if(opts.iconSvg){
+    iconEl.innerHTML=opts.iconSvg;
+  } else if(isDanger){
+    iconEl.innerHTML=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+  } else {
+    iconEl.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`;
+  }
+
+  overlay.classList.add('open');
+
+  const cleanup=()=>{
+    overlay.classList.remove('open');
+    okBtn.onclick=null;cancelBtn.onclick=null;overlay.onclick=null;
+  };
+  okBtn.onclick=()=>{cleanup();opts.onOk&&opts.onOk();};
+  cancelBtn.onclick=cleanup;
+  overlay.onclick=(e)=>{if(e.target===overlay)cleanup();};
 }
 
 /* ─── iOS HAPTIC FEEDBACK ─── */
