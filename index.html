@@ -2349,33 +2349,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   padding:6px;
   min-width:192px;
   opacity:0;
-  transform:scale(.4) translateY(-8px);
+  transform:scale(.88) translateY(-6px);
   transform-origin:top right;
-  /* fechamento: rápido e sem mola — sensação de "solta na hora" */
-  transition:opacity .15s var(--ease-ios), transform .15s var(--ease-ios);
+  transition:opacity .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1);
   pointer-events:none;
 }
 .theme-popover.open{
   opacity:1;transform:scale(1) translateY(0);pointer-events:all;
-  /* abertura: pop com leve overshoot de mola, igual a um menu de contexto do iOS */
-  transition:opacity .22s var(--ease-ios), transform .42s var(--ease-spring);
-}
-/* vibrância — vidro fosco por trás do menu, como o material dos menus do iOS */
-[data-theme="dark"] .theme-popover{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 45%),
-    rgba(30,30,32,.72);
-  border-color:rgba(255,255,255,.12);
-  backdrop-filter:saturate(190%) blur(24px);
-  -webkit-backdrop-filter:saturate(190%) blur(24px);
-}
-[data-theme="light"] .theme-popover{
-  background:
-    linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,.22) 100%),
-    rgba(248,248,250,.78);
-  border-color:rgba(0,0,0,.08);
-  backdrop-filter:saturate(190%) blur(24px);
-  -webkit-backdrop-filter:saturate(190%) blur(24px);
 }
 /* arrow/tail pointing up-right */
 .theme-popover::before{
@@ -2389,33 +2369,14 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   border-right:1px solid var(--line2);
   border-top:1px solid var(--line2);
 }
-[data-theme="dark"] .theme-popover::before{background:rgba(30,30,32,.92);}
-[data-theme="light"] .theme-popover::before{background:rgba(248,248,250,.96);}
 .theme-popover-item{
   display:flex;align-items:center;gap:11px;
   padding:11px 13px;
   border-radius:11px;
   cursor:pointer;
-  position:relative;
-  transition:background .12s, opacity .12s var(--ease-ios), transform .12s var(--ease-ios);
+  transition:background .12s;
   user-select:none;
   -webkit-user-select:none;
-  opacity:0;
-  transform:translateY(-4px);
-}
-/* itens surgem em cascata só na abertura — no fechamento somem juntos e rápido */
-.theme-popover.open .theme-popover-item{
-  opacity:1;transform:translateY(0);
-  transition:background .12s, opacity .24s var(--ease-ios), transform .3s var(--ease-spring);
-}
-.theme-popover.open .theme-popover-item:nth-child(1){transition-delay:.02s}
-.theme-popover.open .theme-popover-item:nth-child(2){transition-delay:.05s}
-.theme-popover.open .theme-popover-item:nth-child(3){transition-delay:.08s}
-.theme-popover.open .theme-popover-item:nth-child(4){transition-delay:.11s}
-/* separador fino entre linhas — como uma lista nativa do iOS */
-.theme-popover-item:not(:last-child)::after{
-  content:'';position:absolute;left:13px;right:13px;bottom:0;
-  height:.5px;background:var(--line2);opacity:.6;
 }
 .theme-popover-item:active{background:var(--bg3)!important;}
 .theme-popover-item:hover{background:var(--bg2);}
@@ -6066,60 +6027,6 @@ input, textarea, select {
 /* collapsed desktop */
 .cal-day-sheet-overlay.collapsed{left:264px}
 
-/* ═══════════════════════════════
-   TOPBAR MOBILE — Liquid Glass (iOS)
-   O painel original do .top-fixed continua exatamente igual (é ele que
-   fica atrás da tira de trimestres, como sempre foi). A topbar só ganha
-   um vidro extra por cima, flutuando, igual ao efeito da bottom nav.
-═══════════════════════════════ */
-@media (max-width:767px){
-  .topbar{
-    position:relative;
-    margin:8px 6px 10px;
-    padding:9px 10px;
-    border-radius:24px;
-    isolation:isolate;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.06) 28%, rgba(255,255,255,0) 55%),
-      rgba(28,28,32,.30);
-    border:2px solid transparent;
-    backdrop-filter:url(#frosted) saturate(190%);
-    -webkit-backdrop-filter:saturate(190%) blur(28px);
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.4),
-      inset 0 1px 0 rgba(255,255,255,.35),
-      inset 0 -1px 6px rgba(0,0,0,.18),
-      0 14px 34px rgba(0,0,0,.32),
-      0 3px 10px rgba(0,0,0,.18);
-    transition:background .35s var(--ease-ios), box-shadow .35s var(--ease-ios);
-  }
-  /* filete de brilho no topo — mesma refração de vidro da bottom nav */
-  .topbar::before{
-    content:"";
-    position:absolute;top:0;left:14px;right:14px;height:1px;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,.55) 50%, transparent);
-    border-radius:1px;
-    pointer-events:none;
-  }
-  [data-theme="light"] .topbar{
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.65) 0%, rgba(255,255,255,.35) 45%, rgba(255,255,255,.22) 100%);
-    border:2px solid transparent;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.9),
-      inset 0 1px 0 rgba(255,255,255,.9),
-      inset 0 -1px 4px rgba(0,0,0,.04),
-      0 14px 30px rgba(0,0,0,.14),
-      0 2px 8px rgba(0,0,0,.06);
-  }
-  [data-theme="light"] .topbar::before{
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,.9) 50%, transparent);
-  }
-
-  /* saudação "Dynamic Island" continua nascendo dentro da topbar,
-     agora com cantos coerentes com o novo vidro flutuante */
-  .topbar-greet-overlay{border-radius:18px;}
-}
 
 </style>
 <body>
