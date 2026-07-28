@@ -1998,23 +1998,34 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .field-wrap input:focus{box-shadow:none;border-color:var(--line)}
 .field-wrap input::placeholder{color:var(--t3)}
 
-/* exam list */
-.exam-list{display:flex;flex-direction:column;gap:8px}
+/* exam list — visual modernizado */
+.exam-list{display:flex;flex-direction:column;gap:10px}
 .exam-item{
+  position:relative;
   background:var(--bg1);
-  border:1.5px solid var(--line2);
-  border-radius:16px;
-  padding:14px 15px 12px;
-  display:flex;flex-direction:column;gap:9px;
-  transition:background .14s var(--ease-ios),border-color .14s;
+  border:1px solid var(--line2);
+  border-radius:18px;
+  padding:15px 16px 13px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:background .18s var(--ease-ios),border-color .18s var(--ease-ios),
+             box-shadow .2s var(--ease-ios),transform .18s var(--ease-ios);
   animation:fadeIn .22s var(--ease-ios) both;
   overflow:hidden;cursor:default;
+  box-shadow:0 1px 2px rgba(0,0,0,.04),0 1px 12px rgba(0,0,0,.03);
+}
+.exam-item::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--line2);opacity:0;transition:opacity .18s var(--ease-ios);
 }
 .exam-item[onclick]{cursor:pointer}
+.exam-item[onclick]:hover{box-shadow:0 4px 18px rgba(0,0,0,.08);transform:translateY(-1px)}
+.exam-item[onclick]:hover::before{opacity:1;background:var(--gold)}
 .exam-item:active{background:var(--bg2)}
-.exam-item.done{opacity:.45;filter:saturate(.4)}
+.exam-item.done{opacity:.45;filter:saturate(.4);box-shadow:none}
 .exam-item.soon{border-color:var(--amberbd)}
+.exam-item.soon::before{opacity:1;background:var(--amber)}
 .exam-item.today-exam{border-color:var(--redbd);background:var(--redbg)}
+.exam-item.today-exam::before{opacity:1;background:var(--red)}
 .exam-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .exam-item-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
 .exam-tipo-pill{letter-spacing:.2px;
@@ -2049,22 +2060,31 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .exam-days-badge.soon-badge{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
 .exam-days-badge.today-badge{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
 .exam-days-badge.future-badge{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd)}
-.exam-rm-btn{
-  width:26px;height:26px;background:var(--redbg);border:none;border-radius:50%;
-  color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .15s var(--ease-ios)
+
+/* ── Rodapé de ações (editar / lembrete / excluir) ── */
+.exam-item-foot{
+  padding-top:9px;margin-top:2px !important;
+  border-top:1px solid var(--line2);
 }
-.exam-rm-btn:active{opacity:.5}
-.exam-rm-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
+.exam-rm-btn{
+  width:30px;height:30px;background:transparent;border:1.5px solid var(--line2);border-radius:9px;
+  color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .16s var(--ease-ios),border-color .16s var(--ease-ios),color .16s var(--ease-ios),transform .12s var(--ease-spring);
+}
+.exam-rm-btn:hover{background:var(--redbg);border-color:var(--redbd);color:var(--red)}
+.exam-rm-btn:active{transform:scale(.88);background:var(--redbg);border-color:var(--redbd);color:var(--red)}
+.exam-rm-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Botão lápis (editar prova) ── */
 .exam-edit-btn{
-  width:26px;height:26px;background:var(--goldbg);border:none;border-radius:50%;
-  color:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:opacity .15s var(--ease-ios),transform .12s var(--ease-spring);
+  width:30px;height:30px;background:transparent;border:1.5px solid var(--line2);border-radius:9px;
+  color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .16s var(--ease-ios),border-color .16s var(--ease-ios),color .16s var(--ease-ios),transform .12s var(--ease-spring);
   flex-shrink:0;
 }
-.exam-edit-btn:active{opacity:.5;transform:scale(.88)}
-.exam-edit-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.exam-edit-btn:hover{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+.exam-edit-btn:active{transform:scale(.88);background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+.exam-edit-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Modal de edição de prova ── */
 .exam-edit-overlay{
@@ -2264,7 +2284,6 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 
   #n-provas.nav-btn--add-mode .nav-btn-icon{
     background:var(--gold);
-    box-shadow:0 4px 14px rgba(255,214,10,.34);
   }
   #n-provas.nav-btn--add-mode .nav-icon-default{transform:translate(-50%,-50%) rotate(90deg) scale(.4);opacity:0}
   #n-provas.nav-btn--add-mode .nav-icon-add{
@@ -9604,15 +9623,15 @@ function renderProvas(el){
     const todayCount=todayExams.length;
     statsHtml=`<div class="provas-stats-v2">
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg></div>
         <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${upcoming.length}</div><div class="ps2-lbl">Próximas</div></div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg></div>
         <div class="ps2-info"><div class="ps2-val" style="color:var(--amber)">${soon.length}</div><div class="ps2-lbl">Esta semana</div>${todayCount>0?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">${todayCount} hoje</div>`:''}</div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
         <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${totalValor>0?totalValor.toFixed(1):'—'}</div><div class="ps2-lbl">Pts em jogo</div></div>
       </div>
     </div>`;
@@ -9824,7 +9843,7 @@ function renderProvas(el){
       else if(isToday){badgeCls='today-badge';badgeTxt='HOJE';itemCls='today-exam';}
       else if(diff===1){badgeCls='soon-badge';badgeTxt='Amanhã';itemCls='soon';}
       else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff} dias`;itemCls='soon';}
-      else{badgeCls='future-badge';badgeTxt=`${diff}d`;itemCls='';}
+      else{badgeCls='future-badge';badgeTxt=`${diff} dias`;itemCls='';}
       const subjColor=SUBJECTS.find(s=>s.name===e.subj)?.color||'var(--gold)';
       const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
       const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
@@ -9843,7 +9862,6 @@ function renderProvas(el){
       return`<div class="exam-item ${itemCls}" ${clickAttr}>
         <div class="exam-item-head">
           <div class="exam-item-head-left">
-            <span class="exam-tipo-pill">${tipoIcon}${tipoLabel}</span>
             <span class="exam-subj-name">${escHtml(e.subj)}</span>
           </div>
           <div class="exam-item-actions">
@@ -9851,17 +9869,18 @@ function renderProvas(el){
           </div>
         </div>
         <div class="exam-item-body">
-          ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
           <div class="exam-meta-row">
             ${infoBadge}
+            <span class="exam-tipo-pill">${tipoIcon}${tipoLabel}</span>
             ${valorHtml}
           </div>
+          ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
           ${conteudoHtml}
         </div>
         <div class="exam-item-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:-2px">
           ${bellBtn}
           ${isPast?'':`<button class="exam-edit-btn" onclick="event.stopPropagation();openEditExam('${e.id}')" title="Editar prova"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`}
-          <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+          <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
         </div>
       </div>`;
     };
