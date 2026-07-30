@@ -73,14 +73,52 @@
     setTimeout(() => {
       const splash = document.getElementById('app-splash');
       if (!splash) return;
-      splash.style.opacity = '0';
+      const shell = document.querySelector('.shell');
+      // Dispara o "flash" do logo (estilo X/Twitter no iOS): o resto do
+      // splash some rápido e o logo cresce preenchendo a tela.
+      splash.classList.add('is-exiting');
+      // Enquanto o logo ainda está "crescendo", já revela o conteúdo do
+      // app por baixo — assim quando o splash sumir de vez, tudo já está
+      // no lugar, sem espera extra.
       setTimeout(() => {
-        splash.remove();
-        // Só mostra a saudação estilo "ilha" se o usuário estiver logado com Google
-        if (_currentUid && typeof window._showGreetingIsland === 'function') {
-          window._showGreetingIsland();
+        if (shell) {
+          shell.classList.add('app-revealed');
+          // Assim que a transição de entrada (opacity/transform) termina, removemos
+          // o transform do .shell por completo. Enquanto ele tiver QUALQUER valor de
+          // transform (mesmo "neutro", scale(1) translateY(0)), o .shell vira o
+          // "containing block" dos elementos position:fixed (.nav e .top-fixed) —
+          // ou seja, a barra inferior e a topbar passam a se posicionar relativas
+          // ao .shell em vez da tela. Como o .shell tem overflow-x:hidden e alguns
+          // wrappers internos (ex.: a página de Atividades) são propositalmente
+          // mais largos que ele, isso cria um scroll horizontal invisível — e
+          // sempre que esse scroll interno muda, a barra inferior "pula"/corta na
+          // lateral. Zerando o transform aqui, a nav/topbar voltam a ser fixas de
+          // verdade em relação à viewport e param de ser afetadas por isso.
+          // "will-change: transform" (definido no CSS base do .shell, para a
+          // animação de entrada ficar suave) tem o mesmo efeito colateral do
+          // transform em si: também faz o .shell virar containing block dos
+          // elementos fixos. Por isso limpamos os dois juntos.
+          const clearShellTransform = () => { shell.style.transform = 'none'; shell.style.willChange = 'auto'; };
+          shell.addEventListener('transitionend', function onEnd(e){
+            if (e.propertyName === 'transform') {
+              shell.removeEventListener('transitionend', onEnd);
+              clearShellTransform();
+            }
+          });
+          // Fallback: se por algum motivo o transitionend não disparar
+          // (ex.: prefers-reduced-motion, aba em background), garante que o
+          // transform seja limpo do mesmo jeito.
+          setTimeout(clearShellTransform, 650);
         }
-      }, 400);
+      }, 260);
+      // Some com o fundo do splash depois que o flash do logo terminou
+      setTimeout(() => {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.remove();
+          // Saudação de entrada removida a pedido do usuário.
+        }, 400);
+      }, 560);
     }, 320);
   };
 
@@ -905,12 +943,19 @@ body{font-family:var(--ff);background:var(--bg0);color:var(--t1);min-height:100d
 input,button,select{font-family:inherit;letter-spacing:inherit}
 input:focus,button:focus,select:focus,textarea:focus{outline:none!important;box-shadow:none!important}
 /* iOS press feedback — toque rápido com scale */
-button:active:not(:disabled){transform:scale(.96);transition:transform .08s var(--ease-ios)}
+button:active:not(:disabled):not(.nav-btn){transform:scale(.96);transition:transform .08s var(--ease-ios)}
 input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 .shell{width:100%;max-width:480px;min-height:100dvh;display:flex;flex-direction:column;overflow-x:hidden;position:relative}
+/* Conteúdo entra suavemente assim que o splash termina o "flash" do logo */
+.shell{
+  opacity:0;transform:translateY(10px) scale(.975);
+  transition:opacity .5s ease,transform .55s cubic-bezier(0.34,1.56,0.64,1);
+  will-change:opacity,transform;
+}
+.shell.app-revealed{opacity:1;transform:translateY(0) scale(1)}
 
 /* ── FIXED TOP ── */
 .top-fixed{
@@ -2208,9 +2253,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     transform   .2s  var(--ease-spring);
 }
 .nav-btn:active .nav-btn-icon{
-  transform:scale(.80);
-  opacity:.6;
-  transition:transform .08s var(--ease-ios),opacity .08s;
+  transform:scale(.90);
+  opacity:.7;
+  transition:transform .1s var(--ease-ios),opacity .1s var(--ease-ios);
+}
+.nav-btn:active span{
+  opacity:.7;
+  transition:opacity .1s var(--ease-ios);
 }
 
 /* pill ativo — usa as variáveis do accent escolhido pelo usuário */
@@ -2230,6 +2279,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 [data-theme="light"] .nav-btn svg{
   stroke:rgba(28,28,30,.34);
 }
+
+/* ── iOS style: contorno quando inativo, preenchido (fill) quando ativo — igual à SF Symbols do tab bar do iOS ── */
+.nav-btn-icon{position:relative}
+.nav-btn-icon svg.nav-ico-out{position:static}
+.nav-btn-icon svg.nav-ico-fill{display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.nav-btn.active .nav-btn-icon svg.nav-ico-out{display:none}
+.nav-btn.active .nav-btn-icon svg.nav-ico-fill{display:block}
 
 /* ── labels ── */
 .nav-btn span{
@@ -2262,6 +2318,10 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   border:1.5px solid var(--bg0);
   box-shadow:0 1px 5px rgba(255,69,58,.45);
   z-index:2;
+}
+/* No mobile a barra inferior fica mais limpa: sem a bolinha de contagem no canto do ícone */
+@media (max-width:767px){
+  .nav-badge{display:none !important;}
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -3447,6 +3507,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     transition:background .16s var(--ease-ios), border-color .16s, box-shadow .16s, opacity .15s;
   }
   .nav-btn:active .nav-btn-icon { transform:none !important; opacity:1 !important; }
+  .nav-btn:active span { opacity:1 !important; }
   .nav-btn-icon {
     width:auto !important; height:auto !important;
     background:none !important;
@@ -4782,7 +4843,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 /* ══════════════════════════════════════
    MICRO-INTERAÇÕES extras
 ══════════════════════════════════════ */
-button:active:not(:disabled) {
+button:active:not(:disabled):not(.nav-btn) {
   transform: scale(.96);
   transition: transform .07s var(--ease-ios);
 }
@@ -6354,37 +6415,82 @@ input, textarea, select {
   background:var(--bg0);
   transition:opacity .45s ease;
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;
+  overflow:hidden;
+}
+/* leve glow radial de fundo, dá profundidade sem pesar */
+#app-splash::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle at 50% 38%, var(--goldbg) 0%, transparent 62%);
+  opacity:.55;
+}
+#splash-logo-wrap{
+  position:relative;width:88px;height:88px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:22px;flex-shrink:0;
+}
+#splash-logo{
+  position:relative;width:64px;height:64px;border-radius:19px;
+  display:flex;align-items:center;justify-content:center;z-index:2;
+  box-shadow:
+    0 10px 32px rgba(0,0,0,.32),
+    0 2px 8px rgba(0,0,0,.22),
+    0 0 0 1px rgba(255,255,255,.05),
+    inset 0 1px 0 rgba(255,255,255,.06);
+  animation:splash-breathe 2.6s ease-in-out infinite;
+  overflow:hidden;
+}
+/* leve brilho no topo, estilo ícone de app iOS moderno (glass/gloss) */
+#splash-logo::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(165deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,0) 42%);
+}
+#splash-logo svg{width:100%;height:100%;display:block;position:relative;z-index:1}
+@keyframes splash-breathe{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.045);}
 }
 #splash-spinner-track {
   position:absolute;inset:0;border-radius:50%;
-  border:1.8px solid var(--line2);
+  border:2px solid var(--line2);
 }
 #splash-spinner-arc {
   position:absolute;inset:0;border-radius:50%;
-  border:1.8px solid transparent;
+  border:2px solid transparent;
   border-top-color:var(--gold);
-  animation:splash-spin .85s linear infinite;
+  border-right-color:var(--goldbd);
+  animation:splash-spin .9s cubic-bezier(.5,.15,.5,.85) infinite;
+}
+#splash-appname{
+  font-size:15px;font-weight:650;color:var(--t1);
+  letter-spacing:-.2px;margin-bottom:5px;
 }
 #splash-label {
-  font-size:13px;font-weight:500;
+  font-size:12.5px;font-weight:500;
   color:var(--t3);
   letter-spacing:-.1px;
-  margin-bottom:20px;
+  margin-bottom:18px;
 }
 #splash-bar-track {
-  width:120px;height:2px;
+  width:140px;height:4px;
   background:var(--line2);
-  border-radius:2px;overflow:hidden;margin-bottom:8px;
+  border-radius:4px;overflow:hidden;margin-bottom:10px;
+  position:relative;
 }
 #splash-bar {
-  height:100%;width:0%;
-  background:var(--gold);
-  border-radius:2px;
+  position:relative;height:100%;width:0%;
+  background:linear-gradient(90deg, var(--goldbd), var(--gold));
+  border-radius:4px;
   transition:width .38s cubic-bezier(0.25,0.46,0.45,0.94);
+  box-shadow:0 0 10px 0 var(--goldbg);
+}
+#splash-bar::after{
+  content:'';position:absolute;inset:0;border-radius:4px;
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.35));
+  opacity:.5;
 }
 #splash-pct {
   font-family:ui-monospace,'SF Mono',monospace;
-  font-size:10px;font-weight:600;
+  font-size:10.5px;font-weight:600;
   color:var(--goldbd);
   letter-spacing:.06em;
 }
@@ -6397,6 +6503,31 @@ input, textarea, select {
   border-radius:20px;padding:7px 14px;
   font-size:11px;font-weight:600;
   color:rgba(255,159,10,.8);
+}
+
+/* ── Saída do splash, estilo "flash" do logo do X/Twitter no iOS: assim
+     que o carregamento termina, o resto do conteúdo (nome, texto, barra,
+     anel de progresso) some rápido e o logo dá um zoom confiante que
+     preenche a tela, revelando o app por trás ── */
+#app-splash.is-exiting #splash-appname,
+#app-splash.is-exiting #splash-label,
+#app-splash.is-exiting #splash-bar-track,
+#app-splash.is-exiting #splash-pct{
+  opacity:0;transform:translateY(4px);
+  transition:opacity .18s ease,transform .18s ease;
+}
+#app-splash.is-exiting #splash-spinner-track,
+#app-splash.is-exiting #splash-spinner-arc{
+  opacity:0;
+  transition:opacity .15s ease;
+}
+#app-splash.is-exiting #splash-logo{
+  animation:splash-logo-flash .5s cubic-bezier(.5,0,.75,0) .1s forwards;
+}
+@keyframes splash-logo-flash{
+  0%  {transform:scale(1);opacity:1;}
+  30% {transform:scale(1.1);opacity:1;}
+  100%{transform:scale(7);opacity:0;}
 }
 </style>
 
@@ -6475,11 +6606,35 @@ input, textarea, select {
 </style>
 <div id="app-splash">
 
-  <!-- Spinner elegante -->
-  <div style="position:relative;width:44px;height:44px;margin-bottom:24px;flex-shrink:0;">
+  <!-- Logo com anel de progresso -->
+  <div id="splash-logo-wrap">
     <div id="splash-spinner-track"></div>
     <div id="splash-spinner-arc"></div>
+    <div id="splash-logo" style="background:linear-gradient(155deg,#1b1c24 0%,#0e0f13 100%)">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="splashGold" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#FFE066"/>
+            <stop offset="100%" stop-color="#FFB800"/>
+          </linearGradient>
+          <linearGradient id="splashGoldBadge" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#FFE066"/>
+            <stop offset="100%" stop-color="#FFC300"/>
+          </linearGradient>
+        </defs>
+        <rect x="7" y="5" width="13" height="17" rx="3" fill="none" stroke="url(#splashGold)" stroke-width="1.3" opacity=".95"/>
+        <line x1="10" y1="10" x2="17" y2="10" stroke="url(#splashGold)" stroke-width="1.1" stroke-linecap="round" opacity=".7"/>
+        <line x1="10" y1="13.4" x2="16" y2="13.4" stroke="url(#splashGold)" stroke-width="1.1" stroke-linecap="round" opacity=".45"/>
+        <line x1="10" y1="16.8" x2="13.4" y2="16.8" stroke="url(#splashGold)" stroke-width="1.1" stroke-linecap="round" opacity=".45"/>
+        <circle cx="21" cy="22" r="6.4" fill="#13141A"/>
+        <circle cx="21" cy="22" r="5.4" fill="url(#splashGoldBadge)"/>
+        <polyline points="18.4,22 20.2,23.9 23.6,20.1" fill="none" stroke="#171300" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
   </div>
+
+  <!-- Nome do app -->
+  <div id="splash-appname">Cálculo das notas</div>
 
   <!-- Label -->
   <div id="splash-label">Carregando…</div>
@@ -6704,21 +6859,24 @@ input, textarea, select {
     <div class="sb-section-label">Navegação</div>
     <button class="nav-btn active" id="n-notas" onclick="setPage('notas',this)">
       <div class="nav-btn-icon">
-        <svg viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="9" y="2" width="6" height="5" rx="1"/><line x1="9" y1="11" x2="15" y2="11"/><polyline points="9 15.5 11 17.5 15 13.5"/></svg>
+        <svg class="nav-ico-out" viewBox="0 0 24 24"><rect x="5" y="3.3" width="14" height="17.4" rx="3.2"/><line x1="8.2" y1="8" x2="15.8" y2="8"/><line x1="8.2" y1="12.4" x2="15.8" y2="12.4"/><line x1="8.2" y1="16.8" x2="13.2" y2="16.8"/></svg>
+        <svg class="nav-ico-fill" viewBox="0 0 24 24"><rect x="5" y="3.3" width="14" height="17.4" rx="3.2" fill="var(--gold)" stroke="none"/><line x1="8.2" y1="8" x2="15.8" y2="8" stroke="var(--goldbg)" stroke-width="1.6" stroke-linecap="round"/><line x1="8.2" y1="12.4" x2="15.8" y2="12.4" stroke="var(--goldbg)" stroke-width="1.6" stroke-linecap="round"/><line x1="8.2" y1="16.8" x2="13.2" y2="16.8" stroke="var(--goldbg)" stroke-width="1.6" stroke-linecap="round"/></svg>
       </div>
       <span>Notas</span>
     </button>
 
     <button class="nav-btn" id="n-horarios" onclick="setPage('horarios',this)">
       <div class="nav-btn-icon">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14.5"/><line x1="12" y1="12" x2="12" y2="12" stroke-width="2.8" stroke-linecap="round"/></svg>
+        <svg class="nav-ico-out" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6V12l3.1 1.9"/></svg>
+        <svg class="nav-ico-fill" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="var(--gold)" stroke="none"/><path d="M12 7.6V12l3.1 1.9" stroke="var(--goldbg)" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <span>Horários</span>
     </button>
 
     <button class="nav-btn" id="n-provas" onclick="provasNavClick(this)">
       <div class="nav-btn-icon">
-        <svg class="nav-icon-default" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>
+        <svg class="nav-icon-default nav-ico-out" viewBox="0 0 24 24"><rect x="5.2" y="3" width="13.6" height="18" rx="3"/><polyline points="14.5 3 14.5 7.2 18.7 7.2" style="opacity:.55"/><line x1="8.4" y1="13" x2="15.6" y2="13"/><line x1="8.4" y1="16.6" x2="13" y2="16.6"/></svg>
+        <svg class="nav-icon-default nav-ico-fill" viewBox="0 0 24 24"><rect x="5.2" y="3" width="13.6" height="18" rx="3" fill="var(--gold)" stroke="none"/><line x1="8.4" y1="13" x2="15.6" y2="13" stroke="var(--goldbg)" stroke-width="1.6" stroke-linecap="round"/><line x1="8.4" y1="16.6" x2="13" y2="16.6" stroke="var(--goldbg)" stroke-width="1.6" stroke-linecap="round"/></svg>
         <svg class="nav-icon-add" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </div>
       <div class="nav-btn-label-wrap">
@@ -6729,14 +6887,16 @@ input, textarea, select {
 
     <button class="nav-btn" id="n-resumo" onclick="setPage('resumo',this)">
       <div class="nav-btn-icon">
-        <svg viewBox="0 0 24 24"><rect x="3" y="14" width="4" height="7" rx="1"/><rect x="10" y="9" width="4" height="12" rx="1"/><rect x="17" y="4" width="4" height="17" rx="1"/></svg>
+        <svg class="nav-ico-out" viewBox="0 0 24 24"><rect x="4" y="13" width="4.2" height="8" rx="1.5"/><rect x="9.9" y="8" width="4.2" height="13" rx="1.5"/><rect x="15.8" y="3.5" width="4.2" height="17.5" rx="1.5"/></svg>
+        <svg class="nav-ico-fill" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><rect x="4" y="13" width="4.2" height="8" rx="1.5"/><rect x="9.9" y="8" width="4.2" height="13" rx="1.5"/><rect x="15.8" y="3.5" width="4.2" height="17.5" rx="1.5"/></svg>
       </div>
       <span>Resultado</span>
     </button>
 
     <button class="nav-btn" id="n-calendario" onclick="setPage('calendario',this)">
       <div class="nav-btn-icon">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2.5"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="15.5" x2="8" y2="15.5" stroke-width="2.8" stroke-linecap="round"/><line x1="12" y1="15.5" x2="12" y2="15.5" stroke-width="2.8" stroke-linecap="round"/><line x1="16" y1="15.5" x2="16" y2="15.5" stroke-width="2.8" stroke-linecap="round"/></svg>
+        <svg class="nav-ico-out" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><line x1="3.5" y1="9.3" x2="20.5" y2="9.3"/><line x1="8" y1="2.6" x2="8" y2="6.2" stroke-width="2.4"/><line x1="16" y1="2.6" x2="16" y2="6.2" stroke-width="2.4"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
+        <svg class="nav-ico-fill" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5" fill="var(--gold)" stroke="none"/><line x1="8" y1="2.6" x2="8" y2="6.2" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round"/><line x1="16" y1="2.6" x2="16" y2="6.2" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round"/><circle cx="8" cy="14" r="1" fill="var(--goldbg)" stroke="none"/><circle cx="12" cy="14" r="1" fill="var(--goldbg)" stroke="none"/><circle cx="16" cy="14" r="1" fill="var(--goldbg)" stroke="none"/></svg>
       </div>
       <span>Agenda</span>
     </button>
@@ -7452,6 +7612,10 @@ function finalGrade(sid){
 }
 
 const fmt=n=>n===null?'—':Number(n).toFixed(1);
+/* Formata um valor de pontuação no padrão BR: "3,0 pontos" (em vez de "3.0 pts") */
+const fmtPts=n=>{const v=parseFloat(n);return isNaN(v)?'':v.toFixed(1).replace('.',',')+' pontos';};
+/* Só o número no padrão BR (vírgula), sem a palavra "pontos" — usado quando o rótulo já deixa isso claro */
+const fmtNumBR=n=>{const v=parseFloat(n);return isNaN(v)?'—':v.toFixed(1).replace('.',',');};
 const st=n=>n===null?'pending':n>=6?'pass':n>=5?'warn':'fail';
 const SL={pass:'Aprovado',fail:'Reprovado',warn:'Em Risco',pending:'Pendente'};
 
@@ -7759,7 +7923,7 @@ function renderNotasTab(el){
         <div class="eval-list" id="el-${s.id}-${curTab}">${evHtml}</div>
         <button class="add-eval-btn" id="ab-${s.id}-${curTab}"${!canAdd?' disabled':''} onclick="addEv('${s.id}','${curTab}')">
           <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="add-eval-lbl">${canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)'}</span>
+          <span class="add-eval-lbl">${canAdd?'Adicionar avaliação':'Peso máximo atingido (10,0 pontos)'}</span>
         </button>
       </div></div></div>
       <div class="subj-footer"><span class="subj-footer-label">${flab}</span>${fval}</div>
@@ -7957,7 +8121,7 @@ function renderResultado(el){
         </div>
         <div class="risk-right">
           <div class="risk-current" style="color:${SC(x.s2)}">${fmt(x.g)}</div>
-          <div class="risk-gap">${gap!==null?`faltam ${gap} pts`:'pendente'}</div>
+          <div class="risk-gap">${gap!==null?`faltam ${fmtPts(gap)}`:'pendente'}</div>
         </div>
       </div>`;
     });
@@ -8081,8 +8245,8 @@ function _eacBlock3T(t1,t2,b3,e3){
   // EAC feito mas a média ainda ficou abaixo — explica o motivo
   const wentWell=e3>=6; // foi bem no EAC
   const desc=wentWell
-    ? 'Você foi bem no EAC ('+fmt(e3)+'), mas as notas dos trimestres anteriores puxaram a média para baixo. Faltaram '+missingPts.toFixed(1)+' pts para chegar a 6.0.'
-    : 'Base '+fmt(b3)+' · EAC '+fmt(e3)+' · Melhor nota: '+fmt(finalT3)+'. Faltaram '+missingPts.toFixed(1)+' pts na média final para chegar a 6.0.';
+    ? 'Você foi bem no EAC ('+fmt(e3)+'), mas as notas dos trimestres anteriores puxaram a média para baixo. Faltaram '+fmtPts(missingPts)+' para chegar a 6.0.'
+    : 'Base '+fmt(b3)+' · EAC '+fmt(e3)+' · Melhor nota: '+fmt(finalT3)+'. Faltaram '+fmtPts(missingPts)+' na média final para chegar a 6.0.';
   return'<div class="resumo-recovery-alert impossible">'+
     '<div class="resumo-recovery-left">'+
       '<div class="resumo-recovery-badge">EAC feito — ainda abaixo da média</div>'+
@@ -9341,7 +9505,7 @@ function populateDateStrip(dow,validDows){
   dates.forEach(dateStr=>{
     const dd=new Date(dateStr+'T00:00:00');
     const diff=daysDiff(dateStr);
-    const distTxt=diff===0?'hoje':diff===1?'amanhã':`${diff}d`;
+    const distTxt=diff===0?'hoje':diff===1?'amanhã':`${diff} dias`;
     cardsHtml+=`<button class="date-card" type="button" data-date="${dateStr}" onclick="selectDateCard(this,'${dateStr}')"><div class="date-card-dow">${DOW_SHORT[dd.getDay()]}</div><div class="date-card-num">${dd.getDate()}</div><div class="date-card-mon">${MONTHS[dd.getMonth()]}</div><div class="date-card-dist">${distTxt}</div></button>`;
   });
   cardsHtml+=`<button class="date-card custom-card" type="button" id="ex-custom-card" onclick="toggleCustomDate()"><svg class="date-card-custom-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><div class="date-card-custom-lbl">Personalizada</div></button>`;
@@ -9542,16 +9706,13 @@ function renderProvas(el){
     const isToday=diff===0;
     const isTomorrow=diff===1;
     const tipoLabel=nx.tipo==='trabalho'?'Próximo Trabalho':'Próxima Prova';
-    const tipoSvg=nx.tipo==='trabalho'
-      ?`<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
-      :`<svg viewBox="0 0 24 24" width="11" height="11" style="stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
 
     /* Status label: Hoje / Amanhã / Xd */
     let statusTxt, statusColor, statusBg;
     if(isToday){statusTxt='HOJE';statusColor='var(--red)';statusBg='var(--redbg)';}
     else if(isTomorrow){statusTxt='Amanhã';statusColor='var(--amber)';statusBg='var(--amberbg)';}
-    else if(diff<=7){statusTxt=`${diff}d`;statusColor='var(--amber)';statusBg='var(--amberbg)';}
-    else{statusTxt=`${diff}d`;statusColor=nxColor;statusBg=nxColor+'22';}
+    else if(diff<=7){statusTxt=`${diff} dias`;statusColor='var(--amber)';statusBg='var(--amberbg)';}
+    else{statusTxt=`${diff} dias`;statusColor=nxColor;statusBg=nxColor+'22';}
 
     /* Dia, data e hora formatados */
     const _DIAS_COMPLETO=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
@@ -9581,9 +9742,10 @@ function renderProvas(el){
     const pct=Math.max(0,Math.min(100,Math.round((1-Math.min(diff,14)/14)*100)));
     const barColor=isToday?'var(--red)':diff<=3?'var(--amber)':nxColor;
 
-    /* Cronômetro ao vivo só aparece quando ≤ 3 dias */
-    const cdColor=(diff<=3&&!isToday)?'var(--t1)':'var(--red)';
-    const cdBlock=(diff<=3||isToday)
+    /* Cronômetro ao vivo só aparece quando faltar menos de 24 horas */
+    const _msDay=24*60*60*1000;
+    const cdColor='var(--red)';
+    const cdBlock=(ms<_msDay)
       ?`<div style="display:flex;gap:0;align-items:baseline;margin-top:10px" class="neh-cd">
           <div class="neh-cd-block"><span class="neh-cd-num" id="hero-cd-h" style="color:${cdColor}">${cd.h}</span><span class="neh-cd-lbl">Horas</span></div>
           <span class="neh-cd-sep">:</span>
@@ -9593,12 +9755,12 @@ function renderProvas(el){
         </div>`
       :'';
 
-    const valorBadge=nx.valor?`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:4px 10px;border-radius:8px;white-space:nowrap;margin-top:2px">${parseFloat(nx.valor).toFixed(1)} pts</span>`:'';
+    const valorBadge=nx.valor?`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:4px 10px;border-radius:8px;white-space:nowrap;margin-top:2px">${fmtPts(nx.valor)}</span>`:'';
 
     heroHtml=`<div class="next-exam-hero" style="--accent-color:${nxColor};border-left-color:${nxColor}" onclick="openExamDetail('${nx.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div style="min-width:0;flex:1">
-          <div class="neh-eyebrow" style="color:${nxColor}">${tipoSvg}<span class="dot" style="background:${nxColor}"></span>${tipoLabel}</div>
+          <div class="neh-eyebrow" style="color:${nxColor}"><span class="dot" style="background:${nxColor}"></span>${tipoLabel}</div>
           <div class="neh-subj">${escHtml(nx.subj)}</div>
           ${nx.title?`<div class="neh-title">${escHtml(nx.title)}</div>`:''}
         </div>
@@ -9623,16 +9785,16 @@ function renderProvas(el){
     const todayCount=todayExams.length;
     statsHtml=`<div class="provas-stats-v2">
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg></div>
+        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${upcoming.length}</div><div class="ps2-lbl">Próximas</div></div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg></div>
+        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
         <div class="ps2-info"><div class="ps2-val" style="color:var(--amber)">${soon.length}</div><div class="ps2-lbl">Esta semana</div>${todayCount>0?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">${todayCount} hoje</div>`:''}</div>
       </div>
       <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${totalValor>0?totalValor.toFixed(1):'—'}</div><div class="ps2-lbl">Pts em jogo</div></div>
+        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${totalValor>0?fmtNumBR(totalValor):'—'}</div><div class="ps2-lbl">Pontos em jogo</div></div>
       </div>
     </div>`;
   }
@@ -9845,7 +10007,7 @@ function renderProvas(el){
       else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff} dias`;itemCls='soon';}
       else{badgeCls='future-badge';badgeTxt=`${diff} dias`;itemCls='';}
       const subjColor=SUBJECTS.find(s=>s.name===e.subj)?.color||'var(--gold)';
-      const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${parseFloat(e.valor).toFixed(1)} pts</span>`:'';
+      const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${fmtPts(e.valor)}</span>`:'';
       const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
       const tipoIcon=e.tipo==='trabalho'
         ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
@@ -9956,8 +10118,8 @@ function renderProvas(el){
   if(window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
   if(sortedUp.length>0){
     const _nx=sortedUp[0];
-    const _diff=daysDiff(_nx.examDate);
-    if(_diff<=3){
+    const _msNow=msUntilExam(_nx.examDate,_nx.examTime);
+    if(_msNow<24*60*60*1000){
       window._heroTimer=setInterval(()=>{
         const _h=document.getElementById('hero-cd-h');
         const _m=document.getElementById('hero-cd-m');
@@ -10038,7 +10200,7 @@ function openExamDetail(examId){
   // valor — tipo e horário já aparecem no hero, sem duplicar
   const valorRow=e.valor?`<div class="exam-detail-row">
     <span class="edr-label">Valor</span>
-    <span class="edr-val">${parseFloat(e.valor).toFixed(1)} pts</span>
+    <span class="edr-val">${fmtPts(e.valor)}</span>
   </div>`:'';
 
 
@@ -10448,7 +10610,7 @@ function _eedPopulateDateStrip(dow,validDows,preselectDate){
   dates.forEach(dateStr=>{
     const dd=new Date(dateStr+'T00:00:00');
     const diff=daysDiff(dateStr);
-    const distTxt=diff===0?'hoje':diff===1?'amanhã':`${diff}d`;
+    const distTxt=diff===0?'hoje':diff===1?'amanhã':`${diff} dias`;
     const isPresel=preselectDate===dateStr;
     cardsHtml+=`<button class="date-card${isPresel?' selected':''}" type="button" data-date="${dateStr}" onclick="_eedSelectDateCard(this,'${dateStr}')"><div class="date-card-dow">${DOW_SHORT[dd.getDay()]}</div><div class="date-card-num">${dd.getDate()}</div><div class="date-card-mon">${MONTHS[dd.getMonth()]}</div><div class="date-card-dist">${distTxt}</div></button>`;
   });
@@ -11209,7 +11371,7 @@ function _refreshEvList(sid,tab){
   if(btn){
     btn.disabled=!canAdd;
     const lbl=btn.querySelector('span.add-eval-lbl');
-    if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)';
+    if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10,0 pontos)';
   }
   // contador: só avaliações salvas
   const subjItem=document.getElementById(`si-${sid}`);
@@ -11379,7 +11541,7 @@ function updateCardDisplay(sid,tab){
   if(addBtn){
     addBtn.disabled=!canAdd;
     const lbl=addBtn.querySelector('span.add-eval-lbl');
-    if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10 pts)';
+    if(lbl)lbl.textContent=canAdd?'Adicionar avaliação':'Peso máximo atingido (10,0 pontos)';
   }
 }
 
@@ -11823,11 +11985,11 @@ function openSubjSheet(subjName, prof, color){
     upcoming.forEach(e=>{
       const diff=daysDiff(e.examDate);
       const cls=diff===0?'today-badge':diff<=3?'soon-badge':'future-badge';
-      const txt=diff===0?'HOJE':`em ${diff}d`;
+      const txt=diff===0?'HOJE':`em ${diff} dias`;
       html+=`<div class="ss-prova-item">
         <div class="ss-prova-info">
           <div class="ss-prova-title">${escHtml(e.title||'Prova')}</div>
-          <div class="ss-prova-date">${fmtDateBR(e.examDate)}${e.valor?' · '+parseFloat(e.valor).toFixed(1)+' pts':''}</div>
+          <div class="ss-prova-date">${fmtDateBR(e.examDate)}${e.valor?' · '+fmtPts(e.valor):''}</div>
         </div>
         <span class="ss-prova-badge exam-days-badge ${cls}">${txt}</span>
       </div>`;
@@ -11836,7 +11998,7 @@ function openSubjSheet(subjName, prof, color){
       html+=`<div class="ss-prova-item" style="opacity:.5">
         <div class="ss-prova-info">
           <div class="ss-prova-title">${escHtml(e.title||'Prova')}</div>
-          <div class="ss-prova-date">${fmtDateBR(e.examDate)}${e.valor?' · '+parseFloat(e.valor).toFixed(1)+' pts':''}</div>
+          <div class="ss-prova-date">${fmtDateBR(e.examDate)}${e.valor?' · '+fmtPts(e.valor):''}</div>
         </div>
         <span class="ss-prova-badge exam-days-badge done-badge">Feita</span>
       </div>`;
