@@ -1086,7 +1086,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   overflow-y:auto;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
-  padding:var(--slide-pt,160px) 16px calc(96px + env(safe-area-inset-bottom));
+  padding:var(--slide-pt,160px) 16px calc(112px + env(safe-area-inset-bottom));
 }
 /* ── PAGE TRANSITIONS — iOS style, MOBILE ONLY (≤767px) ──
    Desktop: sem animação, troca instantânea.
@@ -2222,54 +2222,111 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 .exam-empty{text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;line-height:1.8}
 .exam-empty strong{display:block;font-size:16px;font-weight:700;color:var(--t4);margin-bottom:6px}
 
-/* ═══════════════════════════════
-   BOTTOM NAV — Premium v4
-═══════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   BOTTOM NAV — "Liquid Glass" (iOS 26)
+   Barra flutuante, arredondada, translúcida e separada das
+   bordas da tela — com blur real do conteúdo atrás e sombra
+   suave de profundidade.
+═══════════════════════════════════════════════════════ */
 .nav{
-  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
-  width:100%;max-width:480px;z-index:100;
-  background:rgba(9,9,11,.86);
-  backdrop-filter:saturate(200%) blur(46px);
-  -webkit-backdrop-filter:saturate(200%) blur(46px);
-  border-top:0.5px solid rgba(255,255,255,.065);
-  display:flex;
-  padding:9px 4px calc(10px + env(safe-area-inset-bottom));
-  gap:0;
-  transition:background .35s var(--ease-ios), box-shadow .35s;
+  position:fixed;left:50%;
+  bottom:calc(14px + env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  width:calc(100% - 32px);max-width:412px;z-index:100;
+  display:flex;align-items:center;
+  gap:1px;
+  padding:7px 7px;
+  border-radius:32px;
+  background:rgba(8,8,9,.86);
+  backdrop-filter:saturate(150%) blur(18px);
+  -webkit-backdrop-filter:saturate(150%) blur(18px);
+  border:0.5px solid rgba(255,255,255,.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 24px 48px -16px rgba(0,0,0,.6),
+    0 10px 22px -10px rgba(0,0,0,.45);
+  transition:background .35s var(--ease-ios), box-shadow .35s var(--ease-ios),
+             border-color .35s var(--ease-ios), transform .3s var(--ease-spring);
 }
 [data-theme="light"] .nav{
-  background:rgba(255,255,255,.96);
-  border-top:none;
+  background:rgba(245,245,247,.92);
+  backdrop-filter:saturate(140%) blur(14px);
+  -webkit-backdrop-filter:saturate(140%) blur(14px);
+  border:0.5px solid rgba(0,0,0,.07);
   box-shadow:
-    0 -0.5px 0 rgba(0,0,0,.09),
-    0 -6px 28px rgba(0,0,0,.07),
-    0 -1px 4px rgba(0,0,0,.04);
+    inset 0 1px 0 rgba(255,255,255,.8),
+    0 18px 36px -18px rgba(0,0,0,.16),
+    0 6px 16px -8px rgba(0,0,0,.08);
 }
 
-/* ── botão base ── */
+/* ── pílula deslizante (mobile) — física de mola via JS ──
+   Fica atrás do ícone ativo e se move de aba pra aba, esticando
+   elasticamente na direção do movimento antes de encaixar.
+   Substitui, só no mobile, o "pill" estático que cada botão já
+   tinha (ver override de .nav-btn.active .nav-btn-icon abaixo). */
+.nav-pill{
+  position:absolute;left:0;top:0;
+  width:46px;height:30px;
+  border-radius:100px;
+  background:linear-gradient(180deg, color-mix(in srgb, var(--gold) 85%, white 15%), var(--gold));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.35),
+    0 3px 10px -2px var(--goldbg);
+  opacity:0;
+  pointer-events:none;
+  z-index:0;
+  transition:opacity .22s var(--ease-ios);
+  will-change:transform,width;
+}
+/* enquanto arrasta, a pílula "acorda" com uma sombra um pouco mais forte —
+   reforça a sensação líquida/elástica do gesto (sem brilho/glow) */
+.nav.nav-dragging .nav-pill{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.4),
+    0 4px 14px -2px var(--goldbg);
+}
+@media (min-width:768px){
+  .nav-pill{display:none}
+}
+/* enquanto o dedo está arrastando entre as abas, trava o gesto
+   nativo de scroll/rubber-band da página nessa área */
+.nav.nav-dragging{touch-action:none}
+
+/* ── botão base — touch target confortável ── */
 .nav-btn{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;
-  padding:4px 2px 2px;background:none;border:none;cursor:pointer;
-  border-radius:0;position:relative;
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:50px;
+  padding:5px 2px;background:none;border:none;cursor:pointer;
+  border-radius:24px;position:relative;
   -webkit-tap-highlight-color:transparent;
   outline:none;
 }
 
-/* pill container */
+/* pill container — cápsula translúcida por trás do ícone ativo */
 .nav-btn-icon{
-  width:50px;height:32px;
+  width:46px;height:30px;
   display:flex;align-items:center;justify-content:center;
   border-radius:100px;
   background:transparent;
   transition:
-    background .28s var(--ease-ios),
-    box-shadow  .28s var(--ease-ios),
-    transform   .2s  var(--ease-spring);
+    background .32s var(--ease-spring),
+    box-shadow  .32s var(--ease-spring),
+    transform   .32s var(--ease-spring);
 }
-.nav-btn:active .nav-btn-icon{
-  transform:scale(.90);
-  opacity:.7;
-  transition:transform .1s var(--ease-ios),opacity .1s var(--ease-ios);
+.nav-btn:active .nav-btn-icon,
+.nav-btn--pressed .nav-btn-icon{
+  transform:scale(.86);
+  opacity:.72;
+  transition:transform .12s var(--ease-ios),opacity .12s var(--ease-ios);
+}
+/* ao soltar, a pílula/ícone "quica" de volta com leve overshoot —
+   dá o toque tátil de mola que faltava no gesto de toque simples */
+.nav-btn:not(.nav-btn--pressed):not(:active) .nav-btn-icon{
+  transition:
+    background .32s var(--ease-spring),
+    box-shadow  .32s var(--ease-spring),
+    transform   .42s var(--ease-spring),
+    opacity     .22s var(--ease-ios);
 }
 .nav-btn:active span{
   opacity:.7;
@@ -2279,19 +2336,31 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 /* pill ativo — usa as variáveis do accent escolhido pelo usuário */
 .nav-btn.active .nav-btn-icon{
   background:var(--goldbg);
-  box-shadow:0 0 0 1px var(--goldbd), 0 2px 10px var(--goldbg);
+  box-shadow:
+    0 0 0 1px var(--goldbd),
+    0 3px 12px -2px var(--goldbg);
+  transform:scale(1.14);
+}
+/* No mobile quem faz o destaque agora é a .nav-pill (spring physics),
+   então o pill estático de cada botão é desligado pra não duplicar. */
+@media (max-width:767px){
+  .nav-btn.active .nav-btn-icon{
+    background:transparent;
+    box-shadow:none;
+    transform:none;
+  }
 }
 
 /* ── ícones ── */
 .nav-btn svg{
   width:22px;height:22px;fill:none;
-  stroke:rgba(255,255,255,.33);
-  stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
-  transition:stroke .25s var(--ease-ios), stroke-width .25s var(--ease-ios);
+  stroke:rgba(255,255,255,.52);
+  stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .25s var(--ease-ios), stroke-width .25s var(--ease-ios), transform .25s var(--ease-spring);
   pointer-events:none;flex-shrink:0;
 }
 [data-theme="light"] .nav-btn svg{
-  stroke:rgba(28,28,30,.34);
+  stroke:rgba(28,28,30,.5);
 }
 
 /* ── iOS style: contorno quando inativo, preenchido (fill) quando ativo — igual à SF Symbols do tab bar do iOS ── */
@@ -2304,13 +2373,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 /* ── labels ── */
 .nav-btn span{
   font-size:9.5px;font-weight:500;
-  color:rgba(255,255,255,.26);
+  color:rgba(255,255,255,.34);
   transition:color .25s var(--ease-ios);
   letter-spacing:.2px;line-height:1;
   pointer-events:none;white-space:nowrap;
 }
 [data-theme="light"] .nav-btn span{
-  color:rgba(28,28,30,.34);
+  color:rgba(28,28,30,.42);
 }
 
 /* ── active: usa a cor accent do usuário ── */
@@ -2320,6 +2389,15 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 }
 .nav-btn.active span{
   color:var(--gold);font-weight:700;letter-spacing:.1px;
+}
+/* No mobile a .nav-pill virou um preenchimento sólido (mesmo estilo do
+   botão "+" de Atividades) — o ícone precisa de contraste escuro por
+   cima dele, em vez do dourado-sobre-dourado que ficava apagado. */
+@media (max-width:767px){
+  .nav-btn.active svg{
+    stroke:var(--accent-text,#000);
+    stroke-width:2.1;
+  }
 }
 
 /* ── badge ── */
@@ -2357,12 +2435,20 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   #n-provas .nav-icon-add{transform:translate(-50%,-50%) rotate(-90deg) scale(.4);opacity:0;pointer-events:none}
 
   #n-provas.nav-btn--add-mode .nav-btn-icon{
-    background:var(--gold);
+    background:linear-gradient(180deg, color-mix(in srgb, var(--gold) 85%, white 15%), var(--gold));
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.35),
+      0 3px 10px -2px var(--goldbg);
+    transform:scale(1.06);
+  }
+  #n-provas.nav-btn--add-mode:active .nav-btn-icon,
+  #n-provas.nav-btn--add-mode.nav-btn--pressed .nav-btn-icon{
+    transform:scale(.92);
   }
   #n-provas.nav-btn--add-mode .nav-icon-default{transform:translate(-50%,-50%) rotate(90deg) scale(.4);opacity:0}
   #n-provas.nav-btn--add-mode .nav-icon-add{
     transform:translate(-50%,-50%) rotate(0deg) scale(1);opacity:1;
-    stroke:var(--accent-text,#000);pointer-events:auto;
+    stroke:var(--accent-text,#000);stroke-width:2.1;pointer-events:auto;
   }
 
   #n-provas .nav-btn-label-wrap{position:relative;width:100%;height:11px}
@@ -6245,7 +6331,7 @@ input, textarea, select {
 /* Botão flutuante "+" (quando já existem atividades na lista) */
 .add-exam-fab-anchor{
   position:fixed;left:50%;transform:translateX(-50%);
-  bottom:calc(72px + env(safe-area-inset-bottom));
+  bottom:calc(88px + env(safe-area-inset-bottom));
   width:100%;max-width:480px;
   display:flex;justify-content:flex-end;
   padding:0 20px;pointer-events:none;
@@ -6843,6 +6929,9 @@ input, textarea, select {
   <div class="scroll-content" id="scroll-content"></div>
 
   <nav class="nav" id="main-nav">
+    <!-- pílula deslizante com física de mola (só mobile, ver CSS/JS) -->
+    <div class="nav-pill" id="nav-pill"></div>
+
     <!-- ① Cabeçalho: brand + botão minimizar -->
     <div class="sb-header">
       <div class="sb-brand" onclick="openModal()">
@@ -6873,24 +6962,21 @@ input, textarea, select {
     <div class="sb-section-label">Navegação</div>
     <button class="nav-btn active" id="n-notas" onclick="setPage('notas',this)">
       <div class="nav-btn-icon">
-        <svg class="nav-ico-out" viewBox="0 0 24 24"><rect x="5" y="3.3" width="14" height="17.4" rx="3.2"/><line x1="8.2" y1="8" x2="15.8" y2="8"/><line x1="8.2" y1="12.4" x2="15.8" y2="12.4"/><line x1="8.2" y1="16.8" x2="13.2" y2="16.8"/></svg>
-        <svg class="nav-ico-fill" viewBox="0 0 24 24"><rect x="5" y="3.3" width="14" height="17.4" rx="3.2" fill="var(--gold)" stroke="none"/><line x1="8.2" y1="8" x2="15.8" y2="8" stroke="var(--bg0)" stroke-width="1.6" stroke-linecap="round"/><line x1="8.2" y1="12.4" x2="15.8" y2="12.4" stroke="var(--bg0)" stroke-width="1.6" stroke-linecap="round"/><line x1="8.2" y1="16.8" x2="13.2" y2="16.8" stroke="var(--bg0)" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <i data-lucide="notepad-text" class="nav-ico"></i>
       </div>
       <span>Notas</span>
     </button>
 
     <button class="nav-btn" id="n-horarios" onclick="setPage('horarios',this)">
       <div class="nav-btn-icon">
-        <svg class="nav-ico-out" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.6V12l3.1 1.9"/></svg>
-        <svg class="nav-ico-fill" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="var(--gold)" stroke="none"/><path d="M12 7.6V12l3.1 1.9" stroke="var(--bg0)" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <i data-lucide="clock" class="nav-ico"></i>
       </div>
       <span>Horários</span>
     </button>
 
     <button class="nav-btn" id="n-provas" onclick="provasNavClick(this)">
       <div class="nav-btn-icon">
-        <svg class="nav-icon-default nav-ico-out" viewBox="0 0 24 24"><rect x="5.2" y="3" width="13.6" height="18" rx="3"/><polyline points="14.5 3 14.5 7.2 18.7 7.2" style="opacity:.55"/><line x1="8.4" y1="13" x2="15.6" y2="13"/><line x1="8.4" y1="16.6" x2="13" y2="16.6"/></svg>
-        <svg class="nav-icon-default nav-ico-fill" viewBox="0 0 24 24"><rect x="5.2" y="3" width="13.6" height="18" rx="3" fill="var(--gold)" stroke="none"/><line x1="8.4" y1="13" x2="15.6" y2="13" stroke="var(--bg0)" stroke-width="1.6" stroke-linecap="round"/><line x1="8.4" y1="16.6" x2="13" y2="16.6" stroke="var(--bg0)" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <i data-lucide="book-open" class="nav-icon-default"></i>
         <svg class="nav-icon-add" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </div>
       <div class="nav-btn-label-wrap">
@@ -6901,21 +6987,251 @@ input, textarea, select {
 
     <button class="nav-btn" id="n-resumo" onclick="setPage('resumo',this)">
       <div class="nav-btn-icon">
-        <svg class="nav-ico-out" viewBox="0 0 24 24"><rect x="4" y="13" width="4.2" height="8" rx="1.5"/><rect x="9.9" y="8" width="4.2" height="13" rx="1.5"/><rect x="15.8" y="3.5" width="4.2" height="17.5" rx="1.5"/></svg>
-        <svg class="nav-ico-fill" viewBox="0 0 24 24" fill="var(--gold)" stroke="none"><rect x="4" y="13" width="4.2" height="8" rx="1.5"/><rect x="9.9" y="8" width="4.2" height="13" rx="1.5"/><rect x="15.8" y="3.5" width="4.2" height="17.5" rx="1.5"/></svg>
+        <i data-lucide="chart-no-axes-combined" class="nav-ico"></i>
       </div>
       <span>Resultado</span>
     </button>
 
     <button class="nav-btn" id="n-calendario" onclick="setPage('calendario',this)">
       <div class="nav-btn-icon">
-        <svg class="nav-ico-out" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5"/><line x1="3.5" y1="9.3" x2="20.5" y2="9.3"/><line x1="8" y1="2.6" x2="8" y2="6.2" stroke-width="2.4"/><line x1="16" y1="2.6" x2="16" y2="6.2" stroke-width="2.4"/><circle cx="8" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="14" r="1" fill="currentColor" stroke="none"/></svg>
-        <svg class="nav-ico-fill" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="16" rx="3.5" fill="var(--gold)" stroke="none"/><line x1="8" y1="2.6" x2="8" y2="6.2" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round"/><line x1="16" y1="2.6" x2="16" y2="6.2" stroke="var(--gold)" stroke-width="2.4" stroke-linecap="round"/><circle cx="8" cy="14" r="1" fill="var(--bg0)" stroke="none"/><circle cx="12" cy="14" r="1" fill="var(--bg0)" stroke="none"/><circle cx="16" cy="14" r="1" fill="var(--bg0)" stroke="none"/></svg>
+        <i data-lucide="calendar-1" class="nav-ico"></i>
       </div>
-      <span>Agenda</span>
+      <span>Calendário</span>
     </button>
 
   </nav>
+
+  <!-- Ícones Lucide da barra de navegação. Como a página não usa bundler
+       (Vite/Webpack), carregamos a build UMD via CDN — que expõe
+       window.lucide.createIcons() — em vez do import ES module usado em
+       projetos com bundler. createIcons() varre o DOM procurando por
+       elementos com [data-lucide] e troca cada um por um <svg> real,
+       preservando as classes (nav-ico / nav-icon-default) usadas no CSS. -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    if(window.lucide)lucide.createIcons();
+  </script>
+
+  <script>
+  /* ══════════════════════════════════════════════════════════
+     NAV PILL — física de mola (spring physics), sem libs.
+     A pílula tem duas molas independentes: uma para a borda
+     esquerda, outra para a direita. Como cada borda persegue seu
+     alvo separadamente (e uma é levemente mais "solta" que a
+     outra), o estiramento elástico surge naturalmente da física
+     — não é um efeito de easing/scale aplicado por cima.
+     Só roda no mobile; no desktop a .nav vira sidebar e o pill
+     some (display:none via CSS).
+     ══════════════════════════════════════════════════════════ */
+  (function(){
+    function Spring(v, stiffness, damping){
+      this.value=v; this.target=v; this.velocity=0;
+      this.stiffness=stiffness; this.damping=damping;
+    }
+    Spring.prototype.step=function(dt){
+      const acc=(-this.stiffness*(this.value-this.target))-this.damping*this.velocity;
+      this.velocity+=acc*dt;
+      this.value+=this.velocity*dt;
+    };
+    Spring.prototype.settled=function(){
+      return Math.abs(this.velocity)<0.02 && Math.abs(this.value-this.target)<0.05;
+    };
+
+    const nav  = document.getElementById('main-nav');
+    const pill = document.getElementById('nav-pill');
+    if(!nav||!pill) return;
+
+    // borda de trás um pouco mais rígida que a da frente → assimetria
+    // sutil que dá a sensação "líquida" ao esticar.
+    const springLeft  = new Spring(0, 270, 24);
+    const springRight = new Spring(0, 210, 27);
+    let rafId=null, lastT=null;
+
+    function isMobileNav(){ return window.innerWidth<768; }
+
+    function iconRect(btn){
+      const icon=btn.querySelector('.nav-btn-icon');
+      const navBox=nav.getBoundingClientRect();
+      const icoBox=icon.getBoundingClientRect();
+      return{
+        left:icoBox.left-navBox.left,
+        top:icoBox.top-navBox.top,
+        width:icoBox.width,
+        height:icoBox.height
+      };
+    }
+
+    function render(){
+      const l=springLeft.value, r=springRight.value;
+      pill.style.width=Math.max(4,r-l)+'px';
+      pill.style.transform='translateX('+l+'px)';
+    }
+
+    function loop(){
+      if(rafId) return;
+      lastT=performance.now();
+      function tick(now){
+        const dt=Math.min((now-lastT)/1000, 1/30); // evita saltos ao trocar de aba rápido
+        lastT=now;
+        springLeft.step(dt); springRight.step(dt);
+        render();
+        if(!springLeft.settled()||!springRight.settled()){
+          rafId=requestAnimationFrame(tick);
+        }else{
+          springLeft.value=springLeft.target;
+          springRight.value=springRight.target;
+          render();
+          rafId=null;
+        }
+      }
+      rafId=requestAnimationFrame(tick);
+    }
+
+    window.updateNavPill=function(instant){
+      const active=nav.querySelector('.nav-btn.active')||nav.querySelector('.nav-btn');
+      if(!active||!isMobileNav()){
+        pill.style.opacity='0';
+        return;
+      }
+      pill.style.opacity='1';
+      const r=iconRect(active);
+      pill.style.top=r.top+'px';
+      pill.style.height=r.height+'px';
+      springLeft.target=r.left;
+      springRight.target=r.left+r.width;
+      if(instant){
+        springLeft.value=r.left; springRight.value=r.left+r.width;
+        springLeft.velocity=springRight.velocity=0;
+        render();
+      }else{
+        loop();
+      }
+    };
+
+    window.addEventListener('resize', function(){ window.updateNavPill(true); });
+
+    // posiciona sem animação assim que o layout estiver pronto
+    requestAnimationFrame(function(){ window.updateNavPill(true); });
+
+    /* ── Segurar e arrastar o dedo entre as abas ──
+       Enquanto o dedo está pressionado na nav, a pílula não pula:
+       ela se estica (metaball) entre a aba ativa e o ponto tocado,
+       acompanhando o dedo em tempo real. Ao soltar, "encaixa" na
+       aba mais próxima do dedo — reaproveitando o clique original
+       de cada botão (setPage / provasNavClick / haptics), então
+       nenhuma lógica de navegação é duplicada aqui. */
+    let dragging=false, dragPointerId=null, hoverBtn=null, pressedBtn=null;
+    let dragStartX=0, dragMaxDelta=0;
+    const DRAG_COMMIT_PX=14; // abaixo disso é considerado "toque", não arrasto real
+
+    function centerX(btn){ const r=iconRect(btn); return r.left+r.width/2; }
+
+    function nearestNavBtn(clientX){
+      const navBox=nav.getBoundingClientRect();
+      const localX=clientX-navBox.left;
+      let best=null, bestDist=Infinity;
+      nav.querySelectorAll('.nav-btn').forEach(function(b){
+        const d=Math.abs(centerX(b)-localX);
+        if(d<bestDist){bestDist=d;best=b;}
+      });
+      return best;
+    }
+
+    function stretchPillTo(clientX){
+      const activeBtn=nav.querySelector('.nav-btn.active')||nav.querySelector('.nav-btn');
+      if(!activeBtn)return;
+      const navBox=nav.getBoundingClientRect();
+      const localX=clientX-navBox.left;
+      hoverBtn=nearestNavBtn(clientX)||activeBtn;
+      const anchor=iconRect(activeBtn);
+      const hover=iconRect(hoverBtn);
+      const half=anchor.width*0.2;
+      const left=Math.min(anchor.left, hover.left, localX-half);
+      const right=Math.max(anchor.left+anchor.width, hover.left+hover.width, localX+half);
+      springLeft.target=left;
+      springRight.target=right;
+      loop();
+    }
+
+    function endNavDrag(e){
+      if(!dragging)return;
+      if(e&&e.pointerId!==undefined&&e.pointerId!==dragPointerId)return;
+      dragging=false;
+      nav.classList.remove('nav-dragging');
+      if(pressedBtn)pressedBtn.classList.remove('nav-btn--pressed');
+      const target=hoverBtn;
+      const start=pressedBtn;
+      const wasRealDrag=dragMaxDelta>=DRAG_COMMIT_PX;
+      hoverBtn=null;pressedBtn=null;dragPointerId=null;dragMaxDelta=0;
+      // Só disparamos o clique do botão em dois casos "de verdade":
+      //  1) foi um toque simples (o dedo não se afastou o suficiente pra
+      //     contar como arrasto) — clica no botão onde o dedo tocou;
+      //  2) foi um arrasto que terminou sobre uma aba DIFERENTE da que
+      //     estava pressionada — o usuário deliberadamente "arrastou" até lá.
+      // Se o dedo saiu e voltou pro mesmo botão (arrasto de "brincadeira"
+      // com a física da pílula, sem intenção real de tocar), não disparamos
+      // nada — isso evita, por exemplo, abrir o formulário de "+" sozinho
+      // quando o usuário só estava testando o efeito elástico da barra.
+      const shouldFire = target && (!wasRealDrag || target!==start);
+      // Em vez de chamar target.click() (que dispara um Event de verdade e
+      // pode, em alguns navegadores/dispositivos, ecoar num clique nativo
+      // duplicado logo depois), chamamos a função do onclick diretamente.
+      // Isso garante que a ação roda exatamente uma vez, de forma previsível
+      // em qualquer navegador — sem depender de checar se o clique é
+      // "confiável" (isTrusted), o que se mostrou frágil.
+      if(shouldFire && typeof target.onclick==='function'){
+        target.onclick.call(target);
+      }
+      // garante que a pílula sempre acabe assentada na aba certa, mesmo
+      // quando o clique acima não muda de página (ex.: soltar na própria
+      // aba já ativa) — nesses casos ela só se contrai de volta.
+      if(window.updateNavPill)window.updateNavPill();
+    }
+
+    nav.addEventListener('pointerdown', function(e){
+      if(!isMobileNav())return;
+      const btn=e.target.closest('.nav-btn');
+      if(!btn)return;
+      e.preventDefault();
+      dragging=true;
+      dragPointerId=e.pointerId;
+      dragStartX=e.clientX;
+      dragMaxDelta=0;
+      hoverBtn=btn;
+      pressedBtn=btn;
+      btn.classList.add('nav-btn--pressed');
+      nav.classList.add('nav-dragging');
+      try{nav.setPointerCapture(e.pointerId);}catch(err){}
+      stretchPillTo(e.clientX);
+    });
+    nav.addEventListener('pointermove', function(e){
+      if(!dragging||e.pointerId!==dragPointerId)return;
+      const delta=Math.abs(e.clientX-dragStartX);
+      if(delta>dragMaxDelta)dragMaxDelta=delta;
+      stretchPillTo(e.clientX);
+    });
+    nav.addEventListener('pointerup', endNavDrag);
+    nav.addEventListener('pointercancel', endNavDrag);
+
+    /* ── Blindagem contra clique duplicado ──
+       Em telas mobile, a navegação inteira já é resolvida no par
+       pointerdown/pointerup acima, que chama a função do botão
+       diretamente (sem gerar um Event de "click"). Alguns navegadores/
+       dispositivos ainda disparam um clique NATIVO por conta própria
+       depois do toque — sem essa blindagem, ele rodaria a ação de novo
+       (ex.: reabrir o "+" de Atividades logo depois de já termos entrado
+       na aba). Por isso bloqueamos qualquer clique que chegue até os
+       botões da nav enquanto estivermos no modo mobile: a ação real já
+       foi disparada acima, então esse clique nunca precisa fazer nada. */
+    nav.addEventListener('click', function(e){
+      if(!isMobileNav())return;
+      const btn=e.target.closest('.nav-btn');
+      if(!btn)return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    }, true);
+  })();
+  </script>
 
   <!-- Expand btn: agora é o hambúrguer no topbar, esse div é só um anchor para o JS -->
   <span id="sb-expand-btn" style="display:none"></span>
@@ -9832,6 +10148,7 @@ function renderProvas(el){
   const minDate=todayStr();
 
   const _isDesktopUI=window.innerWidth>=768;
+  window._provasLastIsDesktop=_isDesktopUI;
 
   const wizBodyHtml=`<div class="aec-body-wrap">
       <div class="aec-body-inner">
@@ -9940,7 +10257,7 @@ function renderProvas(el){
     </div>`;
 
   /* ── Variante desktop: card acordeão embutido na coluna (comportamento original) ── */
-  const formHtml=`<div class="add-exam-card" id="add-exam-card" data-step="1">
+  const formHtml=`<div class="add-exam-card open" id="add-exam-card" data-step="1">
     <div class="aec-header" onclick="toggleExamForm()">
       <div class="aec-header-icon">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -9960,7 +10277,7 @@ function renderProvas(el){
   </div>`;
 
   /* ── Variante mobile: pop-up (bottom sheet) acionado por botão dedicado ── */
-  const modalHtml=`<div class="add-exam-modal-overlay" id="add-exam-modal-overlay" onclick="if(event.target===this)closeAddExamModal()">
+  const modalHtml=`<div class="add-exam-modal-overlay" id="add-exam-modal-overlay" onclick="_addExamOverlayClick(event,this)">
     <div class="add-exam-card add-exam-card--modal open" id="add-exam-card" data-step="1">
       <div class="aec-header aec-header--modal">
         <div class="aec-header-icon">
@@ -11158,7 +11475,7 @@ function _showNotifToast(msg){
   if(!t){
     t=document.createElement('div');t.id='notif-mini-toast';
     Object.assign(t.style,{
-      position:'fixed',bottom:'calc(90px + env(safe-area-inset-bottom))',
+      position:'fixed',bottom:'calc(104px + env(safe-area-inset-bottom))',
       left:'50%',transform:'translateX(-50%)',
       background:'var(--bg1)',border:'1px solid var(--goldbd)',
       color:'var(--t1)',fontSize:'13px',fontWeight:'600',
@@ -11636,6 +11953,7 @@ function setNavActive(p){
   const el=document.getElementById(m[p]||'n-notas');
   if(el)el.classList.add('active');
   syncProvasNavMode();
+  if(window.updateNavPill)window.updateNavPill();
 }
 
 /* ── Botão "Atividades" da barra inferior: enquanto essa aba está
@@ -12846,6 +13164,29 @@ setInterval(checkExamToasts,60000);
 setInterval(checkPendingNotifs,60000);
 setInterval(_autoRemovePastExams,60000);
 window.addEventListener('resize',syncLayout);
+/* ── Corrige o botão "+" de Atividades ficando "morto" ──
+   A página de Provas/Atividades renderiza um HTML diferente para
+   desktop (formulário embutido, sem overlay) e mobile (pop-up com
+   #add-exam-modal-overlay). Essa escolha era feita só no momento do
+   render e nunca era refeita num simples resize da janela — então,
+   se o usuário estivesse na aba Atividades e a janela cruzasse os
+   768px (redimensionar o navegador, girar um tablet, modo split-
+   screen), o botão "+" da barra inferior continuava mudando de
+   aparência (ficava dourado/"+"), mas o elemento do pop-up nem
+   existia mais no DOM — clicar nele não fazia nada. Re-renderizamos
+   a aba sempre que o breakpoint muda enquanto ela está aberta. */
+let _resizeRerenderTimer=null;
+window.addEventListener('resize',function(){
+  clearTimeout(_resizeRerenderTimer);
+  _resizeRerenderTimer=setTimeout(function(){
+    if(curPage==='provas'){
+      const nowDesktop=window.innerWidth>=768;
+      if(nowDesktop!==window._provasLastIsDesktop){
+        render(null);
+      }
+    }
+  },150);
+});
 new ResizeObserver(syncLayout).observe(document.getElementById('top-fixed'));
 setInterval(tickTimer,1000);
 setInterval(checkSchedRefresh,10000);
@@ -13170,6 +13511,14 @@ function openAddExamModal(){
   const overlay=document.getElementById('add-exam-modal-overlay');
   if(!overlay)return;
   overlay.classList.add('open');
+  // Marca o instante da abertura: em toques (touchscreen), o navegador
+  // costuma disparar um "click" fantasma logo depois do toque que abriu
+  // o modal (compat. touch→mouse). Como o overlay some a cobrir a tela
+  // exatamente onde o dedo estava, esse clique fantasma caía em cima do
+  // próprio fundo e fechava o modal no mesmo instante em que abria —
+  // parecia que o botão "+" simplesmente não fazia nada. Ignoramos
+  // cliques no fundo que cheguem muito colados na abertura.
+  window._addExamModalOpenedAt=Date.now();
   _lockBackgroundScroll(true);
   // inicializa aviso padrão, igual ao fluxo antigo
   if(typeof setAvisoDias==="function"){const inp=document.getElementById("ex-aviso-dias");if(inp&&inp.value==="")setAvisoDias(1);}
@@ -13180,6 +13529,16 @@ function closeAddExamModal(){
   if(overlay)overlay.classList.remove('open');
   _lockBackgroundScroll(false);
   document.removeEventListener('keydown',_addExamModalEscHandler);
+}
+/* ── Clique no fundo do pop-up de Atividades ──
+   Só fecha se: (1) o alvo é mesmo o fundo (não um filho do card) e
+   (2) já passou tempo suficiente desde que o modal abriu — protegendo
+   contra o "clique fantasma" que toques em telas sensíveis disparam
+   logo após o toque que abriu o próprio modal (ver openAddExamModal). */
+function _addExamOverlayClick(event,el){
+  if(event.target!==el)return;
+  if(Date.now()-(window._addExamModalOpenedAt||0)<350)return;
+  closeAddExamModal();
 }
 function _addExamModalEscHandler(e){
   if(e.key==='Escape')closeAddExamModal();
