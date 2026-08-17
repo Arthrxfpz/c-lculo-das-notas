@@ -7654,6 +7654,42 @@ const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 let G={};
 SUBJECTS.forEach(s=>{G[s.id]={};ALL_TABS.forEach(t=>G[s.id][t]=[]);});
 let curTab='1T', curPage='notas', openAcc={};
+
+/* ══════════════════════════════════════════
+   ROTEAMENTO POR URL
+   Mesmo sendo tudo um único HTML, cada aba passa a ter um
+   endereço próprio (ex.: /notas, /provas) via History API —
+   dá pra favoritar, compartilhar ou recarregar numa aba
+   específica, e o botão voltar/avançar do navegador funciona.
+══════════════════════════════════════════ */
+const ROUTES={notas:'notas',horarios:'horarios',provas:'provas',resumo:'resultado',calendario:'calendario'};
+let _routerSuppressPush=false;
+
+function _pageFromPath(path){
+  const slug=(path||'').split('?')[0].split('#')[0].replace(/^\/+|\/+$/g,'').toLowerCase();
+  if(!slug)return null;
+  const found=Object.keys(ROUTES).find(k=>ROUTES[k]===slug);
+  return found||null;
+}
+function _syncURL(page,replace){
+  // Em file:// (preview local, sem servidor) mexer no path quebra o
+  // carregamento do arquivo — nesse caso simplesmente não mexe na URL.
+  if(location.protocol==='file:')return;
+  const slug=ROUTES[page]||'notas';
+  const url='/'+slug;
+  if(location.pathname===url)return;
+  try{
+    if(replace)history.replaceState({page},'',url);
+    else history.pushState({page},'',url);
+  }catch(e){/* contexto sem suporte a History API: ignora silenciosamente */}
+}
+window.addEventListener('popstate',function(){
+  const page=_pageFromPath(location.pathname)||'notas';
+  if(page===curPage)return;
+  _routerSuppressPush=true;
+  setPage(page);
+  _routerSuppressPush=false;
+});
 let stu={nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'gold'};
 let _isFirstVisit=false;
 const todayDow=new Date().getDay();
@@ -11945,6 +11981,7 @@ function setPage(page,btn){
     ts.style.display='none';
   }
   render(dir);syncLayout();
+  if(!_routerSuppressPush)_syncURL(page,false);
 }
 
 function setNavActive(p){
@@ -13136,6 +13173,18 @@ window.addEventListener('load',()=>{
   checkUpdateBanner();
   syncLayout();
   fetchWeather(true);
+  // Abre direto na aba correspondente à URL (ex.: acessar /provas já
+  // carrega a aba de Atividades, sem precisar navegar manualmente).
+  (function _bootFromURL(){
+    const initialPage=_pageFromPath(location.pathname);
+    if(initialPage&&initialPage!==curPage){
+      curPage=initialPage;
+      setNavActive(initialPage);
+      const ts=document.getElementById('tabs-strip');
+      if(ts)ts.style.display=(initialPage==='notas')?'':'none';
+    }
+    _syncURL(curPage,true);
+  })();
   render(null);
   updateExamBadge();
   checkPendingNotifs();
