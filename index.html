@@ -198,6 +198,9 @@
           student: JSON.parse(localStorage.getItem('t205_stu')     || 'null'),
           notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
           notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
+          freq:    JSON.parse(localStorage.getItem('t205_freq')    || 'null'),
+          freqNoClass: JSON.parse(localStorage.getItem('t205_freq_noclass') || 'null'),
+          freqPeriods: JSON.parse(localStorage.getItem('t205_freqp') || 'null'),
           updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
@@ -216,8 +219,14 @@
     if (d.student) localStorage.setItem('t205_stu',    JSON.stringify(d.student));
     if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
     if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
+    if (d.freq)    localStorage.setItem('t205_freq',   JSON.stringify(d.freq));
+    if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
+    if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
     if (typeof loadGrades       === 'function') loadGrades();
     if (typeof loadExams        === 'function') loadExams();
+    if (typeof loadFreq         === 'function') loadFreq();
+    if (typeof loadFreqNoClass  === 'function') loadFreqNoClass();
+    if (typeof loadFreqPeriods  === 'function') loadFreqPeriods();
     if (typeof _autoRemovePastExams === 'function') _autoRemovePastExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
     if (typeof renderCurrentPage === 'function') renderCurrentPage();
@@ -249,6 +258,9 @@
           if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
           if (d.notes)     localStorage.setItem('t205_notes',     JSON.stringify(d.notes));
           if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
+          if (d.freq)      localStorage.setItem('t205_freq',      JSON.stringify(d.freq));
+          if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
+          if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           _setSplashProgress(90, 'Aplicando atualizações…');
           setTimeout(() => location.reload(), 200);
@@ -6703,6 +6715,125 @@ input, textarea, select {
   94%  { width:44px; height:44px; padding:0;             transform:translateX(-50%) scale(1);  opacity:1; }
   100% { width:44px; height:44px; padding:0;             transform:translateX(-50%) scale(.5); opacity:0; }
 }
+
+/* ══════════════════════════════════════════
+   FREQUÊNCIA
+══════════════════════════════════════════ */
+.freq-day{position:relative}
+.freq-day--off{opacity:.32;cursor:default;pointer-events:none}
+.freq-day.feriado.freq-day--off{opacity:.45}
+.freq-unmarked .cal-day-num{color:var(--t2)}
+.freq-unmarked{box-shadow:inset 0 0 0 1.5px var(--line);border-radius:12px}
+.freq-day-dot{width:6px;height:6px;border-radius:50%;margin-top:5px}
+.freq-ok .cal-day-num{color:var(--green);font-weight:700}
+.freq-warn .cal-day-num{color:var(--amber);font-weight:700}
+.freq-bad .cal-day-num{color:var(--red);font-weight:700}
+.freq-ok,.freq-warn,.freq-bad{border-radius:12px}
+.freq-ok{background:var(--greenbg)}
+.freq-warn{background:var(--amberbg)}
+.freq-bad{background:var(--redbg)}
+.freq-partial .freq-day-dot{box-shadow:0 0 0 2px var(--bg1) inset,0 0 0 1px currentColor}
+.freq-day--noclass{background:var(--bg3);border-radius:12px}
+.freq-day--noclass .cal-day-num{color:var(--t3)}
+.freq-day-dash{width:10px;height:2px;border-radius:1px;background:var(--t4);margin-top:8px}
+
+/* sheet: toggle "sem aula neste dia" */
+.freq-noclass-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:12px 14px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);
+  margin-bottom:12px;
+}
+.freq-noclass-info{min-width:0}
+.freq-noclass-title{font-size:13.5px;font-weight:700;color:var(--t1);letter-spacing:-.1px}
+.freq-noclass-sub{font-size:11px;color:var(--t3);font-weight:500;margin-top:2px}
+.freq-switch{
+  flex-shrink:0;width:46px;height:27px;border-radius:16px;border:none;background:var(--bg4);
+  position:relative;cursor:pointer;transition:background .2s ease;padding:0;
+}
+.freq-switch.on{background:var(--red)}
+.freq-switch-knob{
+  position:absolute;top:2px;left:2px;width:23px;height:23px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s cubic-bezier(.34,1.4,.64,1);
+}
+.freq-switch.on .freq-switch-knob{transform:translateX(19px)}
+.freq-switch:active .freq-switch-knob{width:26px}
+
+/* sheet: lista de matérias do dia */
+.freq-subj-list{display:flex;flex-direction:column;gap:8px}
+.freq-subj-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 14px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);
+}
+.freq-subj-info{display:flex;align-items:center;gap:10px;min-width:0}
+.freq-subj-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.freq-subj-names{min-width:0}
+.freq-subj-name{font-size:14px;font-weight:600;color:var(--t1);letter-spacing:-.1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.freq-subj-prof{font-size:11.5px;color:var(--t3);font-weight:500;margin-top:1px}
+.freq-toggle{display:flex;gap:6px;flex-shrink:0}
+.freq-toggle-btn{
+  font-family:var(--ffb,inherit);font-size:12px;font-weight:700;letter-spacing:-.1px;
+  padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg3);
+  color:var(--t3);cursor:pointer;transition:all .15s ease;white-space:nowrap;
+}
+.freq-toggle-btn:active{transform:scale(.94)}
+.freq-toggle-p.active{background:var(--greenbg);border-color:var(--greenbd);color:var(--green)}
+.freq-toggle-f.active{background:var(--redbg);border-color:var(--redbd);color:var(--red)}
+
+/* numeração da aula (1ª, 2ª, 3ª...) — deixa claro que cada período conta
+   separadamente, mesmo quando a mesma matéria se repete no dia */
+.freq-period-num{
+  flex-shrink:0;width:22px;height:22px;border-radius:7px;
+  background:var(--bg3);border:1px solid var(--line2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ffm);font-size:11px;font-weight:800;color:var(--t3);
+}
+.freq-subj-time{
+  display:inline-flex;align-items:center;gap:3px;
+  font-family:var(--ffm);font-size:10.5px;font-weight:600;color:var(--t4);
+}
+
+/* estatísticas */
+.freq-stats{margin-top:18px;display:flex;flex-direction:column;gap:14px}
+.freq-stats-scope{
+  display:flex;gap:6px;background:var(--bg2);border:1px solid var(--line);
+  border-radius:14px;padding:4px;
+}
+.freq-scope-btn{
+  flex:1;font-family:inherit;font-size:12.5px;font-weight:700;letter-spacing:-.1px;
+  padding:9px 10px;border-radius:11px;border:none;background:transparent;color:var(--t3);cursor:pointer;
+  transition:all .15s ease;
+}
+.freq-scope-btn.active{background:var(--bg1);color:var(--t1);box-shadow:0 1px 3px rgba(0,0,0,.16)}
+[data-theme="light"] .freq-scope-btn.active{box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+.freq-banner{
+  position:relative;overflow:hidden;border-radius:22px;padding:22px 20px 20px;
+  background:linear-gradient(165deg,var(--bg2) 0%,var(--bg1) 100%);border:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;
+}
+.freq-banner-eyebrow{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--t3);
+  letter-spacing:.2px;text-transform:uppercase;
+}
+.freq-banner-eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--accent,#FFD60A)}
+.freq-banner-pct{font-size:44px;font-weight:800;letter-spacing:-1.2px;line-height:1.1;margin-top:2px}
+.freq-banner-sub{font-size:12.5px;font-weight:600;color:var(--t3);margin-top:2px}
+.freq-banner-aulas{color:var(--t4);font-weight:600;margin-top:1px}
+
+.freq-stat-list{display:flex;flex-direction:column;gap:10px}
+.freq-stat-row{display:flex;align-items:center;gap:10px}
+.freq-stat-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.freq-stat-name{
+  flex:0 0 auto;width:128px;font-size:12.5px;font-weight:600;color:var(--t2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;flex-direction:column;gap:1px;
+}
+.freq-stat-count{font-size:10.5px;font-weight:600;color:var(--t4)}
+.freq-stat-track{flex:1;height:6px;border-radius:3px;background:var(--bg3);overflow:hidden}
+.freq-stat-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.22,1,.36,1);opacity:.9}
+.freq-stat-pct{flex:0 0 auto;width:38px;text-align:right;font-size:12.5px;font-weight:700}
+@media (max-width:480px){
+  .freq-stat-name{width:92px;font-size:11.5px}
+}
 </style>
 <div id="app-splash">
 
@@ -6992,6 +7123,13 @@ input, textarea, select {
       <span>Resultado</span>
     </button>
 
+    <button class="nav-btn" id="n-frequencia" onclick="setPage('frequencia',this)">
+      <div class="nav-btn-icon">
+        <i data-lucide="calendar-check-2" class="nav-ico"></i>
+      </div>
+      <span>Frequência</span>
+    </button>
+
     <button class="nav-btn" id="n-calendario" onclick="setPage('calendario',this)">
       <div class="nav-btn-icon">
         <i data-lucide="calendar-1" class="nav-ico"></i>
@@ -7248,6 +7386,21 @@ input, textarea, select {
       </div>
       <div class="cal-day-sheet-body" id="cal-day-sheet-body"></div>
       <div class="cal-day-sheet-close" onclick="closeCalDaySheet()">Fechar</div>
+    </div>
+  </div>
+
+  <!-- FREQUÊNCIA — sheet do dia (reaproveita o chrome visual do sheet do calendário) -->
+  <div class="cal-day-sheet-overlay" id="freq-day-sheet-overlay" onclick="if(event.target===this)closeFreqDaySheet()">
+    <div class="cal-day-sheet" id="freq-day-sheet">
+      <div class="cal-day-sheet-handle-row"><div class="cal-day-sheet-handle"></div></div>
+      <div class="cal-day-sheet-head">
+        <div class="cal-day-sheet-date-block">
+          <div class="cal-day-sheet-date" id="freq-day-sheet-date">—</div>
+          <div class="cal-day-sheet-dow" id="freq-day-sheet-dow"></div>
+        </div>
+      </div>
+      <div class="cal-day-sheet-body" id="freq-day-sheet-body"></div>
+      <div class="cal-day-sheet-close" onclick="closeFreqDaySheet()">Fechar</div>
     </div>
   </div>
 
@@ -7646,6 +7799,251 @@ function resetMaterias(){
   if(typeof saveGrades==='function')saveGrades();
 }
 const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+/* ══════════════════════════════════════════
+   FREQUÊNCIA — presença por matéria/dia
+   FREQ[subjectId][dateStr] = 'p' (presente) | 'f' (falta)
+   Só existem registros de segunda a sexta (dias com aula),
+   e apenas para matérias que de fato têm aula naquele dia
+   da semana (baseado em SCHED, o mesmo horário usado na aba
+   "Horários"). Assim a lista de matérias do dia é sempre a
+   real, e nunca precisa ser configurada de novo aqui.
+══════════════════════════════════════════ */
+let FREQ={};
+function saveFreq(){
+  try{localStorage.setItem('t205_freq',JSON.stringify(FREQ));}catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadFreq(){
+  try{
+    const d=localStorage.getItem('t205_freq');
+    if(d)FREQ=JSON.parse(d);
+  }catch(e){}
+  SUBJECTS.forEach(s=>{ if(!FREQ[s.id])FREQ[s.id]={}; });
+}
+/* dias marcados manualmente como "sem aula" (ex.: cancelada, professor faltou etc.).
+   Quando ativo, o dia é anulado por completo das estatísticas — não conta como
+   dia letivo nem entra no total de aulas, mesmo que o horário preveja aulas nele. */
+let FREQ_NOCLASS={};
+function saveFreqNoClass(){
+  try{localStorage.setItem('t205_freq_noclass',JSON.stringify(FREQ_NOCLASS));}catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadFreqNoClass(){
+  try{
+    const d=localStorage.getItem('t205_freq_noclass');
+    if(d)FREQ_NOCLASS=JSON.parse(d);
+  }catch(e){}
+}
+function isFreqNoClass(dateStr){ return !!FREQ_NOCLASS[dateStr]; }
+function setFreqNoClass(dateStr,val){
+  if(val)FREQ_NOCLASS[dateStr]=true;
+  else delete FREQ_NOCLASS[dateStr];
+  saveFreqNoClass();
+}
+/* matérias que têm aula em uma data, direto do horário — sem considerar
+   a flag "sem aula" (usada para sempre poder reabrir o dia e desmarcar) */
+function freqScheduledSubjectsOnDate(dateStr){
+  const dow=new Date(dateStr+'T12:00:00').getDay();
+  if(dow<1||dow>5)return[];
+  const slots=SCHED[dow]||[];
+  const seen=new Set(),list=[];
+  slots.forEach(id=>{
+    if(id&&!seen.has(id)){
+      const s=findSubjectById(id);
+      if(s){seen.add(id);list.push(s);}
+    }
+  });
+  return list;
+}
+/* matérias que têm aula em uma data (dedup, na ordem do horário) — vazio em fins de semana
+   ou em dias marcados manualmente como "sem aula" */
+function freqSubjectsOnDate(dateStr){
+  if(isFreqNoClass(dateStr))return[];
+  return freqScheduledSubjectsOnDate(dateStr);
+}
+/* lista "crua" das aulas do dia (uma entrada por período, com repetições —
+   ex.: se "Proj. Integrador" tem 3 períodos no dia, aparece 3x aqui).
+   Usada para contar o TOTAL DE AULAS (não só matérias distintas). */
+function freqPeriodsOnDate(dateStr){
+  const dow=new Date(dateStr+'T12:00:00').getDay();
+  if(dow<1||dow>5)return[];
+  if(isFreqNoClass(dateStr))return[];
+  return (SCHED[dow]||[]).filter(id=>!!id&&!!findSubjectById(id));
+}
+function freqStatusOf(subjId,dateStr){
+  return (FREQ[subjId]&&FREQ[subjId][dateStr])||null;
+}
+function setFreqStatus(subjId,dateStr,status){
+  if(!FREQ[subjId])FREQ[subjId]={};
+  if(status){FREQ[subjId][dateStr]=status;}
+  else{delete FREQ[subjId][dateStr];}
+  saveFreq();
+}
+
+/* ══════════════════════════════════════════
+   FREQUÊNCIA POR AULA (não por matéria/dia)
+   FREQP[dateStr][slotIdx] = 'p' | 'f'
+   slotIdx = índice da aula dentro de SCHED[dow] (0-based, na ordem do
+   horário do dia). Isso permite registrar cada aula separadamente —
+   inclusive quando a mesma matéria se repete no dia (aula dupla/tripla) —
+   em vez de um único status por matéria/dia.
+══════════════════════════════════════════ */
+let FREQP={};
+function saveFreqPeriods(){
+  try{localStorage.setItem('t205_freqp',JSON.stringify(FREQP));}catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadFreqPeriods(){
+  try{
+    const d=localStorage.getItem('t205_freqp');
+    if(d)FREQP=JSON.parse(d);
+  }catch(e){}
+}
+function freqPeriodStatus(dateStr,idx){
+  return (FREQP[dateStr]&&FREQP[dateStr][idx])||null;
+}
+function setFreqPeriodStatus(dateStr,idx,status){
+  if(!FREQP[dateStr])FREQP[dateStr]={};
+  if(status){
+    FREQP[dateStr][idx]=status;
+  }else{
+    delete FREQP[dateStr][idx];
+    if(Object.keys(FREQP[dateStr]).length===0) delete FREQP[dateStr];
+  }
+  saveFreqPeriods();
+}
+/* mapeia o índice de uma aula dentro de SCHED[dow] (0-based, sem contar
+   recreios) para o período correspondente em PERIODS (nome + horário) */
+function freqPeriodMeta(dow,slotIdx){
+  let ci=0;
+  for(let pi=0;pi<PERIODS.length;pi++){
+    const p=PERIODS[pi];
+    if(p.break)continue;
+    if(ci===slotIdx)return p;
+    ci++;
+  }
+  return null;
+}
+/* lista crua (sem dedup, sem considerar "sem aula") de TODAS as aulas do
+   dia, uma entrada por período — inclui repetições da mesma matéria.
+   É essa lista que alimenta o registro de presença por aula. */
+function freqDaySlotsRaw(dateStr){
+  const dow=new Date(dateStr+'T12:00:00').getDay();
+  if(dow<1||dow>5)return[];
+  const slots=SCHED[dow]||[];
+  const list=[];
+  slots.forEach((id,idx)=>{
+    if(!id)return;
+    const s=findSubjectById(id);
+    if(!s)return;
+    const meta=freqPeriodMeta(dow,idx);
+    const timeStr=meta?`${fmtHM(meta.s)}–${fmtHM(meta.e)}`:'';
+    list.push({idx,subjId:id,subj:s,periodNum:idx+1,label:meta?meta.n:`${idx+1}ª aula`,timeStr});
+  });
+  return list;
+}
+/* mesma lista, mas vazia em dias marcados manualmente como "sem aula" */
+function freqDaySlots(dateStr){
+  if(isFreqNoClass(dateStr))return[];
+  return freqDaySlotsRaw(dateStr);
+}
+/* migração única: converte marcações antigas (um status por matéria/dia,
+   que ignorava aulas duplicadas) para o novo formato por aula individual —
+   preenche cada aula daquela matéria naquele dia com o status que já
+   existia, para ninguém perder o que já tinha registrado */
+function migrateFreqToPeriods(){
+  try{
+    if(localStorage.getItem('t205_freq_migrated_v2'))return;
+    let changed=false;
+    Object.keys(FREQ||{}).forEach(subjId=>{
+      const byDate=FREQ[subjId]||{};
+      Object.keys(byDate).forEach(dateStr=>{
+        const status=byDate[dateStr];
+        if(!status)return;
+        const slots=freqDaySlotsRaw(dateStr).filter(sl=>sl.subjId===subjId);
+        slots.forEach(sl=>{
+          if(!FREQP[dateStr])FREQP[dateStr]={};
+          if(FREQP[dateStr][sl.idx]===undefined){FREQP[dateStr][sl.idx]=status;changed=true;}
+        });
+      });
+    });
+    if(changed)saveFreqPeriods();
+    localStorage.setItem('t205_freq_migrated_v2','1');
+  }catch(e){}
+}
+/* {total,marked,present} de um dia específico — agora contando cada AULA
+   individualmente (uma matéria com 2 aulas no dia conta como 2, não 1) */
+function freqDayStats(dateStr){
+  const slots=freqDaySlots(dateStr);
+  let marked=0,present=0;
+  slots.forEach(sl=>{
+    const v=freqPeriodStatus(dateStr,sl.idx);
+    if(v){marked++; if(v==='p')present++;}
+  });
+  return{total:slots.length,marked,present};
+}
+/* pct >=75 ok · >=50 warn · <50 bad — 75% é o mínimo legal de frequência escolar no Brasil */
+function freqPctStatus(pct){
+  if(pct===null)return'none';
+  if(pct>=75)return'ok';
+  if(pct>=50)return'warn';
+  return'bad';
+}
+function freqStatusColor(st){
+  return st==='ok'?'var(--green)':st==='warn'?'var(--amber)':st==='bad'?'var(--red)':'var(--t4)';
+}
+/* as aulas do ano letivo de 2026 começaram em 18 de fevereiro — dias
+   anteriores a essa data não contam nem podem ser registrados */
+const FREQ_YEAR_START=new Date(2026,1,18);
+function isBeforeSchoolYearStart(dateStr){
+  return new Date(dateStr+'T12:00:00')<FREQ_YEAR_START;
+}
+/* percorre todas as datas letivas de 2026 dentro de um intervalo de meses (ambos inclusive, 0-11)
+   e agrega presença/total por matéria, no total geral (por dia/matéria) e também
+   no total de AULAS (períodos individuais — ex.: um dia cheio pode ter 6 aulas). */
+function freqAggregate(monthStart,monthEnd){
+  const today=new Date();today.setHours(0,0,0,0);
+  const perSubj={};
+  SUBJECTS.forEach(s=>{perSubj[s.id]={present:0,total:0,name:s.name,color:s.color};});
+  let totalPresent=0,totalAll=0,daysRegistered=0,daysWithClass=0;
+  let aulasTotal=0,aulasPresent=0,aulasFalta=0;
+  for(let mo=monthStart;mo<=monthEnd;mo++){
+    const daysInMonth=new Date(2026,mo+1,0).getDate();
+    for(let d=1;d<=daysInMonth;d++){
+      const dateObj=new Date(2026,mo,d);
+      if(dateObj>today)continue; // não conta dias futuros nas estatísticas
+      if(dateObj<FREQ_YEAR_START)continue; // antes do início das aulas (18/02)
+      const dateStr=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      if(FERIADOS_2026[dateStr])continue;
+      const slots=freqDaySlots(dateStr);
+      if(!slots.length)continue;
+      daysWithClass++;
+      let dayMarked=0;
+
+      // conta cada AULA individualmente (uma matéria com 2 aulas no dia
+      // conta 2x — não mais colapsada em uma única entrada por matéria)
+      aulasTotal+=slots.length;
+      slots.forEach(sl=>{
+        const v=freqPeriodStatus(dateStr,sl.idx);
+        if(v){
+          dayMarked++;
+          if(perSubj[sl.subjId]) perSubj[sl.subjId].total++;
+          totalAll++;
+          if(v==='p'){
+            if(perSubj[sl.subjId]) perSubj[sl.subjId].present++;
+            totalPresent++;aulasPresent++;
+          }else if(v==='f'){
+            aulasFalta++;
+          }
+        }
+      });
+      if(dayMarked>0)daysRegistered++;
+    }
+  }
+  const overallPct=totalAll>0?Math.round((totalPresent/totalAll)*100):null;
+  return{perSubj,totalPresent,totalAll,overallPct,daysRegistered,daysWithClass,aulasTotal,aulasPresent,aulasFalta};
+}
 
 /* ══════════════════════════════════════════
    GRADES DATA
@@ -8100,7 +8498,7 @@ function syncLayout(){
    Abordagem: ambos os slides são position:absolute
    e a transição usa CSS transition (não animation)
 ══════════════════════════════════════════ */
-const PAGE_ORDER=['notas','horarios','provas','resumo','calendario'];
+const PAGE_ORDER=['notas','horarios','provas','resumo','frequencia','calendario'];
 
 function _buildSlide(){
   const s=document.createElement('div');
@@ -8108,6 +8506,7 @@ function _buildSlide(){
   if(curPage==='horarios')renderHorarios(s);
   else if(curPage==='provas')renderProvas(s);
   else if(curPage==='resumo'||curPage==='resultado')renderResumo(s);
+  else if(curPage==='frequencia')renderFrequencia(s);
   else if(curPage==='calendario')renderCalendario(s);
   else renderNotasTab(s);
   return s;
@@ -11956,7 +12355,7 @@ function setPage(page,btn){
 
 function setNavActive(p){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',calendario:'n-calendario'};
+  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',frequencia:'n-frequencia',calendario:'n-calendario'};
   const el=document.getElementById(m[p]||'n-notas');
   if(el)el.classList.add('active');
   syncProvasNavMode();
@@ -13100,7 +13499,7 @@ function toggleSidebar(){
   const toggleIcon = document.querySelector('.sb-toggle-icon');
   const wxOverlay = document.getElementById('wx-overlay');
   const notifOverlay = document.getElementById('notif-overlay');
-  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay','cal-day-sheet-overlay'];
+  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay','cal-day-sheet-overlay','freq-day-sheet-overlay'];
   const toastEl = document.getElementById('exam-toast');
 
   const hamburger = document.getElementById('topbar-hamburger');
@@ -13139,6 +13538,10 @@ window.addEventListener('load',()=>{
   updateGreeting();
   loadGrades();
   loadExams();
+  loadFreq();
+  loadFreqNoClass();
+  loadFreqPeriods();
+  migrateFreqToPeriods();
   _autoRemovePastExams();
   checkUpdateBanner();
   syncLayout();
@@ -13474,6 +13877,308 @@ function calDayClick(dateStr){
 
 function closeCalDaySheet(){
   document.getElementById('cal-day-sheet-overlay').classList.remove('open');
+}
+
+/* ══════════════════════════════════════════
+   FREQUÊNCIA — página
+   ▸ Calendário do mês (só dias úteis são clicáveis)
+   ▸ Toque num dia → sheet com as matérias que têm aula
+     naquele dia (vem do horário) e um toggle Presente/Falta
+   ▸ Estatísticas com escopo "Este mês" ou "Ano todo"
+══════════════════════════════════════════ */
+let _freqMonth=(new Date().getFullYear()===2026)?new Date().getMonth():0;
+let _freqStatsScope='mes'; // 'mes' | 'ano'
+
+function renderFrequencia(el){
+  el.innerHTML=_buildFreqHtml();
+}
+
+function _buildFreqHtml(){
+  return `<div class="cal-wrap freq-wrap">
+    <div class="cal-disclaimer">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span class="cal-disclaimer-text">Toque num dia de aula (seg–sex) para registrar presença ou falta em cada aula — inclusive quando a mesma matéria se repete no dia.</span>
+    </div>
+    ${_buildFreqCalHtml()}
+    ${_buildFreqStatsHtml()}
+  </div>`;
+}
+
+function _buildFreqCalHtml(){
+  const mo=_freqMonth;
+  const canPrev=mo>0, canNext=mo<11;
+  let html=`<div class="cal-nav">
+    <button class="cal-nav-btn" onclick="freqNavMonth(-1)"${canPrev?'':' disabled'}>
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="cal-nav-title">${CAL_MONTHS_PT[mo]}<span>2026</span></div>
+    <button class="cal-nav-btn" onclick="freqNavMonth(1)"${canNext?'':' disabled'}>
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+  <div class="cal-weekdays">`;
+  ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=>{ html+=`<div class="cal-wd">${d}</div>`; });
+  html+='</div><div class="cal-grid-wrap">'+_buildFreqGridHtml(mo)+'</div>';
+  return html;
+}
+
+function _buildFreqGridHtml(mo){
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayY=today.getFullYear(),todayM=today.getMonth(),todayD=today.getDate();
+  const firstDow=new Date(2026,mo,1).getDay();
+  const daysInMonth=new Date(2026,mo+1,0).getDate();
+
+  let html='<div class="cal-grid">';
+  for(let i=0;i<firstDow;i++) html+='<div class="cal-day empty"></div>';
+
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow=new Date(2026,mo,d).getDay();
+    const isWeekend=(dow===0||dow===6);
+    const isToday=(todayY===2026&&todayM===mo&&todayD===d);
+    const isFeriado=!!FERIADOS_2026[dateStr];
+    const isFuture=new Date(2026,mo,d)>today;
+    const isBeforeStart=isBeforeSchoolYearStart(dateStr);
+
+    let cls='cal-day freq-day';
+    if(dow===0) cls+=' sunday';
+    if(isToday) cls+=' today';
+    if(isFeriado) cls+=' feriado';
+
+    let markHtml='';
+    if(isWeekend||isFeriado||isFuture||isBeforeStart){
+      cls+=' freq-day--off';
+    }else if(isFreqNoClass(dateStr)){
+      cls+=' freq-day--noclass';
+      markHtml='<div class="freq-day-dash">–</div>';
+    }else{
+      const {total,marked,present}=freqDayStats(dateStr);
+      if(!total){
+        cls+=' freq-day--off';
+      }else if(marked===0){
+        cls+=' freq-unmarked';
+      }else{
+        const pct=(present/total)*100;
+        const st=freqPctStatus(pct);
+        cls+=' freq-'+st;
+        if(marked<total)cls+=' freq-partial';
+        markHtml=`<div class="freq-day-dot" style="background:${freqStatusColor(st)}"></div>`;
+      }
+    }
+
+    const clickable=!(isWeekend||isFeriado||isFuture||isBeforeStart);
+    html+=`<div class="${cls}" ${clickable?`onclick="freqDayClick('${dateStr}')"`:''}>
+      <div class="cal-day-num">${d}</div>
+      ${markHtml}
+    </div>`;
+  }
+  html+='</div>';
+  return html;
+}
+
+function freqNavMonth(dir){
+  const next=_freqMonth+dir;
+  if(next<0||next>11) return;
+  _freqMonth=next;
+
+  const slide=document.querySelector('.page-slide');
+  if(!slide||curPage!=='frequencia') return;
+
+  const title=slide.querySelector('.freq-wrap .cal-nav-title');
+  if(title) title.textContent=CAL_MONTHS_PT[_freqMonth]+' 2026';
+  const btns=slide.querySelectorAll('.freq-wrap .cal-nav-btn');
+  if(btns[0]) btns[0].disabled=_freqMonth===0;
+  if(btns[1]) btns[1].disabled=_freqMonth===11;
+
+  const wrap=slide.querySelector('.freq-wrap .cal-grid-wrap');
+  if(wrap){
+    const animClass=dir>0?'slide-right':'slide-left';
+    wrap.innerHTML=_buildFreqGridHtml(_freqMonth);
+    wrap.classList.remove('slide-right','slide-left');
+    void wrap.offsetWidth;
+    wrap.classList.add(animClass);
+  }
+
+  // se as estatísticas estiverem no modo "Este mês", atualiza junto
+  if(_freqStatsScope==='mes'){
+    const statsWrap=slide.querySelector('.freq-stats');
+    if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
+  }
+}
+
+function freqDayClick(dateStr){
+  const parts=dateStr.split('-');
+  const d=new Date(dateStr+'T00:00:00');
+  const dow=PT_WEEKDAYS[d.getDay()];
+  const fmtd=`${parts[2]}/${parts[1]}/${parts[0]}`;
+  document.getElementById('freq-day-sheet-date').textContent=fmtd;
+  document.getElementById('freq-day-sheet-dow').textContent=dow;
+  document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
+  document.getElementById('freq-day-sheet-overlay').classList.add('open');
+}
+
+function _buildFreqDaySheetBody(dateStr){
+  const noClass=isFreqNoClass(dateStr);
+  const slots=freqDaySlotsRaw(dateStr);
+
+  let html=`<div class="freq-noclass-row">
+    <div class="freq-noclass-info">
+      <div class="freq-noclass-title">Sem aula neste dia</div>
+      <div class="freq-noclass-sub">Anula o dia por completo das estatísticas</div>
+    </div>
+    <button class="freq-switch${noClass?' on':''}" onclick="freqToggleNoClass('${dateStr}',this)" aria-pressed="${noClass}" title="Marcar dia sem aula">
+      <div class="freq-switch-knob"></div>
+    </button>
+  </div>`;
+
+  if(noClass){
+    html+='<div class="cal-day-empty-state">Dia marcado como sem aula — nenhuma presença é contabilizada hoje.</div>';
+    return html;
+  }
+
+  if(!slots.length){
+    html+='<div class="cal-day-empty-state">Nenhuma aula prevista neste dia.</div>';
+    return html;
+  }
+
+  // cada aula do dia é listada separadamente (1ª, 2ª, 3ª...), com o
+  // horário ao lado — mesmo quando a mesma matéria se repete no dia,
+  // já que cada aula precisa ser registrada individualmente
+  html+='<div class="freq-subj-list">';
+  slots.forEach(sl=>{
+    const v=freqPeriodStatus(dateStr,sl.idx);
+    html+=`<div class="freq-subj-row">
+      <div class="freq-subj-info">
+        <div class="freq-period-num">${sl.periodNum}</div>
+        <div class="freq-subj-dot" style="background:${sl.subj.color}"></div>
+        <div class="freq-subj-names">
+          <div class="freq-subj-name">${sl.periodNum}ª aula: ${escHtml(sl.subj.name)}</div>
+          <div class="freq-subj-prof">${escHtml(sl.subj.prof||'')}${sl.subj.prof?' · ':''}<span class="freq-subj-time">${sl.timeStr}</span></div>
+        </div>
+      </div>
+      <div class="freq-toggle">
+        <button class="freq-toggle-btn freq-toggle-p${v==='p'?' active':''}" onclick="freqPeriodSheetSet(${sl.idx},'${dateStr}','p',this)">Presente</button>
+        <button class="freq-toggle-btn freq-toggle-f${v==='f'?' active':''}" onclick="freqPeriodSheetSet(${sl.idx},'${dateStr}','f',this)">Falta</button>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function freqToggleNoClass(dateStr,btn){
+  const newVal=!isFreqNoClass(dateStr);
+  setFreqNoClass(dateStr,newVal);
+  iosHaptic(btn);
+  document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
+
+  const slide=document.querySelector('.page-slide');
+  if(slide&&curPage==='frequencia'){
+    const wrap=slide.querySelector('.freq-wrap .cal-grid-wrap');
+    if(wrap) wrap.innerHTML=_buildFreqGridHtml(_freqMonth);
+    const statsWrap=slide.querySelector('.freq-stats');
+    if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
+  }
+}
+
+function freqDaySheetSet(subjId,dateStr,status,btn){
+  const current=freqStatusOf(subjId,dateStr);
+  // tocar no mesmo status de novo desmarca (fica "não registrado")
+  setFreqStatus(subjId,dateStr,current===status?null:status);
+  iosHaptic(btn);
+  document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
+
+  // Atualiza o grid do mês e as estatísticas, sem reabrir o sheet
+  const slide=document.querySelector('.page-slide');
+  if(slide&&curPage==='frequencia'){
+    const wrap=slide.querySelector('.freq-wrap .cal-grid-wrap');
+    if(wrap) wrap.innerHTML=_buildFreqGridHtml(_freqMonth);
+    const statsWrap=slide.querySelector('.freq-stats');
+    if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
+  }
+}
+
+/* registro por AULA individual (idx = índice da aula dentro do horário
+   do dia) — é essa função que a sheet de frequência usa agora */
+function freqPeriodSheetSet(idx,dateStr,status,btn){
+  const current=freqPeriodStatus(dateStr,idx);
+  // tocar no mesmo status de novo desmarca (fica "não registrado")
+  setFreqPeriodStatus(dateStr,idx,current===status?null:status);
+  iosHaptic(btn);
+  document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
+
+  // Atualiza o grid do mês e as estatísticas, sem reabrir o sheet
+  const slide=document.querySelector('.page-slide');
+  if(slide&&curPage==='frequencia'){
+    const wrap=slide.querySelector('.freq-wrap .cal-grid-wrap');
+    if(wrap) wrap.innerHTML=_buildFreqGridHtml(_freqMonth);
+    const statsWrap=slide.querySelector('.freq-stats');
+    if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
+  }
+}
+
+function closeFreqDaySheet(){
+  document.getElementById('freq-day-sheet-overlay').classList.remove('open');
+}
+
+function freqSetStatsScope(scope){
+  if(_freqStatsScope===scope)return;
+  _freqStatsScope=scope;
+  const slide=document.querySelector('.page-slide');
+  if(slide&&curPage==='frequencia'){
+    const statsWrap=slide.querySelector('.freq-stats');
+    if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
+  }
+}
+
+function _buildFreqStatsHtml(){
+  const scope=_freqStatsScope;
+  const agg = scope==='mes' ? freqAggregate(_freqMonth,_freqMonth) : freqAggregate(0,11);
+  const {perSubj,overallPct,daysRegistered,daysWithClass,aulasTotal,aulasPresent}=agg;
+  const overallSt=freqPctStatus(overallPct);
+  const scopeLbl = scope==='mes' ? CAL_MONTHS_PT[_freqMonth] : 'Ano letivo de 2026';
+
+  let subjRows='';
+  SUBJECTS.forEach(s=>{
+    const d=perSubj[s.id];
+    if(!d||d.total===0){
+      subjRows+=`<div class="freq-stat-row">
+        <div class="freq-stat-name">${escHtml(s.name)}</div>
+        <div class="freq-stat-track"><div class="freq-stat-fill" style="width:0%;background:var(--t4)"></div></div>
+        <div class="freq-stat-pct" style="color:var(--t4)">—</div>
+      </div>`;
+      return;
+    }
+    const pct=Math.round((d.present/d.total)*100);
+    const st=freqPctStatus(pct);
+    subjRows+=`<div class="freq-stat-row">
+      <div class="freq-stat-name">${escHtml(s.name)}<span class="freq-stat-count">${d.present}/${d.total}</span></div>
+      <div class="freq-stat-track"><div class="freq-stat-fill" style="width:${pct}%;background:${freqStatusColor(st)}"></div></div>
+      <div class="freq-stat-pct" style="color:${freqStatusColor(st)}">${pct}%</div>
+    </div>`;
+  });
+
+  if(!daysWithClass){
+    subjRows='';
+  }
+
+  const emptyHint = !daysRegistered ? `<div class="cal-day-empty-state">Nenhum registro de presença ainda${scope==='mes'?' neste mês':' neste ano'}.</div>` : '';
+
+  return `<div class="freq-stats">
+    <div class="freq-stats-scope">
+      <button class="freq-scope-btn${scope==='mes'?' active':''}" onclick="freqSetStatsScope('mes')">Este mês</button>
+      <button class="freq-scope-btn${scope==='ano'?' active':''}" onclick="freqSetStatsScope('ano')">Ano todo</button>
+    </div>
+    <div class="freq-banner">
+      <div class="freq-banner-ring"></div>
+      <div class="freq-banner-eyebrow"><span class="dot"></span>${scopeLbl}</div>
+      <div class="freq-banner-pct" style="color:${freqStatusColor(overallSt)}">${overallPct!==null?overallPct+'%':'—'}</div>
+      <div class="freq-banner-sub">${daysRegistered} de ${daysWithClass} dia${daysWithClass===1?'':'s'} de aula registrado${daysRegistered===1?'':'s'}</div>
+      <div class="freq-banner-sub freq-banner-aulas">${aulasPresent} de ${aulasTotal} aulas totais</div>
+    </div>
+    ${emptyHint}
+    ${subjRows?`<div class="freq-stat-list">${subjRows}</div>`:''}
+  </div>`;
 }
 
 function wxToggleAcc(idx){
