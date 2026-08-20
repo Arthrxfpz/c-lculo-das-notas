@@ -201,6 +201,7 @@
           freq:    JSON.parse(localStorage.getItem('t205_freq')    || 'null'),
           freqNoClass: JSON.parse(localStorage.getItem('t205_freq_noclass') || 'null'),
           freqPeriods: JSON.parse(localStorage.getItem('t205_freqp') || 'null'),
+          freqOverride: JSON.parse(localStorage.getItem('t205_freq_override') || 'null'),
           updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
@@ -222,11 +223,13 @@
     if (d.freq)    localStorage.setItem('t205_freq',   JSON.stringify(d.freq));
     if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
     if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
+    if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride));
     if (typeof loadGrades       === 'function') loadGrades();
     if (typeof loadExams        === 'function') loadExams();
     if (typeof loadFreq         === 'function') loadFreq();
     if (typeof loadFreqNoClass  === 'function') loadFreqNoClass();
     if (typeof loadFreqPeriods  === 'function') loadFreqPeriods();
+    if (typeof loadFreqOverride === 'function') loadFreqOverride();
     if (typeof _autoRemovePastExams === 'function') _autoRemovePastExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
     if (typeof renderCurrentPage === 'function') renderCurrentPage();
@@ -261,6 +264,7 @@
           if (d.freq)      localStorage.setItem('t205_freq',      JSON.stringify(d.freq));
           if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
           if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
+          if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride));
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           _setSplashProgress(90, 'Aplicando atualizações…');
           setTimeout(() => location.reload(), 200);
@@ -5413,6 +5417,20 @@ input, textarea, select {
 }
 .se-hint svg { flex-shrink: 0; }
 
+.se-effective-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--bg2); border: 1px solid var(--line2);
+  border-radius: 12px; padding: 10px 12px; margin-bottom: 10px;
+}
+.se-effective-label { font-size: 12.5px; font-weight: 700; color: var(--t2); line-height: 1.3; }
+.se-effective-input {
+  flex-shrink: 0; padding: 8px 10px; background: var(--bg1); border: 0.5px solid var(--line);
+  border-radius: 10px; font-size: 12.5px; font-weight: 600; color: var(--t1);
+  font-family: var(--ff);
+}
+[data-theme="dark"] .se-effective-input { color-scheme: dark; }
+[data-theme="light"] .se-effective-input { color-scheme: light; }
+
 .se-period-row {
   display: flex; align-items: center; gap: 8px;
   background: var(--bg2); border: 1px solid var(--line2);
@@ -6758,6 +6776,25 @@ input, textarea, select {
 .freq-switch.on .freq-switch-knob{transform:translateX(19px)}
 .freq-switch:active .freq-switch-knob{width:26px}
 
+/* sheet: personalizar matérias do dia (só aquele dia, sem mexer no horário fixo) */
+.freq-edit-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;
+  padding:12px 14px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);
+  margin-bottom:12px;transition:border-color .15s ease;
+}
+.freq-edit-row:active{opacity:.7}
+.freq-edit-row.has-override{border-color:var(--goldbd)}
+.freq-edit-chevron{width:16px;height:16px;stroke:var(--t3);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;transition:transform .22s var(--ease-ios)}
+.freq-edit-chevron.open{transform:rotate(180deg)}
+.freq-edit-panel{margin:-2px 0 14px;padding:12px 12px 4px;border-radius:14px;background:var(--bg2);border:1px dashed var(--line2)}
+.freq-edit-hint{font-size:11px;color:var(--t3);font-weight:500;margin:0 2px 10px;line-height:1.4}
+.freq-restore-btn{
+  width:100%;padding:11px;margin-top:2px;border-radius:12px;background:var(--bg1);
+  border:1px solid var(--line);color:var(--t3);font-size:12.5px;font-weight:700;
+  font-family:var(--ff);cursor:pointer;
+}
+.freq-restore-btn:active{opacity:.6}
+
 /* sheet: lista de matérias do dia */
 .freq-subj-list{display:flex;flex-direction:column;gap:8px}
 .freq-subj-row{
@@ -7532,6 +7569,15 @@ input, textarea, select {
       <span>Ao mudar o fim de uma aula, o início da próxima se ajusta automaticamente.</span>
     </div>
 
+    <div class="se-effective-row">
+      <label class="se-effective-label" for="se-effective-date">Essas mudanças valem a partir de</label>
+      <input type="date" id="se-effective-date" class="se-effective-input" onchange="onSchedEffectiveDateChange(this.value)">
+    </div>
+    <div class="se-hint">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span>Se o horário já tinha mudado antes de hoje, volte essa data pro dia certo — assim as faltas antigas passam a usar o horário que realmente valia naquela época, e o horário anterior continua contando pros dias antes dele.</span>
+    </div>
+
     <div class="prof-section-label" style="margin-top:0">Horários das aulas</div>
     <div id="se-periods"></div>
     <div class="se-add-row">
@@ -7772,11 +7818,67 @@ const DEFAULT_SCHED={
 /* horários ativos — podem ser sobrescritos pelo usuário e persistidos */
 let PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
 let SCHED=JSON.parse(JSON.stringify(DEFAULT_SCHED));
+
+/* ══════════════════════════════════════════
+   HISTÓRICO DE HORÁRIOS
+   O horário muda ao longo do ano (troca de matéria/professor num dia
+   da semana etc.), mas antes só existia UM horário "atual" — então
+   marcar presença/falta de um dia passado (ex.: 3/5) sempre usava o
+   horário de HOJE pra decidir quais aulas aquele dia teve, o que
+   ficava errado se o horário já tinha mudado desde então.
+   SCHED_HISTORY guarda cada versão do horário com a data a partir da
+   qual ela passou a valer. scheduleActiveOn(dateStr) devolve a versão
+   certa pra qualquer data, então a Frequência sempre usa o horário que
+   realmente estava em vigor naquele dia — mesmo que o horário atual já
+   tenha mudado várias vezes depois.
+══════════════════════════════════════════ */
+let SCHED_HISTORY=[]; // [{from:'YYYY-MM-DD', periods:[...], sched:{...}}], ordenado por 'from'
+let _schedEffectiveFrom=null; // data escolhida no editor pra "vale a partir de"
+
+function saveSchedHistory(){
+  try{localStorage.setItem('t205_sched_history',JSON.stringify(SCHED_HISTORY));}catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadSchedHistory(){
+  try{
+    const h=localStorage.getItem('t205_sched_history');
+    if(h)SCHED_HISTORY=JSON.parse(h);
+  }catch(e){}
+}
+/* registra a configuração atual de PERIODS/SCHED como a versão vigente
+   a partir de `fromDate` (padrão: hoje). Se já existir uma versão
+   começando exatamente nessa data, ela é substituída — assim editar
+   várias vezes no mesmo dia (ou pra mesma data retroativa) não empilha
+   versões repetidas */
+function snapshotScheduleVersion(fromDate){
+  const from=fromDate||todayStr();
+  const snap={from,periods:JSON.parse(JSON.stringify(PERIODS)),sched:JSON.parse(JSON.stringify(SCHED))};
+  const idx=SCHED_HISTORY.findIndex(v=>v.from===from);
+  if(idx>=0)SCHED_HISTORY[idx]=snap;
+  else SCHED_HISTORY.push(snap);
+  SCHED_HISTORY.sort((a,b)=>a.from<b.from?-1:(a.from>b.from?1:0));
+  saveSchedHistory();
+}
+/* {periods,sched} que estavam em vigor numa data específica. Sem
+   nenhuma versão registrada ainda (app recém-atualizado, usuário nunca
+   editou o horário), cai no horário atual — comportamento idêntico ao
+   de antes, sem quebrar nada */
+function scheduleActiveOn(dateStr){
+  if(!SCHED_HISTORY.length)return{periods:PERIODS,sched:SCHED};
+  let best=null;
+  for(const v of SCHED_HISTORY){
+    if(v.from<=dateStr)best=v; else break;
+  }
+  if(!best)best=SCHED_HISTORY[0]; // data anterior à 1ª versão conhecida: usa a mais antiga que existe
+  return{periods:best.periods,sched:best.sched};
+}
+
 function saveSchedule(){
   try{
     localStorage.setItem('t205_periods',JSON.stringify(PERIODS));
     localStorage.setItem('t205_sched',JSON.stringify(SCHED));
   }catch(e){}
+  snapshotScheduleVersion(_schedEffectiveFrom);
   if(window._fbSaveAll)window._fbSaveAll();
 }
 function loadSchedule(){
@@ -7786,6 +7888,19 @@ function loadSchedule(){
     if(p)PERIODS=JSON.parse(p);
     if(s)SCHED=JSON.parse(s);
   }catch(e){}
+}
+/* Garante que sempre exista pelo menos UMA versão no histórico, datada
+   bem no passado, representando o horário "como ele já estava" antes de
+   qualquer edição nova. Sem isso, a 1ª edição de horário (a que de fato
+   cria o primeiro registro em SCHED_HISTORY) ficaria sem nenhuma versão
+   anterior pra proteger — e scheduleActiveOn() acabaria aplicando o
+   horário NOVO retroativamente aos dias já registrados na Frequência,
+   que é exatamente o que não pode acontecer. Roda uma vez a cada
+   carregamento do app e não faz nada se já existir histórico. */
+function ensureInitialScheduleSnapshot(){
+  if(SCHED_HISTORY.length)return;
+  SCHED_HISTORY=[{from:'2000-01-01',periods:JSON.parse(JSON.stringify(PERIODS)),sched:JSON.parse(JSON.stringify(SCHED))}];
+  saveSchedHistory();
 }
 function resetHorarios(){
   PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
@@ -7846,7 +7961,7 @@ function setFreqNoClass(dateStr,val){
 function freqScheduledSubjectsOnDate(dateStr){
   const dow=new Date(dateStr+'T12:00:00').getDay();
   if(dow<1||dow>5)return[];
-  const slots=SCHED[dow]||[];
+  const slots=scheduleActiveOn(dateStr).sched[dow]||[];
   const seen=new Set(),list=[];
   slots.forEach(id=>{
     if(id&&!seen.has(id)){
@@ -7869,7 +7984,7 @@ function freqPeriodsOnDate(dateStr){
   const dow=new Date(dateStr+'T12:00:00').getDay();
   if(dow<1||dow>5)return[];
   if(isFreqNoClass(dateStr))return[];
-  return (SCHED[dow]||[]).filter(id=>!!id&&!!findSubjectById(id));
+  return (scheduleActiveOn(dateStr).sched[dow]||[]).filter(id=>!!id&&!!findSubjectById(id));
 }
 function freqStatusOf(subjId,dateStr){
   return (FREQ[subjId]&&FREQ[subjId][dateStr])||null;
@@ -7913,12 +8028,49 @@ function setFreqPeriodStatus(dateStr,idx,status){
   }
   saveFreqPeriods();
 }
+/* ══════════════════════════════════════════
+   PERSONALIZAÇÃO DE MATÉRIAS POR DIA (só na Frequência)
+   FREQ_OVERRIDE[dateStr] = array paralelo a SCHED[dow], com o id da
+   matéria (ou null) de cada aula NAQUELE dia específico. Permite trocar
+   ou remover a matéria de um dia sem alterar o horário fixo semanal —
+   útil quando a aula real foi diferente da prevista (troca de matéria,
+   professor faltou e entrou outra disciplina, aula extra etc.).
+   Enquanto não existir override para uma data, ela continua usando o
+   horário normal (scheduleActiveOn) — comportamento idêntico ao de antes. */
+let FREQ_OVERRIDE={};
+function saveFreqOverride(){
+  try{localStorage.setItem('t205_freq_override',JSON.stringify(FREQ_OVERRIDE));}catch(e){}
+  if(window._fbSaveAll)window._fbSaveAll();
+}
+function loadFreqOverride(){
+  try{
+    const d=localStorage.getItem('t205_freq_override');
+    if(d)FREQ_OVERRIDE=JSON.parse(d);
+  }catch(e){}
+}
+function freqOverrideBaseRow(dateStr){
+  const dow=new Date(dateStr+'T12:00:00').getDay();
+  const active=scheduleActiveOn(dateStr);
+  return (active.sched[dow]||[]).slice();
+}
+function setFreqOverrideSlot(dateStr,idx,subjId){
+  const row=(FREQ_OVERRIDE[dateStr]||freqOverrideBaseRow(dateStr)).slice();
+  row[idx]=subjId||null;
+  FREQ_OVERRIDE[dateStr]=row;
+  saveFreqOverride();
+}
+function clearFreqOverride(dateStr){
+  delete FREQ_OVERRIDE[dateStr];
+  saveFreqOverride();
+}
+
 /* mapeia o índice de uma aula dentro de SCHED[dow] (0-based, sem contar
    recreios) para o período correspondente em PERIODS (nome + horário) */
-function freqPeriodMeta(dow,slotIdx){
+function freqPeriodMeta(dow,slotIdx,periodsList){
+  const list=periodsList||PERIODS;
   let ci=0;
-  for(let pi=0;pi<PERIODS.length;pi++){
-    const p=PERIODS[pi];
+  for(let pi=0;pi<list.length;pi++){
+    const p=list[pi];
     if(p.break)continue;
     if(ci===slotIdx)return p;
     ci++;
@@ -7931,13 +8083,14 @@ function freqPeriodMeta(dow,slotIdx){
 function freqDaySlotsRaw(dateStr){
   const dow=new Date(dateStr+'T12:00:00').getDay();
   if(dow<1||dow>5)return[];
-  const slots=SCHED[dow]||[];
+  const active=scheduleActiveOn(dateStr);
+  const slots=FREQ_OVERRIDE[dateStr]||active.sched[dow]||[];
   const list=[];
   slots.forEach((id,idx)=>{
     if(!id)return;
     const s=findSubjectById(id);
     if(!s)return;
-    const meta=freqPeriodMeta(dow,idx);
+    const meta=freqPeriodMeta(dow,idx,active.periods);
     const timeStr=meta?`${fmtHM(meta.s)}–${fmtHM(meta.e)}`:'';
     list.push({idx,subjId:id,subj:s,periodNum:idx+1,label:meta?meta.n:`${idx+1}ª aula`,timeStr});
   });
@@ -9996,10 +10149,20 @@ function renderCurrentPageIfHorarios(){
 
 function openScheduleEditor(){
   seCurrentDay=todayDow>=1&&todayDow<=5?todayDow:1;
+  _schedEffectiveFrom=todayStr();
+  const effInput=document.getElementById('se-effective-date');
+  if(effInput)effInput.value=_schedEffectiveFrom;
   renderPeriodsEditor();
   renderDayTabsEditor();
   renderSubjectsEditor();
   document.getElementById('sched-edit-overlay').classList.add('open');
+}
+/* muda a partir de quando as edições feitas agora passam a valer —
+   por padrão é hoje, mas dá pra voltar pra uma data passada quando o
+   horário mudou antes e ninguém tinha registrado isso ainda (assim as
+   faltas antigas passam a usar o horário certo daquela época) */
+function onSchedEffectiveDateChange(val){
+  _schedEffectiveFrom=val||todayStr();
 }
 function closeScheduleEditor(){
   document.getElementById('sched-edit-overlay').classList.remove('open');
@@ -13532,6 +13695,8 @@ window.addEventListener('load',()=>{
   loadTheme();
   loadStudentLS();
   loadSchedule();
+  loadSchedHistory();
+  ensureInitialScheduleSnapshot();
   loadSubjects();
   applyAccent(stu.accentKey||'gold');
   applyAvatar();
@@ -13541,6 +13706,7 @@ window.addEventListener('load',()=>{
   loadFreq();
   loadFreqNoClass();
   loadFreqPeriods();
+  loadFreqOverride();
   migrateFreqToPeriods();
   _autoRemovePastExams();
   checkUpdateBanner();
@@ -14006,20 +14172,34 @@ function freqNavMonth(dir){
   }
 }
 
+let _freqSheetEditing=false;
+
 function freqDayClick(dateStr){
   const parts=dateStr.split('-');
   const d=new Date(dateStr+'T00:00:00');
   const dow=PT_WEEKDAYS[d.getDay()];
   const fmtd=`${parts[2]}/${parts[1]}/${parts[0]}`;
+  _freqSheetEditing=false;
   document.getElementById('freq-day-sheet-date').textContent=fmtd;
   document.getElementById('freq-day-sheet-dow').textContent=dow;
   document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
   document.getElementById('freq-day-sheet-overlay').classList.add('open');
 }
 
+/* atualiza o grid do mês + as estatísticas por trás da sheet, sem
+   precisar reabri-la — reaproveitado por todas as ações da sheet */
+function _refreshFreqBehindSheet(){
+  const slide=document.querySelector('.page-slide');
+  if(!slide||curPage!=='frequencia')return;
+  const wrap=slide.querySelector('.freq-wrap .cal-grid-wrap');
+  if(wrap) wrap.innerHTML=_buildFreqGridHtml(_freqMonth);
+  const statsWrap=slide.querySelector('.freq-stats');
+  if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
+}
+
 function _buildFreqDaySheetBody(dateStr){
   const noClass=isFreqNoClass(dateStr);
-  const slots=freqDaySlotsRaw(dateStr);
+  const hasOverride=!!FREQ_OVERRIDE[dateStr];
 
   let html=`<div class="freq-noclass-row">
     <div class="freq-noclass-info">
@@ -14035,6 +14215,27 @@ function _buildFreqDaySheetBody(dateStr){
     html+='<div class="cal-day-empty-state">Dia marcado como sem aula — nenhuma presença é contabilizada hoje.</div>';
     return html;
   }
+
+  // personalizar quais matérias esse dia teve — igual à seleção usada
+  // na aba Horários, mas só vale pra essa data específica
+  html+=`<div class="freq-edit-row${hasOverride?' has-override':''}" onclick="freqToggleEditMode('${dateStr}')">
+    <div class="freq-noclass-info">
+      <div class="freq-noclass-title">Personalizar matérias do dia</div>
+      <div class="freq-noclass-sub">${hasOverride?'Este dia está diferente do horário padrão':'Trocar as matérias só deste dia, sem mexer no horário fixo'}</div>
+    </div>
+    <svg class="freq-edit-chevron${_freqSheetEditing?' open':''}" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>`;
+
+  if(_freqSheetEditing){
+    html+=`<div class="freq-edit-panel">
+      <div class="freq-edit-hint">Escolha a matéria de cada aula que esse dia realmente teve. Selecione "— Vago —" pra aula que não aconteceu.</div>
+      ${_buildFreqEditRowsHtml(dateStr)}
+      ${hasOverride?`<button class="freq-restore-btn" onclick="freqRestoreDefaultSubjects('${dateStr}',this)">Restaurar matérias do horário padrão</button>`:''}
+    </div>`;
+    return html;
+  }
+
+  const slots=freqDaySlotsRaw(dateStr);
 
   if(!slots.length){
     html+='<div class="cal-day-empty-state">Nenhuma aula prevista neste dia.</div>';
@@ -14070,6 +14271,7 @@ function freqToggleNoClass(dateStr,btn){
   const newVal=!isFreqNoClass(dateStr);
   setFreqNoClass(dateStr,newVal);
   iosHaptic(btn);
+  _freqSheetEditing=false;
   document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
 
   const slide=document.querySelector('.page-slide');
@@ -14079,6 +14281,68 @@ function freqToggleNoClass(dateStr,btn){
     const statsWrap=slide.querySelector('.freq-stats');
     if(statsWrap) statsWrap.outerHTML=_buildFreqStatsHtml();
   }
+}
+
+/* mostra/esconde o painel de seleção de matérias daquele dia específico
+   (mesma lógica de select por aula usada no editor de Horários) */
+function freqToggleEditMode(dateStr){
+  _freqSheetEditing=!_freqSheetEditing;
+  document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
+}
+
+/* uma linha "select" por aula do dia (nome do período + dropdown de
+   matéria), igual ao editor de Horários — só que grava num override
+   por data em vez de alterar o horário fixo semanal */
+function _buildFreqEditRowsHtml(dateStr){
+  const dow=new Date(dateStr+'T12:00:00').getDay();
+  if(dow<1||dow>5)return'<div class="se-empty-hint">Sem aulas previstas neste dia da semana.</div>';
+  const active=scheduleActiveOn(dateStr);
+  const row=FREQ_OVERRIDE[dateStr]||active.sched[dow]||[];
+  let html='';
+  let ci=0;
+  (active.periods||[]).forEach(p=>{
+    if(p.break)return;
+    const curId=row[ci]||'';
+    const label=(p.n||((ci+1)+'ª aula'));
+    html+=`<div class="se-subj-row">
+      <div class="se-subj-label">${escHtml(label)}</div>
+      <select class="se-subj-input se-subj-select" onchange="freqOverrideSlotChange('${dateStr}',${ci},this.value)">
+        ${_subjectOptionsHtml(curId)}
+      </select>
+    </div>`;
+    ci++;
+  });
+  return html||'<div class="se-empty-hint">Nenhuma aula prevista neste dia.</div>';
+}
+
+function freqOverrideSlotChange(dateStr,idx,value){
+  setFreqOverrideSlot(dateStr,idx,value||null);
+  // atualiza só o rótulo "personalizado" da linha de cima, sem fechar
+  // o painel — a pessoa pode ajustar as outras aulas em seguida
+  const row=document.querySelector('.freq-edit-row');
+  if(row){
+    row.classList.add('has-override');
+    const sub=row.querySelector('.freq-noclass-sub');
+    if(sub) sub.textContent='Este dia está diferente do horário padrão';
+  }
+  if(!document.querySelector('.freq-restore-btn')){
+    const panel=document.querySelector('.freq-edit-panel');
+    if(panel){
+      const btn=document.createElement('button');
+      btn.className='freq-restore-btn';
+      btn.textContent='Restaurar matérias do horário padrão';
+      btn.setAttribute('onclick',`freqRestoreDefaultSubjects('${dateStr}',this)`);
+      panel.appendChild(btn);
+    }
+  }
+  _refreshFreqBehindSheet();
+}
+
+function freqRestoreDefaultSubjects(dateStr,btn){
+  clearFreqOverride(dateStr);
+  if(btn)iosHaptic(btn);
+  document.getElementById('freq-day-sheet-body').innerHTML=_buildFreqDaySheetBody(dateStr);
+  _refreshFreqBehindSheet();
 }
 
 function freqDaySheetSet(subjId,dateStr,status,btn){
