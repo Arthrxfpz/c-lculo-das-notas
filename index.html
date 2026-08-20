@@ -1225,6 +1225,22 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--bg2);
 }
 
+/* ── tirinha "Necessário" — aparece no card da matéria quando o EAC daquele
+   trimestre ainda precisa ser feito (mesmo padrão visual da badge "Editando"
+   dos itens de avaliação, só que vermelha e no topo do card da matéria) ── */
+.subj-item-wrap{position:relative}
+.subj-item-wrap.eac-needed{margin-top:14px}
+.subj-necessario-badge{
+  display:flex;align-items:center;gap:5px;
+  position:absolute;top:-13px;left:12px;z-index:2;
+  font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+  background:var(--red);color:#fff;
+  padding:3px 10px 3px 8px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+  pointer-events:none;white-space:nowrap;
+  animation:badgePop .22s var(--ease-spring) both;
+}
+
 /* ── eval items ── */
 .eval-list{display:flex;flex-direction:column;gap:8px;margin:4px 0 10px}
 
@@ -8874,11 +8890,16 @@ function renderNotasTab(el){
   h+='<div class="subj-list">';
   SUBJECTS.forEach(s=>{
     const score=tabScore(s.id,curTab);
-    let disp,stat;
+    let disp,stat,needsEac=false;
     if(isEAC){
       const norm=tabScore(s.id,base);
       const best=(score===null&&norm===null)?null:score===null?norm:norm===null?score:Math.max(score,norm);
       disp=best;stat=st(best);
+      // "Necessário": o trimestre base já fechou o peso (10 pts), a nota ficou
+      // abaixo de 6 e o EAC desse trimestre ainda não foi preenchido — mesma
+      // lógica do alerta de recuperação usado no Resumo (_eacSt).
+      const baseFull=_tabFull(s.id,base)&&norm!==null;
+      needsEac=baseFull&&_eacSt(norm,score)==='pending';
     }else{disp=score;stat=st(score);}
 
     // Pill ao lado do nome: só mostra a nota quando o peso máximo (10 pts) do
@@ -8905,22 +8926,25 @@ function renderNotasTab(el){
       ?`<div class="subj-footer-val"><span class="sfv-num pending">Pendente</span></div>`
       :`<div class="subj-footer-val"><span class="sfv-num ${stat}">${fmt(disp)}</span><span class="sfv-denom">/ 10</span></div>`;
 
-    h+=`<div class="subj-item${isOpen?' open':''}" id="si-${s.id}" >
-      <div class="subj-header" onclick="toggleAcc('${s.id}')">
-        <div class="subj-label"><div class="subj-name">${s.name}</div><div class="subj-count">${countTxt}</div></div>
-        <div class="subj-right">
-          <span class="grade-tag ${pillStat}">${pill}</span>
-          <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+    h+=`<div class="subj-item-wrap${needsEac?' eac-needed':''}">
+      ${needsEac?'<div class="subj-necessario-badge"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Necessário</div>':''}
+      <div class="subj-item${isOpen?' open':''}" id="si-${s.id}" >
+        <div class="subj-header" onclick="toggleAcc('${s.id}')">
+          <div class="subj-label"><div class="subj-name">${s.name}</div><div class="subj-count">${countTxt}</div></div>
+          <div class="subj-right">
+            <span class="grade-tag ${pillStat}">${pill}</span>
+            <div class="chevron"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+          </div>
         </div>
+        <div class="subj-body"><div class="subj-body-inner"><div class="subj-body-pad">
+          <div class="eval-list" id="el-${s.id}-${curTab}">${evHtml}</div>
+          <button class="add-eval-btn" id="ab-${s.id}-${curTab}"${!canAdd?' disabled':''} onclick="addEv('${s.id}','${curTab}')">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="add-eval-lbl">${canAdd?'Adicionar avaliação':'Peso máximo atingido (10,0 pontos)'}</span>
+          </button>
+        </div></div></div>
+        <div class="subj-footer"><span class="subj-footer-label">${flab}</span>${fval}</div>
       </div>
-      <div class="subj-body"><div class="subj-body-inner"><div class="subj-body-pad">
-        <div class="eval-list" id="el-${s.id}-${curTab}">${evHtml}</div>
-        <button class="add-eval-btn" id="ab-${s.id}-${curTab}"${!canAdd?' disabled':''} onclick="addEv('${s.id}','${curTab}')">
-          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span class="add-eval-lbl">${canAdd?'Adicionar avaliação':'Peso máximo atingido (10,0 pontos)'}</span>
-        </button>
-      </div></div></div>
-      <div class="subj-footer"><span class="subj-footer-label">${flab}</span>${fval}</div>
     </div>`;
   });
   h+='</div>';
