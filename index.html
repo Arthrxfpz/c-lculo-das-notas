@@ -6138,6 +6138,32 @@ input, textarea, select {
 .cal-disclaimer svg{width:14px;height:14px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
 .cal-disclaimer-text{font-size:11px;font-weight:500;color:var(--t3);line-height:1.5}
 
+/* ── Banner do horário ativo (Frequência) ── */
+.freq-sched-banner{
+  display:flex;align-items:center;gap:8px;
+  margin:12px 14px 10px;padding:10px 13px;
+  background:var(--goldbg);border:1px solid var(--goldbd);border-radius:12px;
+  cursor:pointer;transition:background .15s;
+}
+.freq-sched-banner:active{background:var(--goldbd)}
+.freq-sched-banner svg{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.freq-sched-banner-text{font-size:11.5px;font-weight:500;color:var(--t2);line-height:1.4;flex:1}
+.freq-sched-banner-chevron{width:13px!important;height:13px!important;stroke:var(--t4)!important;margin-left:2px}
+
+/* ── Popup "Horários usados" ── */
+.sched-info-segment{padding:0 0 18px}
+.sched-info-segment--sep{margin-top:6px;padding-top:18px;border-top:1px solid var(--line2)}
+.sched-info-segment-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sched-info-segment-tag{
+  font-size:11px;font-weight:700;color:var(--accent-text);background:var(--gold);
+  padding:3px 9px;border-radius:20px;letter-spacing:-.1px;
+}
+.sched-info-segment-range{font-size:12.5px;font-weight:600;color:var(--t2)}
+.sched-info-day{margin-bottom:14px}
+.sched-info-day:last-child{margin-bottom:0}
+.sched-info-day-name{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px;padding-left:2px}
+.sched-info-day-empty{font-size:12px;color:var(--t4);font-weight:500;padding-left:2px}
+
 /* ── Cal event list (below grid) - redesigned ── */
 .cal-event-list{display:flex;flex-direction:column;gap:8px;margin-top:24px;padding:0 14px}
 .cal-event-list-title{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;padding-left:2px}
@@ -7441,6 +7467,21 @@ input, textarea, select {
     </div>
   </div>
 
+  <!-- FREQUÊNCIA — sheet "Horários usados" (aberto pelo aviso no topo do calendário) -->
+  <div class="cal-day-sheet-overlay" id="sched-info-sheet-overlay" onclick="if(event.target===this)closeSchedInfoSheet()">
+    <div class="cal-day-sheet" id="sched-info-sheet">
+      <div class="cal-day-sheet-handle-row"><div class="cal-day-sheet-handle"></div></div>
+      <div class="cal-day-sheet-head">
+        <div class="cal-day-sheet-date-block">
+          <div class="cal-day-sheet-date" id="sched-info-sheet-title">—</div>
+          <div class="cal-day-sheet-dow" id="sched-info-sheet-sub"></div>
+        </div>
+      </div>
+      <div class="cal-day-sheet-body" id="sched-info-sheet-body"></div>
+      <div class="cal-day-sheet-close" onclick="closeSchedInfoSheet()">Fechar</div>
+    </div>
+  </div>
+
 <!-- WEATHER POPUP -->
 <div class="wx-overlay" id="wx-overlay" onclick="if(event.target===this)closeWeatherPopup()">
   <div class="wx-sheet">
@@ -7835,6 +7876,27 @@ let SCHED=JSON.parse(JSON.stringify(DEFAULT_SCHED));
 let SCHED_HISTORY=[]; // [{from:'YYYY-MM-DD', periods:[...], sched:{...}}], ordenado por 'from'
 let _schedEffectiveFrom=null; // data escolhida no editor pra "vale a partir de"
 
+/* versões reais do horário que já valeram esse ano, informadas pela
+   escola — usadas só pra popular o histórico na primeira vez que o app
+   carrega (se a pessoa já tiver editado algo, o que estiver salvo no
+   localStorage manda). A versão "atual" (a partir de 15/06) não entra
+   aqui: ela usa o PERIODS/SCHED que já estiver ativo no momento do seed,
+   seja o padrão ou algo que a pessoa já tenha personalizado. */
+const SEED_SCHED_1={ // 18/fev a 15/mar
+  1:['bio','fis','bio','edu_fin','ed_fis','esp'],
+  2:['port','hist','lit','qui','proj','fis'],
+  3:['proj','qui','proj','mat','proj','soc'],
+  4:['geo','ed_fis','port','mat','artes','port'],
+  5:['proj','esc_cri','proj','mat','ing','rel'],
+};
+const SEED_SCHED_2={ // 16/mar a 14/jun
+  1:['bio','ed_fis','artes','fis','edu_fin','bio'],
+  2:['proj','ing','proj','proj','port','soc'],
+  3:['proj','mat','qui','rel','qui','geo'],
+  4:['proj','mat','esc_cri','proj','port','esp'],
+  5:['hist','lit','fis','mat','port','ed_fis'],
+};
+
 function saveSchedHistory(){
   try{localStorage.setItem('t205_sched_history',JSON.stringify(SCHED_HISTORY));}catch(e){}
   if(window._fbSaveAll)window._fbSaveAll();
@@ -7844,6 +7906,36 @@ function loadSchedHistory(){
     const h=localStorage.getItem('t205_sched_history');
     if(h)SCHED_HISTORY=JSON.parse(h);
   }catch(e){}
+  let changed=false;
+  // remove versões com data anterior ao início do ano letivo (18/fev/2026)
+  // — elas não servem pra nada (a Frequência nunca deixa marcar presença
+  // antes disso) e só atrapalhavam o aviso do topo, fazendo ele mostrar
+  // um horário errado pros primeiros meses. Normalmente é resquício de
+  // um salvamento antigo feito em "Editar horários" sem ajustar a data
+  // em "vale a partir de" (que por padrão pega a data de hoje do aparelho).
+  const before=SCHED_HISTORY.length;
+  SCHED_HISTORY=SCHED_HISTORY.filter(v=>v.from>='2026-02-18');
+  if(SCHED_HISTORY.length!==before)changed=true;
+  // garante que as 2 primeiras versões reais do ano (informadas pela
+  // escola: 18/fev e 16/mar) sempre existam, mesmo que o histórico salvo
+  // esteja incompleto ou tenha sido corrompido por algum salvamento antigo
+  if(!SCHED_HISTORY.some(v=>v.from==='2026-02-18')){
+    SCHED_HISTORY.push({from:'2026-02-18',periods:JSON.parse(JSON.stringify(DEFAULT_PERIODS)),sched:JSON.parse(JSON.stringify(SEED_SCHED_1))});
+    changed=true;
+  }
+  if(!SCHED_HISTORY.some(v=>v.from==='2026-03-16')){
+    SCHED_HISTORY.push({from:'2026-03-16',periods:JSON.parse(JSON.stringify(DEFAULT_PERIODS)),sched:JSON.parse(JSON.stringify(SEED_SCHED_2))});
+    changed=true;
+  }
+  // se nunca foi registrada a versão "atual" (a partir de 15/jun), usa o
+  // horário ativo agora — seja o padrão ou algo que a pessoa já tenha
+  // personalizado — como sendo essa versão
+  if(!SCHED_HISTORY.some(v=>v.from==='2026-06-15')){
+    SCHED_HISTORY.push({from:'2026-06-15',periods:JSON.parse(JSON.stringify(PERIODS)),sched:JSON.parse(JSON.stringify(SCHED))});
+    changed=true;
+  }
+  SCHED_HISTORY.sort((a,b)=>a.from<b.from?-1:(a.from>b.from?1:0));
+  if(changed)saveSchedHistory();
 }
 /* registra a configuração atual de PERIODS/SCHED como a versão vigente
    a partir de `fromDate` (padrão: hoje). Se já existir uma versão
@@ -7873,6 +7965,32 @@ function scheduleActiveOn(dateStr){
   return{periods:best.periods,sched:best.sched};
 }
 
+const MESES_LONGO_PT=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+function fmtDateLongPT(dateStr){
+  const p=dateStr.split('-');
+  return `${parseInt(p[2],10)} de ${MESES_LONGO_PT[parseInt(p[1],10)-1]}`;
+}
+/* qual versão do SCHED_HISTORY vale numa data, junto com o índice dela
+   (pra rotular "Horário 1", "Horário 2"...) e se é a última — a que
+   ainda está em vigor, sem data de fim marcada */
+function schedVersionInfoOn(dateStr){
+  if(!SCHED_HISTORY.length)return null;
+  let idx=-1;
+  for(let i=0;i<SCHED_HISTORY.length;i++){
+    if(SCHED_HISTORY[i].from<=dateStr)idx=i; else break;
+  }
+  if(idx<0)idx=0; // data anterior à 1ª versão conhecida: usa a mais antiga
+  return{version:SCHED_HISTORY[idx],index:idx,isLast:idx===SCHED_HISTORY.length-1};
+}
+/* data de fim "natural" de uma versão do histórico (o dia anterior ao
+   início da próxima) — null quando ela é a última e ainda está em vigor */
+function schedVersionEndDate(index){
+  if(index>=SCHED_HISTORY.length-1)return null;
+  const nd=new Date(SCHED_HISTORY[index+1].from+'T12:00:00');
+  nd.setDate(nd.getDate()-1);
+  return nd.getFullYear()+'-'+String(nd.getMonth()+1).padStart(2,'0')+'-'+String(nd.getDate()).padStart(2,'0');
+}
+
 function saveSchedule(){
   try{
     localStorage.setItem('t205_periods',JSON.stringify(PERIODS));
@@ -7888,19 +8006,6 @@ function loadSchedule(){
     if(p)PERIODS=JSON.parse(p);
     if(s)SCHED=JSON.parse(s);
   }catch(e){}
-}
-/* Garante que sempre exista pelo menos UMA versão no histórico, datada
-   bem no passado, representando o horário "como ele já estava" antes de
-   qualquer edição nova. Sem isso, a 1ª edição de horário (a que de fato
-   cria o primeiro registro em SCHED_HISTORY) ficaria sem nenhuma versão
-   anterior pra proteger — e scheduleActiveOn() acabaria aplicando o
-   horário NOVO retroativamente aos dias já registrados na Frequência,
-   que é exatamente o que não pode acontecer. Roda uma vez a cada
-   carregamento do app e não faz nada se já existir histórico. */
-function ensureInitialScheduleSnapshot(){
-  if(SCHED_HISTORY.length)return;
-  SCHED_HISTORY=[{from:'2000-01-01',periods:JSON.parse(JSON.stringify(PERIODS)),sched:JSON.parse(JSON.stringify(SCHED))}];
-  saveSchedHistory();
 }
 function resetHorarios(){
   PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
@@ -13662,7 +13767,7 @@ function toggleSidebar(){
   const toggleIcon = document.querySelector('.sb-toggle-icon');
   const wxOverlay = document.getElementById('wx-overlay');
   const notifOverlay = document.getElementById('notif-overlay');
-  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay','cal-day-sheet-overlay','freq-day-sheet-overlay'];
+  const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay','cal-day-sheet-overlay','freq-day-sheet-overlay','sched-info-sheet-overlay'];
   const toastEl = document.getElementById('exam-toast');
 
   const hamburger = document.getElementById('topbar-hamburger');
@@ -13696,7 +13801,6 @@ window.addEventListener('load',()=>{
   loadStudentLS();
   loadSchedule();
   loadSchedHistory();
-  ensureInitialScheduleSnapshot();
   loadSubjects();
   applyAccent(stu.accentKey||'gold');
   applyAvatar();
@@ -14070,6 +14174,55 @@ function _buildFreqHtml(){
   </div>`;
 }
 
+/* segmentos do histórico de horários que tocam o mês visível — na
+   ordem em que aparecem ao longo do mês. Normalmente é só 1 (o mês
+   inteiro usa a mesma versão), mas quando o horário muda NO MEIO do
+   mês (ex.: março, que troca no dia 16) retorna as 2 versões, cada
+   uma com seu próprio intervalo de datas — pra Frequência mostrar
+   certinho qual horário vale em cada trecho do mês, em vez de só
+   olhar pro dia 1. */
+function _schedSegmentsForMonth(mo){
+  if(!SCHED_HISTORY.length)return[];
+  const daysInMonth=new Date(2026,mo+1,0).getDate();
+  const segments=[];
+  let lastIdx=null;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`2026-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if(isBeforeSchoolYearStart(ds))continue;
+    const info=schedVersionInfoOn(ds);
+    if(!info)continue;
+    if(info.index!==lastIdx){
+      segments.push(info);
+      lastIdx=info.index;
+    }
+  }
+  return segments;
+}
+function _schedRangeText(seg){
+  const de=fmtDateLongPT(seg.version.from);
+  if(seg.isLast)return`a partir de ${de}`;
+  const end=schedVersionEndDate(seg.index);
+  return`${de} a ${fmtDateLongPT(end)}`;
+}
+/* rótulo no topo da Frequência indicando qual(is) versão(ões) do
+   horário (do histórico) estão sendo usadas pra calcular a presença
+   das aulas do mês visível — assim, ao navegar entre meses, sempre
+   fica claro qual horário (matérias/professores daquela época) está
+   valendo ali, mesmo que ele já tenha mudado várias vezes desde então
+   — inclusive quando a troca acontece no meio do próprio mês. Clicável:
+   abre um popup com o detalhe de cada horário usado. */
+function _freqScheduleBannerHtml(mo){
+  const segments=_schedSegmentsForMonth(mo);
+  if(!segments.length)return'';
+  const rangeTxt=segments.map(_schedRangeText).join(' e ');
+  const plural=segments.length>1;
+  return `<div class="freq-sched-banner" onclick="openSchedInfoSheet(${mo})">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span class="freq-sched-banner-text">Utilizando horário${plural?'s':''} de ${rangeTxt}</span>
+    <svg class="freq-sched-banner-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+  </div>`;
+}
+
 function _buildFreqCalHtml(){
   const mo=_freqMonth;
   const canPrev=mo>0, canNext=mo<11;
@@ -14082,10 +14235,77 @@ function _buildFreqCalHtml(){
       <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
+  <div class="freq-sched-banner-slot">${_freqScheduleBannerHtml(mo)}</div>
   <div class="cal-weekdays">`;
   ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].forEach(d=>{ html+=`<div class="cal-wd">${d}</div>`; });
   html+='</div><div class="cal-grid-wrap">'+_buildFreqGridHtml(mo)+'</div>';
   return html;
+}
+
+/* ── Popup "Horários usados" — abre ao tocar no aviso do topo da
+   Frequência, mostrando o(s) horário(s) que valem pro mês visível,
+   com a data de início/fim de cada um e a grade completa (matéria +
+   professor de cada aula, seg a sex) daquela versão ── */
+function _schedVersionDaySlots(version,dow){
+  const slots=(version.sched&&version.sched[dow])||[];
+  const list=[];
+  slots.forEach((id,idx)=>{
+    if(!id)return;
+    const s=findSubjectById(id);
+    if(!s)return;
+    const meta=freqPeriodMeta(dow,idx,version.periods);
+    const timeStr=meta?`${fmtHM(meta.s)}–${fmtHM(meta.e)}`:'';
+    list.push({subj:s,periodNum:idx+1,timeStr});
+  });
+  return list;
+}
+function _buildSchedInfoBody(mo){
+  const segments=_schedSegmentsForMonth(mo);
+  if(!segments.length)return'<div class="cal-day-empty-state">Nenhum horário registrado pra esse mês ainda.</div>';
+  const DAY_LABELS=['Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira'];
+  let html='';
+  segments.forEach((seg,si)=>{
+    html+=`<div class="sched-info-segment${si>0?' sched-info-segment--sep':''}">
+      <div class="sched-info-segment-head">
+        <div class="sched-info-segment-tag">Horário ${seg.index+1}</div>
+        <div class="sched-info-segment-range">${_schedRangeText(seg)}</div>
+      </div>`;
+    for(let dow=1;dow<=5;dow++){
+      const rows=_schedVersionDaySlots(seg.version,dow);
+      html+=`<div class="sched-info-day">
+        <div class="sched-info-day-name">${DAY_LABELS[dow-1]}</div>`;
+      if(!rows.length){
+        html+='<div class="sched-info-day-empty">Sem aulas previstas</div>';
+      }else{
+        html+='<div class="freq-subj-list">';
+        rows.forEach(r=>{
+          html+=`<div class="freq-subj-row">
+            <div class="freq-subj-info">
+              <div class="freq-period-num">${r.periodNum}</div>
+              <div class="freq-subj-dot" style="background:${r.subj.color}"></div>
+              <div class="freq-subj-names">
+                <div class="freq-subj-name">${escHtml(r.subj.name)}</div>
+                <div class="freq-subj-prof">${escHtml(r.subj.prof||'')}${r.subj.prof?' · ':''}<span class="freq-subj-time">${r.timeStr}</span></div>
+              </div>
+            </div>
+          </div>`;
+        });
+        html+='</div>';
+      }
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+  return html;
+}
+function openSchedInfoSheet(mo){
+  document.getElementById('sched-info-sheet-title').textContent=CAL_MONTHS_PT[mo]+' de 2026';
+  document.getElementById('sched-info-sheet-sub').textContent='Horários usados nesse mês';
+  document.getElementById('sched-info-sheet-body').innerHTML=_buildSchedInfoBody(mo);
+  document.getElementById('sched-info-sheet-overlay').classList.add('open');
+}
+function closeSchedInfoSheet(){
+  document.getElementById('sched-info-sheet-overlay').classList.remove('open');
 }
 
 function _buildFreqGridHtml(mo){
@@ -14155,6 +14375,9 @@ function freqNavMonth(dir){
   const btns=slide.querySelectorAll('.freq-wrap .cal-nav-btn');
   if(btns[0]) btns[0].disabled=_freqMonth===0;
   if(btns[1]) btns[1].disabled=_freqMonth===11;
+
+  const bannerSlot=slide.querySelector('.freq-wrap .freq-sched-banner-slot');
+  if(bannerSlot) bannerSlot.innerHTML=_freqScheduleBannerHtml(_freqMonth);
 
   const wrap=slide.querySelector('.freq-wrap .cal-grid-wrap');
   if(wrap){
