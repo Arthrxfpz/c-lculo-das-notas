@@ -5186,6 +5186,83 @@ input, textarea, select {
 .prof-member-date { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
 .prof-member-days { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
 [data-fb-auth="out"] .prof-member-card { display: none; }
+
+/* ── SOBRE O SITE ── */
+.about-box { max-width: 420px; }
+.about-hero {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 18px;
+}
+.about-hero-icon {
+  width: 52px; height: 52px; flex-shrink: 0;
+  border-radius: 16px;
+  background: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+}
+.about-hero-icon svg { width: 26px; height: 26px; stroke: var(--accent-text,#000); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.about-hero-title { font-size: 18px; font-weight: 700; color: var(--t1); letter-spacing: -.3px; line-height: 1.25; }
+.about-hero-sub { font-size: 12.5px; color: var(--t3); margin-top: 2px; }
+.about-text-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 16px;
+  padding: 15px 16px;
+  font-size: 14px; line-height: 1.6;
+  color: var(--t2);
+  letter-spacing: -.1px;
+  margin-bottom: 12px;
+}
+.about-text-card b { color: var(--t1); font-weight: 700; }
+.about-update-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11.5px; font-weight: 600;
+  color: var(--gold);
+  background: var(--goldbg);
+  border: 0.5px solid var(--goldbd);
+  padding: 6px 11px;
+  border-radius: 100px;
+  margin-bottom: 18px;
+}
+.about-update-chip svg { width: 12px; height: 12px; stroke: var(--gold); fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.about-report-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px;
+  background: var(--bg2);
+  border: 1.5px solid var(--line2);
+  border-radius: 15px;
+  font-size: 15px; font-weight: 600;
+  color: var(--t1);
+  cursor: pointer;
+  letter-spacing: -.2px;
+  transition: all .18s var(--ease-ios);
+}
+.about-report-btn:active { transform: scale(.98); opacity: .8; }
+.about-report-btn svg { width: 17px; height: 17px; stroke: #FF453A; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── RELATAR ERRO — formulário ── */
+.report-box { max-width: 420px; }
+.report-title { font-size: 18px; font-weight: 700; color: var(--t1); letter-spacing: -.3px; margin-bottom: 4px; }
+.report-sub { font-size: 13px; color: var(--t3); margin-bottom: 18px; line-height: 1.4; }
+.report-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 13px 16px;
+  background: var(--bg2);
+  border: 1.5px solid var(--line2);
+  border-radius: 13px;
+  font-size: 15px; font-weight: 400;
+  color: var(--t1);
+  outline: none;
+  resize: vertical;
+  font-family: var(--ff);
+  line-height: 1.5;
+  transition: all .2s var(--ease-ios);
+}
+.report-textarea:focus { background: var(--bg1); border-color: var(--gold); box-shadow: 0 0 0 3.5px var(--goldbg); }
+.report-textarea::placeholder { color: var(--t4); }
+.report-limit-hint { font-size: 11px; color: var(--t4); margin: 6px 2px 0; text-align: right; }
 /* ── PERFIL: lock overlay (sem login) ── */
 #prof-lock-overlay {
   display: none;
@@ -7823,6 +7900,52 @@ input, textarea, select {
     </button>
 
     <button class="modal-save-btn" onclick="saveStudent()">Salvar perfil</button>
+  </div>
+</div>
+
+<!-- MODAL — Sobre o site -->
+<div class="modal-overlay" id="about-overlay" onclick="if(event.target===this)closeAboutModal()">
+  <div class="modal-box about-box">
+    <div class="modal-handle"></div>
+    <div class="about-hero">
+      <div class="about-hero-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      </div>
+      <div>
+        <div class="about-hero-title">Sobre o site</div>
+        <div class="about-hero-sub">Turma 205</div>
+      </div>
+    </div>
+    <div class="about-text-card" id="about-text-card">
+      Site desenvolvido por <b>Arthur Marques</b>, atualmente da turma 205, postado pela primeira vez em <b>06/03/2026</b> na internet — há <b id="about-days-count">—</b>.
+    </div>
+    <div class="about-update-chip">
+      <svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Atualizado toda semana com novidades e correções
+    </div>
+    <button class="about-report-btn" onclick="closeAboutModal();openReportModal()">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Relatar um erro
+    </button>
+  </div>
+</div>
+
+<!-- MODAL — Relatar um erro -->
+<div class="modal-overlay" id="report-overlay" onclick="if(event.target===this)closeReportModal()">
+  <div class="modal-box report-box">
+    <div class="modal-handle"></div>
+    <div class="report-title">Relate seu erro aqui:</div>
+    <div class="report-sub">Descreva o que aconteceu e vamos corrigir o quanto antes.</div>
+    <div class="field-group">
+      <label class="field-label">Seu nome:</label>
+      <input class="field-input" id="report-nome" type="text" placeholder="Digite seu nome..."/>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Descreva o erro:</label>
+      <textarea class="report-textarea" id="report-msg" placeholder="Explique o que aconteceu, em qual parte do site e o que você esperava que acontecesse..."></textarea>
+      <div class="report-limit-hint">(Máximo de 1.000 linhas)</div>
+    </div>
+    <button class="modal-save-btn" onclick="submitReport()">Enviar</button>
   </div>
 </div>
 
@@ -13061,6 +13184,80 @@ function syncMemberSince(){
   dateEl.textContent=fmt;
   daysEl.textContent=days===0?'há menos de 1 dia':'há '+days+(days===1?' dia':' dias');
 }
+
+/* ─── SOBRE O SITE ─── */
+const SITE_LAUNCH_DATE = new Date(2026, 2, 6); // 06/03/2026
+function openAboutModal(){
+  const daysEl=document.getElementById('about-days-count');
+  if(daysEl){
+    const days=Math.max(0,Math.floor((Date.now()-SITE_LAUNCH_DATE.getTime())/86400000));
+    daysEl.textContent=days+(days===1?' dia':' dias');
+  }
+  document.getElementById('about-overlay').classList.add('open');
+}
+function closeAboutModal(){
+  document.getElementById('about-overlay').classList.remove('open');
+}
+
+/* ─── RELATAR UM ERRO ─── */
+const REPORT_EMAIL = 'zarthur063@gmail.com';
+function openReportModal(){
+  const nomeEl=document.getElementById('report-nome');
+  const msgEl=document.getElementById('report-msg');
+  if(nomeEl) nomeEl.value = stu && stu.nome ? stu.nome : '';
+  if(msgEl) msgEl.value = '';
+  document.getElementById('report-overlay').classList.add('open');
+}
+function closeReportModal(){
+  document.getElementById('report-overlay').classList.remove('open');
+}
+// Limita a descrição a 1.000 linhas
+(function(){
+  const msgEl=document.getElementById('report-msg');
+  if(!msgEl)return;
+  msgEl.addEventListener('input',()=>{
+    const lines=msgEl.value.split('\n');
+    if(lines.length>1000){
+      msgEl.value=lines.slice(0,1000).join('\n');
+    }
+  });
+})();
+function submitReport(){
+  const nome=(document.getElementById('report-nome').value||'').trim();
+  const msg=(document.getElementById('report-msg').value||'').trim();
+  if(!msg){
+    if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Descreva o erro antes de enviar.');
+    return;
+  }
+  showConfirm({
+    title:'Sair do site?',
+    msg:'Você está saindo do site e indo para o Gmail, quer prosseguir?',
+    okLabel:'Sim',
+    danger:false,
+    iconSvg:'<svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>',
+    onOk:()=>{
+      const subject='Relato de erro — Turma 205';
+      // mailto tem limite de tamanho em muitos apps de e-mail — corta a mensagem se for gigante
+      const MAX_BODY_CHARS=1800;
+      let corpoMsg=msg;
+      let truncado=false;
+      if(corpoMsg.length>MAX_BODY_CHARS){
+        corpoMsg=corpoMsg.slice(0,MAX_BODY_CHARS);
+        truncado=true;
+      }
+      let body='Nome: '+(nome||'Não informado')+'\n\nDescrição do erro:\n'+corpoMsg;
+      if(truncado) body+='\n\n[mensagem cortada por limite do app de e-mail — envie o restante em outra mensagem, se precisar]';
+      const mailtoUrl='mailto:'+REPORT_EMAIL+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+
+      // mailto: é tratado pelo sistema operacional (abre o app de e-mail padrão,
+      // geralmente o Gmail) — muito mais confiável em navegadores mobile e em
+      // apps instalados (PWA) do que abrir uma aba nova com window.open.
+      window.location.href=mailtoUrl;
+
+      closeReportModal();
+    }
+  });
+}
 function modalOvClick(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');}
 function saveStudent(){
   stu.nome=document.getElementById('m-nome').value.trim();
@@ -15820,6 +16017,12 @@ window.addEventListener('online',async()=>{
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="9" y="2" width="6" height="5" rx="1"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
     </div>
     <span class="theme-popover-label">Editar matérias</span>
+  </div>
+  <div class="theme-popover-item" onclick="closeGearPopover();openAboutModal()">
+    <div class="theme-popover-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    </div>
+    <span class="theme-popover-label">Sobre o site</span>
   </div>
 </div>
 
