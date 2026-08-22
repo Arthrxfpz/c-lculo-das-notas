@@ -235,6 +235,7 @@
     if (typeof renderCurrentPage === 'function') renderCurrentPage();
     if (typeof updateGreeting    === 'function') updateGreeting();
     if (typeof applyThemeFromLS  === 'function') applyThemeFromLS();
+    if (typeof updateNotifCenter === 'function') updateNotifCenter();
   }
 
   /* ── Carrega dados do Firestore ── */
@@ -2544,6 +2545,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 [data-theme="light"] .theme-btn .icon-sun{opacity:1;transform:rotate(0deg) scale(1)}
 [data-theme="light"] .theme-btn .icon-moon{opacity:0;transform:rotate(90deg) scale(.4)}
 #gear-btn svg{width:16px;height:16px;stroke:var(--t2)}
+#nc-btn svg{width:16px;height:16px;stroke:var(--t2)}
 
 /* ── Theme Popover ── */
 .theme-popover-backdrop{
@@ -2633,6 +2635,77 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   stroke:var(--gold);fill:none;
   stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;
 }
+
+/* ── Central de Notificações (sino) ── */
+.nc-btn{position:relative;overflow:visible}
+.nc-badge{
+  position:absolute;top:-3px;right:-3px;
+  min-width:16px;height:16px;padding:0 4px;
+  background:var(--red);border-radius:20px;
+  font-size:9px;font-weight:800;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  border:1.5px solid var(--bg1);
+  box-shadow:0 1px 5px rgba(255,69,58,.45);
+  line-height:1;pointer-events:none;
+}
+.nc-popover{
+  position:fixed;z-index:9991;
+  background:var(--bg1);
+  border:1px solid var(--line2);
+  border-radius:18px;
+  box-shadow:0 8px 32px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.14);
+  width:min(360px,calc(100vw - 24px));
+  max-height:min(480px,70vh);
+  display:flex;flex-direction:column;
+  opacity:0;
+  transform:scale(.92) translateY(-6px);
+  transform-origin:top right;
+  transition:opacity .18s cubic-bezier(.22,1,.36,1),transform .18s cubic-bezier(.22,1,.36,1);
+  pointer-events:none;
+  overflow:hidden;
+}
+.nc-popover.open{opacity:1;transform:scale(1) translateY(0);pointer-events:all}
+.nc-popover::before{
+  content:'';position:absolute;top:-7px;right:10px;
+  width:13px;height:7px;background:var(--bg1);
+  clip-path:polygon(50% 0%,100% 100%,0% 100%);
+  border-left:1px solid var(--line2);border-right:1px solid var(--line2);border-top:1px solid var(--line2);
+}
+.nc-popover-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 10px;flex-shrink:0;
+  border-bottom:1px solid var(--line2);
+}
+.nc-popover-title{font-size:15px;font-weight:700;color:var(--t1);letter-spacing:-.2px}
+.nc-popover-count{font-size:11px;font-weight:600;color:var(--t3)}
+.nc-list{overflow-y:auto;flex:1;padding:6px}
+.nc-item{
+  display:flex;align-items:flex-start;gap:11px;
+  padding:11px 10px;border-radius:13px;
+  cursor:pointer;position:relative;
+  transition:background .12s;
+}
+.nc-item:active{background:var(--bg3)!important}
+.nc-item:hover{background:var(--bg2)}
+.nc-icon{
+  width:32px;height:32px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.nc-icon svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.nc-item-body{flex:1;min-width:0}
+.nc-item-title{font-size:13px;font-weight:700;color:var(--t1);letter-spacing:-.1px;line-height:1.3}
+.nc-item-desc{font-size:12px;color:var(--t3);line-height:1.4;margin-top:2px}
+.nc-item-time{font-size:10px;color:var(--t4);margin-top:5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.nc-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
+.nc-empty{padding:44px 20px;text-align:center}
+.nc-empty-icon{margin-bottom:10px;display:flex;align-items:center;justify-content:center}
+.nc-empty-icon svg{width:34px;height:34px;stroke:var(--t4);fill:none}
+.nc-empty-title{font-size:14px;font-weight:700;color:var(--t3);margin-bottom:4px}
+.nc-empty-desc{font-size:12px;color:var(--t3)}
+.nc-sev-critical{background:var(--redbg);color:var(--red)}
+.nc-sev-warning{background:var(--amberbg);color:var(--amber)}
+.nc-sev-info{background:var(--goldbg);color:var(--gold)}
+.nc-sev-success{background:var(--greenbg);color:var(--green)}
 
 .topbar-right{display:flex;align-items:center;gap:6px}
 
@@ -7025,6 +7098,18 @@ input, textarea, select {
   <div class="et-progress"><div class="et-progress-fill" id="et-progress-fill"></div></div>
 </div>
 
+<!-- Toast genérico da Central de Notificações -->
+<div class="exam-toast" id="nc-toast" onclick="_ncToastClick()">
+  <div class="et-icon" id="nc-toast-icon"></div>
+  <div class="et-body">
+    <div class="et-app">Cálculo das notas · Notificações</div>
+    <div class="et-title" id="nc-toast-title"></div>
+    <div class="et-sub" id="nc-toast-sub"></div>
+  </div>
+  <button class="et-dismiss-btn" onclick="event.stopPropagation();_dismissNCToast()" title="Fechar"></button>
+  <div class="et-progress"><div class="et-progress-fill" id="nc-toast-progress-fill"></div></div>
+</div>
+
 <!-- CONFIRM: não lembrar mais do aviso de prova -->
 <div class="confirm-overlay" id="toast-dismiss-overlay" onclick="if(event.target===this)closeToastDismissConfirm()">
   <div class="confirm-box">
@@ -7117,6 +7202,10 @@ input, textarea, select {
         <div class="theme-btn" id="theme-btn" onclick="openThemePopover(event)">
           <svg class="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </div>
+        <div class="theme-btn nc-btn" id="nc-btn" onclick="openNCPopover(event)" title="Notificações">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="nc-badge" id="nc-badge" style="display:none">0</span>
         </div>
         <div class="theme-btn" id="gear-btn" onclick="openGearPopover(event)" title="Configurações">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82V15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -8049,6 +8138,7 @@ let FREQ={};
 function saveFreq(){
   try{localStorage.setItem('t205_freq',JSON.stringify(FREQ));}catch(e){}
   if(window._fbSaveAll)window._fbSaveAll();
+  if(typeof updateNotifCenter==='function')updateNotifCenter();
 }
 function loadFreq(){
   try{
@@ -8129,6 +8219,7 @@ let FREQP={};
 function saveFreqPeriods(){
   try{localStorage.setItem('t205_freqp',JSON.stringify(FREQP));}catch(e){}
   if(window._fbSaveAll)window._fbSaveAll();
+  if(typeof updateNotifCenter==='function')updateNotifCenter();
 }
 function loadFreqPeriods(){
   try{
@@ -8340,11 +8431,11 @@ let schedDay=(todayDow>=1&&todayDow<=5)?todayDow:1;
 
 /* exams: {id,subj,title,examDate,valor} — persisted to localStorage */
 let exams=[];
-function saveExams(){try{localStorage.setItem('t205_exams',JSON.stringify(exams));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();}
+function saveExams(){try{localStorage.setItem('t205_exams',JSON.stringify(exams));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();if(typeof updateNotifCenter==='function')updateNotifCenter();}
 function loadExams(){try{const d=localStorage.getItem('t205_exams');if(d)exams=JSON.parse(d);}catch(e){}}
 
 /* grades persist */
-function saveGrades(){try{localStorage.setItem('t205_grades',JSON.stringify(G));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();}
+function saveGrades(){try{localStorage.setItem('t205_grades',JSON.stringify(G));}catch(e){}if(window._fbSaveAll)window._fbSaveAll();if(typeof updateNotifCenter==='function')updateNotifCenter();}
 function loadGrades(){
   try{
     const d=localStorage.getItem('t205_grades');
@@ -8657,6 +8748,14 @@ function getTrimesterRecovery(sid){
   if(t1!==null && t2===null){
     if(t1<6){
       const minT2=12-t1;
+      // Mesmo com o peso do 2°T ainda não fechado em 10 pts, se a soma
+      // dos pontos já lançados nele já atinge o mínimo necessário, a
+      // aprovação já está garantida (pontos só aumentam com mais notas
+      // lançadas, nunca diminuem) — não precisa esperar fechar os 10 pts.
+      const partial2=tabScore(sid,'2T');
+      if(partial2!==null && partial2>=minT2){
+        return{phase:'t2',t1,alreadyPassed:true,impossible:false,minNeeded:0};
+      }
       return{
         phase:'t2',
         t1,
@@ -8672,15 +8771,54 @@ function getTrimesterRecovery(sid){
   if(t1!==null && t2!==null && t3===null){
     const minT3=(60-t1*3-t2*3)/4;
     if(minT3<=0) return{phase:'t3',t1,t2,alreadyPassed:true,impossible:false,minNeeded:0};
+    // Mesmo idem: se os pontos já lançados no 3°T (ainda com peso
+    // parcial) já cobrem o mínimo necessário, já está garantido.
+    const partial3=tabScore(sid,'3T');
+    if(partial3!==null && partial3>=minT3){
+      return{phase:'t3',t1,t2,alreadyPassed:true,impossible:false,minNeeded:0};
+    }
     return{phase:'t3',t1,t2,alreadyPassed:false,impossible:minT3>10,minNeeded:minT3};
   }
 
   return null;
 }
 
-/* ══════════════════════════════════════════
-   LAYOUT SYNC
-══════════════════════════════════════════ */
+/**
+ * Diz se a matéria já está aprovada — seja pela nota final (todos os
+ * trimestres fechados e média ≥ 6) ou por projeção antecipada, quando o
+ * trimestre em andamento já tem pontos suficientes lançados pra garantir
+ * a aprovação mesmo sem o peso ter fechado em 10 pts.
+ * Usada para suprimir avisos (EAC, risco, notificações) de matérias que
+ * já estão garantidas.
+ */
+function subjApproved(sid){
+  const g=finalGrade(sid);
+  if(g!==null)return g>=6;
+
+  const t1c=trimGradeClosed(sid,'1T'), t2c=trimGradeClosed(sid,'2T'), t3c=trimGradeClosed(sid,'3T');
+
+  // T1+T2 fechados, T3 em andamento
+  if(t1c!==null&&t2c!==null&&t3c===null){
+    const minT3=(60-t1c*3-t2c*3)/4;
+    if(minT3<=0)return true;
+    const t3=trimGrade(sid,'3T');
+    if(t3!==null&&t3>=minT3)return true;
+    return false;
+  }
+
+  // T1 fechado (≥6 já aprova sozinho a essa altura, senão checa T2 em andamento)
+  if(t1c!==null&&t2c===null){
+    if(t1c>=6)return false; // ainda não dá pra garantir sem ver T2/T3
+    const minT2=12-t1c;
+    const t2=trimGrade(sid,'2T');
+    if(t2!==null&&t2>=minT2)return true;
+    return false;
+  }
+
+  return false;
+}
+
+
 /* ══════════════════════════════════════════
    APP UPDATE BANNER — faixa fixa no topo
    Para adicionar um aviso: inclua um objeto no array UPDATES abaixo.
@@ -8902,13 +9040,16 @@ function renderNotasTab(el){
       needsEac=baseFull&&_eacSt(norm,score)==='pending';
     }else{disp=score;stat=st(score);}
 
-    // Pill ao lado do nome: só mostra a nota quando o peso máximo (10 pts) do
-    // trimestre (ou do EAC) foi atingido. Enquanto isso, mostra "Pendente" —
-    // mesmo que já existam notas parciais lançadas (isso continua no footer).
+    // Pill ao lado do nome: mostra a nota corrente do trimestre (parcial,
+    // sem precisar fechar os 10 pts de peso). No tab normal (1T/2T/3T)
+    // mostra exatamente a nota lançada nele (não é afetada pelo EAC). No
+    // tab do EAC, mostra a MAIOR entre a nota base do trimestre e a nota
+    // do EAC — ou seja, só atualiza para a nota do EAC se ela for maior
+    // que a nota base.
     const trBase=isEAC?base:curTab;
-    const closedVal=trimGradeClosed(s.id,trBase);
-    const pillStat=st(closedVal);
-    const pill=pillStat==='pending'?'Pendente':fmt(closedVal);
+    const liveVal=isEAC?trimGrade(s.id,trBase):tabScore(s.id,curTab);
+    const pillStat=st(liveVal);
+    const pill=pillStat==='pending'?'Pendente':fmt(liveVal);
     const rows=G[s.id][curTab];
     const isOpen=!!openAcc[s.id+'_'+curTab];
     const cnt=rows.length;
@@ -9189,6 +9330,17 @@ function _tabFull(sid,tab){
   rows.forEach(r=>{const t=nf(r.total);if(t!==null)sum+=t;});
   // usa >=9.99 para absorver qualquer imprecisão de ponto flutuante
   return sum>=9.99;
+}
+
+/* Soma do peso (campo "total") já lançado num tab, mesmo que ainda não
+   tenha fechado em 10 pts — usada para saber quanto peso ainda falta
+   lançar e, com isso, o teto máximo de nota ainda alcançável. */
+function _tabWeightSum(sid,tab){
+  if(!G[sid]||!G[sid][tab])return 0;
+  const rows=G[sid][tab].filter(r=>!r._isNew);
+  let sum=0;
+  rows.forEach(r=>{const t=nf(r.total);if(t!==null)sum+=t;});
+  return sum;
 }
 
 function _eacSt(base,eac){
@@ -9485,7 +9637,31 @@ function renderResumo(el){
   const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'—';
   SUBJECTS.forEach((s,i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
-    const ss=stFinal(s.id,g);
+    let ss=stFinal(s.id,g);
+    // Se 1° e 2° trimestre já fecharam o peso mas o 3° ainda está aberto,
+    // verifica se a meta necessária no 3°T já foi batida (ou já ficou
+    // impossível) com o que já foi lançado até agora — e já reflete isso
+    // no status principal (Aprovado/Reprovado), sem esperar o peso do
+    // 3°T fechar em 10 pts.
+    if(ss==='pending'){
+      if(subjApproved(s.id)){
+        ss='pass';
+      }else{
+        // Detecta reprovação antecipada: T1+T2 fechados, T3 em andamento,
+        // e mesmo tirando o máximo possível no restante do peso do 3°T
+        // não dá pra alcançar o mínimo necessário.
+        const t1c=trimGradeClosed(s.id,'1T'), t2c=trimGradeClosed(s.id,'2T'), t3c=trimGradeClosed(s.id,'3T');
+        if(t1c!==null&&t2c!==null&&t3c===null){
+          const minT3=(60-t1c*3-t2c*3)/4;
+          const enteredW=Math.max(_tabWeightSum(s.id,'3T'),_tabWeightSum(s.id,'3T-EAC'));
+          const remaining=Math.max(0,10-enteredW);
+          const maxPossible=t3!==null?t3+remaining:remaining;
+          if(maxPossible<minT3-0.001){
+            ss='fail';
+          }
+        }
+      }
+    }
     const pct=g!==null?Math.min(g/10*100,100):0;
     const trendIcon=t1!==null&&t2!==null&&t3!==null?(t3>t1?'↑ Subindo':t3<t1?'↓ Caindo':'→ Estável'):'Dados parciais';
     const trendStr=g!==null?(g>=7?`${trendIcon}`:`${trendIcon}`):`${trendIcon}`;
@@ -9498,15 +9674,19 @@ function renderResumo(el){
 
     let recHtml='';
 
-    // Alertas só aparecem quando o peso do trimestre está completo (= 10 pts)
-    // e há pelo menos uma nota lançada nele (tabScore não nulo).
+    // Alertas de "ainda pode recuperar no EAC" de um trimestre específico
+    // (nota base < 6 e EAC ainda não feito). Se a matéria já está
+    // aprovada (projeção ou nota final), esses avisos somem — a
+    // aprovação já está garantida, então o EAC deixou de ser necessário
+    // para passar de ano.
     const full1T=_tabFull(s.id,'1T')&&b1!==null;
     const full2T=_tabFull(s.id,'2T')&&b2!==null;
     const full3T=_tabFull(s.id,'3T')&&b3!==null;
 
-    // 1. Alertas de EAC por trimestre (pending = oportunidade, recovered = sucesso)
+    if(ss!=='pass'){
     if(full1T) recHtml+=_eacBlock(b1,e1,'1° Trimestre');
     if(full2T) recHtml+=_eacBlock(b2,e2,'2° Trimestre');
+
     // 3°T: usa fórmula final completa para calcular mínimo real e detectar impossibilidade
     if(full3T) recHtml+=_eacBlock3T(t1,t2,b3,e3);
 
@@ -9519,7 +9699,14 @@ function renderResumo(el){
       const showIt=refFull;
       if(showIt){
         if(rec.phase==='t2'){
-          if(rec.impossible){
+          if(rec.alreadyPassed){
+            recHtml+='<div class="resumo-recovery-alert" style="background:var(--greenbg);border-color:var(--greenbd)">'+
+              '<div class="resumo-recovery-left">'+
+                '<div class="resumo-recovery-badge" style="color:var(--green)">Aprovação garantida</div>'+
+                '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', os pontos já lançados no 2° Trimestre já garantem a aprovação</div>'+
+              '</div>'+
+            '</div>';
+          }else if(rec.impossible){
             recHtml+='<div class="resumo-recovery-alert impossible">'+
               '<div class="resumo-recovery-left">'+
                 '<div class="resumo-recovery-badge">Atenção no 2° Trimestre</div>'+
@@ -9568,6 +9755,7 @@ function renderResumo(el){
         }
       }
     }
+    } // fim if(ss!=='pass')
     h+=`<div class="resumo-subj-card" style="animation-delay:${i*.03}s;border-left:3px solid ${statusColor}" onclick="openSubjSheet('${s.name.replace(/'/g,"\'")}','','${s.color}')">
       <div class="resumo-subj-head">
         <div class="resumo-subj-info">
@@ -13239,6 +13427,391 @@ function checkExamToasts(){
 }
 
 
+/* ══════════════════════════════════════════════════════════
+   CENTRAL DE NOTIFICAÇÕES (sino)
+   Gera avisos automaticamente a partir dos dados do site:
+   1) EAC necessário (trimestre fechado com nota < 6, sem EAC)
+   2) Risco de não atingir a média (nota necessária no próximo
+      trimestre, via getTrimesterRecovery)
+   3) Provas/trabalhos a 0, 1 ou 2 dias de distância
+   4) Ritmo baixo num trimestre ainda em andamento
+   5) Frequência baixa (abaixo ou perto do mínimo legal de 75%)
+   6) Aprovação garantida antecipada (aviso positivo)
+   As notificações "somem" sozinhas quando o problema deixa de
+   existir (nota lançada, EAC feito, prova removida, presença
+   recuperada etc).
+══════════════════════════════════════════════════════════ */
+const NC_TR_LABEL={'1T':'1° Trimestre','2T':'2° Trimestre','3T':'3° Trimestre'};
+let _ncLastList=[];
+let _ncToastTimer=null;
+let _ncToastId=null;
+let _ncToastExtra=0;
+
+function _ncLoadMeta(){
+  try{const d=localStorage.getItem('t205_nc_meta');return d?JSON.parse(d):null;}catch(e){return null;}
+}
+function _ncSaveMeta(m){
+  try{localStorage.setItem('t205_nc_meta',JSON.stringify(m));}catch(e){}
+}
+
+function _ncIcon(type){
+  if(type==='eac')return'<svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
+  if(type==='exam')return'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  if(type==='lowperf')return'<svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>';
+  if(type==='freq')return'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/></svg>';
+  if(type==='approved')return'<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  return'<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+}
+
+function computeNotifications(){
+  const list=[];
+
+  // 1) EAC necessário
+  SUBJECTS.forEach(s=>{
+    if(subjApproved(s.id))return; // já aprovado na matéria — EAC deixou de ser necessário
+    ['1T','2T','3T'].forEach(tr=>{
+      const base=tabScore(s.id,tr);
+      if(base===null||!_tabFull(s.id,tr))return;
+      const eac=tabScore(s.id,tr+'-EAC');
+      if(_eacSt(base,eac)==='pending'){
+        list.push({
+          id:`eac-${s.id}-${tr}`,type:'eac',sid:s.id,tr,
+          subjName:s.name,color:s.color,
+          title:'EAC necessário',
+          body:`É necessário fazer o EAC do ${NC_TR_LABEL[tr]} de ${s.name} — nota atual ${fmt(base)}.`,
+          severity:'critical',priority:3,variant:null
+        });
+      }
+    });
+  });
+
+  // 2) Risco de não atingir a média
+  SUBJECTS.forEach(s=>{
+    const rec=getTrimesterRecovery(s.id);
+    if(!rec||rec.alreadyPassed)return;
+    const trNext=rec.phase==='t2'?'2T':'3T';
+    const trLbl=NC_TR_LABEL[trNext];
+    if(rec.impossible){
+      list.push({
+        id:`imp-${s.id}-${trNext}`,type:'need',sid:s.id,tr:trNext,
+        subjName:s.name,color:s.color,
+        title:'Aprovação em risco',
+        body:`Mesmo tirando 10 no ${trLbl} de ${s.name}, não é possível atingir a média só com as notas dos trimestres. Vale conversar com o professor.`,
+        severity:'critical',priority:3,variant:null
+      });
+    }else{
+      list.push({
+        id:`need-${s.id}-${trNext}`,type:'need',sid:s.id,tr:trNext,
+        subjName:s.name,color:s.color,
+        title:`Atenção no ${trLbl}`,
+        body:`Em ${s.name}, você precisa de pelo menos ${rec.minNeeded.toFixed(1)} no ${trLbl} para não ficar em risco.`,
+        severity:'warning',priority:5,variant:Math.round(rec.minNeeded*10)
+      });
+    }
+  });
+
+  // 3) Provas/trabalhos próximos (hoje, amanhã, depois de amanhã)
+  exams.forEach(e=>{
+    const d=daysDiff(e.examDate);
+    if(d<0||d>2)return;
+    const tipoLabel=e.tipo==='trabalho'?'trabalho':'prova';
+    const txtDias=d===0?'É hoje':d===1?'Falta 1 dia':`Faltam ${d} dias`;
+    const subj=SUBJECTS.find(s=>s.name===e.subj);
+    list.push({
+      id:`exam-${e.id}`,type:'exam',examId:e.id,
+      subjName:e.subj,color:subj?subj.color:null,
+      title:`${txtDias} para ${tipoLabel} de ${e.subj}`,
+      body:e.title?`"${e.title}" · ${fmtDateBR(e.examDate)}`:fmtDateBR(e.examDate),
+      severity:d===0?'critical':d===1?'warning':'info',
+      priority:d,variant:d
+    });
+  });
+
+  // 4) Ritmo baixo num trimestre ainda em andamento (ainda não fechado)
+  SUBJECTS.forEach(s=>{
+    if(subjApproved(s.id))return; // já aprovado na matéria — ritmo do trimestre deixou de importar
+    ['1T','2T','3T'].forEach(tr=>{
+      if(_tabFull(s.id,tr))return; // já fechado -> vira alerta de EAC, não este
+      const w=_tabWeightSum(s.id,tr);
+      const raw=tabScore(s.id,tr);
+      if(w<3||raw===null)return; // pouca informação ainda, evita ruído
+      const trend=(raw/w)*10;
+      if(trend<6){
+        list.push({
+          id:`low-${s.id}-${tr}`,type:'lowperf',sid:s.id,tr,
+          subjName:s.name,color:s.color,
+          title:`Pontuação baixa em ${s.name}`,
+          body:`No ${NC_TR_LABEL[tr]}, seu ritmo está em ${trend.toFixed(1)} — abaixo da média. Reforce os estudos nas próximas avaliações.`,
+          severity:trend<5?'critical':'warning',priority:7,variant:Math.round(trend*10)
+        });
+      }
+    });
+  });
+
+  // 5) Frequência baixa (ou perto do mínimo legal de 75%) por matéria
+  if(typeof freqAggregate==='function'){
+    const freqAgg=freqAggregate(0,11);
+    SUBJECTS.forEach(s=>{
+      const fs=freqAgg.perSubj[s.id];
+      if(!fs||fs.total<4)return; // poucas aulas registradas ainda, evita ruído
+      const pct=(fs.present/fs.total)*100;
+      if(pct<75){
+        list.push({
+          id:`freq-${s.id}`,type:'freq',sid:s.id,
+          subjName:s.name,color:s.color,
+          title:`Frequência abaixo do mínimo em ${s.name}`,
+          body:`Sua presença está em ${pct.toFixed(0)}% — abaixo dos 75% exigidos por lei. Risco de reprovação por falta.`,
+          severity:'critical',priority:2,variant:Math.round(pct)
+        });
+      }else if(pct<80){
+        list.push({
+          id:`freq-warn-${s.id}`,type:'freq',sid:s.id,
+          subjName:s.name,color:s.color,
+          title:`Frequência caindo em ${s.name}`,
+          body:`Sua presença está em ${pct.toFixed(0)}% — perto do mínimo de 75%. Evite faltar nas próximas aulas.`,
+          severity:'warning',priority:6,variant:Math.round(pct)
+        });
+      }
+    });
+  }
+
+  // 6) Aprovação garantida antecipada (aviso positivo, uma vez por matéria)
+  // Só dispara enquanto a matéria ainda está "em andamento" (nem todos os
+  // trimestres fecharam de vez) — depois que fecha, o card "Aprovado" já
+  // aparece normalmente no Resumo/Resultado, então não precisa duplicar.
+  SUBJECTS.forEach(s=>{
+    if(finalGrade(s.id)!==null)return;
+    if(subjApproved(s.id)){
+      list.push({
+        id:`ok-${s.id}`,type:'approved',sid:s.id,
+        subjName:s.name,color:s.color,
+        title:`Aprovação garantida em ${s.name}!`,
+        body:`Você já garantiu a aprovação em ${s.name}, mesmo antes de todos os trimestres fecharem.`,
+        severity:'success',priority:9,variant:null
+      });
+    }
+  });
+
+  list.sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id));
+  return list;
+}
+
+function updateNotifCenter(){
+  if(typeof SUBJECTS==='undefined'||typeof G==='undefined'||typeof exams==='undefined')return;
+  const list=computeNotifications();
+  _ncLastList=list;
+
+  let meta=_ncLoadMeta();
+  const firstRun=(meta===null);
+  if(!meta)meta={};
+  const now=Date.now();
+  const seenIds=new Set();
+
+  list.forEach(n=>{
+    seenIds.add(n.id);
+    const m=meta[n.id];
+    if(!m){
+      meta[n.id]={read:firstRun,firstSeenAt:now,variant:n.variant,toasted:firstRun};
+    }else if(n.type==='exam' && m.variant!==n.variant){
+      // reabre como não lida quando a urgência muda (ex.: faltavam 2 dias, agora falta 1)
+      m.variant=n.variant;m.read=false;m.toasted=false;
+    }
+  });
+  // limpa metadados de notificações que já não existem mais (problema resolvido)
+  Object.keys(meta).forEach(id=>{if(!seenIds.has(id))delete meta[id];});
+  _ncSaveMeta(meta);
+
+  const unreadCount=list.filter(n=>meta[n.id]&&!meta[n.id].read).length;
+  _ncRenderBadge(unreadCount);
+
+  // toast para o item mais urgente ainda não avisado
+  const pendingToast=list.filter(n=>meta[n.id]&&!meta[n.id].toasted);
+  const popEl=document.getElementById('nc-popover');
+  const popOpen=popEl&&popEl.classList.contains('open');
+  if(pendingToast.length && !popOpen){
+    const examToastEl=document.getElementById('exam-toast');
+    const examToastShowing=examToastEl&&examToastEl.classList.contains('show');
+    if(!examToastShowing){
+      _showNCToast(pendingToast[0],pendingToast.length-1);
+      pendingToast.forEach(n=>{meta[n.id].toasted=true;});
+      _ncSaveMeta(meta);
+    }
+  }
+
+  // se o popover estiver aberto, re-renderiza a lista com os dados atuais
+  if(popOpen)_ncRenderList();
+}
+
+function _ncRelTime(ts){
+  const diff=Date.now()-ts;
+  const min=Math.floor(diff/60000);
+  if(min<1)return'agora';
+  if(min<60)return`há ${min} min`;
+  const h=Math.floor(min/60);
+  if(h<24)return`há ${h}h`;
+  const d=Math.floor(h/24);
+  return d===1?'há 1 dia':`há ${d} dias`;
+}
+
+function _ncRenderBadge(count){
+  const badge=document.getElementById('nc-badge');
+  if(!badge)return;
+  if(count>0){
+    badge.textContent=count>99?'99+':String(count);
+    badge.style.display='flex';
+  }else{
+    badge.style.display='none';
+  }
+}
+
+function _ncRenderList(){
+  const body=document.getElementById('nc-list');
+  const countEl=document.getElementById('nc-popover-count');
+  if(!body)return;
+  const meta=_ncLoadMeta()||{};
+  const list=_ncLastList;
+  if(countEl)countEl.textContent=list.length?`${list.length} no total`:'';
+  if(!list.length){
+    body.innerHTML=`<div class="nc-empty">
+      <div class="nc-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><line x1="2" y1="2" x2="22" y2="22"/></svg></div>
+      <div class="nc-empty-title">Sem notificações</div>
+    </div>`;
+    return;
+  }
+  body.innerHTML=list.map(n=>{
+    const m=meta[n.id]||{};
+    const unread=!m.read;
+    const time=m.firstSeenAt?_ncRelTime(m.firstSeenAt):'agora';
+    return`<div class="nc-item${unread?' unread':''}" onclick="handleNCClick('${n.id}')">
+      <div class="nc-icon nc-sev-${n.severity}">${_ncIcon(n.type)}</div>
+      <div class="nc-item-body">
+        <div class="nc-item-title">${escHtml(n.title)}</div>
+        <div class="nc-item-desc">${escHtml(n.body)}</div>
+        <div class="nc-item-time">${time}</div>
+      </div>
+      ${unread?'<div class="nc-dot"></div>':''}
+    </div>`;
+  }).join('');
+}
+
+function openNCPopover(e){
+  if(e)e.stopPropagation();
+  const pop=document.getElementById('nc-popover');
+  const btn=document.getElementById('nc-btn');
+  const bk=document.getElementById('nc-popover-backdrop');
+  if(!pop||!btn)return;
+  if(pop.classList.contains('open')){closeNCPopover();return;}
+
+  // fecha outros popovers abertos, se houver
+  if(typeof closeGearPopover==='function')closeGearPopover();
+  if(typeof closeThemePopover==='function')closeThemePopover();
+
+  _ncLastList=computeNotifications();
+  _ncRenderList();
+
+  const meta=_ncLoadMeta()||{};
+  let changed=false;
+  _ncLastList.forEach(n=>{
+    if(meta[n.id]&&!meta[n.id].read){meta[n.id].read=true;changed=true;}
+  });
+  if(changed)_ncSaveMeta(meta);
+  _ncRenderBadge(0);
+
+  const r=btn.getBoundingClientRect();
+  pop.style.top=(r.bottom+8)+'px';
+  pop.style.right=(window.innerWidth-r.right)+'px';
+  pop.style.left='auto';
+
+  if(bk)bk.style.display='block';
+  requestAnimationFrame(()=>{pop.classList.add('open');});
+}
+function closeNCPopover(){
+  const pop=document.getElementById('nc-popover');
+  const bk=document.getElementById('nc-popover-backdrop');
+  if(pop)pop.classList.remove('open');
+  if(bk)setTimeout(()=>{bk.style.display='none';},180);
+}
+
+function handleNCClick(id){
+  const n=_ncLastList.find(x=>x.id===id);
+  closeNCPopover();
+  if(!n)return;
+  if(n.type==='exam'){
+    if(typeof openExamDetail==='function')openExamDetail(n.examId);
+    return;
+  }
+  if(n.type==='freq'){
+    if(typeof setPage==='function')setPage('frequencia');
+    return;
+  }
+  if(n.type==='approved'){
+    const subj=typeof SUBJECTS!=='undefined'?SUBJECTS.find(x=>x.id===n.sid):null;
+    if(subj&&typeof openSubjSheet==='function'){
+      openSubjSheet(subj.name,'',subj.color);
+    }else if(typeof setPage==='function'){
+      setPage('resultado');
+    }
+    return;
+  }
+  if(n.sid&&n.tr){
+    const targetTab=n.type==='eac'?(n.tr+'-EAC'):n.tr;
+    if(typeof openAcc!=='undefined')openAcc[n.sid+'_'+targetTab]=true;
+    const tabBtn=document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
+    if(tabBtn&&typeof switchTab==='function'){
+      switchTab(targetTab,tabBtn);
+    }else if(typeof setPage==='function'){
+      setPage('notas');
+    }
+    setTimeout(()=>{
+      const el=document.getElementById('si-'+n.sid);
+      if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+    },340);
+  }
+}
+
+function _showNCToast(n,extraCount){
+  const toast=document.getElementById('nc-toast');
+  const iconEl=document.getElementById('nc-toast-icon');
+  const titleEl=document.getElementById('nc-toast-title');
+  const subEl=document.getElementById('nc-toast-sub');
+  const fill=document.getElementById('nc-toast-progress-fill');
+  if(!toast||!titleEl||!subEl||!fill)return;
+
+  _ncToastId=n.id;
+  _ncToastExtra=extraCount||0;
+  iconEl.className='et-icon nc-sev-'+n.severity;
+  iconEl.innerHTML=_ncIcon(n.type);
+  titleEl.textContent=n.title;
+  subEl.textContent=extraCount>0?`${n.body} (+${extraCount} outra${extraCount>1?'s':''})`:n.body;
+
+  fill.style.transition='none';
+  fill.style.width='100%';
+  clearTimeout(_ncToastTimer);
+  toast.classList.remove('hide');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    toast.classList.add('show');
+    const duration=4500;
+    fill.style.transition=`width ${duration}ms linear`;
+    fill.style.width='0%';
+    _ncToastTimer=setTimeout(_dismissNCToast,duration);
+  }));
+}
+function _dismissNCToast(){
+  clearTimeout(_ncToastTimer);
+  const toast=document.getElementById('nc-toast');
+  if(!toast)return;
+  toast.classList.remove('show');
+  toast.classList.add('hide');
+  setTimeout(()=>toast.classList.remove('hide'),400);
+}
+function _ncToastClick(){
+  const id=_ncToastId,extra=_ncToastExtra;
+  _dismissNCToast();
+  if(extra>0)openNCPopover();
+  else if(id)handleNCClick(id);
+}
+
+
 /* ═══════════════════════════════
    WEATHER — Open-Meteo (free, no key)
    Rio Grande, RS: -32.035, -52.099
@@ -13793,6 +14366,7 @@ function toggleSidebar(){
   const notifOverlay = document.getElementById('notif-overlay');
   const overlays = ['confirm-overlay','subj-sheet-overlay','exam-sheet-overlay','toast-dismiss-overlay','cal-day-sheet-overlay','freq-day-sheet-overlay','sched-info-sheet-overlay'];
   const toastEl = document.getElementById('exam-toast');
+  const ncToastEl = document.getElementById('nc-toast');
 
   const hamburger = document.getElementById('topbar-hamburger');
   if(_sbCollapsed){
@@ -13803,6 +14377,7 @@ function toggleSidebar(){
     if(notifOverlay) notifOverlay.classList.add('collapsed');
     overlays.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('collapsed'); });
     if(toastEl) toastEl.classList.add('collapsed');
+    if(ncToastEl) ncToastEl.classList.add('collapsed');
     if(hamburger){ hamburger.classList.add('visible'); hamburger.style.display='flex'; }
     if(toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
   } else {
@@ -13813,6 +14388,7 @@ function toggleSidebar(){
     if(notifOverlay) notifOverlay.classList.remove('collapsed');
     overlays.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('collapsed'); });
     if(toastEl) toastEl.classList.remove('collapsed');
+    if(ncToastEl) ncToastEl.classList.remove('collapsed');
     if(hamburger){ hamburger.classList.remove('visible'); hamburger.style.display='none'; }
     if(toggleIcon) toggleIcon.style.transform = '';
   }
@@ -13845,6 +14421,8 @@ window.addEventListener('load',()=>{
   checkPendingNotifs();
   enableDragScroll('tabs-strip');
   setTimeout(checkExamToasts, 1200);
+  setTimeout(()=>{ if(typeof updateNotifCenter==='function') updateNotifCenter(); }, 1500);
+  setInterval(()=>{ if(typeof updateNotifCenter==='function') updateNotifCenter(); }, 60000);
   document.addEventListener('click',e=>{
     const wrap=document.querySelector('.subj-picker-wrap');
     if(wrap&&!wrap.contains(e.target)){
@@ -14806,6 +15384,7 @@ function openThemePopover(e){
 
   // já aberto → fecha
   if(pop.classList.contains('open')){closeThemePopover();return;}
+  if(typeof closeNCPopover==='function')closeNCPopover();
 
   // atualiza checkmarks com preferência atual
   const saved=localStorage.getItem('t205_theme')||'system';
@@ -14854,6 +15433,7 @@ function openGearPopover(e){
 
   // já aberto → fecha
   if(pop.classList.contains('open')){closeGearPopover();return;}
+  if(typeof closeNCPopover==='function')closeNCPopover();
 
   // posiciona relativo ao botão
   const r=btn.getBoundingClientRect();
@@ -15093,6 +15673,16 @@ window.addEventListener('online',async()=>{
     </div>
     <span class="theme-popover-label">Editar matérias</span>
   </div>
+</div>
+
+<!-- CENTRAL DE NOTIFICAÇÕES POPOVER -->
+<div class="theme-popover-backdrop" id="nc-popover-backdrop" onclick="closeNCPopover()" style="display:none"></div>
+<div class="nc-popover" id="nc-popover" role="menu" aria-label="Notificações">
+  <div class="nc-popover-header">
+    <span class="nc-popover-title">Notificações</span>
+    <span class="nc-popover-count" id="nc-popover-count"></span>
+  </div>
+  <div class="nc-list" id="nc-list"></div>
 </div>
 
 <!-- POPUP LOGOUT GOOGLE -->
