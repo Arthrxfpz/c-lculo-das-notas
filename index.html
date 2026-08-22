@@ -2665,6 +2665,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   overflow:hidden;
 }
 .nc-popover.open{opacity:1;transform:scale(1) translateY(0);pointer-events:all}
+.nc-popover.nc-centered{
+  left:50%!important;right:auto!important;
+  transform:translateX(-50%) scale(.92) translateY(-6px);
+  transform-origin:top center;
+}
+.nc-popover.nc-centered.open{transform:translateX(-50%) scale(1) translateY(0)}
+.nc-popover.nc-centered::before{display:none}
 .nc-popover::before{
   content:'';position:absolute;top:-7px;right:10px;
   width:13px;height:7px;background:var(--bg1);
@@ -13431,12 +13438,10 @@ function checkExamToasts(){
    CENTRAL DE NOTIFICAÇÕES (sino)
    Gera avisos automaticamente a partir dos dados do site:
    1) EAC necessário (trimestre fechado com nota < 6, sem EAC)
-   2) Risco de não atingir a média (nota necessária no próximo
-      trimestre, via getTrimesterRecovery)
-   3) Provas/trabalhos a 0, 1 ou 2 dias de distância
-   4) Ritmo baixo num trimestre ainda em andamento
-   5) Frequência baixa (abaixo ou perto do mínimo legal de 75%)
-   6) Aprovação garantida antecipada (aviso positivo)
+   2) Provas/trabalhos a 0, 1 ou 2 dias de distância
+   3) Ritmo baixo num trimestre ainda em andamento
+   4) Frequência baixa (abaixo ou perto do mínimo legal de 75%)
+   5) Aprovação garantida antecipada (aviso positivo)
    As notificações "somem" sozinhas quando o problema deixa de
    existir (nota lançada, EAC feito, prova removida, presença
    recuperada etc).
@@ -13485,32 +13490,7 @@ function computeNotifications(){
     });
   });
 
-  // 2) Risco de não atingir a média
-  SUBJECTS.forEach(s=>{
-    const rec=getTrimesterRecovery(s.id);
-    if(!rec||rec.alreadyPassed)return;
-    const trNext=rec.phase==='t2'?'2T':'3T';
-    const trLbl=NC_TR_LABEL[trNext];
-    if(rec.impossible){
-      list.push({
-        id:`imp-${s.id}-${trNext}`,type:'need',sid:s.id,tr:trNext,
-        subjName:s.name,color:s.color,
-        title:'Aprovação em risco',
-        body:`Mesmo tirando 10 no ${trLbl} de ${s.name}, não é possível atingir a média só com as notas dos trimestres. Vale conversar com o professor.`,
-        severity:'critical',priority:3,variant:null
-      });
-    }else{
-      list.push({
-        id:`need-${s.id}-${trNext}`,type:'need',sid:s.id,tr:trNext,
-        subjName:s.name,color:s.color,
-        title:`Atenção no ${trLbl}`,
-        body:`Em ${s.name}, você precisa de pelo menos ${rec.minNeeded.toFixed(1)} no ${trLbl} para não ficar em risco.`,
-        severity:'warning',priority:5,variant:Math.round(rec.minNeeded*10)
-      });
-    }
-  });
-
-  // 3) Provas/trabalhos próximos (hoje, amanhã, depois de amanhã)
+  // 2) Provas/trabalhos próximos (hoje, amanhã, depois de amanhã)
   exams.forEach(e=>{
     const d=daysDiff(e.examDate);
     if(d<0||d>2)return;
@@ -13527,7 +13507,7 @@ function computeNotifications(){
     });
   });
 
-  // 4) Ritmo baixo num trimestre ainda em andamento (ainda não fechado)
+  // 3) Ritmo baixo num trimestre ainda em andamento (ainda não fechado)
   SUBJECTS.forEach(s=>{
     if(subjApproved(s.id))return; // já aprovado na matéria — ritmo do trimestre deixou de importar
     ['1T','2T','3T'].forEach(tr=>{
@@ -13548,7 +13528,7 @@ function computeNotifications(){
     });
   });
 
-  // 5) Frequência baixa (ou perto do mínimo legal de 75%) por matéria
+  // 4) Frequência baixa (ou perto do mínimo legal de 75%) por matéria
   if(typeof freqAggregate==='function'){
     const freqAgg=freqAggregate(0,11);
     SUBJECTS.forEach(s=>{
@@ -13575,7 +13555,7 @@ function computeNotifications(){
     });
   }
 
-  // 6) Aprovação garantida antecipada (aviso positivo, uma vez por matéria)
+  // 5) Aprovação garantida antecipada (aviso positivo, uma vez por matéria)
   // Só dispara enquanto a matéria ainda está "em andamento" (nem todos os
   // trimestres fecharam de vez) — depois que fecha, o card "Aprovado" já
   // aparece normalmente no Resumo/Resultado, então não precisa duplicar.
@@ -13718,9 +13698,17 @@ function openNCPopover(e){
   _ncRenderBadge(0);
 
   const r=btn.getBoundingClientRect();
+  const isMobileNC=window.innerWidth<=767;
   pop.style.top=(r.bottom+8)+'px';
-  pop.style.right=(window.innerWidth-r.right)+'px';
-  pop.style.left='auto';
+  if(isMobileNC){
+    pop.classList.add('nc-centered');
+    pop.style.left='50%';
+    pop.style.right='auto';
+  }else{
+    pop.classList.remove('nc-centered');
+    pop.style.right=(window.innerWidth-r.right)+'px';
+    pop.style.left='auto';
+  }
 
   if(bk)bk.style.display='block';
   requestAnimationFrame(()=>{pop.classList.add('open');});
