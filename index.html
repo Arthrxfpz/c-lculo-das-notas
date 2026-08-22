@@ -310,6 +310,12 @@
       s.googlePhoto = newPhoto;
       changed = true;
     }
+    // Data em que a conta Google foi criada (primeiro login) — grava uma única vez
+    const creationTime = user.metadata && user.metadata.creationTime;
+    if (creationTime && s.memberSince !== creationTime) {
+      s.memberSince = creationTime;
+      changed = true;
+    }
     if (changed) {
       localStorage.setItem('t205_stu', JSON.stringify(s));
       if (typeof loadStudentLS === 'function') loadStudentLS();
@@ -5108,14 +5114,78 @@ input, textarea, select {
 }
 .profile-box::-webkit-scrollbar { display: none; }
 
-/* ── Hero do perfil ── */
+/* ── Hero do perfil (redesign moderno) ── */
 .prof-hero {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 22px;
-  padding: 0 2px;
+  margin-bottom: 16px;
+  padding: 18px 16px;
+  background: linear-gradient(155deg, var(--bg2), var(--bg1) 70%);
+  border: 0.5px solid var(--line);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
 }
+.prof-hero::before {
+  content: "";
+  position: absolute;
+  top: -40%; right: -20%;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: .12;
+  filter: blur(10px);
+  pointer-events: none;
+}
+.prof-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.prof-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: -.1px;
+  color: var(--t2);
+  background: var(--bg3);
+  border: 0.5px solid var(--line2);
+  padding: 3px 9px 3px 7px;
+  border-radius: 100px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.prof-hero-badge svg { width: 11px; height: 11px; flex-shrink: 0; stroke: var(--t3); }
+
+/* ── Card "Membro desde" ── */
+.prof-member-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  background: var(--goldbg);
+  border: 0.5px solid var(--goldbd);
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+.prof-member-icon {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--gold);
+  display: flex; align-items: center; justify-content: center;
+}
+.prof-member-icon svg { width: 19px; height: 19px; stroke: var(--accent-text,#000); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prof-member-info { flex: 1; min-width: 0; }
+.prof-member-label { font-size: 10px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
+.prof-member-date { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
+.prof-member-days { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
+[data-fb-auth="out"] .prof-member-card { display: none; }
 /* ── PERFIL: lock overlay (sem login) ── */
 #prof-lock-overlay {
   display: none;
@@ -5286,7 +5356,7 @@ input, textarea, select {
   background: var(--bg2);
   border: 0.5px solid var(--line);
   border-radius: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 [data-fb-auth="in"] .prof-account-section { display: flex; }
 .prof-account-avatar {
@@ -5325,6 +5395,47 @@ input, textarea, select {
   margin: 4px 0 10px 2px;
   opacity: .7;
 }
+
+/* ── Card de campos (Informações) — redesign moderno ── */
+.prof-fields-card {
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 18px;
+  padding: 4px 14px;
+  margin-bottom: 20px;
+}
+.prof-field-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 0.5px solid var(--line);
+}
+.prof-field-row:last-child { border-bottom: none; }
+.prof-field-row-icon {
+  width: 30px; height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+}
+.prof-field-row-icon svg { width: 15px; height: 15px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prof-field-row-body { flex: 1; min-width: 0; }
+.prof-field-row-label {
+  font-size: 11px; font-weight: 600; color: var(--t3);
+  letter-spacing: -.1px; margin-bottom: 2px;
+}
+.prof-field-row-input {
+  width: 100%;
+  border: none; outline: none;
+  background: transparent;
+  padding: 0;
+  font-size: 15px; font-weight: 500;
+  color: var(--t1);
+  letter-spacing: -.2px;
+  font-family: var(--ff);
+}
+.prof-field-row-input::placeholder { color: var(--t4); font-weight: 400; }
 
 /* ── 2-col row ── */
 .prof-row-2col {
@@ -7633,7 +7744,7 @@ input, textarea, select {
       </div>
       <div class="prof-hero-info">
         <div class="prof-hero-name" id="prof-hero-name">Seu nome</div>
-        <div class="prof-hero-sub" id="prof-hero-sub">Escola · Turma</div>
+        <div class="prof-hero-badges" id="prof-hero-badges"></div>
       </div>
     </div>
 
@@ -7662,12 +7773,43 @@ input, textarea, select {
       </div>
     </div>
 
+    <!-- CARD: Membro desde -->
+    <div class="prof-member-card" id="prof-member-card">
+      <div class="prof-member-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01z"/></svg>
+      </div>
+      <div class="prof-member-info">
+        <div class="prof-member-label">Membro da plataforma desde</div>
+        <div class="prof-member-date" id="prof-member-date">—</div>
+        <div class="prof-member-days" id="prof-member-days"></div>
+      </div>
+    </div>
+
     <!-- SEÇÃO: Informações -->
     <div class="prof-section-label">Informações</div>
-    <div class="field-group"><label class="field-label">Nome completo</label><input class="field-input" id="m-nome" type="text" placeholder="Digite seu nome..." oninput="updateProfileHero()"/></div>
-    <div class="field-group"><label class="field-label">Escola / Instituição</label><input class="field-input" id="m-escola" type="text" placeholder="Nome da escola..." oninput="updateProfileHero()"/></div>
-
-    <div class="field-group"><label class="field-label">Turma / Sala</label><input class="field-input" id="m-turma" type="text" placeholder="Ex: 205"/></div>
+    <div class="prof-fields-card">
+      <div class="prof-field-row">
+        <div class="prof-field-row-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="prof-field-row-body">
+          <div class="prof-field-row-label">Nome completo</div>
+          <input class="prof-field-row-input" id="m-nome" type="text" placeholder="Digite seu nome..." oninput="updateProfileHero()"/>
+        </div>
+      </div>
+      <div class="prof-field-row">
+        <div class="prof-field-row-icon"><svg viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg></div>
+        <div class="prof-field-row-body">
+          <div class="prof-field-row-label">Escola / Instituição</div>
+          <input class="prof-field-row-input" id="m-escola" type="text" placeholder="Nome da escola..." oninput="updateProfileHero()"/>
+        </div>
+      </div>
+      <div class="prof-field-row">
+        <div class="prof-field-row-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div>
+        <div class="prof-field-row-body">
+          <div class="prof-field-row-label">Turma / Sala</div>
+          <input class="prof-field-row-input" id="m-turma" type="text" placeholder="Ex: 205"/>
+        </div>
+      </div>
+    </div>
 
     <!-- SEÇÃO: Cor do app -->
     <div class="prof-section-label">Cor do aplicativo</div>
@@ -12889,6 +13031,7 @@ function openModal(){
   }
   if (acctName)  acctName.textContent  = fbUser ? (fbUser.displayName||'Usuário') : '—';
   if (acctEmail) acctEmail.textContent = fbUser ? (fbUser.email||'')              : '—';
+  syncMemberSince();
 
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
   const hint=document.getElementById('prof-first-visit-hint');
@@ -12906,6 +13049,18 @@ function openModal(){
 
   document.getElementById('modal-overlay').classList.add('open');
 }
+function syncMemberSince(){
+  const dateEl=document.getElementById('prof-member-date');
+  const daysEl=document.getElementById('prof-member-days');
+  if(!dateEl||!daysEl)return;
+  if(!stu.memberSince){dateEl.textContent='—';daysEl.textContent='';return;}
+  const since=new Date(stu.memberSince);
+  if(isNaN(since.getTime())){dateEl.textContent='—';daysEl.textContent='';return;}
+  const fmt=since.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  const days=Math.max(0,Math.floor((Date.now()-since.getTime())/86400000));
+  dateEl.textContent=fmt;
+  daysEl.textContent=days===0?'há menos de 1 dia':'há '+days+(days===1?' dia':' dias');
+}
 function modalOvClick(e){if(e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open');}
 function saveStudent(){
   stu.nome=document.getElementById('m-nome').value.trim();
@@ -12922,9 +13077,14 @@ function syncProfilePreview(){
   const escola=document.getElementById('m-escola').value.trim()||'';
   const turma=document.getElementById('m-turma')?document.getElementById('m-turma').value.trim():'';
   const heroName=document.getElementById('prof-hero-name');
-  const heroSub=document.getElementById('prof-hero-sub');
+  const heroBadges=document.getElementById('prof-hero-badges');
   if(heroName)heroName.textContent=nome||'Seu nome';
-  if(heroSub)heroSub.textContent=(escola||'Escola')+(turma?' · Turma '+turma:'');
+  if(heroBadges){
+    let badges='';
+    if(escola)badges+='<span class="prof-hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5-10-5z"/><path d="M6 12v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/></svg>'+escola+'</span>';
+    if(turma)badges+='<span class="prof-hero-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Turma '+turma+'</span>';
+    heroBadges.innerHTML=badges||'<span class="prof-hero-badge">Complete seu perfil</span>';
+  }
   const av=document.getElementById('prof-avatar-display');
   const initEl=document.getElementById('prof-avatar-initials');
   const emojiEl=document.getElementById('prof-avatar-emoji');
