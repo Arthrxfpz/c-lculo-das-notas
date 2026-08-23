@@ -5187,6 +5187,30 @@ input, textarea, select {
 .prof-member-days { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
 [data-fb-auth="out"] .prof-member-card { display: none; }
 
+/* ── Card "Armazenamento da nuvem" ── */
+.prof-storage-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+.prof-storage-icon {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+}
+.prof-storage-icon svg { width: 19px; height: 19px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prof-storage-info { flex: 1; min-width: 0; }
+.prof-storage-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
+.prof-storage-value { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
+[data-fb-auth="out"] .prof-storage-card { display: none; }
+
 /* ── SOBRE O SITE ── */
 .about-box { max-width: 420px; }
 .about-hero {
@@ -7885,6 +7909,17 @@ input, textarea, select {
           <div class="prof-field-row-label">Turma / Sala</div>
           <input class="prof-field-row-input" id="m-turma" type="text" placeholder="Ex: 205"/>
         </div>
+      </div>
+    </div>
+
+    <!-- CARD: Armazenamento da nuvem -->
+    <div class="prof-storage-card" id="prof-storage-card">
+      <div class="prof-storage-icon">
+        <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+      </div>
+      <div class="prof-storage-info">
+        <div class="prof-storage-label">Armazenamento da nuvem consumido pela conta</div>
+        <div class="prof-storage-value" id="prof-storage-value">—</div>
       </div>
     </div>
 
@@ -13155,6 +13190,7 @@ function openModal(){
   if (acctName)  acctName.textContent  = fbUser ? (fbUser.displayName||'Usuário') : '—';
   if (acctEmail) acctEmail.textContent = fbUser ? (fbUser.email||'')              : '—';
   syncMemberSince();
+  syncStorageUsage();
 
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
   const hint=document.getElementById('prof-first-visit-hint');
@@ -13183,6 +13219,30 @@ function syncMemberSince(){
   const days=Math.max(0,Math.floor((Date.now()-since.getTime())/86400000));
   dateEl.textContent=fmt;
   daysEl.textContent=days===0?'há menos de 1 dia':'há '+days+(days===1?' dia':' dias');
+}
+
+/* ── Armazenamento da nuvem consumido pela conta ──
+   Estima o tamanho (em bytes) de tudo que é enviado ao Firestore para
+   este usuário (notas, provas, perfil, anotações, faltas etc.), somando
+   o tamanho das chaves correspondentes salvas no localStorage. */
+function syncStorageUsage(){
+  const el=document.getElementById('prof-storage-value');
+  if(!el)return;
+  try{
+    const keys=['t205_grades','t205_exams','t205_stu','t205_notes','t205_notifs','t205_freq','t205_freq_noclass','t205_freqp','t205_freq_override'];
+    let bytes=0;
+    keys.forEach(k=>{
+      const v=localStorage.getItem(k);
+      if(v) bytes+=new Blob([v]).size;
+    });
+    let text;
+    if(bytes<1024) text=bytes+' B';
+    else if(bytes<1024*1024) text=(bytes/1024).toFixed(1).replace('.',',')+' KB';
+    else text=(bytes/(1024*1024)).toFixed(2).replace('.',',')+' MB';
+    el.textContent=text;
+  }catch(e){
+    el.textContent='—';
+  }
 }
 
 /* ─── SOBRE O SITE ─── */
@@ -13264,6 +13324,7 @@ function saveStudent(){
   stu.escola=document.getElementById('m-escola').value.trim();
   stu.turma=document.getElementById('m-turma').value.trim();
   applyStudent();saveStudentLS();
+  syncStorageUsage();
   document.getElementById('modal-overlay').classList.remove('open');
 }
 function updateProfileHero(){
