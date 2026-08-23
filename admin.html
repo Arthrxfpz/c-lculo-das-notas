@@ -238,6 +238,10 @@
         <div class="stat-value" id="st-users">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Google vinculado</div>
+        <div class="stat-value" id="st-google">—</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Média/usuário</div>
         <div class="stat-value" id="st-avg">—</div>
       </div>
@@ -268,6 +272,11 @@
         <option value="updatedAt">Recente</option>
         <option value="createdAt">Entrada mais recente</option>
         <option value="escola">Escola</option>
+      </select>
+      <select id="google-filter">
+        <option value="all">Todos os usuários</option>
+        <option value="google">Só com Google vinculado</option>
+        <option value="nogoogle">Só sem Google vinculado</option>
       </select>
     </div>
     <div id="loading"><div class="spinner"></div>Carregando dados do Firestore...</div>
@@ -696,6 +705,14 @@
   // ─────────────────────────────────────────────────────────────
   let rows = [];
   let sortKey = 'bytes';
+  let googleFilterKey = 'all';
+
+  // Considera "conta Google vinculada" quando o documento tem e-mail
+  // sincronizado ou foto de perfil do Google — ambos só existem depois
+  // que o login com Google sincroniza os dados no Firestore.
+  function hasGoogle(row){
+    return !!(row.email || row.googlePhoto || (row.raw && row.raw.student && row.raw.student.googlePhoto));
+  }
 
   async function loadData(){
     const loadingEl = document.getElementById('loading');
@@ -743,9 +760,11 @@
       const totalExams = rows.reduce((a,r)=>a+r.examsCount,0);
       const withFreq = rows.filter(r=>r.freqPct!=null);
       const avgFreq = withFreq.length ? Math.round(withFreq.reduce((a,r)=>a+r.freqPct,0)/withFreq.length) : null;
+      const googleLinked = rows.filter(hasGoogle).length;
 
       document.getElementById('st-total').textContent  = fmtBytes(total);
       document.getElementById('st-users').textContent  = rows.length;
+      document.getElementById('st-google').textContent = googleLinked;
       document.getElementById('st-avg').textContent    = rows.length ? fmtBytes(Math.round(total/rows.length)) : '—';
       document.getElementById('st-max').textContent    = rows.length ? fmtBytes(max) : '—';
       document.getElementById('st-exams').textContent  = totalExams;
@@ -799,6 +818,8 @@
       r.turma.toLowerCase().includes(q) ||
       r.uid.toLowerCase().includes(q)
     );
+    if (googleFilterKey === 'google') filtered = filtered.filter(hasGoogle);
+    else if (googleFilterKey === 'nogoogle') filtered = filtered.filter(r => !hasGoogle(r));
     filtered.sort((a,b) => {
       if(sortKey === 'updatedAt') return (b.updatedAt||0) - (a.updatedAt||0);
       if(sortKey === 'createdAt') return (entryDateFor(b).ts||0) - (entryDateFor(a).ts||0);
@@ -852,6 +873,7 @@
 
   document.getElementById('search').addEventListener('input', renderList);
   document.getElementById('sort-select').addEventListener('change', (e)=>{ sortKey = e.target.value; renderList(); });
+  document.getElementById('google-filter').addEventListener('change', (e)=>{ googleFilterKey = e.target.value; renderList(); });
   document.getElementById('btn-refresh').addEventListener('click', (e)=>{
     e.currentTarget.classList.add('spin');
     loadData().finally(()=> e.currentTarget.classList.remove('spin'));
