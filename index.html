@@ -205,6 +205,12 @@
           freqNoClass: JSON.parse(localStorage.getItem('t205_freq_noclass') || 'null'),
           freqPeriods: JSON.parse(localStorage.getItem('t205_freqp') || 'null'),
           freqOverride: JSON.parse(localStorage.getItem('t205_freq_override') || 'null'),
+          schedule: {
+            periods: JSON.parse(localStorage.getItem('t205_periods') || 'null'),
+            sched:   JSON.parse(localStorage.getItem('t205_sched') || 'null'),
+            history: JSON.parse(localStorage.getItem('t205_sched_history') || 'null')
+          },
+          subjects: JSON.parse(localStorage.getItem('t205_subjects') || 'null'),
           email: u ? (u.email || null) : null,
           uid: _currentUid,
           createdAt: _docCreatedAt,
@@ -230,12 +236,21 @@
     if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
     if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
     if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride));
+    if (d.schedule) {
+      if (d.schedule.periods) localStorage.setItem('t205_periods', JSON.stringify(d.schedule.periods));
+      if (d.schedule.sched)   localStorage.setItem('t205_sched',   JSON.stringify(d.schedule.sched));
+      if (d.schedule.history) localStorage.setItem('t205_sched_history', JSON.stringify(d.schedule.history));
+    }
+    if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects));
     if (typeof loadGrades       === 'function') loadGrades();
     if (typeof loadExams        === 'function') loadExams();
     if (typeof loadFreq         === 'function') loadFreq();
     if (typeof loadFreqNoClass  === 'function') loadFreqNoClass();
     if (typeof loadFreqPeriods  === 'function') loadFreqPeriods();
     if (typeof loadFreqOverride === 'function') loadFreqOverride();
+    if (typeof loadSchedule     === 'function') loadSchedule();
+    if (typeof loadSchedHistory === 'function') loadSchedHistory();
+    if (typeof loadSubjects     === 'function') loadSubjects();
     if (typeof _autoRemovePastExams === 'function') _autoRemovePastExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
     if (typeof renderCurrentPage === 'function') renderCurrentPage();
@@ -273,6 +288,12 @@
           if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
           if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
           if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride));
+          if (d.schedule) {
+            if (d.schedule.periods) localStorage.setItem('t205_periods', JSON.stringify(d.schedule.periods));
+            if (d.schedule.sched)   localStorage.setItem('t205_sched',   JSON.stringify(d.schedule.sched));
+            if (d.schedule.history) localStorage.setItem('t205_sched_history', JSON.stringify(d.schedule.history));
+          }
+          if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects));
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           _setSplashProgress(90, 'Aplicando atualizações…');
           setTimeout(() => location.reload(), 200);
