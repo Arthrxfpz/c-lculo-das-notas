@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cálculo das notas — Em manutenção</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2313141A'/%3E%3Crect x='7' y='5' width='13' height='17' rx='2' fill='none' stroke='%23FFD60A' stroke-width='1.2' opacity='.9'/%3E%3Cline x1='10' y1='10' x2='17' y2='10' stroke='%23FFD60A' stroke-width='1' stroke-linecap='round' opacity='.65'/%3E%3Cline x1='10' y1='13' x2='16' y2='13' stroke='%23FFD60A' stroke-width='1' stroke-linecap='round' opacity='.4'/%3E%3Cline x1='10' y1='16' x2='17' y2='16' stroke='%23FFD60A' stroke-width='1' stroke-linecap='round' opacity='.4'/%3E%3Ccircle cx='21' cy='22' r='6' fill='%2313141A'/%3E%3Ccircle cx='21' cy='22' r='5' fill='%23FFD60A'/%3E%3Cpolyline points='18.5,22 20.2,23.8 23.5,20.2' fill='none' stroke='%2313141A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+<style>
+  :root{
+    --bg:      #0A0B0E;
+    --bg2:     #121319;
+    --card:    #15161D;
+    --line:    rgba(255,255,255,.08);
+    --t1:      #F5F5F7;
+    --t2:      rgba(245,245,247,.56);
+    --t3:      rgba(245,245,247,.34);
+    --gold:    #FFD60A;
+    --gold2:   #FFC300;
+    --goldbg:  rgba(255,214,10,.10);
+    --goldbd:  rgba(255,214,10,.28);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    min-height:100dvh;
+    display:flex;align-items:center;justify-content:center;
+    background:#000;
+    color:var(--t1);
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;
+    overflow:hidden;
+    padding:24px;
+  }
+
+  .wrap{
+    position:relative;
+    width:100%;
+    max-width:460px;
+    text-align:center;
+    animation:rise .7s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes rise{
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  /* ── Logo ── */
+  .logo{
+    width:64px;height:64px;
+    margin:0 auto 28px;
+    border-radius:17px;
+    background:var(--bg2);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.02) inset;
+    position:relative;
+  }
+  .logo svg{width:34px;height:34px;display:block}
+  .logo::after{
+    content:'';
+    position:absolute;inset:-1px;
+    border-radius:18px;
+    padding:1px;
+    background:conic-gradient(from var(--ang,0deg), transparent 0 70%, var(--gold) 85%, transparent 100%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;
+    animation:spin 3.2s linear infinite;
+    opacity:.85;
+  }
+  @keyframes spin{ to{ --ang:360deg; } }
+  @property --ang{ syntax:'<angle>'; inherits:false; initial-value:0deg; }
+
+  h1{
+    margin:0 0 12px;
+    font-size:26px;
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.25;
+  }
+  p.lead{
+    margin:0 auto 34px;
+    max-width:360px;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--t2);
+    font-weight:500;
+  }
+  p.lead strong{color:var(--t1);font-weight:700}
+
+  @media (max-width:420px){
+    h1{font-size:22px}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important}
+  }
+</style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <div class="logo">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="7" y="5" width="13" height="17" rx="2" fill="none" stroke="#FFD60A" stroke-width="1.2" opacity=".9"/>
+        <line x1="10" y1="10" x2="17" y2="10" stroke="#FFD60A" stroke-width="1" stroke-linecap="round" opacity=".65"/>
+        <line x1="10" y1="13" x2="16" y2="13" stroke="#FFD60A" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+        <line x1="10" y1="16" x2="17" y2="16" stroke="#FFD60A" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+        <circle cx="21" cy="22" r="6" fill="#0A0B0E"/>
+        <circle cx="21" cy="22" r="5" fill="#FFD60A"/>
+        <polyline points="18.5,22 20.2,23.8 23.5,20.2" fill="none" stroke="#0A0B0E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <h1>Página em manutenção.</h1>
+    <p class="lead">Até breve.</p>
+
+  </div>
+
+</body>
+</html>
