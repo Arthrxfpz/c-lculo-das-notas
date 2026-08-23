@@ -319,6 +319,8 @@
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+  import { getFunctions, httpsCallable }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-functions.js";
 
   // ── Mesmo projeto Firebase do app principal ──
   const firebaseConfig = {
@@ -336,9 +338,11 @@
   // só pra não nem tentar mostrar a tela pra quem não deveria)
   const ADMIN_EMAIL = "zarthur063@gmail.com";
 
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+  const app       = initializeApp(firebaseConfig);
+  const auth      = getAuth(app);
+  const db        = getFirestore(app);
+  const fns       = getFunctions(app);
+  const listAllUsersFn = httpsCallable(fns, 'listAllUsers');
 
   /* ═══════════ Referência de matérias padrão (mat_id → nome/cor) ═══════════
      Desde a sincronização de horário/matérias (ver index.html), o campo
@@ -724,13 +728,14 @@
     try{
       const snap = await getDocs(collection(db, 'users'));
       rows = [];
+      const byUid = {};
       snap.forEach(docSnap => {
         const d = docSnap.data() || {};
         const json = JSON.stringify(d);
         const bytes = new Blob([json]).size;
         const student = d.student || {};
         const freqStats = computeFreq(d);
-        rows.push({
+        const row = {
           uid: docSnap.id,
           raw: d,
           nome: student.nome || '(sem nome)',
@@ -750,8 +755,59 @@
           gradesCount: countGradeEntries(d.grades),
           notesCount: Array.isArray(d.notes) ? d.notes.length : 0,
           freqPct: freqStats.totalPct,
-        });
+          neverUsedApp: false,
+        };
+        rows.push(row);
+        byUid[docSnap.id] = row;
       });
+
+      // ── Busca TODAS as contas do Firebase Authentication (via Cloud
+      // Function com Admin SDK), incluindo as que nunca gravaram nada no
+      // Firestore (login feito mas app nunca realmente usado). Isso não
+      // trava o carregamento se a function ainda não estiver deployada.
+      try{
+        const res = await listAllUsersFn();
+        const authUsers = (res.data && res.data.users) || [];
+        authUsers.filter(u => u.isGoogle).forEach(u => {
+          if (byUid[u.uid]) {
+            // já existe doc no Firestore — só completa e-mail/foto se faltar
+            const row = byUid[u.uid];
+            if (!row.email) row.email = u.email || null;
+            if (!row.googlePhoto) row.googlePhoto = u.photoURL || null;
+            if (!row.createdAt && u.creationTime) row.createdAt = new Date(u.creationTime).getTime();
+            return;
+          }
+          // conta Google que nunca gravou dado no Firestore — entra como stub
+          const createdAt = u.creationTime ? new Date(u.creationTime).getTime() : null;
+          const lastSignIn = u.lastSignInTime ? new Date(u.lastSignInTime).getTime() : null;
+          const row = {
+            uid: u.uid,
+            raw: {},
+            nome: u.displayName || '(sem nome)',
+            escola: '—',
+            turma: '',
+            serie: '',
+            email: u.email || null,
+            createdAt,
+            createdAtApprox: false,
+            memberSince: null,
+            googlePhoto: u.photoURL || null,
+            avatarColor: realAvatarColor({}),
+            accentKey: realAccentKey({}),
+            bytes: 0,
+            updatedAt: lastSignIn,
+            examsCount: 0,
+            gradesCount: 0,
+            notesCount: 0,
+            freqPct: null,
+            neverUsedApp: true,
+          };
+          rows.push(row);
+          byUid[u.uid] = row;
+        });
+      }catch(fnErr){
+        toast('Não foi possível carregar contas do Authentication (Cloud Function): ' + fnErr.message, 'err');
+      }
 
       const total = rows.reduce((a,r)=>a+r.bytes,0);
       const max   = rows.reduce((a,r)=>Math.max(a,r.bytes),0);
@@ -852,9 +908,10 @@
           <div class="user-sub">${escapeHtml(subInfo)}</div>
           ${emailHtml}
           <div class="user-tags">
+            ${r.neverUsedApp ? '<span class="tag" style="color:var(--blue)">só login, sem uso</span>' : `
             <span class="tag">${r.gradesCount} notas</span>
             <span class="tag">${r.examsCount} provas</span>
-            ${freqTag}
+            ${freqTag}`}
           </div>
         </div>
         <div class="user-meta">
