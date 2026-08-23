@@ -47,6 +47,7 @@
 
   let _syncTimer = null;
   let _currentUid = null;
+  let _docCreatedAt = null; // data de entrada na plataforma (gravada uma única vez)
 
   /* ── Controle do splash com progresso ── */
   let _splashSlowTimer = null;
@@ -192,6 +193,8 @@
       try {
         const now = Date.now();
         localStorage.setItem('t205_updatedAt', String(now));
+        if (!_docCreatedAt) _docCreatedAt = now; // primeira gravação define a data de entrada
+        const u = auth.currentUser;
         const payload = {
           grades:  JSON.parse(localStorage.getItem('t205_grades')  || 'null'),
           exams:   JSON.parse(localStorage.getItem('t205_exams')   || '[]'),
@@ -202,6 +205,9 @@
           freqNoClass: JSON.parse(localStorage.getItem('t205_freq_noclass') || 'null'),
           freqPeriods: JSON.parse(localStorage.getItem('t205_freqp') || 'null'),
           freqOverride: JSON.parse(localStorage.getItem('t205_freq_override') || 'null'),
+          email: u ? (u.email || null) : null,
+          uid: _currentUid,
+          createdAt: _docCreatedAt,
           updatedAt: now
         };
         await setDoc(doc(db, 'users', _currentUid), payload);
@@ -253,6 +259,7 @@
 
       if (snap.exists()) {
         const d = snap.data();
+        if (d.createdAt) _docCreatedAt = d.createdAt; // preserva a data de entrada já gravada
         const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
         const remoteTs = d.updatedAt || 0;
         if (remoteTs > localTs) {
@@ -274,6 +281,7 @@
         _setSplashProgress(85, 'Dados atualizados!');
         _showSyncBadge('ok');
       } else {
+        if (!_docCreatedAt) _docCreatedAt = Date.now(); // primeiro acesso deste usuário
         _setSplashProgress(85, 'Pronto!');
         _showSyncBadge('idle');
       }

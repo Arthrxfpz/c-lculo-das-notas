@@ -66,7 +66,11 @@
   .user-list{display:flex;flex-direction:column;gap:8px}
   .user-card{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:12px 12px;cursor:pointer;transition:background .1s}
   .user-card:active{background:var(--bg3);transform:scale(.995)}
-  .avatar{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#000}
+  .avatar{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#000;overflow:hidden;background-size:cover;background-position:center}
+  .avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .google-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--bg2);border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;margin-left:30px;margin-top:30px}
+  .google-dot svg{width:9px;height:9px}
+  .avatar-wrap{position:relative;flex-shrink:0}
   .user-info{flex:1;min-width:0}
   .user-name{font-size:14.5px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .user-sub{font-size:12px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
@@ -75,6 +79,7 @@
   .user-meta{text-align:right;flex-shrink:0}
   .user-size{font-size:13px;font-weight:800;color:var(--gold)}
   .user-time{font-size:10.5px;color:var(--t4);margin-top:3px}
+  .user-email{font-size:11px;color:var(--t4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
   .chev{color:var(--t4);flex-shrink:0}
   .chev svg{width:16px;height:16px;display:block}
 
@@ -91,7 +96,11 @@
   @media(min-width:720px){.sheet-handle{display:none}}
   .sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 18px 10px;flex-shrink:0}
   .sheet-name{font-size:17px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
-  .sheet-uid{font-size:10.5px;color:var(--t4);font-family:monospace;margin-top:3px;word-break:break-all}
+  .sheet-uid{font-size:10.5px;color:var(--t4);font-family:monospace;margin-top:3px;word-break:break-all;cursor:pointer}
+  .sheet-uid:active{opacity:.6}
+  .sheet-avatar{width:52px;height:52px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:19px;color:#000;overflow:hidden}
+  .sheet-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .sheet-header-top{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
   .sheet-tabs{display:flex;gap:6px;padding:0 14px 12px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
   .sheet-tabs::-webkit-scrollbar{display:none}
   .tab-pill{flex-shrink:0;background:var(--bg3);border:.5px solid var(--line);color:var(--t3);font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
@@ -107,9 +116,23 @@
   .input[type=color]{padding:4px;height:42px;cursor:pointer}
 
   .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-  .info-box{background:var(--bg3);border-radius:11px;padding:10px 12px}
+  .info-box{background:var(--bg3);border-radius:11px;padding:10px 12px;min-width:0}
   .info-box-label{font-size:9.5px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
-  .info-box-value{font-size:13px;font-weight:700;color:var(--t1)}
+  .info-box-value{font-size:13px;font-weight:700;color:var(--t1);word-break:break-word}
+  .info-box-value.mono{font-family:monospace;font-size:11.5px}
+  .info-box.full{grid-column:1/-1}
+  .info-box.copyable{cursor:pointer}
+  .info-box.copyable:active{background:var(--bg4)}
+
+  .profile-card{display:flex;align-items:center;gap:14px;background:var(--bg3);border-radius:16px;padding:14px;margin-bottom:16px}
+  .profile-card-av{width:64px;height:64px;border-radius:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:#000;overflow:hidden}
+  .profile-card-av img{width:100%;height:100%;object-fit:cover;display:block}
+  .profile-card-name{font-size:15px;font-weight:800;color:var(--t1)}
+  .profile-card-email{font-size:12px;color:var(--t3);margin-top:2px;word-break:break-all}
+  .profile-card-badges{display:flex;gap:6px;margin-top:7px;flex-wrap:wrap}
+  .gbadge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;background:var(--bg4);color:var(--t3)}
+  .gbadge svg{width:10px;height:10px}
+  .gbadge.on{background:var(--goldbg);color:var(--gold)}
 
   .btn-primary{width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:6px}
   .btn-primary:active{transform:scale(.98)}
@@ -220,15 +243,20 @@
         <div class="stat-label">Ativos (7 dias)</div>
         <div class="stat-value green" id="st-active">—</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Frequência média</div>
+        <div class="stat-value" id="st-freq">—</div>
+      </div>
     </div>
 
     <div class="section-label">Usuários</div>
     <div class="toolbar">
-      <input id="search" placeholder="Buscar por nome, escola, turma ou UID...">
+      <input id="search" placeholder="Buscar por nome, e-mail, escola, turma ou UID...">
       <select id="sort-select">
         <option value="bytes">Tamanho</option>
         <option value="nome">Nome</option>
         <option value="updatedAt">Recente</option>
+        <option value="createdAt">Entrada mais recente</option>
         <option value="escola">Escola</option>
       </select>
     </div>
@@ -243,9 +271,12 @@
 <div class="sheet" id="sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
-    <div style="min-width:0">
-      <div class="sheet-name" id="sh-name">—</div>
-      <div class="sheet-uid" id="sh-uid">—</div>
+    <div class="sheet-header-top">
+      <div class="sheet-avatar" id="sh-avatar">?</div>
+      <div style="min-width:0">
+        <div class="sheet-name" id="sh-name">—</div>
+        <div class="sheet-uid" id="sh-uid" title="Toque para copiar o UID">—</div>
+      </div>
     </div>
     <button class="icon-btn" id="btn-close-sheet">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -362,6 +393,24 @@
     return (bytes/(1024*1024*1024)).toFixed(2).replace('.',',') + ' GB';
   }
   function fmtDate(ts){ return ts ? new Date(ts).toLocaleString('pt-BR') : '—'; }
+  function fmtDateOnly(ts){
+    if(!ts) return '—';
+    const d = typeof ts === 'string' ? new Date(ts) : new Date(ts);
+    if(isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  function daysSince(ts){
+    if(!ts) return null;
+    const d = typeof ts === 'string' ? new Date(ts) : new Date(ts);
+    if(isNaN(d.getTime())) return null;
+    return Math.max(0, Math.floor((Date.now() - d.getTime())/(24*3600*1000)));
+  }
+  function copyText(text, label){
+    if(!text) return;
+    navigator.clipboard?.writeText(String(text)).then(()=>{
+      toast((label||'Copiado') + ' copiado!', 'ok');
+    }).catch(()=>{ toast('Não foi possível copiar.', 'err'); });
+  }
   function timeAgo(ts){
     if(!ts) return '—';
     const diff = Date.now() - ts;
@@ -439,6 +488,7 @@
         const json = JSON.stringify(d);
         const bytes = new Blob([json]).size;
         const student = d.student || {};
+        const freqStats = computeFreq(d.freq);
         rows.push({
           uid: docSnap.id,
           raw: d,
@@ -446,10 +496,17 @@
           escola: student.escola || '—',
           turma: student.turma || '',
           serie: student.serie || '',
+          email: d.email || null,
+          createdAt: d.createdAt || null,
+          memberSince: student.memberSince || null,
+          googlePhoto: student.googlePhoto || null,
+          avatarColor: student.avatarColor || '#FFD60A',
           bytes,
           updatedAt: d.updatedAt || null,
           examsCount: Array.isArray(d.exams) ? d.exams.length : 0,
           gradesCount: countGradeEntries(d.grades),
+          notesCount: Array.isArray(d.notes) ? d.notes.length : 0,
+          freqPct: freqStats.totalPct,
         });
       });
 
@@ -458,6 +515,8 @@
       const now = Date.now();
       const active7 = rows.filter(r => r.updatedAt && (now - r.updatedAt) < 7*24*3600*1000).length;
       const totalExams = rows.reduce((a,r)=>a+r.examsCount,0);
+      const withFreq = rows.filter(r=>r.freqPct!=null);
+      const avgFreq = withFreq.length ? Math.round(withFreq.reduce((a,r)=>a+r.freqPct,0)/withFreq.length) : null;
 
       document.getElementById('st-total').textContent  = fmtBytes(total);
       document.getElementById('st-users').textContent  = rows.length;
@@ -465,6 +524,8 @@
       document.getElementById('st-max').textContent    = rows.length ? fmtBytes(max) : '—';
       document.getElementById('st-exams').textContent  = totalExams;
       document.getElementById('st-active').textContent = active7;
+      document.getElementById('st-freq').textContent   = avgFreq!=null ? avgFreq+'%' : '—';
+      document.getElementById('st-freq').style.color   = avgFreq!=null ? pctColor(avgFreq) : '';
       document.getElementById('last-refresh').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
 
       renderList();
@@ -476,7 +537,15 @@
   }
 
   function avatarColorFor(row){
-    return (row.raw.student && row.raw.student.avatarColor) || '#FFD60A';
+    return (row.raw.student && row.raw.student.avatarColor) || row.avatarColor || '#FFD60A';
+  }
+  function avatarHtmlFor(row, initial, color){
+    const photo = row.googlePhoto || (row.raw.student && row.raw.student.googlePhoto);
+    if(photo){
+      return `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+              <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${color};color:#000;font-weight:800">${escapeHtml(initial)}</div>`;
+    }
+    return escapeHtml(initial);
   }
 
   function renderList(){
@@ -486,12 +555,14 @@
 
     let filtered = rows.filter(r =>
       r.nome.toLowerCase().includes(q) ||
+      (r.email||'').toLowerCase().includes(q) ||
       r.escola.toLowerCase().includes(q) ||
       r.turma.toLowerCase().includes(q) ||
       r.uid.toLowerCase().includes(q)
     );
     filtered.sort((a,b) => {
       if(sortKey === 'updatedAt') return (b.updatedAt||0) - (a.updatedAt||0);
+      if(sortKey === 'createdAt') return (b.createdAt||0) - (a.createdAt||0);
       if(sortKey === 'nome' || sortKey === 'escola') return String(a[sortKey]).localeCompare(String(b[sortKey]));
       return b.bytes - a.bytes;
     });
@@ -508,20 +579,24 @@
       const initial = (r.nome || '?').trim().charAt(0).toUpperCase() || '?';
       const color = avatarColorFor(r);
       const subInfo = [r.escola !== '—' ? r.escola : null, r.turma || null].filter(Boolean).join(' · ') || 'Sem escola cadastrada';
+      const freqTag = r.freqPct!=null ? `<span class="tag" style="color:${pctColor(r.freqPct)}">${r.freqPct}% freq.</span>` : '';
       return `
       <div class="user-card" data-uid="${r.uid}">
-        <div class="avatar" style="background:${color}">${escapeHtml(initial)}</div>
+        <div class="avatar" style="background:${color}">${avatarHtmlFor(r, initial, color)}</div>
         <div class="user-info">
           <div class="user-name">${escapeHtml(r.nome)}</div>
           <div class="user-sub">${escapeHtml(subInfo)}</div>
+          ${r.email ? `<div class="user-email">${escapeHtml(r.email)}</div>` : ''}
           <div class="user-tags">
             <span class="tag">${r.gradesCount} notas</span>
             <span class="tag">${r.examsCount} provas</span>
+            ${freqTag}
           </div>
         </div>
         <div class="user-meta">
           <div class="user-size">${fmtBytes(r.bytes)}</div>
           <div class="user-time">${timeAgo(r.updatedAt)}</div>
+          <div class="user-time">desde ${fmtDateOnly(r.createdAt)}</div>
         </div>
         <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>`;
@@ -560,6 +635,16 @@
 
     document.getElementById('sh-name').textContent = currentData.student.nome || '(sem nome)';
     document.getElementById('sh-uid').textContent = uid;
+    document.getElementById('sh-uid').onclick = () => copyText(uid, 'UID');
+
+    const shAv = document.getElementById('sh-avatar');
+    const initial = (currentData.student.nome || '?').trim().charAt(0).toUpperCase() || '?';
+    const color = currentData.student.avatarColor || '#FFD60A';
+    const photo = currentData.student.googlePhoto || '';
+    shAv.style.background = color;
+    shAv.innerHTML = photo
+      ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:#000">${escapeHtml(initial)}</div>`
+      : escapeHtml(initial);
 
     activeTab = 'perfil';
     document.querySelectorAll('.tab-pill').forEach(b=>b.classList.toggle('active', b.dataset.tab==='perfil'));
@@ -605,13 +690,22 @@
       const row = rows.find(r=>r.uid===currentUid);
       if(row){
         Object.assign(row.raw, patch);
-        row.nome = (currentData.student && currentData.student.nome) || '(sem nome)';
-        row.escola = (currentData.student && currentData.student.escola) || '—';
-        row.turma = (currentData.student && currentData.student.turma) || '';
+        const rs = row.raw.student || {};
+        row.nome = rs.nome || '(sem nome)';
+        row.escola = rs.escola || '—';
+        row.turma = rs.turma || '';
+        row.serie = rs.serie || '';
+        row.email = row.raw.email || null;
+        row.createdAt = row.raw.createdAt || null;
+        row.memberSince = rs.memberSince || null;
+        row.googlePhoto = rs.googlePhoto || null;
+        row.avatarColor = rs.avatarColor || '#FFD60A';
         row.updatedAt = patch.updatedAt;
         row.bytes = new Blob([JSON.stringify(row.raw)]).size;
         row.examsCount = Array.isArray(row.raw.exams) ? row.raw.exams.length : 0;
         row.gradesCount = countGradeEntries(row.raw.grades);
+        row.notesCount = Array.isArray(row.raw.notes) ? row.raw.notes.length : 0;
+        row.freqPct = computeFreq(row.raw.freq).totalPct;
       }
       document.getElementById('sh-name').textContent = currentData.student.nome || '(sem nome)';
       if(statusEl){ statusEl.textContent = successMsg || 'Salvo com sucesso.'; statusEl.className='save-status ok'; setTimeout(()=>statusEl.textContent='',2200); }
@@ -628,12 +722,41 @@
   function renderPerfilTab(){
     const s = currentData.student || {};
     const row = rows.find(r=>r.uid===currentUid);
+    const initial = (s.nome || '?').trim().charAt(0).toUpperCase() || '?';
+    const color = s.avatarColor || '#FFD60A';
+    const photo = s.googlePhoto || '';
+    const email = currentData.email || (row && row.email) || null;
+    const joined = currentData.createdAt || (row && row.createdAt) || null;
+    const googleSince = s.memberSince || null;
+    const freqStats = computeFreq(currentData.freq);
+    const daysOnPlatform = daysSince(joined);
+
     sheetBody.innerHTML = `
+      <div class="profile-card">
+        <div class="profile-card-av" style="background:${color}">
+          ${photo ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:#000">${escapeHtml(initial)}</div>` : escapeHtml(initial)}
+        </div>
+        <div style="min-width:0;flex:1">
+          <div class="profile-card-name">${escapeHtml(s.nome || '(sem nome)')}</div>
+          <div class="profile-card-email">${email ? escapeHtml(email) : 'E-mail não sincronizado'}</div>
+          <div class="profile-card-badges">
+            <span class="gbadge ${photo?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>${photo?'Com foto Google':'Sem foto'}</span>
+            <span class="gbadge">UID · ${escapeHtml((currentUid||'').slice(0,8))}…</span>
+          </div>
+        </div>
+      </div>
+
       <div class="info-grid">
+        <div class="info-box copyable" id="pf-copy-email"><div class="info-box-label">E-mail (Google)</div><div class="info-box-value mono">${email ? escapeHtml(email) : '—'}</div></div>
+        <div class="info-box copyable" id="pf-copy-uid"><div class="info-box-label">UID</div><div class="info-box-value mono">${escapeHtml(currentUid||'—')}</div></div>
+        <div class="info-box"><div class="info-box-label">Entrou na plataforma</div><div class="info-box-value">${fmtDateOnly(joined)}${daysOnPlatform!=null?` <span style="color:var(--t4);font-weight:600">(há ${daysOnPlatform}d)</span>`:''}</div></div>
+        <div class="info-box"><div class="info-box-label">Conta Google criada em</div><div class="info-box-value">${fmtDateOnly(googleSince)}</div></div>
         <div class="info-box"><div class="info-box-label">Armazenamento</div><div class="info-box-value">${fmtBytes(row?row.bytes:0)}</div></div>
         <div class="info-box"><div class="info-box-label">Atualizado em</div><div class="info-box-value">${fmtDate(currentData.updatedAt)}</div></div>
         <div class="info-box"><div class="info-box-label">Notas lançadas</div><div class="info-box-value">${countGradeEntries(currentData.grades)}</div></div>
         <div class="info-box"><div class="info-box-label">Provas cadastradas</div><div class="info-box-value">${(currentData.exams||[]).length}</div></div>
+        <div class="info-box"><div class="info-box-label">Anotações</div><div class="info-box-value">${(currentData.notes||[]).length}</div></div>
+        <div class="info-box"><div class="info-box-label">Frequência geral</div><div class="info-box-value" style="color:${pctColor(freqStats.totalPct)}">${freqStats.totalPct!=null?freqStats.totalPct+'%':'—'}</div></div>
       </div>
 
       <div class="field-group">
@@ -664,10 +787,17 @@
           <input class="input" type="number" step="0.1" min="0" max="10" id="pf-meta" value="${s.meta!=null?s.meta:6}">
         </div>
       </div>
-      <div class="field-group">
-        <span class="field-label">Cor do avatar</span>
-        <input class="input" type="color" id="pf-color" value="${s.avatarColor||'#FFD60A'}">
+      <div class="field-row field-group">
+        <div>
+          <span class="field-label">Cor do avatar</span>
+          <input class="input" type="color" id="pf-color" value="${color}">
+        </div>
+        <div>
+          <span class="field-label">URL da foto (Google)</span>
+          <input class="input" id="pf-photo" placeholder="https://..." value="${escapeHtml(photo)}">
+        </div>
       </div>
+      <div class="hint">E-mail, data de entrada e data de criação da conta Google vêm do login automático e não são editáveis por aqui — apenas exibidos para consulta.</div>
 
       <button class="btn-primary" id="pf-save">Salvar perfil</button>
       <div class="save-status" id="pf-status"></div>
@@ -678,6 +808,8 @@
         <button class="btn-danger" id="pf-delete">Excluir usuário</button>
       </div>
     `;
+    document.getElementById('pf-copy-email').addEventListener('click', ()=>copyText(email, 'E-mail'));
+    document.getElementById('pf-copy-uid').addEventListener('click', ()=>copyText(currentUid, 'UID'));
     document.getElementById('pf-save').addEventListener('click', ()=>{
       const student = {
         ...s,
@@ -688,6 +820,7 @@
         turno: document.getElementById('pf-turno').value.trim(),
         meta: parseFloat(document.getElementById('pf-meta').value) || 0,
         avatarColor: document.getElementById('pf-color').value,
+        googlePhoto: document.getElementById('pf-photo').value.trim(),
       };
       saveDoc({ student }, 'pf-status', 'Perfil salvo com sucesso.');
     });
@@ -949,13 +1082,22 @@
         const row = rows.find(r=>r.uid===currentUid);
         if(row){
           row.raw = parsed;
-          row.nome = (parsed.student && parsed.student.nome) || '(sem nome)';
-          row.escola = (parsed.student && parsed.student.escola) || '—';
-          row.turma = (parsed.student && parsed.student.turma) || '';
+          const ps = parsed.student || {};
+          row.nome = ps.nome || '(sem nome)';
+          row.escola = ps.escola || '—';
+          row.turma = ps.turma || '';
+          row.serie = ps.serie || '';
+          row.email = parsed.email || null;
+          row.createdAt = parsed.createdAt || null;
+          row.memberSince = ps.memberSince || null;
+          row.googlePhoto = ps.googlePhoto || null;
+          row.avatarColor = ps.avatarColor || '#FFD60A';
           row.updatedAt = parsed.updatedAt;
           row.bytes = new Blob([JSON.stringify(row.raw)]).size;
           row.examsCount = Array.isArray(row.raw.exams) ? row.raw.exams.length : 0;
           row.gradesCount = countGradeEntries(row.raw.grades);
+          row.notesCount = Array.isArray(row.raw.notes) ? row.raw.notes.length : 0;
+          row.freqPct = computeFreq(row.raw.freq).totalPct;
         }
         document.getElementById('sh-name').textContent = (parsed.student && parsed.student.nome) || '(sem nome)';
         statusEl.textContent = 'Documento salvo com sucesso.'; statusEl.className='save-status ok';
