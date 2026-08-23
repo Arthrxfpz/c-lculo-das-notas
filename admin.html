@@ -322,9 +322,12 @@
   const db   = getFirestore(app);
 
   /* ═══════════ Referência de matérias padrão (mat_id → nome/cor) ═══════════
-     As matérias em si não sincronizam no Firestore (só ficam no aparelho do
-     aluno), então usamos a lista padrão do app pra dar nome amigável aos IDs
-     nas notas/frequência. Se o aluno usa matéria custom, mostramos o ID puro. */
+     Desde a sincronização de horário/matérias (ver index.html), o campo
+     `subjects` do documento traz a lista real e personalizada de matérias
+     do aluno quando ele mexeu nisso. Quando esse campo não existir ainda
+     (conta antiga que não reabriu o app desde a atualização), caímos na
+     lista padrão da escola abaixo — que é a mesma usada pelo app quando
+     o aluno nunca personalizou nada. */
   const DEFAULT_SUBJECTS=[
     {id:'edu_fin',name:'Educação Financeira',   color:'#E8B84B'},
     {id:'mat',    name:'Matemática',            color:'#A78BFA'},
@@ -347,9 +350,164 @@
   const SUBJ_MAP = {};
   DEFAULT_SUBJECTS.forEach(s=>SUBJ_MAP[s.id]=s);
   function subjInfo(id){ return SUBJ_MAP[id] || {id, name:id, color:'#8a8d99'}; }
+  // Versão ciente do doc do aluno: usa o `subjects` sincronizado (matérias
+  // customizadas) quando existir, senão cai no subjInfo() padrão acima.
+  function subjInfoDoc(raw, id){
+    const custom = raw && Array.isArray(raw.subjects) ? raw.subjects.find(s=>s.id===id) : null;
+    if (custom) return { id, name: custom.name || id, color: custom.color || '#8a8d99' };
+    return subjInfo(id);
+  }
 
   const GRADE_TABS = ['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC'];
   const TAB_LABELS = {'1T':'1° Trimestre','1T-EAC':'EAC do 1°','2T':'2° Trimestre','2T-EAC':'EAC do 2°','3T':'3° Trimestre','3T-EAC':'EAC do 3°'};
+
+  /* ═══════════ Cor do avatar (accentKey) — espelha EXATAMENTE o app ═══════════
+     O app NÃO usa mais student.avatarColor (campo morto, ficou só por
+     compatibilidade). A cor real vem de student.accentKey, resolvido pela
+     mesma tabela ACCENT_MAPS do app principal. O painel é sempre escuro,
+     então usamos sempre a variante "dark". */
+  const ACCENT_MAPS={
+    gold:{dark:'#FFD60A',light:'#B07D00'}, blue:{dark:'#0A84FF',light:'#007AFF'},
+    green:{dark:'#30D158',light:'#1C7C36'}, violet:{dark:'#BF5AF2',light:'#7519A8'},
+    red:{dark:'#FF453A',light:'#C5000F'}, orange:{dark:'#FF9F0A',light:'#A85200'},
+    pink:{dark:'#FF2D55',light:'#D60030'}, cyan:{dark:'#32ADE6',light:'#0070C0'},
+    indigo:{dark:'#5E5CE6',light:'#3634AC'}, teal:{dark:'#30B0C7',light:'#007A92'},
+    mint:{dark:'#00C7BE',light:'#00896F'}, verde:{dark:'#408C5D',light:'#346D4A'},
+    verde_escuro:{dark:'#438967',light:'#264B39'}, verde_oliva:{dark:'#5E7557',light:'#404F3C'},
+    verde_oliva_escuro:{dark:'#607359',light:'#2B3328'}, verde_agua:{dark:'#3B9188',light:'#275C56'},
+    verde_petroleo:{dark:'#3C8E90',light:'#1B3D3E'}, verde_turquesa:{dark:'#3E8E7A',light:'#347162'},
+    verde_limao:{dark:'#6D923A',light:'#5D7A33'}, verde_musgo:{dark:'#6F903C',light:'#32401C'},
+    azul2:{dark:'#1F56AD',light:'#1C478B'}, azul_marinho:{dark:'#2556A7',light:'#152E57'},
+    azul_petroleo:{dark:'#2A66A2',light:'#214B75'}, azul_petroleo_escuro:{dark:'#2A6DA2',light:'#15334B'},
+    roxo2:{dark:'#413597',light:'#382F7F'}, roxo_escuro:{dark:'#43408C',light:'#2C2A59'},
+    roxo_claro:{dark:'#783993',light:'#65337B'}, roxo_vinho:{dark:'#753993',light:'#452356'},
+    vermelho_vinho:{dark:'#A72542',light:'#711C2F'}, bordo:{dark:'#9E2E48',light:'#4C1824'},
+    rosa2:{dark:'#B0335B',light:'#842946'}, vinho:{dark:'#913B61',light:'#4F2236'},
+    marrom_avermelhado:{dark:'#9B4C31',light:'#7C3F2A'}, marrom_escuro:{dark:'#875345',light:'#482D26'},
+    marrom:{dark:'#895F43',light:'#573D2C'}, marrom_cafe:{dark:'#7F654D',light:'#32281F'},
+    marrom_acinzentado:{dark:'#766756',light:'#3B342C'}, bege:{dark:'#7B6A51',light:'#685A46'},
+    amarelo_dourado:{dark:'#B19D2F',light:'#877827'}, mostarda_escuro:{dark:'#A79625',light:'#5A5116'},
+    cinza2:{dark:'#666666',light:'#4C4C4C'}, cinza_escuro2:{dark:'#5A6272',light:'#0C0D0F'}
+  };
+  const ACCENT_NEEDS_DARK_TEXT = new Set(['gold','green','orange','cyan','teal','mint']);
+  const ACCENT_META=[
+    {group:'Clássicas',items:[
+      {key:'gold',name:'Dourado'},{key:'blue',name:'Azul'},{key:'green',name:'Verde'},
+      {key:'violet',name:'Roxo'},{key:'red',name:'Vermelho'},{key:'orange',name:'Laranja'},
+      {key:'pink',name:'Rosa'},{key:'cyan',name:'Ciano'},{key:'indigo',name:'Índigo'},
+      {key:'teal',name:'Teal'},{key:'mint',name:'Menta'},
+    ]},
+    {group:'Verdes',items:[
+      {key:'verde',name:'Verde'},{key:'verde_escuro',name:'Verde escuro'},
+      {key:'verde_oliva',name:'Verde oliva'},{key:'verde_oliva_escuro',name:'Verde oliva escuro'},
+      {key:'verde_agua',name:'Verde água'},{key:'verde_petroleo',name:'Verde petróleo'},
+      {key:'verde_turquesa',name:'Verde turquesa'},{key:'verde_limao',name:'Verde limão'},
+      {key:'verde_musgo',name:'Verde musgo'},
+    ]},
+    {group:'Azuis',items:[
+      {key:'azul2',name:'Azul'},{key:'azul_marinho',name:'Azul marinho'},
+      {key:'azul_petroleo',name:'Azul petróleo'},{key:'azul_petroleo_escuro',name:'Azul petróleo escuro'},
+    ]},
+    {group:'Roxos',items:[
+      {key:'roxo2',name:'Roxo'},{key:'roxo_escuro',name:'Roxo escuro'},
+      {key:'roxo_claro',name:'Roxo claro'},{key:'roxo_vinho',name:'Roxo vinho'},
+    ]},
+    {group:'Vermelhos e rosas',items:[
+      {key:'vermelho_vinho',name:'Vermelho vinho'},{key:'bordo',name:'Bordô'},
+      {key:'rosa2',name:'Rosa'},{key:'vinho',name:'Vinho'},
+    ]},
+    {group:'Marrons e bege',items:[
+      {key:'marrom_avermelhado',name:'Marrom avermelhado'},{key:'marrom_escuro',name:'Marrom escuro'},
+      {key:'marrom',name:'Marrom'},{key:'marrom_cafe',name:'Marrom café'},
+      {key:'marrom_acinzentado',name:'Marrom acinzentado'},{key:'bege',name:'Bege'},
+    ]},
+    {group:'Amarelos',items:[
+      {key:'amarelo_dourado',name:'Amarelo dourado'},{key:'mostarda_escuro',name:'Mostarda escuro'},
+    ]},
+    {group:'Cinzas',items:[
+      {key:'cinza2',name:'Cinza'},{key:'cinza_escuro2',name:'Cinza muito escuro'},
+    ]},
+  ];
+  function accentDisplayName(key){
+    for(const g of ACCENT_META){ for(const it of g.items){ if(it.key===key) return it.name; } }
+    return 'Dourado';
+  }
+  // Cor real que o app mostra para este aluno (accentKey → dark variant).
+  // Mantém compatibilidade com registros muito antigos que só tinham
+  // avatarColor (hex cru) e nunca chegaram a ter accentKey.
+  function realAvatarColor(student){
+    const s = student || {};
+    if (s.accentKey && ACCENT_MAPS[s.accentKey]) return ACCENT_MAPS[s.accentKey].dark;
+    if (s.avatarColor) return s.avatarColor;
+    return ACCENT_MAPS.gold.dark;
+  }
+  function realAccentKey(student){
+    const s = student || {};
+    return (s.accentKey && ACCENT_MAPS[s.accentKey]) ? s.accentKey : 'gold';
+  }
+
+  /* ═══════════ Horário padrão / histórico-semente (fallback) ═══════════
+     Espelha DEFAULT_PERIODS/DEFAULT_SCHED/SEED_SCHED do app. Usado para
+     calcular a frequência quando o documento do aluno ainda não tem o
+     campo "schedule" sincronizado (contas que não abriram o app desde
+     que a sincronização de horário foi adicionada) — nesse caso o cálculo
+     usa o horário padrão da escola como melhor aproximação disponível. */
+  const DEFAULT_PERIODS=[
+    {n:'1ª aula',s:[13,30],e:[14,20]},{n:'2ª aula',s:[14,20],e:[15,10]},
+    {n:'3ª aula',s:[15,10],e:[15,50]},{n:'recreio',s:[15,50],e:[16,5],break:true},
+    {n:'4ª aula',s:[16,5],e:[16,50]},{n:'5ª aula',s:[16,50],e:[17,40]},
+    {n:'6ª aula',s:[17,40],e:[18,30]},
+  ];
+  const DEFAULT_SCHED={
+    1:['ed_fis','edu_fin','artes','bio','fis','bio'],
+    2:['port','proj','proj','port','proj','esp'],
+    3:['proj','mat','qui','rel','qui','geo'],
+    4:['proj','ing','proj','mat','esc_cri','ed_fis'],
+    5:['hist','port','soc','fis','lit','mat'],
+  };
+  const SEED_SCHED_1={ // 18/fev a 15/mar
+    1:['bio','fis','bio','edu_fin','ed_fis','esp'], 2:['port','hist','lit','qui','proj','fis'],
+    3:['proj','qui','proj','mat','proj','soc'], 4:['geo','ed_fis','port','mat','artes','port'],
+    5:['proj','esc_cri','proj','mat','ing','rel'],
+  };
+  const SEED_SCHED_2={ // 16/mar a 14/jun
+    1:['bio','ed_fis','artes','fis','edu_fin','bio'], 2:['proj','ing','proj','proj','port','soc'],
+    3:['proj','mat','qui','rel','qui','geo'], 4:['proj','mat','esc_cri','proj','port','esp'],
+    5:['hist','lit','fis','mat','port','ed_fis'],
+  };
+  const FALLBACK_SCHED_HISTORY=[
+    {from:'2026-02-18',periods:DEFAULT_PERIODS,sched:SEED_SCHED_1},
+    {from:'2026-03-16',periods:DEFAULT_PERIODS,sched:SEED_SCHED_2},
+    {from:'2026-06-15',periods:DEFAULT_PERIODS,sched:DEFAULT_SCHED},
+  ];
+  const FERIADOS_2026 = {
+    '2026-04-03':'Sexta-feira Santa','2026-04-05':'Páscoa','2026-04-15':'Parada Pedagógica',
+    '2026-04-20':'Feriado Ponte','2026-04-21':'Tiradentes','2026-05-01':'Dia do Trabalhador',
+    '2026-06-04':'Corpus Christi','2026-06-05':'Feriado Ponte','2026-07-27':'Recesso Escolar',
+    '2026-07-28':'Recesso Escolar','2026-07-29':'Recesso Escolar','2026-07-30':'Recesso Escolar',
+    '2026-07-31':'Recesso Escolar','2026-08-05':'Parada Pedagógica','2026-09-07':'Dia da Independência',
+    '2026-10-12':'Dia de Nossa Senhora','2026-10-13':'Dia dos Professores','2026-11-02':'Finados',
+    '2026-11-20':'Dia da Consciência Negra','2026-11-25':'Parada Pedagógica',
+  };
+  const FREQ_YEAR_START = new Date(2026,1,18);
+
+  /* Retorna {periods,sched} vigentes numa data, priorizando o histórico
+     sincronizado do aluno (raw.schedule.history) e caindo pro horário
+     padrão/semente da escola quando não houver nada sincronizado ainda. */
+  function scheduleActiveOnFor(raw, dateStr){
+    const own = raw && raw.schedule && Array.isArray(raw.schedule.history) && raw.schedule.history.length
+      ? raw.schedule.history.slice().sort((a,b)=>a.from<b.from?-1:(a.from>b.from?1:0))
+      : null;
+    const history = own || FALLBACK_SCHED_HISTORY;
+    let best = null;
+    for(const v of history){ if(v.from<=dateStr) best=v; else break; }
+    if(!best) best = history[0];
+    if (own) return { periods: best.periods||DEFAULT_PERIODS, sched: best.sched||DEFAULT_SCHED };
+    return { periods: DEFAULT_PERIODS, sched: best.sched||DEFAULT_SCHED };
+  }
+  function hasSyncedSchedule(raw){
+    return !!(raw && raw.schedule && (raw.schedule.sched || (Array.isArray(raw.schedule.history)&&raw.schedule.history.length)));
+  }
 
   // ─────────────────────────────────────────────────────────────
   // AUTENTICAÇÃO
@@ -442,23 +600,81 @@
     });
     return n;
   }
-  function computeFreq(freq){
-    const perSubj = [];
-    let totalP = 0, totalF = 0;
-    if(freq){
-      Object.keys(freq).forEach(sid=>{
-        const days = freq[sid] || {};
-        let p=0, f=0;
-        Object.values(days).forEach(v=>{ if(v==='p')p++; else if(v==='f')f++; });
-        if(p||f){
-          totalP += p; totalF += f;
-          const info = subjInfo(sid);
-          perSubj.push({id:sid, name:info.name, color:info.color, p, f, pct: (p+f)?Math.round(p/(p+f)*100):null});
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  /* ═══════════ Cálculo de frequência — espelha freqAggregate() do app ═══════════
+     Fonte real de verdade é `freqPeriods` (um status por AULA individual,
+     resolvido através do horário do dia), não o antigo `freq` por
+     matéria/dia — esse último só existe hoje como resquício de contas
+     muito antigas que nunca reabriram o app pra migrar (o app migra
+     automaticamente na primeira vez que abre). O painel cobre os dois
+     casos: usa freqPeriods quando existir; se não existir e só houver o
+     formato antigo, calcula a partir dele (rotulando como "formato antigo"). */
+  function computeFreq(raw){
+    raw = raw || {};
+    const perSubjMap = {};
+    const baseSubjects = Array.isArray(raw.subjects) && raw.subjects.length ? raw.subjects : DEFAULT_SUBJECTS;
+    baseSubjects.forEach(s=>{ perSubjMap[s.id] = {id:s.id, name:s.name||s.id, color:s.color||'#8a8d99', p:0, total:0}; });
+    const freqNoClass = raw.freqNoClass || {};
+    const freqOverride = raw.freqOverride || {};
+    const freqPeriods = raw.freqPeriods || null;
+    let totalP = 0, totalAll = 0, daysRegistered = 0, daysWithClass = 0, aulasTotal = 0, legacy = false;
+
+    if (freqPeriods && Object.keys(freqPeriods).length) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      for (let mo=0; mo<=11; mo++){
+        const daysInMonth = new Date(2026, mo+1, 0).getDate();
+        for (let d=1; d<=daysInMonth; d++){
+          const dateObj = new Date(2026, mo, d);
+          if (dateObj > today) continue;
+          if (dateObj < FREQ_YEAR_START) continue;
+          const dateStr = `2026-${pad2(mo+1)}-${pad2(d)}`;
+          if (FERIADOS_2026[dateStr]) continue;
+          const dow = dateObj.getDay();
+          if (dow<1 || dow>5) continue;
+          if (freqNoClass[dateStr]) continue;
+          const active = scheduleActiveOnFor(raw, dateStr);
+          const slots = freqOverride[dateStr] || active.sched[dow] || [];
+          const validSlots = slots.filter(id => !!id);
+          if (!validSlots.length) continue;
+          daysWithClass++;
+          aulasTotal += validSlots.length;
+          let dayMarked = 0;
+          const dayData = freqPeriods[dateStr] || {};
+          slots.forEach((id, idx) => {
+            if (!id) return;
+            const v = dayData[idx];
+            if (!v) return;
+            dayMarked++;
+            const info = perSubjMap[id] || (perSubjMap[id] = {id, name: subjInfoDoc(raw,id).name, color: subjInfoDoc(raw,id).color, p:0, total:0});
+            info.total++; totalAll++;
+            if (v === 'p'){ info.p++; totalP++; }
+          });
+          if (dayMarked>0) daysRegistered++;
         }
+      }
+    } else if (raw.freq && Object.keys(raw.freq).length) {
+      legacy = true;
+      Object.keys(raw.freq).forEach(sid=>{
+        const days = raw.freq[sid] || {};
+        const info = perSubjMap[sid] || (perSubjMap[sid] = {id:sid, name: subjInfoDoc(raw,sid).name, color: subjInfoDoc(raw,sid).color, p:0, total:0});
+        Object.values(days).forEach(v=>{
+          if (v==='p'){ info.p++; info.total++; totalP++; totalAll++; }
+          else if (v==='f'){ info.total++; totalAll++; }
+        });
       });
     }
-    perSubj.sort((a,b)=>a.name.localeCompare(b.name));
-    return { perSubj, totalP, totalF, totalPct: (totalP+totalF)?Math.round(totalP/(totalP+totalF)*100):null };
+
+    const perSubj = Object.values(perSubjMap)
+      .filter(s => s.total > 0)
+      .map(s => ({ id:s.id, name:s.name, color:s.color, p:s.p, f:s.total-s.p, pct: s.total ? Math.round(s.p/s.total*100) : null }))
+      .sort((a,b)=>a.name.localeCompare(b.name));
+
+    return {
+      perSubj, totalP, totalF: totalAll-totalP,
+      totalPct: totalAll ? Math.round(totalP/totalAll*100) : null,
+      daysRegistered, daysWithClass, aulasTotal, aulasPresent: totalP,
+      legacy, hasSchedule: hasSyncedSchedule(raw),
+    };
   }
   function pctColor(pct){
     if(pct==null) return 'var(--t4)';
@@ -488,7 +704,7 @@
         const json = JSON.stringify(d);
         const bytes = new Blob([json]).size;
         const student = d.student || {};
-        const freqStats = computeFreq(d.freq);
+        const freqStats = computeFreq(d);
         rows.push({
           uid: docSnap.id,
           raw: d,
@@ -498,9 +714,11 @@
           serie: student.serie || '',
           email: d.email || null,
           createdAt: d.createdAt || null,
+          createdAtApprox: !d.createdAt,
           memberSince: student.memberSince || null,
           googlePhoto: student.googlePhoto || null,
-          avatarColor: student.avatarColor || '#FFD60A',
+          avatarColor: realAvatarColor(student),
+          accentKey: realAccentKey(student),
           bytes,
           updatedAt: d.updatedAt || null,
           examsCount: Array.isArray(d.exams) ? d.exams.length : 0,
@@ -537,15 +755,28 @@
   }
 
   function avatarColorFor(row){
-    return (row.raw.student && row.raw.student.avatarColor) || row.avatarColor || '#FFD60A';
+    return realAvatarColor(row.raw.student || {});
+  }
+  function avatarTextColorFor(row){
+    const key = realAccentKey(row.raw.student || {});
+    return ACCENT_NEEDS_DARK_TEXT.has(key) ? '#000' : '#fff';
   }
   function avatarHtmlFor(row, initial, color){
     const photo = row.googlePhoto || (row.raw.student && row.raw.student.googlePhoto);
+    const txt = avatarTextColorFor(row);
     if(photo){
       return `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-              <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${color};color:#000;font-weight:800">${escapeHtml(initial)}</div>`;
+              <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;background:${color};color:${txt};font-weight:800">${escapeHtml(initial)}</div>`;
     }
-    return escapeHtml(initial);
+    return `<span style="color:${txt}">${escapeHtml(initial)}</span>`;
+  }
+
+  // Data de entrada com fallback — mesma lógica usada no Perfil, pra nunca
+  // mostrar "—" sem necessidade quando dá pra aproximar via outro campo.
+  function entryDateFor(row){
+    if (row.createdAt) return { ts: row.createdAt, approx: false };
+    const fallback = row.memberSince || row.updatedAt || null;
+    return { ts: fallback, approx: !!fallback };
   }
 
   function renderList(){
@@ -562,7 +793,7 @@
     );
     filtered.sort((a,b) => {
       if(sortKey === 'updatedAt') return (b.updatedAt||0) - (a.updatedAt||0);
-      if(sortKey === 'createdAt') return (b.createdAt||0) - (a.createdAt||0);
+      if(sortKey === 'createdAt') return (entryDateFor(b).ts||0) - (entryDateFor(a).ts||0);
       if(sortKey === 'nome' || sortKey === 'escola') return String(a[sortKey]).localeCompare(String(b[sortKey]));
       return b.bytes - a.bytes;
     });
@@ -579,14 +810,18 @@
       const initial = (r.nome || '?').trim().charAt(0).toUpperCase() || '?';
       const color = avatarColorFor(r);
       const subInfo = [r.escola !== '—' ? r.escola : null, r.turma || null].filter(Boolean).join(' · ') || 'Sem escola cadastrada';
-      const freqTag = r.freqPct!=null ? `<span class="tag" style="color:${pctColor(r.freqPct)}">${r.freqPct}% freq.</span>` : '';
+      const freqTag = r.freqPct!=null ? `<span class="tag" style="color:${pctColor(r.freqPct)}">${r.freqPct}% freq.</span>` : `<span class="tag" style="color:var(--t4)">sem freq.</span>`;
+      const entry = entryDateFor(r);
+      const emailHtml = r.email
+        ? `<div class="user-email">${escapeHtml(r.email)}</div>`
+        : `<div class="user-email" style="color:var(--red)">⚠️ sem e-mail sincronizado</div>`;
       return `
       <div class="user-card" data-uid="${r.uid}">
         <div class="avatar" style="background:${color}">${avatarHtmlFor(r, initial, color)}</div>
         <div class="user-info">
           <div class="user-name">${escapeHtml(r.nome)}</div>
           <div class="user-sub">${escapeHtml(subInfo)}</div>
-          ${r.email ? `<div class="user-email">${escapeHtml(r.email)}</div>` : ''}
+          ${emailHtml}
           <div class="user-tags">
             <span class="tag">${r.gradesCount} notas</span>
             <span class="tag">${r.examsCount} provas</span>
@@ -596,7 +831,7 @@
         <div class="user-meta">
           <div class="user-size">${fmtBytes(r.bytes)}</div>
           <div class="user-time">${timeAgo(r.updatedAt)}</div>
-          <div class="user-time">desde ${fmtDateOnly(r.createdAt)}</div>
+          <div class="user-time">desde ${fmtDateOnly(entry.ts)}${entry.approx?' (aprox.)':''}</div>
         </div>
         <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
       </div>`;
@@ -629,7 +864,7 @@
     if(!row) return;
     currentUid = uid;
     currentData = JSON.parse(JSON.stringify(row.raw || {}));
-    if(!currentData.student) currentData.student = {nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A'};
+    if(!currentData.student) currentData.student = {nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,accentKey:'gold'};
     if(!currentData.grades) currentData.grades = {};
     if(!currentData.exams) currentData.exams = [];
 
@@ -639,12 +874,13 @@
 
     const shAv = document.getElementById('sh-avatar');
     const initial = (currentData.student.nome || '?').trim().charAt(0).toUpperCase() || '?';
-    const color = currentData.student.avatarColor || '#FFD60A';
+    const color = realAvatarColor(currentData.student);
+    const txtColor = ACCENT_NEEDS_DARK_TEXT.has(realAccentKey(currentData.student)) ? '#000' : '#fff';
     const photo = currentData.student.googlePhoto || '';
     shAv.style.background = color;
     shAv.innerHTML = photo
-      ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:#000">${escapeHtml(initial)}</div>`
-      : escapeHtml(initial);
+      ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:${txtColor}">${escapeHtml(initial)}</div>`
+      : `<span style="color:${txtColor}">${escapeHtml(initial)}</span>`;
 
     activeTab = 'perfil';
     document.querySelectorAll('.tab-pill').forEach(b=>b.classList.toggle('active', b.dataset.tab==='perfil'));
@@ -699,13 +935,14 @@
         row.createdAt = row.raw.createdAt || null;
         row.memberSince = rs.memberSince || null;
         row.googlePhoto = rs.googlePhoto || null;
-        row.avatarColor = rs.avatarColor || '#FFD60A';
+        row.avatarColor = realAvatarColor(rs);
+        row.accentKey = realAccentKey(rs);
         row.updatedAt = patch.updatedAt;
         row.bytes = new Blob([JSON.stringify(row.raw)]).size;
         row.examsCount = Array.isArray(row.raw.exams) ? row.raw.exams.length : 0;
         row.gradesCount = countGradeEntries(row.raw.grades);
         row.notesCount = Array.isArray(row.raw.notes) ? row.raw.notes.length : 0;
-        row.freqPct = computeFreq(row.raw.freq).totalPct;
+        row.freqPct = computeFreq(row.raw).totalPct;
       }
       document.getElementById('sh-name').textContent = currentData.student.nome || '(sem nome)';
       if(statusEl){ statusEl.textContent = successMsg || 'Salvo com sucesso.'; statusEl.className='save-status ok'; setTimeout(()=>statusEl.textContent='',2200); }
@@ -723,33 +960,53 @@
     const s = currentData.student || {};
     const row = rows.find(r=>r.uid===currentUid);
     const initial = (s.nome || '?').trim().charAt(0).toUpperCase() || '?';
-    const color = s.avatarColor || '#FFD60A';
+    const accentKey = realAccentKey(s);
+    const color = realAvatarColor(s);
+    const txtColor = ACCENT_NEEDS_DARK_TEXT.has(accentKey) ? '#000' : '#fff';
     const photo = s.googlePhoto || '';
     const email = currentData.email || (row && row.email) || null;
-    const joined = currentData.createdAt || (row && row.createdAt) || null;
+
+    // "Entrou na plataforma" (createdAt) — se por algum motivo essa conta
+    // nunca teve esse campo gravado (registro muito antigo, de antes do
+    // campo existir), usamos a melhor aproximação disponível em vez de
+    // mostrar "—" sem explicação nenhuma.
+    let joined = currentData.createdAt || (row && row.createdAt) || null;
+    let joinedApprox = false;
+    if(!joined){
+      joined = s.memberSince || currentData.updatedAt || (row && row.updatedAt) || null;
+      joinedApprox = !!joined;
+    }
     const googleSince = s.memberSince || null;
-    const freqStats = computeFreq(currentData.freq);
+    const freqStats = computeFreq(currentData);
     const daysOnPlatform = daysSince(joined);
+    const scheduleSynced = hasSyncedSchedule(currentData);
+
+    const accentOptionsHtml = ACCENT_META.map(g=>`
+      <optgroup label="${escapeHtml(g.group)}">
+        ${g.items.map(it=>`<option value="${it.key}" ${it.key===accentKey?'selected':''}>${escapeHtml(it.name)}</option>`).join('')}
+      </optgroup>
+    `).join('');
 
     sheetBody.innerHTML = `
       <div class="profile-card">
         <div class="profile-card-av" style="background:${color}">
-          ${photo ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:#000">${escapeHtml(initial)}</div>` : escapeHtml(initial)}
+          ${photo ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:${txtColor}">${escapeHtml(initial)}</div>` : `<span style="color:${txtColor}">${escapeHtml(initial)}</span>`}
         </div>
         <div style="min-width:0;flex:1">
           <div class="profile-card-name">${escapeHtml(s.nome || '(sem nome)')}</div>
-          <div class="profile-card-email">${email ? escapeHtml(email) : 'E-mail não sincronizado'}</div>
+          <div class="profile-card-email">${email ? escapeHtml(email) : '⚠️ E-mail não sincronizado'}</div>
           <div class="profile-card-badges">
             <span class="gbadge ${photo?'on':''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>${photo?'Com foto Google':'Sem foto'}</span>
+            <span class="gbadge ${scheduleSynced?'on':''}">${scheduleSynced?'✓ Horário sincronizado':'⚠️ Horário não sincronizado'}</span>
             <span class="gbadge">UID · ${escapeHtml((currentUid||'').slice(0,8))}…</span>
           </div>
         </div>
       </div>
 
       <div class="info-grid">
-        <div class="info-box copyable" id="pf-copy-email"><div class="info-box-label">E-mail (Google)</div><div class="info-box-value mono">${email ? escapeHtml(email) : '—'}</div></div>
+        <div class="info-box copyable" id="pf-copy-email"><div class="info-box-label">E-mail (Google)</div><div class="info-box-value mono">${email ? escapeHtml(email) : '⚠️ não sincronizado'}</div></div>
         <div class="info-box copyable" id="pf-copy-uid"><div class="info-box-label">UID</div><div class="info-box-value mono">${escapeHtml(currentUid||'—')}</div></div>
-        <div class="info-box"><div class="info-box-label">Entrou na plataforma</div><div class="info-box-value">${fmtDateOnly(joined)}${daysOnPlatform!=null?` <span style="color:var(--t4);font-weight:600">(há ${daysOnPlatform}d)</span>`:''}</div></div>
+        <div class="info-box"><div class="info-box-label">Entrou na plataforma</div><div class="info-box-value">${fmtDateOnly(joined)}${daysOnPlatform!=null?` <span style="color:var(--t4);font-weight:600">(há ${daysOnPlatform}d)</span>`:''}${joinedApprox?` <span style="color:var(--gold);font-weight:600">· aprox.</span>`:''}</div></div>
         <div class="info-box"><div class="info-box-label">Conta Google criada em</div><div class="info-box-value">${fmtDateOnly(googleSince)}</div></div>
         <div class="info-box"><div class="info-box-label">Armazenamento</div><div class="info-box-value">${fmtBytes(row?row.bytes:0)}</div></div>
         <div class="info-box"><div class="info-box-label">Atualizado em</div><div class="info-box-value">${fmtDate(currentData.updatedAt)}</div></div>
@@ -787,17 +1044,18 @@
           <input class="input" type="number" step="0.1" min="0" max="10" id="pf-meta" value="${s.meta!=null?s.meta:6}">
         </div>
       </div>
-      <div class="field-row field-group">
-        <div>
-          <span class="field-label">Cor do avatar</span>
-          <input class="input" type="color" id="pf-color" value="${color}">
-        </div>
-        <div>
-          <span class="field-label">URL da foto (Google)</span>
-          <input class="input" id="pf-photo" placeholder="https://..." value="${escapeHtml(photo)}">
+      <div class="field-group">
+        <span class="field-label">Cor do avatar (a mesma paleta do app)</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div id="pf-color-swatch" style="width:42px;height:42px;border-radius:11px;flex-shrink:0;background:${color};border:.5px solid var(--line)"></div>
+          <select class="select" id="pf-accent" style="flex:1">${accentOptionsHtml}</select>
         </div>
       </div>
-      <div class="hint">E-mail, data de entrada e data de criação da conta Google vêm do login automático e não são editáveis por aqui — apenas exibidos para consulta.</div>
+      <div class="field-group">
+        <span class="field-label">URL da foto (Google)</span>
+        <input class="input" id="pf-photo" placeholder="https://..." value="${escapeHtml(photo)}">
+      </div>
+      <div class="hint">E-mail, data de entrada e data de criação da conta Google vêm do login automático e não são editáveis por aqui — apenas exibidos para consulta. A cor do avatar é a mesma paleta de cores ("Personalizar") que o aluno vê dentro do app.</div>
 
       <button class="btn-primary" id="pf-save">Salvar perfil</button>
       <div class="save-status" id="pf-status"></div>
@@ -810,6 +1068,10 @@
     `;
     document.getElementById('pf-copy-email').addEventListener('click', ()=>copyText(email, 'E-mail'));
     document.getElementById('pf-copy-uid').addEventListener('click', ()=>copyText(currentUid, 'UID'));
+    document.getElementById('pf-accent').addEventListener('change', (e)=>{
+      const map = ACCENT_MAPS[e.target.value] || ACCENT_MAPS.gold;
+      document.getElementById('pf-color-swatch').style.background = map.dark;
+    });
     document.getElementById('pf-save').addEventListener('click', ()=>{
       const student = {
         ...s,
@@ -819,9 +1081,10 @@
         serie: document.getElementById('pf-serie').value.trim(),
         turno: document.getElementById('pf-turno').value.trim(),
         meta: parseFloat(document.getElementById('pf-meta').value) || 0,
-        avatarColor: document.getElementById('pf-color').value,
+        accentKey: document.getElementById('pf-accent').value,
         googlePhoto: document.getElementById('pf-photo').value.trim(),
       };
+      delete student.avatarColor; // campo morto no app — não gravamos mais isso
       saveDoc({ student }, 'pf-status', 'Perfil salvo com sucesso.');
     });
     document.getElementById('pf-delete').addEventListener('click', async ()=>{
@@ -845,7 +1108,7 @@
     const ids = Object.keys(grades).filter(id => GRADE_TABS.some(t => (grades[id][t]||[]).length));
     const idsAll = Object.keys(grades);
     const list = idsAll.length ? idsAll : ids;
-    list.sort((a,b)=>subjInfo(a).name.localeCompare(subjInfo(b).name));
+    list.sort((a,b)=>subjInfoDoc(currentData,a).name.localeCompare(subjInfoDoc(currentData,b).name));
 
     if(!list.length){
       sheetBody.innerHTML = `<div class="empty-tab">Nenhuma matéria com notas registradas ainda.</div>`;
@@ -861,7 +1124,7 @@
     const listEl = document.getElementById('subj-list');
 
     list.forEach(sid=>{
-      const info = subjInfo(sid);
+      const info = subjInfoDoc(currentData,sid);
       const count = GRADE_TABS.reduce((n,t)=>n+((grades[sid][t]||[]).length),0);
       const block = document.createElement('div');
       block.className = 'subj-block';
@@ -1023,21 +1286,31 @@
 
   // ── ABA: FREQUÊNCIA (resumo, somente leitura — editável via Avançado) ──
   function renderFreqTab(){
-    const stats = computeFreq(currentData.freq);
+    const stats = computeFreq(currentData);
+    const scheduleNote = stats.hasSchedule
+      ? `<div class="hint" style="color:var(--green)">✓ Calculado com o horário real sincronizado deste aluno.</div>`
+      : `<div class="hint">⚠️ Este aluno ainda não sincronizou o horário (versão antiga do app). O cálculo abaixo usa o horário padrão da escola como aproximação — pode não bater 100% se o horário dele foi personalizado. Assim que o app abrir de novo neste aluno, o horário real passa a sincronizar e o cálculo fica exato.</div>`;
+    const legacyNote = stats.legacy
+      ? `<div class="hint" style="color:var(--red)">Estes dados estão no formato antigo de frequência (por matéria/dia, sem contar aulas repetidas). O app já migra automaticamente para o formato novo (por aula) na próxima vez que o aluno abrir a Frequência.</div>`
+      : '';
     if(!stats.perSubj.length){
-      sheetBody.innerHTML = `<div class="empty-tab">Nenhum registro de frequência ainda.</div>`;
+      sheetBody.innerHTML = `${scheduleNote}<div class="empty-tab">Nenhum registro de frequência ainda.</div>`;
       return;
     }
     sheetBody.innerHTML = `
+      ${scheduleNote}
+      ${legacyNote}
       <div class="info-grid">
-        <div class="info-box"><div class="info-box-label">Presenças totais</div><div class="info-box-value" style="color:var(--green)">${stats.totalP}</div></div>
-        <div class="info-box"><div class="info-box-label">Faltas totais</div><div class="info-box-value" style="color:var(--red)">${stats.totalF}</div></div>
+        <div class="info-box"><div class="info-box-label">Presenças (aulas)</div><div class="info-box-value" style="color:var(--green)">${stats.totalP}</div></div>
+        <div class="info-box"><div class="info-box-label">Faltas (aulas)</div><div class="info-box-value" style="color:var(--red)">${stats.totalF}</div></div>
+        <div class="info-box"><div class="info-box-label">Dias registrados</div><div class="info-box-value">${stats.daysRegistered} <span style="color:var(--t4);font-weight:600">de ${stats.daysWithClass}</span></div></div>
+        <div class="info-box"><div class="info-box-label">Total de aulas letivas</div><div class="info-box-value">${stats.aulasTotal}</div></div>
       </div>
       <div class="info-box" style="margin-bottom:16px">
         <div class="info-box-label">Frequência geral</div>
         <div class="info-box-value" style="font-size:20px;color:${pctColor(stats.totalPct)}">${stats.totalPct!=null?stats.totalPct+'%':'—'}</div>
       </div>
-      <div class="hint">Resumo por matéria. Para editar dias específicos, use a aba "Avançado".</div>
+      <div class="hint">Resumo por matéria (contando cada aula individualmente, igual ao app). Para editar dias específicos, use a aba "Avançado".</div>
       <div>
         ${stats.perSubj.map(s=>`
           <div class="freq-row" style="display:block">
@@ -1091,13 +1364,14 @@
           row.createdAt = parsed.createdAt || null;
           row.memberSince = ps.memberSince || null;
           row.googlePhoto = ps.googlePhoto || null;
-          row.avatarColor = ps.avatarColor || '#FFD60A';
+          row.avatarColor = realAvatarColor(ps);
+          row.accentKey = realAccentKey(ps);
           row.updatedAt = parsed.updatedAt;
           row.bytes = new Blob([JSON.stringify(row.raw)]).size;
           row.examsCount = Array.isArray(row.raw.exams) ? row.raw.exams.length : 0;
           row.gradesCount = countGradeEntries(row.raw.grades);
           row.notesCount = Array.isArray(row.raw.notes) ? row.raw.notes.length : 0;
-          row.freqPct = computeFreq(row.raw.freq).totalPct;
+          row.freqPct = computeFreq(row.raw).totalPct;
         }
         document.getElementById('sh-name').textContent = (parsed.student && parsed.student.nome) || '(sem nome)';
         statusEl.textContent = 'Documento salvo com sucesso.'; statusEl.className='save-status ok';
