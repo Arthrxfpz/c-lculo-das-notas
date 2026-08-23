@@ -2,62 +2,176 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Painel Admin — Cálculo das notas</title>
 <style>
   :root{
-    --bg:#0b0c10; --bg2:#15161c; --bg3:#1d1f27;
+    --bg:#0b0c10; --bg2:#15161c; --bg3:#1d1f27; --bg4:#25272f;
     --line:#262832; --t1:#f2f2f5; --t2:#b7b9c4; --t3:#8a8d99; --t4:#5c5f6b;
     --gold:#FFD60A; --goldbg:rgba(255,214,10,.08); --goldbd:rgba(255,214,10,.25);
-    --red:#ff5a5f; --green:#34c77b;
+    --red:#ff5a5f; --redbg:rgba(255,90,95,.1); --green:#34c77b; --blue:#5aa9ff;
+    --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
   }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-  .wrap{max-width:920px;margin:0 auto;padding:24px 16px 60px}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+  button,input,select,textarea{font-family:inherit}
+  .wrap{max-width:960px;margin:0 auto;padding:calc(18px + var(--safe-top)) 14px 40px}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:6px}
 
   /* ── Tela de login ── */
   #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;text-align:center;padding:24px}
+  #gate .gate-icon{width:56px;height:56px;border-radius:16px;background:var(--goldbg);border:1px solid var(--goldbd);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
   #gate h1{font-size:20px;margin:0}
-  #gate p{color:var(--t3);font-size:14px;max-width:320px;margin:0}
-  .btn-google{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);color:var(--t1);font-size:15px;font-weight:600;padding:13px 22px;border-radius:14px;cursor:pointer}
+  #gate p{color:var(--t3);font-size:14px;max-width:320px;margin:0;line-height:1.5}
+  .btn-google{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);color:var(--t1);font-size:15px;font-weight:600;padding:14px 24px;border-radius:14px;cursor:pointer}
   .btn-google:active{transform:scale(.97)}
-  #denied{display:none;color:var(--red);font-size:13px;font-weight:600;margin-top:6px}
+  #denied{display:none;color:var(--red);font-size:13px;font-weight:600;margin-top:2px}
 
   /* ── Painel ── */
   #panel{display:none}
-  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
-  .topbar h1{font-size:18px;margin:0}
-  .btn-out{background:none;border:1px solid var(--line);color:var(--t3);font-size:12px;font-weight:600;padding:8px 14px;border-radius:10px;cursor:pointer}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+  .topbar h1{font-size:17px;margin:0;letter-spacing:-.2px}
+  .topbar-sub{font-size:11px;color:var(--t4);margin-top:2px}
+  .topbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+  .icon-btn{width:36px;height:36px;border-radius:10px;background:var(--bg2);border:.5px solid var(--line);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .icon-btn:active{transform:scale(.94);background:var(--bg3)}
+  .icon-btn svg{width:16px;height:16px}
+  .icon-btn.spin svg{animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn-out{background:none;border:1px solid var(--line);color:var(--t3);font-size:12px;font-weight:600;padding:9px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .btn-out:active{transform:scale(.96)}
 
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
-  .stat-card{background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:16px}
-  .stat-label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
-  .stat-value{font-size:22px;font-weight:800;color:var(--t1);letter-spacing:-.4px}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:22px}
+  @media(min-width:560px){.stats{grid-template-columns:repeat(3,1fr)}}
+  @media(min-width:820px){.stats{grid-template-columns:repeat(6,1fr)}}
+  .stat-card{background:var(--bg2);border:.5px solid var(--line);border-radius:14px;padding:13px 14px}
+  .stat-label{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .stat-value{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.4px}
   .stat-value.gold{color:var(--gold)}
+  .stat-value.green{color:var(--green)}
 
-  .section-label{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;opacity:.7;margin:24px 2px 10px}
+  .section-label{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;opacity:.75;margin:22px 2px 10px}
 
-  #search{width:100%;background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:11px 14px;color:var(--t1);font-size:14px;margin-bottom:14px;outline:none}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px}
+  #search{flex:1;min-width:0;background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--t1);font-size:14px;outline:none}
   #search::placeholder{color:var(--t4)}
+  #sort-select{background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:0 10px;color:var(--t2);font-size:12.5px;font-weight:600;outline:none;max-width:118px}
 
-  table{width:100%;border-collapse:collapse;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;overflow:hidden}
-  thead th{text-align:left;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;padding:10px 12px;background:var(--bg3);cursor:pointer;user-select:none;white-space:nowrap}
-  thead th:hover{color:var(--t1)}
-  tbody td{padding:11px 12px;font-size:13px;color:var(--t2);border-top:.5px solid var(--line);vertical-align:top}
-  tbody tr:hover{background:var(--bg3)}
-  .cell-name{color:var(--t1);font-weight:600}
-  .cell-size{color:var(--t1);font-weight:700;white-space:nowrap}
-  .cell-uid{font-size:10px;color:var(--t4);font-family:monospace}
-  .empty{padding:30px;text-align:center;color:var(--t3);font-size:13px}
-  #loading{padding:30px;text-align:center;color:var(--t3);font-size:13px}
+  #loading,.empty{padding:34px 20px;text-align:center;color:var(--t3);font-size:13px}
+  .spinner{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--gold);margin:0 auto 12px;animation:spin .7s linear infinite}
+
+  /* ── Lista de usuários (cards) ── */
+  .user-list{display:flex;flex-direction:column;gap:8px}
+  .user-card{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:12px 12px;cursor:pointer;transition:background .1s}
+  .user-card:active{background:var(--bg3);transform:scale(.995)}
+  .avatar{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#000}
+  .user-info{flex:1;min-width:0}
+  .user-name{font-size:14.5px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .user-sub{font-size:12px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+  .user-tags{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap}
+  .tag{font-size:10px;font-weight:700;color:var(--t3);background:var(--bg3);border-radius:6px;padding:2.5px 6px;white-space:nowrap}
+  .user-meta{text-align:right;flex-shrink:0}
+  .user-size{font-size:13px;font-weight:800;color:var(--gold)}
+  .user-time{font-size:10.5px;color:var(--t4);margin-top:3px}
+  .chev{color:var(--t4);flex-shrink:0}
+  .chev svg{width:16px;height:16px;display:block}
+
+  /* ── Sheet de detalhes ── */
+  .sheet-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);z-index:200;opacity:0;pointer-events:none;transition:opacity .25s ease}
+  .sheet-backdrop.show{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:201;background:var(--bg2);border-radius:20px 20px 0 0;max-height:92vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);box-shadow:0 -8px 40px rgba(0,0,0,.4)}
+  .sheet.show{transform:translateY(0)}
+  @media(min-width:720px){
+    .sheet{left:50%;bottom:auto;top:50%;width:640px;max-width:92vw;transform:translate(-50%,-46%) scale(.97);opacity:0;border-radius:20px;max-height:86vh;transition:transform .22s ease,opacity .22s ease}
+    .sheet.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+  }
+  .sheet-handle{width:36px;height:4px;background:var(--line);border-radius:3px;margin:10px auto 2px;flex-shrink:0}
+  @media(min-width:720px){.sheet-handle{display:none}}
+  .sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 18px 10px;flex-shrink:0}
+  .sheet-name{font-size:17px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+  .sheet-uid{font-size:10.5px;color:var(--t4);font-family:monospace;margin-top:3px;word-break:break-all}
+  .sheet-tabs{display:flex;gap:6px;padding:0 14px 12px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+  .sheet-tabs::-webkit-scrollbar{display:none}
+  .tab-pill{flex-shrink:0;background:var(--bg3);border:.5px solid var(--line);color:var(--t3);font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .tab-pill.active{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+  .sheet-body{flex:1;overflow-y:auto;padding:4px 18px calc(18px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
+
+  .field-group{margin-bottom:14px}
+  .field-label{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;display:block}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .input,.select,.textarea{width:100%;background:var(--bg3);border:.5px solid var(--line);border-radius:11px;padding:11px 12px;color:var(--t1);font-size:14px;outline:none}
+  .input:focus,.select:focus,.textarea:focus{border-color:var(--goldbd)}
+  .textarea{resize:vertical;min-height:64px;font-family:monospace;font-size:12.5px;line-height:1.5}
+  .input[type=color]{padding:4px;height:42px;cursor:pointer}
+
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+  .info-box{background:var(--bg3);border-radius:11px;padding:10px 12px}
+  .info-box-label{font-size:9.5px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+  .info-box-value{font-size:13px;font-weight:700;color:var(--t1)}
+
+  .btn-primary{width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:6px}
+  .btn-primary:active{transform:scale(.98)}
+  .btn-primary:disabled{opacity:.5}
+  .btn-secondary{width:100%;background:var(--bg3);color:var(--t2);border:.5px solid var(--line);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer}
+  .btn-danger{width:100%;background:var(--redbg);color:var(--red);border:1px solid rgba(255,90,95,.3);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px}
+  .btn-danger:active{transform:scale(.98)}
+  .save-status{font-size:12px;text-align:center;margin-top:8px;min-height:16px;font-weight:600}
+  .save-status.ok{color:var(--green)}
+  .save-status.err{color:var(--red)}
+
+  .danger-zone{margin-top:26px;padding-top:16px;border-top:1px dashed var(--line)}
+  .danger-title{font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+
+  /* Notas / Provas tabs */
+  .subj-block{background:var(--bg3);border-radius:13px;margin-bottom:10px;overflow:hidden}
+  .subj-head{display:flex;align-items:center;gap:9px;padding:11px 13px;cursor:pointer}
+  .subj-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .subj-title{font-size:13.5px;font-weight:700;color:var(--t1);flex:1}
+  .subj-count{font-size:11px;color:var(--t4);font-weight:600}
+  .subj-caret{color:var(--t4);transition:transform .2s}
+  .subj-caret svg{width:14px;height:14px;display:block}
+  .subj-body{display:none;padding:0 13px 12px}
+  .subj-body.open{display:block}
+  .period-block{margin-top:10px}
+  .period-label{font-size:10.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+  .grade-row{display:grid;grid-template-columns:1fr 52px 52px 28px;gap:6px;margin-bottom:6px;align-items:center}
+  .grade-row input{background:var(--bg4);border:.5px solid var(--line);border-radius:8px;padding:8px 8px;color:var(--t1);font-size:12.5px;outline:none;width:100%}
+  .btn-x{width:28px;height:28px;border-radius:8px;background:var(--redbg);color:var(--red);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .btn-x svg{width:12px;height:12px}
+  .btn-add-small{background:var(--goldbg);color:var(--gold);border:1px dashed var(--goldbd);border-radius:9px;padding:7px 10px;font-size:11.5px;font-weight:700;cursor:pointer;width:100%;margin-top:2px}
+
+  .exam-card{background:var(--bg3);border-radius:13px;padding:12px 13px;margin-bottom:9px}
+  .exam-card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .exam-card-tag{font-size:10px;font-weight:700;color:var(--gold);background:var(--goldbg);padding:3px 8px;border-radius:6px}
+
+  .freq-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid var(--line)}
+  .freq-row:last-child{border-bottom:none}
+  .freq-name{flex:1;font-size:13px;font-weight:600;color:var(--t1)}
+  .freq-nums{font-size:11px;color:var(--t3);white-space:nowrap}
+  .freq-pct{font-size:14px;font-weight:800;width:46px;text-align:right}
+  .freq-bar-track{width:100%;height:5px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:6px}
+  .freq-bar-fill{height:100%;border-radius:3px}
+
+  .hint{font-size:11.5px;color:var(--t4);line-height:1.5;margin-bottom:12px}
+  .empty-tab{text-align:center;color:var(--t4);font-size:13px;padding:30px 10px}
+
+  .toast{position:fixed;left:50%;bottom:calc(18px + var(--safe-bottom));transform:translateX(-50%) translateY(20px);background:var(--bg4);color:var(--t1);font-size:13px;font-weight:600;padding:11px 18px;border-radius:12px;z-index:400;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;box-shadow:0 6px 24px rgba(0,0,0,.4);border:.5px solid var(--line)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.ok{color:var(--green)}
+  .toast.err{color:var(--red)}
 </style>
 </head>
 <body>
 
 <!-- TELA DE LOGIN / BLOQUEIO -->
 <div id="gate">
+  <div class="gate-icon">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD60A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  </div>
   <h1>Painel administrativo</h1>
-  <p>Acesso restrito. Entre com a conta Google autorizada para ver os dados de armazenamento e usuários.</p>
+  <p>Acesso restrito. Entre com a conta Google autorizada para ver e gerenciar os dados dos usuários.</p>
   <button class="btn-google" id="btn-login">
     <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
     Entrar com o Google
@@ -69,13 +183,21 @@
 <div id="panel">
   <div class="wrap">
     <div class="topbar">
-      <h1>Painel administrativo</h1>
-      <button class="btn-out" id="btn-logout">Sair</button>
+      <div>
+        <h1>Painel administrativo</h1>
+        <div class="topbar-sub" id="last-refresh">—</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="btn-refresh" title="Atualizar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        </button>
+        <button class="btn-out" id="btn-logout">Sair</button>
+      </div>
     </div>
 
-    <div class="stats">
+    <div class="stats" id="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Armazenamento total</div>
+        <div class="stat-label">Armazenamento</div>
         <div class="stat-value gold" id="st-total">—</div>
       </div>
       <div class="stat-card">
@@ -83,37 +205,69 @@
         <div class="stat-value" id="st-users">—</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Média por usuário</div>
+        <div class="stat-label">Média/usuário</div>
         <div class="stat-value" id="st-avg">—</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Maior consumo</div>
         <div class="stat-value" id="st-max">—</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">Provas cadastradas</div>
+        <div class="stat-value" id="st-exams">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ativos (7 dias)</div>
+        <div class="stat-value green" id="st-active">—</div>
+      </div>
     </div>
 
     <div class="section-label">Usuários</div>
-    <input id="search" placeholder="Buscar por nome, escola ou UID..." oninput="renderTable()">
-    <div id="loading">Carregando dados do Firestore...</div>
-    <table id="tbl" style="display:none">
-      <thead>
-        <tr>
-          <th data-key="nome">Nome</th>
-          <th data-key="escola">Escola</th>
-          <th data-key="bytes">Armazenamento</th>
-          <th data-key="updatedAt">Atualizado em</th>
-        </tr>
-      </thead>
-      <tbody id="tbl-body"></tbody>
-    </table>
+    <div class="toolbar">
+      <input id="search" placeholder="Buscar por nome, escola, turma ou UID...">
+      <select id="sort-select">
+        <option value="bytes">Tamanho</option>
+        <option value="nome">Nome</option>
+        <option value="updatedAt">Recente</option>
+        <option value="escola">Escola</option>
+      </select>
+    </div>
+    <div id="loading"><div class="spinner"></div>Carregando dados do Firestore...</div>
+    <div id="list" class="user-list" style="display:none"></div>
+    <div id="empty-state" class="empty" style="display:none">Nenhum usuário encontrado.</div>
   </div>
 </div>
+
+<!-- SHEET DE DETALHES DO USUÁRIO -->
+<div class="sheet-backdrop" id="sheet-backdrop"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div style="min-width:0">
+      <div class="sheet-name" id="sh-name">—</div>
+      <div class="sheet-uid" id="sh-uid">—</div>
+    </div>
+    <button class="icon-btn" id="btn-close-sheet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-tabs" id="sheet-tabs">
+    <button class="tab-pill active" data-tab="perfil">Perfil</button>
+    <button class="tab-pill" data-tab="notas">Notas</button>
+    <button class="tab-pill" data-tab="provas">Provas</button>
+    <button class="tab-pill" data-tab="freq">Frequência</button>
+    <button class="tab-pill" data-tab="json">Avançado</button>
+  </div>
+  <div class="sheet-body" id="sheet-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs }
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   // ── Mesmo projeto Firebase do app principal ──
@@ -136,6 +290,39 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
+  /* ═══════════ Referência de matérias padrão (mat_id → nome/cor) ═══════════
+     As matérias em si não sincronizam no Firestore (só ficam no aparelho do
+     aluno), então usamos a lista padrão do app pra dar nome amigável aos IDs
+     nas notas/frequência. Se o aluno usa matéria custom, mostramos o ID puro. */
+  const DEFAULT_SUBJECTS=[
+    {id:'edu_fin',name:'Educação Financeira',   color:'#E8B84B'},
+    {id:'mat',    name:'Matemática',            color:'#A78BFA'},
+    {id:'bio',    name:'Biologia',              color:'#34D399'},
+    {id:'fis',    name:'Física',                color:'#60A5FA'},
+    {id:'qui',    name:'Química',               color:'#F472B6'},
+    {id:'artes',  name:'Artes Integradas',      color:'#FB923C'},
+    {id:'ed_fis', name:'Educação Física',       color:'#4ADE80'},
+    {id:'esc_cri',name:'Escrita Criativa',      color:'#F9A8D4'},
+    {id:'esp',    name:'Língua Espanhola',      color:'#FCA5A5'},
+    {id:'ing',    name:'Língua Inglesa',        color:'#93C5FD'},
+    {id:'port',   name:'Língua Portuguesa',     color:'#6EE7B7'},
+    {id:'lit',    name:'Literatura',            color:'#6EE7B7'},
+    {id:'rel',    name:'Ensino Religioso',      color:'#C4B5FD'},
+    {id:'geo',    name:'Geografia',             color:'#67E8F9'},
+    {id:'hist',   name:'História',              color:'#FCD34D'},
+    {id:'soc',    name:'Sociologia',            color:'#86EFAC'},
+    {id:'proj',   name:'Proj. Integrador Mat.', color:'#818CF8'},
+  ];
+  const SUBJ_MAP = {};
+  DEFAULT_SUBJECTS.forEach(s=>SUBJ_MAP[s.id]=s);
+  function subjInfo(id){ return SUBJ_MAP[id] || {id, name:id, color:'#8a8d99'}; }
+
+  const GRADE_TABS = ['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC'];
+  const TAB_LABELS = {'1T':'1° Trimestre','1T-EAC':'EAC do 1°','2T':'2° Trimestre','2T-EAC':'EAC do 2°','3T':'3° Trimestre','3T-EAC':'EAC do 3°'};
+
+  // ─────────────────────────────────────────────────────────────
+  // AUTENTICAÇÃO
+  // ─────────────────────────────────────────────────────────────
   const gate    = document.getElementById('gate');
   const panel   = document.getElementById('panel');
   const denied  = document.getElementById('denied');
@@ -155,7 +342,6 @@
       panel.style.display = 'block';
       loadData();
     } else if (user) {
-      // Logado, mas não é a conta autorizada
       signOut(auth);
       denied.style.display = 'block';
       gate.style.display = 'flex';
@@ -166,19 +352,85 @@
     }
   });
 
-  let rows = [];
-  let sortKey = 'bytes', sortDir = -1;
-
+  // ─────────────────────────────────────────────────────────────
+  // HELPERS
+  // ─────────────────────────────────────────────────────────────
   function fmtBytes(bytes){
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024*1024) return (bytes/1024).toFixed(1).replace('.',',') + ' KB';
     if (bytes < 1024*1024*1024) return (bytes/(1024*1024)).toFixed(2).replace('.',',') + ' MB';
     return (bytes/(1024*1024*1024)).toFixed(2).replace('.',',') + ' GB';
   }
+  function fmtDate(ts){ return ts ? new Date(ts).toLocaleString('pt-BR') : '—'; }
+  function timeAgo(ts){
+    if(!ts) return '—';
+    const diff = Date.now() - ts;
+    const min = Math.floor(diff/60000);
+    if(min < 1) return 'agora';
+    if(min < 60) return 'há ' + min + 'min';
+    const h = Math.floor(min/60);
+    if(h < 24) return 'há ' + h + 'h';
+    const d = Math.floor(h/24);
+    if(d < 30) return 'há ' + d + 'd';
+    const mo = Math.floor(d/30);
+    return 'há ' + mo + (mo===1?' mês':' meses');
+  }
+  function escapeHtml(str){
+    return String(str==null?'':str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function toast(msg, kind){
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show' + (kind ? ' '+kind : '');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(()=>{ el.classList.remove('show'); }, 2600);
+  }
+  function countGradeEntries(grades){
+    let n = 0;
+    if(!grades) return 0;
+    Object.keys(grades).forEach(sid=>{
+      GRADE_TABS.forEach(t=>{ if(Array.isArray(grades[sid][t])) n += grades[sid][t].length; });
+    });
+    return n;
+  }
+  function computeFreq(freq){
+    const perSubj = [];
+    let totalP = 0, totalF = 0;
+    if(freq){
+      Object.keys(freq).forEach(sid=>{
+        const days = freq[sid] || {};
+        let p=0, f=0;
+        Object.values(days).forEach(v=>{ if(v==='p')p++; else if(v==='f')f++; });
+        if(p||f){
+          totalP += p; totalF += f;
+          const info = subjInfo(sid);
+          perSubj.push({id:sid, name:info.name, color:info.color, p, f, pct: (p+f)?Math.round(p/(p+f)*100):null});
+        }
+      });
+    }
+    perSubj.sort((a,b)=>a.name.localeCompare(b.name));
+    return { perSubj, totalP, totalF, totalPct: (totalP+totalF)?Math.round(totalP/(totalP+totalF)*100):null };
+  }
+  function pctColor(pct){
+    if(pct==null) return 'var(--t4)';
+    if(pct>=75) return 'var(--green)';
+    if(pct>=60) return 'var(--gold)';
+    return 'var(--red)';
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // CARREGAMENTO DA LISTA
+  // ─────────────────────────────────────────────────────────────
+  let rows = [];
+  let sortKey = 'bytes';
 
   async function loadData(){
-    document.getElementById('loading').style.display = 'block';
-    document.getElementById('tbl').style.display = 'none';
+    const loadingEl = document.getElementById('loading');
+    const listEl = document.getElementById('list');
+    const emptyEl = document.getElementById('empty-state');
+    loadingEl.style.display = 'block';
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'none';
     try{
       const snap = await getDocs(collection(db, 'users'));
       rows = [];
@@ -189,67 +441,531 @@
         const student = d.student || {};
         rows.push({
           uid: docSnap.id,
+          raw: d,
           nome: student.nome || '(sem nome)',
           escola: student.escola || '—',
+          turma: student.turma || '',
+          serie: student.serie || '',
           bytes,
-          updatedAt: d.updatedAt || null
+          updatedAt: d.updatedAt || null,
+          examsCount: Array.isArray(d.exams) ? d.exams.length : 0,
+          gradesCount: countGradeEntries(d.grades),
         });
       });
 
       const total = rows.reduce((a,r)=>a+r.bytes,0);
       const max   = rows.reduce((a,r)=>Math.max(a,r.bytes),0);
-      document.getElementById('st-total').textContent = fmtBytes(total);
-      document.getElementById('st-users').textContent = rows.length;
-      document.getElementById('st-avg').textContent   = rows.length ? fmtBytes(Math.round(total/rows.length)) : '—';
-      document.getElementById('st-max').textContent   = rows.length ? fmtBytes(max) : '—';
+      const now = Date.now();
+      const active7 = rows.filter(r => r.updatedAt && (now - r.updatedAt) < 7*24*3600*1000).length;
+      const totalExams = rows.reduce((a,r)=>a+r.examsCount,0);
 
-      renderTable();
+      document.getElementById('st-total').textContent  = fmtBytes(total);
+      document.getElementById('st-users').textContent  = rows.length;
+      document.getElementById('st-avg').textContent    = rows.length ? fmtBytes(Math.round(total/rows.length)) : '—';
+      document.getElementById('st-max').textContent    = rows.length ? fmtBytes(max) : '—';
+      document.getElementById('st-exams').textContent  = totalExams;
+      document.getElementById('st-active').textContent = active7;
+      document.getElementById('last-refresh').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+
+      renderList();
     }catch(e){
-      document.getElementById('loading').textContent = 'Erro ao carregar: ' + e.message + ' (verifique as regras do Firestore)';
+      loadingEl.innerHTML = 'Erro ao carregar: ' + escapeHtml(e.message) + ' (verifique as regras do Firestore)';
       return;
     }
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('tbl').style.display = 'table';
+    loadingEl.style.display = 'none';
   }
 
-  window.renderTable = function(){
+  function avatarColorFor(row){
+    return (row.raw.student && row.raw.student.avatarColor) || '#FFD60A';
+  }
+
+  function renderList(){
     const q = (document.getElementById('search').value || '').toLowerCase();
-    const body = document.getElementById('tbl-body');
+    const listEl = document.getElementById('list');
+    const emptyEl = document.getElementById('empty-state');
+
     let filtered = rows.filter(r =>
       r.nome.toLowerCase().includes(q) ||
       r.escola.toLowerCase().includes(q) ||
+      r.turma.toLowerCase().includes(q) ||
       r.uid.toLowerCase().includes(q)
     );
     filtered.sort((a,b) => {
-      let av=a[sortKey], bv=b[sortKey];
-      if (sortKey==='updatedAt'){ av=av||0; bv=bv||0; }
-      if (typeof av === 'string') return sortDir * av.localeCompare(bv);
-      return sortDir * ((av>bv)?1:(av<bv)?-1:0);
+      if(sortKey === 'updatedAt') return (b.updatedAt||0) - (a.updatedAt||0);
+      if(sortKey === 'nome' || sortKey === 'escola') return String(a[sortKey]).localeCompare(String(b[sortKey]));
+      return b.bytes - a.bytes;
     });
+
     if (!filtered.length){
-      body.innerHTML = '<tr><td colspan="4" class="empty">Nenhum usuário encontrado.</td></tr>';
+      listEl.style.display = 'none';
+      emptyEl.style.display = 'block';
       return;
     }
-    body.innerHTML = filtered.map(r => `
-      <tr>
-        <td>
-          <div class="cell-name">${r.nome}</div>
-          <div class="cell-uid">${r.uid}</div>
-        </td>
-        <td>${r.escola}</td>
-        <td class="cell-size">${fmtBytes(r.bytes)}</td>
-        <td>${r.updatedAt ? new Date(r.updatedAt).toLocaleString('pt-BR') : '—'}</td>
-      </tr>
-    `).join('');
-  };
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'flex';
 
-  document.querySelectorAll('thead th').forEach(th => {
-    th.addEventListener('click', () => {
-      const key = th.dataset.key;
-      if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
-      renderTable();
+    listEl.innerHTML = filtered.map(r => {
+      const initial = (r.nome || '?').trim().charAt(0).toUpperCase() || '?';
+      const color = avatarColorFor(r);
+      const subInfo = [r.escola !== '—' ? r.escola : null, r.turma || null].filter(Boolean).join(' · ') || 'Sem escola cadastrada';
+      return `
+      <div class="user-card" data-uid="${r.uid}">
+        <div class="avatar" style="background:${color}">${escapeHtml(initial)}</div>
+        <div class="user-info">
+          <div class="user-name">${escapeHtml(r.nome)}</div>
+          <div class="user-sub">${escapeHtml(subInfo)}</div>
+          <div class="user-tags">
+            <span class="tag">${r.gradesCount} notas</span>
+            <span class="tag">${r.examsCount} provas</span>
+          </div>
+        </div>
+        <div class="user-meta">
+          <div class="user-size">${fmtBytes(r.bytes)}</div>
+          <div class="user-time">${timeAgo(r.updatedAt)}</div>
+        </div>
+        <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('.user-card').forEach(card=>{
+      card.addEventListener('click', () => openDetail(card.dataset.uid));
     });
+  }
+
+  document.getElementById('search').addEventListener('input', renderList);
+  document.getElementById('sort-select').addEventListener('change', (e)=>{ sortKey = e.target.value; renderList(); });
+  document.getElementById('btn-refresh').addEventListener('click', (e)=>{
+    e.currentTarget.classList.add('spin');
+    loadData().finally(()=> e.currentTarget.classList.remove('spin'));
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // SHEET DE DETALHES
+  // ─────────────────────────────────────────────────────────────
+  const sheet = document.getElementById('sheet');
+  const sheetBackdrop = document.getElementById('sheet-backdrop');
+  const sheetBody = document.getElementById('sheet-body');
+  let currentUid = null;
+  let currentData = null; // cópia de trabalho (editável) do documento
+  let activeTab = 'perfil';
+
+  function openDetail(uid){
+    const row = rows.find(r=>r.uid===uid);
+    if(!row) return;
+    currentUid = uid;
+    currentData = JSON.parse(JSON.stringify(row.raw || {}));
+    if(!currentData.student) currentData.student = {nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A'};
+    if(!currentData.grades) currentData.grades = {};
+    if(!currentData.exams) currentData.exams = [];
+
+    document.getElementById('sh-name').textContent = currentData.student.nome || '(sem nome)';
+    document.getElementById('sh-uid').textContent = uid;
+
+    activeTab = 'perfil';
+    document.querySelectorAll('.tab-pill').forEach(b=>b.classList.toggle('active', b.dataset.tab==='perfil'));
+    renderTabBody();
+
+    sheetBackdrop.classList.add('show');
+    sheet.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDetail(){
+    sheetBackdrop.classList.remove('show');
+    sheet.classList.remove('show');
+    document.body.style.overflow = '';
+    currentUid = null;
+    currentData = null;
+  }
+  document.getElementById('btn-close-sheet').addEventListener('click', closeDetail);
+  sheetBackdrop.addEventListener('click', closeDetail);
+
+  document.getElementById('sheet-tabs').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tab-pill');
+    if(!btn) return;
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll('.tab-pill').forEach(b=>b.classList.toggle('active', b===btn));
+    renderTabBody();
+  });
+
+  function renderTabBody(){
+    if(activeTab === 'perfil') renderPerfilTab();
+    else if(activeTab === 'notas') renderNotasTab();
+    else if(activeTab === 'provas') renderProvasTab();
+    else if(activeTab === 'freq') renderFreqTab();
+    else if(activeTab === 'json') renderJsonTab();
+  }
+
+  // ── Grava um patch parcial no Firestore (merge:true) e atualiza a linha local ──
+  async function saveDoc(patch, statusElId, successMsg){
+    const statusEl = statusElId ? document.getElementById(statusElId) : null;
+    try{
+      patch.updatedAt = Date.now();
+      await setDoc(doc(db, 'users', currentUid), patch, { merge: true });
+      Object.assign(currentData, patch);
+      const row = rows.find(r=>r.uid===currentUid);
+      if(row){
+        Object.assign(row.raw, patch);
+        row.nome = (currentData.student && currentData.student.nome) || '(sem nome)';
+        row.escola = (currentData.student && currentData.student.escola) || '—';
+        row.turma = (currentData.student && currentData.student.turma) || '';
+        row.updatedAt = patch.updatedAt;
+        row.bytes = new Blob([JSON.stringify(row.raw)]).size;
+        row.examsCount = Array.isArray(row.raw.exams) ? row.raw.exams.length : 0;
+        row.gradesCount = countGradeEntries(row.raw.grades);
+      }
+      document.getElementById('sh-name').textContent = currentData.student.nome || '(sem nome)';
+      if(statusEl){ statusEl.textContent = successMsg || 'Salvo com sucesso.'; statusEl.className='save-status ok'; setTimeout(()=>statusEl.textContent='',2200); }
+      else toast(successMsg || 'Salvo com sucesso.', 'ok');
+      renderList();
+    }catch(e){
+      if(statusEl){ statusEl.textContent = 'Erro ao salvar: ' + e.message; statusEl.className='save-status err'; }
+      else toast('Erro ao salvar: ' + e.message, 'err');
+      console.error(e);
+    }
+  }
+
+  // ── ABA: PERFIL ──
+  function renderPerfilTab(){
+    const s = currentData.student || {};
+    const row = rows.find(r=>r.uid===currentUid);
+    sheetBody.innerHTML = `
+      <div class="info-grid">
+        <div class="info-box"><div class="info-box-label">Armazenamento</div><div class="info-box-value">${fmtBytes(row?row.bytes:0)}</div></div>
+        <div class="info-box"><div class="info-box-label">Atualizado em</div><div class="info-box-value">${fmtDate(currentData.updatedAt)}</div></div>
+        <div class="info-box"><div class="info-box-label">Notas lançadas</div><div class="info-box-value">${countGradeEntries(currentData.grades)}</div></div>
+        <div class="info-box"><div class="info-box-label">Provas cadastradas</div><div class="info-box-value">${(currentData.exams||[]).length}</div></div>
+      </div>
+
+      <div class="field-group">
+        <span class="field-label">Nome</span>
+        <input class="input" id="pf-nome" value="${escapeHtml(s.nome||'')}">
+      </div>
+      <div class="field-group">
+        <span class="field-label">Escola</span>
+        <input class="input" id="pf-escola" value="${escapeHtml(s.escola||'')}">
+      </div>
+      <div class="field-row field-group">
+        <div>
+          <span class="field-label">Turma</span>
+          <input class="input" id="pf-turma" value="${escapeHtml(s.turma||'')}">
+        </div>
+        <div>
+          <span class="field-label">Série</span>
+          <input class="input" id="pf-serie" value="${escapeHtml(s.serie||'')}">
+        </div>
+      </div>
+      <div class="field-row field-group">
+        <div>
+          <span class="field-label">Turno</span>
+          <input class="input" id="pf-turno" value="${escapeHtml(s.turno||'')}">
+        </div>
+        <div>
+          <span class="field-label">Meta de nota</span>
+          <input class="input" type="number" step="0.1" min="0" max="10" id="pf-meta" value="${s.meta!=null?s.meta:6}">
+        </div>
+      </div>
+      <div class="field-group">
+        <span class="field-label">Cor do avatar</span>
+        <input class="input" type="color" id="pf-color" value="${s.avatarColor||'#FFD60A'}">
+      </div>
+
+      <button class="btn-primary" id="pf-save">Salvar perfil</button>
+      <div class="save-status" id="pf-status"></div>
+
+      <div class="danger-zone">
+        <div class="danger-title">Zona de risco</div>
+        <div class="hint">Excluir o usuário apaga permanentemente todos os dados dele no Firestore (notas, provas, frequência, tudo). Essa ação não pode ser desfeita.</div>
+        <button class="btn-danger" id="pf-delete">Excluir usuário</button>
+      </div>
+    `;
+    document.getElementById('pf-save').addEventListener('click', ()=>{
+      const student = {
+        ...s,
+        nome: document.getElementById('pf-nome').value.trim(),
+        escola: document.getElementById('pf-escola').value.trim(),
+        turma: document.getElementById('pf-turma').value.trim(),
+        serie: document.getElementById('pf-serie').value.trim(),
+        turno: document.getElementById('pf-turno').value.trim(),
+        meta: parseFloat(document.getElementById('pf-meta').value) || 0,
+        avatarColor: document.getElementById('pf-color').value,
+      };
+      saveDoc({ student }, 'pf-status', 'Perfil salvo com sucesso.');
+    });
+    document.getElementById('pf-delete').addEventListener('click', async ()=>{
+      if(!confirm(`Tem certeza que deseja excluir permanentemente o usuário "${s.nome||currentUid}"? Essa ação não pode ser desfeita.`)) return;
+      if(!confirm('Confirme novamente: TODOS os dados desse usuário serão apagados. Continuar?')) return;
+      try{
+        await deleteDoc(doc(db, 'users', currentUid));
+        rows = rows.filter(r=>r.uid!==currentUid);
+        toast('Usuário excluído.', 'ok');
+        closeDetail();
+        renderList();
+      }catch(e){
+        toast('Erro ao excluir: ' + e.message, 'err');
+      }
+    });
+  }
+
+  // ── ABA: NOTAS ──
+  function renderNotasTab(){
+    const grades = currentData.grades || {};
+    const ids = Object.keys(grades).filter(id => GRADE_TABS.some(t => (grades[id][t]||[]).length));
+    const idsAll = Object.keys(grades);
+    const list = idsAll.length ? idsAll : ids;
+    list.sort((a,b)=>subjInfo(a).name.localeCompare(subjInfo(b).name));
+
+    if(!list.length){
+      sheetBody.innerHTML = `<div class="empty-tab">Nenhuma matéria com notas registradas ainda.</div>`;
+      return;
+    }
+
+    sheetBody.innerHTML = `
+      <div class="hint">Toque em uma matéria para ver e editar as notas por período. Use "Avançado" para editar campos que não aparecem aqui.</div>
+      <div id="subj-list"></div>
+      <button class="btn-primary" id="nt-save">Salvar notas</button>
+      <div class="save-status" id="nt-status"></div>
+    `;
+    const listEl = document.getElementById('subj-list');
+
+    list.forEach(sid=>{
+      const info = subjInfo(sid);
+      const count = GRADE_TABS.reduce((n,t)=>n+((grades[sid][t]||[]).length),0);
+      const block = document.createElement('div');
+      block.className = 'subj-block';
+      block.innerHTML = `
+        <div class="subj-head" data-sid="${sid}">
+          <div class="subj-dot" style="background:${info.color}"></div>
+          <div class="subj-title">${escapeHtml(info.name)}</div>
+          <div class="subj-count">${count} lançamento${count===1?'':'s'}</div>
+          <div class="subj-caret"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></div>
+        </div>
+        <div class="subj-body" id="sb-${sid}"></div>
+      `;
+      listEl.appendChild(block);
+      block.querySelector('.subj-head').addEventListener('click', ()=>{
+        const body = block.querySelector('.subj-body');
+        const opening = !body.classList.contains('open');
+        body.classList.toggle('open');
+        block.querySelector('.subj-caret').style.transform = opening ? 'rotate(180deg)' : '';
+        if(opening && !body.dataset.built){ buildSubjectBody(body, sid); body.dataset.built = '1'; }
+      });
+    });
+
+    document.getElementById('nt-save').addEventListener('click', ()=>{
+      saveDoc({ grades: currentData.grades }, 'nt-status', 'Notas salvas com sucesso.');
+    });
+  }
+
+  function buildSubjectBody(container, sid){
+    if(!currentData.grades[sid]) currentData.grades[sid] = {};
+    GRADE_TABS.forEach(t=>{ if(!Array.isArray(currentData.grades[sid][t])) currentData.grades[sid][t]=[]; });
+
+    function renderPeriod(t){
+      const entries = currentData.grades[sid][t];
+      const rowsHtml = entries.map((g, idx) => `
+        <div class="grade-row" data-t="${t}" data-idx="${idx}">
+          <input placeholder="Nome" class="g-name" value="${escapeHtml(g.name||'')}">
+          <input placeholder="Nota" class="g-got" value="${escapeHtml(g.got!=null?g.got:'')}">
+          <input placeholder="Total" class="g-total" value="${escapeHtml(g.total!=null?g.total:'')}">
+          <button class="btn-x g-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      `).join('');
+      return `
+        <div class="period-block" data-period="${t}">
+          <div class="period-label">${TAB_LABELS[t]}</div>
+          <div class="period-rows">${rowsHtml}</div>
+          <button class="btn-add-small period-add" data-t="${t}">+ Adicionar avaliação</button>
+        </div>
+      `;
+    }
+
+    container.innerHTML = GRADE_TABS.map(renderPeriod).join('');
+    wireSubjectBody(container, sid);
+  }
+
+  function wireSubjectBody(container, sid){
+    container.querySelectorAll('.grade-row').forEach(rowEl=>{
+      const t = rowEl.dataset.t, idx = parseInt(rowEl.dataset.idx);
+      rowEl.querySelector('.g-name').addEventListener('input', e=>{ currentData.grades[sid][t][idx].name = e.target.value; });
+      rowEl.querySelector('.g-got').addEventListener('input', e=>{ currentData.grades[sid][t][idx].got = e.target.value; });
+      rowEl.querySelector('.g-total').addEventListener('input', e=>{ currentData.grades[sid][t][idx].total = e.target.value; });
+      rowEl.querySelector('.g-del').addEventListener('click', ()=>{
+        currentData.grades[sid][t].splice(idx,1);
+        rebuildPeriod(container, sid, t);
+      });
+    });
+    container.querySelectorAll('.period-add').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const t = btn.dataset.t;
+        currentData.grades[sid][t].push({name:'', got:'', total:''});
+        rebuildPeriod(container, sid, t);
+      });
+    });
+  }
+  function rebuildPeriod(container, sid, t){
+    const block = container.querySelector(`.period-block[data-period="${t}"]`);
+    if(!block) return;
+    const entries = currentData.grades[sid][t];
+    block.querySelector('.period-rows').innerHTML = entries.map((g, idx) => `
+      <div class="grade-row" data-t="${t}" data-idx="${idx}">
+        <input placeholder="Nome" class="g-name" value="${escapeHtml(g.name||'')}">
+        <input placeholder="Nota" class="g-got" value="${escapeHtml(g.got!=null?g.got:'')}">
+        <input placeholder="Total" class="g-total" value="${escapeHtml(g.total!=null?g.total:'')}">
+        <button class="btn-x g-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+    `).join('');
+    wireSubjectBody(container, sid);
+  }
+
+  // ── ABA: PROVAS ──
+  function renderProvasTab(){
+    const exams = currentData.exams || [];
+    sheetBody.innerHTML = `
+      <div class="hint">Edite ou remova provas e trabalhos cadastrados por este usuário.</div>
+      <div id="exam-list"></div>
+      <button class="btn-add-small" id="ex-add" style="margin-bottom:14px">+ Nova prova/trabalho</button>
+      <button class="btn-primary" id="ex-save">Salvar provas</button>
+      <div class="save-status" id="ex-status"></div>
+    `;
+    buildExamList();
+    document.getElementById('ex-add').addEventListener('click', ()=>{
+      currentData.exams.push({ id:'ex_'+Date.now(), subj:'', examDate:'', title:'', valor:'', examTime:'', conteudo:'', tipo:'prova', reminderDays:1 });
+      buildExamList();
+    });
+    document.getElementById('ex-save').addEventListener('click', ()=>{
+      saveDoc({ exams: currentData.exams }, 'ex-status', 'Provas salvas com sucesso.');
+    });
+  }
+  function buildExamList(){
+    const listEl = document.getElementById('exam-list');
+    const exams = currentData.exams || [];
+    if(!exams.length){ listEl.innerHTML = `<div class="empty-tab">Nenhuma prova cadastrada.</div>`; return; }
+    listEl.innerHTML = exams.map((ex, idx) => `
+      <div class="exam-card" data-idx="${idx}">
+        <div class="exam-card-top">
+          <span class="exam-card-tag">${ex.tipo==='trabalho'?'Trabalho':'Prova'}</span>
+          <button class="btn-x ex-del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Título</span>
+          <input class="input ex-title" value="${escapeHtml(ex.title||'')}">
+        </div>
+        <div class="field-row field-group">
+          <div><span class="field-label">Matéria (ID)</span><input class="input ex-subj" value="${escapeHtml(ex.subj||'')}"></div>
+          <div><span class="field-label">Tipo</span>
+            <select class="select ex-tipo">
+              <option value="prova" ${ex.tipo!=='trabalho'?'selected':''}>Prova</option>
+              <option value="trabalho" ${ex.tipo==='trabalho'?'selected':''}>Trabalho</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row field-group">
+          <div><span class="field-label">Data</span><input class="input ex-date" type="date" value="${escapeHtml(ex.examDate||'')}"></div>
+          <div><span class="field-label">Horário</span><input class="input ex-time" type="time" value="${escapeHtml(ex.examTime||'')}"></div>
+        </div>
+        <div class="field-row field-group">
+          <div><span class="field-label">Valor (pts)</span><input class="input ex-valor" value="${escapeHtml(ex.valor!=null?ex.valor:'')}"></div>
+          <div><span class="field-label">Aviso (dias antes)</span><input class="input ex-remind" value="${escapeHtml(ex.reminderDays!=null?ex.reminderDays:1)}"></div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Conteúdo</span>
+          <textarea class="textarea ex-conteudo" style="font-family:inherit;font-size:13px">${escapeHtml(ex.conteudo||'')}</textarea>
+        </div>
+      </div>
+    `).join('');
+    listEl.querySelectorAll('.exam-card').forEach(card=>{
+      const idx = parseInt(card.dataset.idx);
+      const ex = currentData.exams[idx];
+      card.querySelector('.ex-title').addEventListener('input', e=>ex.title=e.target.value);
+      card.querySelector('.ex-subj').addEventListener('input', e=>ex.subj=e.target.value);
+      card.querySelector('.ex-tipo').addEventListener('change', e=>ex.tipo=e.target.value);
+      card.querySelector('.ex-date').addEventListener('input', e=>ex.examDate=e.target.value);
+      card.querySelector('.ex-time').addEventListener('input', e=>ex.examTime=e.target.value);
+      card.querySelector('.ex-valor').addEventListener('input', e=>ex.valor=e.target.value);
+      card.querySelector('.ex-remind').addEventListener('input', e=>ex.reminderDays=parseInt(e.target.value)||1);
+      card.querySelector('.ex-conteudo').addEventListener('input', e=>ex.conteudo=e.target.value);
+      card.querySelector('.ex-del').addEventListener('click', ()=>{ currentData.exams.splice(idx,1); buildExamList(); });
+    });
+  }
+
+  // ── ABA: FREQUÊNCIA (resumo, somente leitura — editável via Avançado) ──
+  function renderFreqTab(){
+    const stats = computeFreq(currentData.freq);
+    if(!stats.perSubj.length){
+      sheetBody.innerHTML = `<div class="empty-tab">Nenhum registro de frequência ainda.</div>`;
+      return;
+    }
+    sheetBody.innerHTML = `
+      <div class="info-grid">
+        <div class="info-box"><div class="info-box-label">Presenças totais</div><div class="info-box-value" style="color:var(--green)">${stats.totalP}</div></div>
+        <div class="info-box"><div class="info-box-label">Faltas totais</div><div class="info-box-value" style="color:var(--red)">${stats.totalF}</div></div>
+      </div>
+      <div class="info-box" style="margin-bottom:16px">
+        <div class="info-box-label">Frequência geral</div>
+        <div class="info-box-value" style="font-size:20px;color:${pctColor(stats.totalPct)}">${stats.totalPct!=null?stats.totalPct+'%':'—'}</div>
+      </div>
+      <div class="hint">Resumo por matéria. Para editar dias específicos, use a aba "Avançado".</div>
+      <div>
+        ${stats.perSubj.map(s=>`
+          <div class="freq-row" style="display:block">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="subj-dot" style="background:${s.color}"></div>
+              <div class="freq-name">${escapeHtml(s.name)}</div>
+              <div class="freq-nums">${s.p}P / ${s.f}F</div>
+              <div class="freq-pct" style="color:${pctColor(s.pct)}">${s.pct!=null?s.pct+'%':'—'}</div>
+            </div>
+            <div class="freq-bar-track"><div class="freq-bar-fill" style="width:${s.pct||0}%;background:${pctColor(s.pct)}"></div></div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ── ABA: AVANÇADO (JSON bruto — controle completo) ──
+  function renderJsonTab(){
+    const pretty = JSON.stringify(currentData, null, 2);
+    sheetBody.innerHTML = `
+      <div class="hint">Edição completa do documento deste usuário no Firestore. Qualquer campo pode ser alterado aqui — incluindo os que não têm tela própria (anotações, notificações, dias de frequência, horários salvos etc). Cuidado: salvar aqui <b>substitui o documento inteiro</b>.</div>
+      <textarea class="textarea" id="json-editor" style="min-height:340px">${escapeHtml(pretty)}</textarea>
+      <button class="btn-primary" id="json-save">Salvar JSON completo</button>
+      <button class="btn-secondary" id="json-format" style="margin-top:8px">Formatar</button>
+      <div class="save-status" id="json-status"></div>
+    `;
+    document.getElementById('json-format').addEventListener('click', ()=>{
+      const ta = document.getElementById('json-editor');
+      try{ ta.value = JSON.stringify(JSON.parse(ta.value), null, 2); }
+      catch(e){ toast('JSON inválido: ' + e.message, 'err'); }
+    });
+    document.getElementById('json-save').addEventListener('click', async ()=>{
+      const statusEl = document.getElementById('json-status');
+      const ta = document.getElementById('json-editor');
+      let parsed;
+      try{ parsed = JSON.parse(ta.value); }
+      catch(e){ statusEl.textContent = 'JSON inválido: ' + e.message; statusEl.className='save-status err'; return; }
+      try{
+        parsed.updatedAt = Date.now();
+        await setDoc(doc(db, 'users', currentUid), parsed); // substituição completa (sem merge)
+        currentData = parsed;
+        const row = rows.find(r=>r.uid===currentUid);
+        if(row){
+          row.raw = parsed;
+          row.nome = (parsed.student && parsed.student.nome) || '(sem nome)';
+          row.escola = (parsed.student && parsed.student.escola) || '—';
+          row.turma = (parsed.student && parsed.student.turma) || '';
+          row.updatedAt = parsed.updatedAt;
+          row.bytes = new Blob([JSON.stringify(row.raw)]).size;
+          row.examsCount = Array.isArray(row.raw.exams) ? row.raw.exams.length : 0;
+          row.gradesCount = countGradeEntries(row.raw.grades);
+        }
+        document.getElementById('sh-name').textContent = (parsed.student && parsed.student.nome) || '(sem nome)';
+        statusEl.textContent = 'Documento salvo com sucesso.'; statusEl.className='save-status ok';
+        setTimeout(()=>statusEl.textContent='',2200);
+        renderList();
+      }catch(e){
+        statusEl.textContent = 'Erro ao salvar: ' + e.message; statusEl.className='save-status err';
+      }
+    });
+  }
 </script>
 </body>
 </html>
