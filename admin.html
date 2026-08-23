@@ -149,6 +149,10 @@
   .btn-danger{width:100%;background:var(--redbg);color:var(--red);border:1px solid rgba(255,90,95,.3);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform .15s var(--ease),background .15s var(--ease)}
   .btn-danger:active{transform:scale(.98)}
   .btn-danger:hover{background:rgba(255,90,95,.16)}
+  .btn-warn{width:100%;background:transparent;color:var(--red);border:1px solid rgba(255,90,95,.35);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform .15s var(--ease),background .15s var(--ease)}
+  .btn-warn:active{transform:scale(.98)}
+  .btn-warn:hover{background:var(--redbg)}
+  .btn-warn:disabled{opacity:.5;cursor:default}
   .save-status{font-size:12px;text-align:center;margin-top:8px;min-height:16px;font-weight:600}
   .save-status.ok{color:var(--green)}
   .save-status.err{color:var(--red)}
@@ -224,6 +228,7 @@
         <button class="icon-btn" id="btn-refresh" title="Atualizar">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
+        <button class="btn-out" id="btn-format-all" style="border-color:rgba(255,90,95,.35);color:var(--red)" title="Apaga os dados salvos de todos os usuários da plataforma">Formatar tudo</button>
         <button class="btn-out" id="btn-logout">Sair</button>
       </div>
     </div>
@@ -317,7 +322,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   // ── Mesmo projeto Firebase do app principal ──
@@ -874,6 +879,46 @@
   document.getElementById('search').addEventListener('input', renderList);
   document.getElementById('sort-select').addEventListener('change', (e)=>{ sortKey = e.target.value; renderList(); });
   document.getElementById('google-filter').addEventListener('change', (e)=>{ googleFilterKey = e.target.value; renderList(); });
+  // ── Formata a plataforma inteira: apaga os dados salvos de TODOS os usuários ──
+  async function formatAllUsers(){
+    if(!rows.length){ toast('Nenhum usuário carregado para formatar.', 'err'); return; }
+    if(!confirm(`Formatar a PLATAFORMA INTEIRA? Isso apaga notas, provas, anotações, frequência e horário salvos de TODOS os ${rows.length} usuário(s). Os perfis (nome, escola, e-mail, foto) são mantidos. Essa ação não pode ser desfeita.`)) return;
+    if(!confirm(`Confirme novamente: os dados salvos de TODOS os ${rows.length} usuários serão apagados de uma vez. Continuar?`)) return;
+    const typed = prompt('Para confirmar, digite exatamente: FORMATAR TUDO');
+    if(typed !== 'FORMATAR TUDO'){ toast('Confirmação incorreta. Nada foi formatado.', 'err'); return; }
+
+    const btn = document.getElementById('btn-format-all');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Formatando...';
+    try{
+      const now = Date.now();
+      const CHUNK = 450; // limite de operações por lote no Firestore é 500
+      for(let i=0;i<rows.length;i+=CHUNK){
+        const batch = writeBatch(db);
+        rows.slice(i, i+CHUNK).forEach(r=>{
+          const kept = {
+            student: (r.raw && r.raw.student) || {},
+            email: r.email || null,
+            createdAt: r.createdAt || null,
+            updatedAt: now,
+          };
+          batch.set(doc(db, 'users', r.uid), kept); // substituição completa (sem merge)
+        });
+        await batch.commit();
+      }
+      if(currentUid) closeDetail();
+      toast(`Plataforma formatada: ${rows.length} usuário(s) resetado(s).`, 'ok');
+      await loadData();
+    }catch(e){
+      toast('Erro ao formatar a plataforma: ' + e.message, 'err');
+    }finally{
+      btn.disabled = false;
+      btn.textContent = originalLabel;
+    }
+  }
+  document.getElementById('btn-format-all').addEventListener('click', formatAllUsers);
+
   document.getElementById('btn-refresh').addEventListener('click', (e)=>{
     e.currentTarget.classList.add('spin');
     loadData().finally(()=> e.currentTarget.classList.remove('spin'));
@@ -1092,7 +1137,8 @@
 
       <div class="danger-zone">
         <div class="danger-title">Zona de risco</div>
-        <div class="hint">Excluir o usuário apaga permanentemente todos os dados dele no Firestore (notas, provas, frequência, tudo). Essa ação não pode ser desfeita.</div>
+        <div class="hint">Formatar apaga os dados salvos deste usuário (notas, provas, anotações, frequência e horário sincronizado) — o perfil (nome, escola, e-mail, foto) e a conta continuam existindo. Excluir apaga permanentemente o usuário inteiro, incluindo o perfil. Nenhuma das duas ações pode ser desfeita.</div>
+        <button class="btn-warn" id="pf-format">Formatar usuário</button>
         <button class="btn-danger" id="pf-delete">Excluir usuário</button>
       </div>
     `;
@@ -1128,6 +1174,43 @@
         renderList();
       }catch(e){
         toast('Erro ao excluir: ' + e.message, 'err');
+      }
+    });
+    document.getElementById('pf-format').addEventListener('click', async ()=>{
+      if(!confirm(`Formatar o usuário "${s.nome||currentUid}"? Isso apaga notas, provas, anotações, frequência e horário salvos dele. O perfil (nome, escola, e-mail, foto) é mantido. Essa ação não pode ser desfeita.`)) return;
+      if(!confirm('Confirme novamente: todos os dados salvos deste usuário serão apagados. Continuar?')) return;
+      const btn = document.getElementById('pf-format');
+      btn.disabled = true;
+      try{
+        const kept = {
+          student: currentData.student || {},
+          email: currentData.email || null,
+          createdAt: currentData.createdAt || null,
+          updatedAt: Date.now(),
+        };
+        // substituição completa do documento (sem merge) — garante que notas, provas,
+        // anotações, frequência, horário e qualquer outro campo salvo sejam apagados de fato
+        await setDoc(doc(db, 'users', currentUid), kept);
+        currentData = kept;
+        if(!currentData.grades) currentData.grades = {};
+        if(!currentData.exams) currentData.exams = [];
+        const row = rows.find(r=>r.uid===currentUid);
+        if(row){
+          row.raw = kept;
+          row.updatedAt = kept.updatedAt;
+          row.bytes = new Blob([JSON.stringify(row.raw)]).size;
+          row.examsCount = 0;
+          row.gradesCount = 0;
+          row.notesCount = 0;
+          row.freqPct = null;
+        }
+        toast('Usuário formatado — dados salvos apagados.', 'ok');
+        renderTabBody();
+        renderList();
+      }catch(e){
+        toast('Erro ao formatar: ' + e.message, 'err');
+      }finally{
+        btn.disabled = false;
       }
     });
   }
@@ -1364,7 +1447,7 @@
       <div class="hint">Edição completa do documento deste usuário no Firestore. Qualquer campo pode ser alterado aqui — incluindo os que não têm tela própria (anotações, notificações, dias de frequência, horários salvos etc). Cuidado: salvar aqui <b>substitui o documento inteiro</b>.</div>
       <textarea class="textarea" id="json-editor" style="min-height:340px">${escapeHtml(pretty)}</textarea>
       <button class="btn-primary" id="json-save">Salvar JSON completo</button>
-      <button class="btn-secondary" id="json-format" style="margin-top:8px">Formatar</button>
+      <button class="btn-secondary" id="json-format" style="margin-top:8px">Formatar JSON (indentar)</button>
       <div class="save-status" id="json-status"></div>
     `;
     document.getElementById('json-format').addEventListener('click', ()=>{
