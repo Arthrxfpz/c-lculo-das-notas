@@ -16,7 +16,7 @@
 <script type="module">
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAnalytics }    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, onSnapshot }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
@@ -42,8 +42,74 @@
   window._fbSetDoc  = setDoc;
   window._fbGetDoc  = getDoc;
   window._fbOnSnapshot = onSnapshot;
-  window._fbSignIn  = () => signInWithPopup(auth, new GoogleAuthProvider());
+
+  /* ── Login com Google — robusto contra os "bugs" intermitentes ──
+     Motivos mais comuns do login "às vezes não funcionar":
+       1) Popup bloqueado pelo navegador (Safari/iOS, alguns Android) → cai pra redirect.
+       2) Navegador in-app (Instagram/Facebook/TikTok) não suporta popup de login do
+          Google (auth/operation-not-supported-in-this-environment) → cai pra redirect.
+       3) Clique duplo no botão gera auth/cancelled-popup-request, cancelando a
+          primeira tentativa → agora ignoramos cliques repetidos enquanto já há
+          um login em andamento.
+       4) Erro silencioso: antes só ia pro console.error e a pessoa via o botão
+          "travado" sem nenhum aviso → agora sempre mostra um toast explicando
+          o que houve, exceto quando o próprio usuário fechou o popup.
+  */
+  let _signInInFlight = null;
+
+  function _fbErrorMessage(err) {
+    const code = (err && err.code) || '';
+    switch (code) {
+      case 'auth/popup-closed-by-user':
+      case 'auth/cancelled-popup-request':
+        return null; // ação do próprio usuário, não precisa avisar
+      case 'auth/network-request-failed':
+        return 'Sem conexão com a internet. Verifique sua rede e tente de novo.';
+      case 'auth/unauthorized-domain':
+        return 'Este domínio não está autorizado para login. Avise o suporte.';
+      case 'auth/too-many-requests':
+        return 'Muitas tentativas seguidas. Aguarde um instante e tente novamente.';
+      case 'auth/user-disabled':
+        return 'Esta conta foi desativada.';
+      default:
+        return 'Não foi possível entrar com o Google. Tente novamente.';
+    }
+  }
+
+  window._fbSignIn = function() {
+    // Se já existe um login em andamento, reaproveita a mesma promise em vez
+    // de disparar um segundo popup (isso é o que gerava cancelled-popup-request).
+    if (_signInInFlight) return _signInInFlight;
+
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    _signInInFlight = signInWithPopup(auth, provider)
+      .catch((err) => {
+        const code = (err && err.code) || '';
+        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+          // Ambiente não suporta popup (comum em webviews de apps de terceiros
+          // ou navegadores com bloqueador de popup ativo) → tenta via redirect.
+          return signInWithRedirect(auth, provider);
+        }
+        throw err;
+      })
+      .finally(() => { _signInInFlight = null; });
+
+    return _signInInFlight;
+  };
+
   window._fbSignOut = () => { window._intentionalLogout = true; return signOut(auth); };
+
+  // Trata o retorno do fluxo de redirect (quando o popup foi bloqueado e
+  // caímos pro fallback acima). Precisa rodar sempre no carregamento da
+  // página: se não checarmos, um erro de redirect (ex.: domínio não
+  // autorizado) simplesmente some sem nenhum aviso.
+  getRedirectResult(auth).catch((err) => {
+    console.error('Firebase redirect sign-in error:', err);
+    const msg = _fbErrorMessage(err);
+    if (msg) setTimeout(() => { if (typeof window._showNotifToast === 'function') window._showNotifToast('⚠️ ' + msg); }, 800);
+  });
 
   let _syncTimer = null;
   let _currentUid = null;
@@ -478,9 +544,26 @@
   }
 
   window._fbLoginClick = () => {
+    // Desabilita temporariamente todos os botões de login visíveis pra evitar
+    // clique duplo (uma das causas do login "às vezes não ir").
+    const btns = document.querySelectorAll('#fb-login-btn, .login-prompt-btn-google, #prof-lock-btn');
+    btns.forEach(b => { b.disabled = true; b.style.opacity = '.6'; b.style.pointerEvents = 'none'; });
+    const restoreBtns = () => btns.forEach(b => { b.disabled = false; b.style.opacity = ''; b.style.pointerEvents = ''; });
+
     window._fbSignIn()
-      .then(() => { setTimeout(() => location.reload(), 300); })
-      .catch(e => console.error(e));
+      .then((result) => {
+        // Se caiu no fallback de redirect, o navegador vai navegar pra fora
+        // da página — nesse caso não há "result" aqui (a promise resolve
+        // como undefined) e o próprio redirect cuida do resto.
+        if (result) setTimeout(() => location.reload(), 300);
+        else restoreBtns();
+      })
+      .catch(e => {
+        console.error('Firebase sign-in error:', e);
+        restoreBtns();
+        const msg = _fbErrorMessage(e);
+        if (msg && typeof window._showNotifToast === 'function') window._showNotifToast('⚠️ ' + msg);
+      });
   };
 
   window._fbLogoutClick = () => {
@@ -7896,7 +7979,7 @@ input, textarea, select {
         </div>
         <div id="prof-lock-title">Login necessário</div>
         <div id="prof-lock-msg">Para personalizar seu perfil e a cor do app, entre com sua conta Google.</div>
-        <button id="prof-lock-btn" onclick="window._fbSignIn&&window._fbSignIn().then(()=>setTimeout(()=>location.reload(),300))">
+        <button id="prof-lock-btn" onclick="window._fbLoginClick&&window._fbLoginClick()">
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
           Entrar com o Google
         </button>
