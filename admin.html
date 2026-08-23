@@ -11,6 +11,7 @@
     --gold:#FFD60A; --goldbg:rgba(255,214,10,.08); --goldbd:rgba(255,214,10,.25);
     --red:#ff5a5f; --redbg:rgba(255,90,95,.1); --green:#34c77b; --blue:#5aa9ff;
     --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+    --ease:cubic-bezier(.22,.8,.36,1);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html{-webkit-text-size-adjust:100%}
@@ -19,53 +20,58 @@
   .wrap{max-width:960px;margin:0 auto;padding:calc(18px + var(--safe-top)) 14px 40px}
   ::-webkit-scrollbar{width:6px;height:6px}
   ::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:6px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-  /* ── Tela de login ── */
-  #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;text-align:center;padding:24px}
-  #gate .gate-icon{width:56px;height:56px;border-radius:16px;background:var(--goldbg);border:1px solid var(--goldbd);display:flex;align-items:center;justify-content:center;margin-bottom:4px}
+  /* ── Tela de login / verificação ── */
+  #gate{min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:18px;text-align:center;padding:24px;animation:fadeUp .4s var(--ease)}
+  #gate-checking,#gate-denied{display:flex;flex-direction:column;align-items:center;gap:14px}
+  #gate .gate-icon{width:56px;height:56px;border-radius:16px;background:var(--goldbg);border:1px solid var(--goldbd);display:flex;align-items:center;justify-content:center;margin-bottom:4px;transition:transform .3s var(--ease)}
   #gate h1{font-size:20px;margin:0}
   #gate p{color:var(--t3);font-size:14px;max-width:320px;margin:0;line-height:1.5}
-  .btn-google{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);color:var(--t1);font-size:15px;font-weight:600;padding:14px 24px;border-radius:14px;cursor:pointer}
-  .btn-google:active{transform:scale(.97)}
-  #denied{display:none;color:var(--red);font-size:13px;font-weight:600;margin-top:2px}
+  #denied{display:none;color:var(--red);font-size:13px;font-weight:600;margin-top:2px;animation:fadeUp .35s var(--ease)}
 
   /* ── Painel ── */
-  #panel{display:none}
+  #panel{display:none;animation:fadeUp .35s var(--ease)}
   .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
   .topbar h1{font-size:17px;margin:0;letter-spacing:-.2px}
   .topbar-sub{font-size:11px;color:var(--t4);margin-top:2px}
   .topbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
-  .icon-btn{width:36px;height:36px;border-radius:10px;background:var(--bg2);border:.5px solid var(--line);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+  .icon-btn{width:36px;height:36px;border-radius:10px;background:var(--bg2);border:.5px solid var(--line);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s var(--ease),border-color .15s var(--ease),transform .15s var(--ease),color .15s var(--ease)}
   .icon-btn:active{transform:scale(.94);background:var(--bg3)}
+  .icon-btn:hover{border-color:var(--goldbd);color:var(--gold)}
   .icon-btn svg{width:16px;height:16px}
   .icon-btn.spin svg{animation:spin .7s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .btn-out{background:none;border:1px solid var(--line);color:var(--t3);font-size:12px;font-weight:600;padding:9px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .btn-out{background:none;border:1px solid var(--line);color:var(--t3);font-size:12px;font-weight:600;padding:9px 14px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:border-color .15s var(--ease),color .15s var(--ease),transform .15s var(--ease)}
   .btn-out:active{transform:scale(.96)}
+  .btn-out:hover{border-color:var(--red);color:var(--red)}
 
   .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:22px}
   @media(min-width:560px){.stats{grid-template-columns:repeat(3,1fr)}}
   @media(min-width:820px){.stats{grid-template-columns:repeat(6,1fr)}}
-  .stat-card{background:var(--bg2);border:.5px solid var(--line);border-radius:14px;padding:13px 14px}
+  .stat-card{background:var(--bg2);border:.5px solid var(--line);border-radius:14px;padding:13px 14px;transition:border-color .2s var(--ease),transform .2s var(--ease)}
+  .stat-card:hover{border-color:var(--goldbd);transform:translateY(-1px)}
   .stat-label{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-  .stat-value{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.4px}
+  .stat-value{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.4px;transition:color .2s var(--ease)}
   .stat-value.gold{color:var(--gold)}
   .stat-value.green{color:var(--green)}
 
   .section-label{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;opacity:.75;margin:22px 2px 10px}
 
   .toolbar{display:flex;gap:8px;margin-bottom:12px}
-  #search{flex:1;min-width:0;background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--t1);font-size:14px;outline:none}
+  #search{flex:1;min-width:0;background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--t1);font-size:14px;outline:none;transition:border-color .2s var(--ease),box-shadow .2s var(--ease)}
+  #search:focus{border-color:var(--goldbd);box-shadow:0 0 0 3px var(--goldbg)}
   #search::placeholder{color:var(--t4)}
-  #sort-select{background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:0 10px;color:var(--t2);font-size:12.5px;font-weight:600;outline:none;max-width:118px}
+  #sort-select{background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:0 10px;color:var(--t2);font-size:12.5px;font-weight:600;outline:none;max-width:118px;transition:border-color .2s var(--ease)}
 
-  #loading,.empty{padding:34px 20px;text-align:center;color:var(--t3);font-size:13px}
+  #loading,.empty{padding:34px 20px;text-align:center;color:var(--t3);font-size:13px;animation:fadeUp .3s var(--ease)}
   .spinner{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--gold);margin:0 auto 12px;animation:spin .7s linear infinite}
 
   /* ── Lista de usuários (cards) ── */
   .user-list{display:flex;flex-direction:column;gap:8px}
-  .user-card{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:12px 12px;cursor:pointer;transition:background .1s}
+  .user-card{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:12px 12px;cursor:pointer;transition:background .15s var(--ease),border-color .2s var(--ease),transform .15s var(--ease)}
   .user-card:active{background:var(--bg3);transform:scale(.995)}
+  .user-card:hover{border-color:var(--goldbd)}
   .avatar{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#000;overflow:hidden;background-size:cover;background-position:center}
   .avatar img{width:100%;height:100%;object-fit:cover;display:block}
   .google-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--bg2);border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;margin-left:30px;margin-top:30px}
@@ -103,7 +109,7 @@
   .sheet-header-top{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
   .sheet-tabs{display:flex;gap:6px;padding:0 14px 12px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
   .sheet-tabs::-webkit-scrollbar{display:none}
-  .tab-pill{flex-shrink:0;background:var(--bg3);border:.5px solid var(--line);color:var(--t3);font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap}
+  .tab-pill{flex-shrink:0;background:var(--bg3);border:.5px solid var(--line);color:var(--t3);font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:10px;cursor:pointer;white-space:nowrap;transition:background .2s var(--ease),color .2s var(--ease),border-color .2s var(--ease)}
   .tab-pill.active{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
   .sheet-body{flex:1;overflow-y:auto;padding:4px 18px calc(18px + var(--safe-bottom));-webkit-overflow-scrolling:touch}
 
@@ -134,12 +140,15 @@
   .gbadge svg{width:10px;height:10px}
   .gbadge.on{background:var(--goldbg);color:var(--gold)}
 
-  .btn-primary{width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:6px}
+  .btn-primary{width:100%;background:var(--gold);color:#000;border:none;border-radius:12px;padding:13px;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:6px;transition:transform .15s var(--ease),filter .15s var(--ease)}
   .btn-primary:active{transform:scale(.98)}
+  .btn-primary:hover{filter:brightness(1.06)}
   .btn-primary:disabled{opacity:.5}
-  .btn-secondary{width:100%;background:var(--bg3);color:var(--t2);border:.5px solid var(--line);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer}
-  .btn-danger{width:100%;background:var(--redbg);color:var(--red);border:1px solid rgba(255,90,95,.3);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px}
+  .btn-secondary{width:100%;background:var(--bg3);color:var(--t2);border:.5px solid var(--line);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;transition:border-color .15s var(--ease),transform .15s var(--ease)}
+  .btn-secondary:active{transform:scale(.98)}
+  .btn-danger{width:100%;background:var(--redbg);color:var(--red);border:1px solid rgba(255,90,95,.3);border-radius:12px;padding:12px;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;transition:transform .15s var(--ease),background .15s var(--ease)}
   .btn-danger:active{transform:scale(.98)}
+  .btn-danger:hover{background:rgba(255,90,95,.16)}
   .save-status{font-size:12px;text-align:center;margin-top:8px;min-height:16px;font-weight:600}
   .save-status.ok{color:var(--green)}
   .save-status.err{color:var(--red)}
@@ -188,18 +197,19 @@
 </head>
 <body>
 
-<!-- TELA DE LOGIN / BLOQUEIO -->
+<!-- TELA DE VERIFICAÇÃO / BLOQUEIO (sem botão de login — usa a sessão Google já ativa no site principal) -->
 <div id="gate">
-  <div class="gate-icon">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD60A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  <div id="gate-checking">
+    <div class="spinner"></div>
+    <p style="color:var(--t3);font-size:13px">Verificando acesso...</p>
   </div>
-  <h1>Painel administrativo</h1>
-  <p>Acesso restrito. Entre com a conta Google autorizada para ver e gerenciar os dados dos usuários.</p>
-  <button class="btn-google" id="btn-login">
-    <svg viewBox="0 0 24 24" width="18" height="18"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-    Entrar com o Google
-  </button>
-  <div id="denied">Esta conta não tem permissão para acessar o painel.</div>
+  <div id="gate-denied" style="display:none">
+    <div class="gate-icon" style="background:var(--redbg);border-color:rgba(255,90,95,.3)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff5a5f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <h1>Acesso restrito</h1>
+    <p>Você não tem permissão para acessar essa página.</p>
+  </div>
 </div>
 
 <!-- PAINEL -->
@@ -296,7 +306,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+  import { getAuth, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
@@ -512,32 +522,30 @@
   // ─────────────────────────────────────────────────────────────
   // AUTENTICAÇÃO
   // ─────────────────────────────────────────────────────────────
-  const gate    = document.getElementById('gate');
-  const panel   = document.getElementById('panel');
-  const denied  = document.getElementById('denied');
+  const gate         = document.getElementById('gate');
+  const panel        = document.getElementById('panel');
+  const gateChecking = document.getElementById('gate-checking');
+  const gateDenied   = document.getElementById('gate-denied');
 
-  document.getElementById('btn-login').onclick = () => {
-    denied.style.display = 'none';
-    signInWithPopup(auth, new GoogleAuthProvider()).catch(e => {
-      denied.textContent = 'Erro ao entrar: ' + e.message;
-      denied.style.display = 'block';
-    });
-  };
   document.getElementById('btn-logout').onclick = () => signOut(auth);
 
+  // Não há botão de login: este painel usa a MESMA sessão do Firebase Auth
+  // já aberta no site principal (mesmo projeto/authDomain). Se a pessoa já
+  // estiver logada com a conta Google correta lá, ela entra aqui automaticamente.
+  // Se não estiver logada, ou estiver com outra conta, mostramos só o aviso
+  // de acesso restrito — o login em si acontece no site principal.
   onAuthStateChanged(auth, (user) => {
+    gateChecking.style.display = 'none';
     if (user && user.email === ADMIN_EMAIL) {
+      gateDenied.style.display = 'none';
       gate.style.display = 'none';
       panel.style.display = 'block';
       loadData();
-    } else if (user) {
-      signOut(auth);
-      denied.style.display = 'block';
-      gate.style.display = 'flex';
-      panel.style.display = 'none';
     } else {
-      gate.style.display = 'flex';
+      if (user) signOut(auth); // conta errada: encerra a sessão local deste painel
       panel.style.display = 'none';
+      gate.style.display = 'flex';
+      gateDenied.style.display = 'flex';
     }
   });
 
