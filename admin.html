@@ -198,6 +198,15 @@
   .toast.ok{color:var(--green)}
   .toast.err{color:var(--red)}
 </style>
+
+<!-- Microsoft Clarity — análise de sessão / heatmaps / gravação deste painel admin -->
+<script type="text/javascript">
+  (function(c,l,a,r,i,t,y){
+      c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+      t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+      y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "vsmwdvmfi8");
+</script>
 </head>
 <body>
 
@@ -285,7 +294,7 @@
       </select>
     </div>
     <div id="loading"><div class="spinner"></div>Carregando dados do Firestore...</div>
-    <div id="list" class="user-list" style="display:none"></div>
+    <div id="list" class="user-list" style="display:none" data-clarity-mask="True"></div>
     <div id="empty-state" class="empty" style="display:none">Nenhum usuário encontrado.</div>
   </div>
 </div>
@@ -313,7 +322,7 @@
     <button class="tab-pill" data-tab="freq">Frequência</button>
     <button class="tab-pill" data-tab="json">Avançado</button>
   </div>
-  <div class="sheet-body" id="sheet-body"></div>
+  <div class="sheet-body" id="sheet-body" data-clarity-mask="True"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -554,12 +563,20 @@
       gateDenied.style.display = 'none';
       gate.style.display = 'none';
       panel.style.display = 'block';
+      // Clarity: identifica a sessão como sendo do admin e marca tags úteis
+      // para filtrar/segmentar as gravações no dashboard do Clarity.
+      if (window.clarity) {
+        clarity('identify', user.email);
+        clarity('set', 'role', 'admin');
+      }
       loadData();
     } else {
       if (user) signOut(auth); // conta errada: encerra a sessão local deste painel
       panel.style.display = 'none';
       gate.style.display = 'flex';
       gateDenied.style.display = 'flex';
+      // Clarity: marca tentativas de acesso negado (conta errada / sem login)
+      if (window.clarity) clarity('event', 'admin_access_denied');
     }
   });
 
@@ -964,6 +981,8 @@
     sheetBackdrop.classList.add('show');
     sheet.classList.add('show');
     document.body.style.overflow = 'hidden';
+    // Clarity: evento customizado (sem PII — só o fato de que uma ficha foi aberta)
+    if (window.clarity) clarity('event', 'opened_student_sheet');
   }
   function closeDetail(){
     sheetBackdrop.classList.remove('show');
@@ -981,6 +1000,8 @@
     activeTab = btn.dataset.tab;
     document.querySelectorAll('.tab-pill').forEach(b=>b.classList.toggle('active', b===btn));
     renderTabBody();
+    // Clarity: marca a última aba vista, útil pra ver em que aba o admin passa mais tempo
+    if (window.clarity) clarity('set', 'last_tab', activeTab);
   });
 
   function renderTabBody(){
@@ -1490,8 +1511,11 @@
         statusEl.textContent = 'Documento salvo com sucesso.'; statusEl.className='save-status ok';
         setTimeout(()=>statusEl.textContent='',2200);
         renderList();
+        // Clarity: evento de ação sensível (substituição total do documento)
+        if (window.clarity) clarity('event', 'json_full_save_success');
       }catch(e){
         statusEl.textContent = 'Erro ao salvar: ' + e.message; statusEl.className='save-status err';
+        if (window.clarity) clarity('event', 'json_full_save_error');
       }
     });
   }
