@@ -317,6 +317,7 @@
     if (typeof loadSchedule     === 'function') loadSchedule();
     if (typeof loadSchedHistory === 'function') loadSchedHistory();
     if (typeof loadSubjects     === 'function') loadSubjects();
+    if (typeof migrateScheduleFix2026Ago === 'function') migrateScheduleFix2026Ago();
     if (typeof _autoRemovePastExams === 'function') _autoRemovePastExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
     if (typeof renderCurrentPage === 'function') renderCurrentPage();
@@ -8313,7 +8314,7 @@ const DEFAULT_SUBJECTS=[
   {id:'fis',    name:'Física',                prof:'Pedro',    color:'#60A5FA'},
   {id:'qui',    name:'Química',               prof:'Jaque',    color:'#F472B6'},
   {id:'artes',  name:'Artes Integradas',      prof:'Max',      color:'#FB923C'},
-  {id:'ed_fis', name:'Educação Física',       prof:'Leani',    color:'#4ADE80'},
+  {id:'ed_fis', name:'Educação Física',       prof:'Adjanete', color:'#4ADE80'},
   {id:'esc_cri',name:'Escrita Criativa',      prof:'André',    color:'#F9A8D4'},
   {id:'esp',    name:'Língua Espanhola',      prof:'Jorge',    color:'#FCA5A5'},
   {id:'ing',    name:'Língua Inglesa',        prof:'Giovana',  color:'#93C5FD'},
@@ -8361,6 +8362,28 @@ function resolveClass(subjId){
   return{subj:s.name,prof:s.prof||'—',color:s.color,subjId:s.id};
 }
 
+/* ── Professor por data ──
+   O nome do professor guardado em SUBJECTS é "global" (não varia por
+   versão do horário) — mas na prática um professor pode ser trocado no
+   meio do ano sem que a matéria em si mude. Esta tabela guarda, por
+   matéria, quem dava aula ANTES de uma certa data (o valor em SUBJECTS
+   é sempre o mais recente). profForSubjectOnDate() decide qual nome
+   mostrar conforme a data sendo exibida (horário de hoje, dia passado
+   na Frequência, etc.) */
+const PROF_PAST_OVERRIDES={
+  // Educação Física: Leani até 23/08/2026; Adjanete a partir de 24/08/2026
+  ed_fis:[{until:'2026-08-23',prof:'Leani'}],
+};
+function profForSubjectOnDate(subjId,dateStr){
+  const s=findSubjectById(subjId);
+  if(!s)return'';
+  const overrides=PROF_PAST_OVERRIDES[subjId];
+  if(overrides&&dateStr){
+    for(const o of overrides){ if(dateStr<=o.until)return o.prof; }
+  }
+  return s.prof||'';
+}
+
 /* ══════════════════════════════════════════
    SCHEDULE DATA — cada slot é o ID de uma matéria (ou null = vago)
 ══════════════════════════════════════════ */
@@ -8373,12 +8396,12 @@ const DEFAULT_PERIODS=[
   {n:'5ª aula',s:[16,50],e:[17,40]},
   {n:'6ª aula',s:[17,40],e:[18,30]},
 ];
-const DEFAULT_SCHED={
-  1:['ed_fis','edu_fin','artes','bio','fis','bio'],
-  2:['port','proj','proj','port','proj','esp'],
-  3:['proj','mat','qui','rel','qui','geo'],
-  4:['proj','ing','proj','mat','esc_cri','ed_fis'],
-  5:['hist','port','soc','fis','lit','mat'],
+const DEFAULT_SCHED={ // vigente a partir de 24/ago/2026
+  1:['ed_fis','edu_fin','bio','mat','fis','bio'],
+  2:['proj','esc_cri','proj','qui','proj','port'],
+  3:['mat','rel','qui','artes','soc','esp'],
+  4:['proj','ing','proj','port','proj','ed_fis'],
+  5:['port','geo','lit','mat','fis','hist'],
 };
 /* horários ativos — podem ser sobrescritos pelo usuário e persistidos */
 let PERIODS=JSON.parse(JSON.stringify(DEFAULT_PERIODS));
@@ -8420,6 +8443,13 @@ const SEED_SCHED_2={ // 16/mar a 14/jun
   4:['proj','mat','esc_cri','proj','port','esp'],
   5:['hist','lit','fis','mat','port','ed_fis'],
 };
+const SEED_SCHED_3={ // 15/jun a 23/ago
+  1:['ed_fis','edu_fin','artes','bio','fis','bio'],
+  2:['port','proj','proj','port','proj','esp'],
+  3:['proj','mat','qui','rel','qui','geo'],
+  4:['proj','ing','proj','mat','esc_cri','ed_fis'],
+  5:['hist','port','soc','fis','lit','mat'],
+};
 
 function saveSchedHistory(){
   try{localStorage.setItem('t205_sched_history',JSON.stringify(SCHED_HISTORY));}catch(e){}
@@ -8451,11 +8481,16 @@ function loadSchedHistory(){
     SCHED_HISTORY.push({from:'2026-03-16',periods:JSON.parse(JSON.stringify(DEFAULT_PERIODS)),sched:JSON.parse(JSON.stringify(SEED_SCHED_2))});
     changed=true;
   }
-  // se nunca foi registrada a versão "atual" (a partir de 15/jun), usa o
+  // versão que valeu de 15/jun a 23/ago
+  if(!SCHED_HISTORY.some(v=>v.from==='2026-06-15')){
+    SCHED_HISTORY.push({from:'2026-06-15',periods:JSON.parse(JSON.stringify(DEFAULT_PERIODS)),sched:JSON.parse(JSON.stringify(SEED_SCHED_3))});
+    changed=true;
+  }
+  // se nunca foi registrada a versão "atual" (a partir de 24/ago), usa o
   // horário ativo agora — seja o padrão ou algo que a pessoa já tenha
   // personalizado — como sendo essa versão
-  if(!SCHED_HISTORY.some(v=>v.from==='2026-06-15')){
-    SCHED_HISTORY.push({from:'2026-06-15',periods:JSON.parse(JSON.stringify(PERIODS)),sched:JSON.parse(JSON.stringify(SCHED))});
+  if(!SCHED_HISTORY.some(v=>v.from==='2026-08-24')){
+    SCHED_HISTORY.push({from:'2026-08-24',periods:JSON.parse(JSON.stringify(PERIODS)),sched:JSON.parse(JSON.stringify(SCHED))});
     changed=true;
   }
   SCHED_HISTORY.sort((a,b)=>a.from<b.from?-1:(a.from>b.from?1:0));
@@ -8529,6 +8564,48 @@ function loadSchedule(){
     const s=localStorage.getItem('t205_sched');
     if(p)PERIODS=JSON.parse(p);
     if(s)SCHED=JSON.parse(s);
+  }catch(e){}
+}
+/* ── Migração pontual (ago/2026): o horário mudou a partir de 24/ago ──
+   A foto oficial da escola mostra o horário (e a professora de Educação
+   Física) que passou a valer a partir do dia 24/08 — diferente do que
+   valia de 15/06 a 23/08. Como o horário salvo no navegador tem
+   prioridade sobre as constantes do código, só trocar o arquivo não
+   bastava. Esta migração roda a cada carregamento (é idempotente) e
+   garante, mesmo em quem já tinha aberto o app antes:
+   1) que a versão de 15/06 continue com o horário antigo (SEED_SCHED_3);
+   2) que exista uma versão a partir de 24/08 com o horário da foto;
+   3) que o horário "atual" exibido reflita essa última versão. */
+function migrateScheduleFix2026Ago(){
+  try{
+    // 1) garante que a versão de 15/jun não ficou com o horário novo por engano
+    const antiga=JSON.parse(JSON.stringify(SEED_SCHED_3));
+    const idxAntiga=SCHED_HISTORY.findIndex(v=>v.from==='2026-06-15');
+    if(idxAntiga>=0&&JSON.stringify(SCHED_HISTORY[idxAntiga].sched)!==JSON.stringify(antiga)){
+      SCHED_HISTORY[idxAntiga].sched=JSON.parse(JSON.stringify(antiga));
+      saveSchedHistory();
+    }
+    // 2) garante que existe (ou corrige) a versão a partir de 24/ago com o horário da foto
+    const nova=JSON.parse(JSON.stringify(DEFAULT_SCHED));
+    const idxNova=SCHED_HISTORY.findIndex(v=>v.from==='2026-08-24');
+    if(idxNova<0){
+      SCHED_HISTORY.push({from:'2026-08-24',periods:JSON.parse(JSON.stringify(DEFAULT_PERIODS)),sched:nova});
+      SCHED_HISTORY.sort((a,b)=>a.from<b.from?-1:(a.from>b.from?1:0));
+      saveSchedHistory();
+    }else if(JSON.stringify(SCHED_HISTORY[idxNova].sched)!==JSON.stringify(nova)){
+      SCHED_HISTORY[idxNova].sched=JSON.parse(JSON.stringify(nova));
+      saveSchedHistory();
+    }
+    // 3) se essa (24/ago) ainda é a versão em vigor (ninguém criou uma versão mais
+    // nova depois via "Editar horários"), garante que o SCHED "atual" também bate
+    const semVersaoPosterior=!SCHED_HISTORY.some(v=>v.from>'2026-08-24');
+    if(semVersaoPosterior&&JSON.stringify(SCHED)!==JSON.stringify(nova)){
+      SCHED=JSON.parse(JSON.stringify(nova));
+      saveSchedule();
+    }
+    // corrige a professora de Educação Física, caso ainda esteja como antes
+    const ef=SUBJECTS.find(s=>s.id==='ed_fis');
+    if(ef&&ef.prof!=='Adjanete'){ ef.prof='Adjanete'; saveSubjects(); }
   }catch(e){}
 }
 function resetHorarios(){
@@ -8723,7 +8800,7 @@ function freqDaySlotsRaw(dateStr){
     if(!s)return;
     const meta=freqPeriodMeta(dow,idx,active.periods);
     const timeStr=meta?`${fmtHM(meta.s)}–${fmtHM(meta.e)}`:'';
-    list.push({idx,subjId:id,subj:s,periodNum:idx+1,label:meta?meta.n:`${idx+1}ª aula`,timeStr});
+    list.push({idx,subjId:id,subj:s,prof:profForSubjectOnDate(id,dateStr),periodNum:idx+1,label:meta?meta.n:`${idx+1}ª aula`,timeStr});
   });
   return list;
 }
@@ -14920,6 +14997,7 @@ window.addEventListener('load',()=>{
   loadSchedule();
   loadSchedHistory();
   loadSubjects();
+  migrateScheduleFix2026Ago();
   applyAccent(stu.accentKey||'gold');
   applyAvatar();
   updateGreeting();
@@ -15375,7 +15453,7 @@ function _schedVersionDaySlots(version,dow){
     if(!s)return;
     const meta=freqPeriodMeta(dow,idx,version.periods);
     const timeStr=meta?`${fmtHM(meta.s)}–${fmtHM(meta.e)}`:'';
-    list.push({subj:s,periodNum:idx+1,timeStr});
+    list.push({subj:s,prof:profForSubjectOnDate(id,version.from),periodNum:idx+1,timeStr});
   });
   return list;
 }
@@ -15405,7 +15483,7 @@ function _buildSchedInfoBody(mo){
               <div class="freq-subj-dot" style="background:${r.subj.color}"></div>
               <div class="freq-subj-names">
                 <div class="freq-subj-name">${escHtml(r.subj.name)}</div>
-                <div class="freq-subj-prof">${escHtml(r.subj.prof||'')}${r.subj.prof?' · ':''}<span class="freq-subj-time">${r.timeStr}</span></div>
+                <div class="freq-subj-prof">${escHtml(r.prof||'')}${r.prof?' · ':''}<span class="freq-subj-time">${r.timeStr}</span></div>
               </div>
             </div>
           </div>`;
@@ -15597,7 +15675,7 @@ function _buildFreqDaySheetBody(dateStr){
         <div class="freq-subj-dot" style="background:${sl.subj.color}"></div>
         <div class="freq-subj-names">
           <div class="freq-subj-name">${sl.periodNum}ª aula: ${escHtml(sl.subj.name)}</div>
-          <div class="freq-subj-prof">${escHtml(sl.subj.prof||'')}${sl.subj.prof?' · ':''}<span class="freq-subj-time">${sl.timeStr}</span></div>
+          <div class="freq-subj-prof">${escHtml(sl.prof||'')}${sl.prof?' · ':''}<span class="freq-subj-time">${sl.timeStr}</span></div>
         </div>
       </div>
       <div class="freq-toggle">
