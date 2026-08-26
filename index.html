@@ -9188,17 +9188,32 @@ function trimGrade(sid,tr){
   return Math.max(n,e);
 }
 
-/* Nota do trimestre só quando o peso lançado (normal ou EAC) atingiu o
-   máximo (10 pts) — usada para qualquer CÁLCULO/CONCLUSÃO (nota final,
-   status aprovado/reprovado, recuperação, "quanto falta"). Enquanto o
-   trimestre não fechar o peso, retorna null (ainda pendente para fins de
-   cálculo), mesmo que já existam notas parciais lançadas. */
+/* Nota do trimestre considerada "fechada" — usada para qualquer
+   CÁLCULO/CONCLUSÃO (nota final, status aprovado/reprovado, recuperação,
+   "quanto falta"). Fecha em dois casos:
+   1) o peso lançado no trimestre normal atingiu o máximo (10 pts); ou
+   2) já existe QUALQUER nota lançada no EAC daquele trimestre — se a
+      pessoa já fez o EAC, o trimestre já passou/encerrou na prática,
+      então a nota conta como fechada (usando o maior entre a nota base
+      parcial e a nota do EAC) mesmo que nem o peso do trimestre normal
+      nem o do EAC tenham somado os 10 pts completos.
+   Enquanto nenhum dos dois casos acontecer, retorna null (ainda
+   pendente para fins de cálculo), mesmo que já existam notas parciais
+   lançadas. */
 function trimGradeClosed(sid,tr){
-  const n=_tabFull(sid,tr)?tabScore(sid,tr):null;
-  const e=_tabFull(sid,tr+'-EAC')?tabScore(sid,tr+'-EAC'):null;
+  const e=tabScore(sid,tr+'-EAC');
+  const eacDone=e!==null; // já fez o EAC → trimestre considerado fechado
+  const n=(_tabFull(sid,tr)||eacDone)?tabScore(sid,tr):null;
   if(n===null&&e===null)return null;
   if(n===null)return e; if(e===null)return n;
   return Math.max(n,e);
+}
+
+/* Diz se um trimestre já deve ser tratado como "fechado" nas telas de
+   Resumo/Resultados — mesmo critério usado em trimGradeClosed: peso do
+   trimestre normal completo OU já existe nota lançada no EAC dele. */
+function _trClosed(sid,tr){
+  return _tabFull(sid,tr)||tabScore(sid,tr+'-EAC')!==null;
 }
 
 function finalGrade(sid){
@@ -10175,9 +10190,9 @@ function renderResumo(el){
     // aprovada (projeção ou nota final), esses avisos somem — a
     // aprovação já está garantida, então o EAC deixou de ser necessário
     // para passar de ano.
-    const full1T=_tabFull(s.id,'1T')&&b1!==null;
-    const full2T=_tabFull(s.id,'2T')&&b2!==null;
-    const full3T=_tabFull(s.id,'3T')&&b3!==null;
+    const full1T=_trClosed(s.id,'1T')&&b1!==null;
+    const full2T=_trClosed(s.id,'2T')&&b2!==null;
+    const full3T=_trClosed(s.id,'3T')&&b3!==null;
 
     if(ss!=='pass'){
     if(full1T) recHtml+=_eacBlock(b1,e1,'1° Trimestre');
