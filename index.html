@@ -9577,6 +9577,13 @@ function renderNotasTab(el){
       needsEac=baseFull&&_eacSt(norm,score)==='pending';
     }else{disp=score;stat=st(score);}
 
+    // Peso do tab normal (1T/2T/3T) ainda não fechou em 10 pts, mas já
+    // existe alguma nota lançada: usado para a pill de cima tratar esse
+    // caso igual ao "sem nada" (texto "Pendente"). O total do rodapé
+    // continua mostrando a nota parcial normalmente. Não mexe no tab do
+    // EAC (lógica de "Melhor" à parte).
+    const pesoDependente=!isEAC&&score!==null&&!_tabFull(s.id,curTab);
+
     // Pill ao lado do nome: mostra a nota corrente do trimestre (parcial,
     // sem precisar fechar os 10 pts de peso). No tab normal (1T/2T/3T)
     // mostra exatamente a nota lançada nele (não é afetada pelo EAC). No
@@ -9585,7 +9592,9 @@ function renderNotasTab(el){
     // que a nota base.
     const trBase=isEAC?base:curTab;
     const liveVal=isEAC?trimGrade(s.id,trBase):tabScore(s.id,curTab);
-    const pillStat=st(liveVal);
+    // Peso não fechado (pesoDependente) trata a pill exatamente como o
+    // estado "sem nada" — mesmo texto "Pendente" e mesma classe cinza.
+    const pillStat=pesoDependente?'pending':st(liveVal);
     const pill=pillStat==='pending'?'Pendente':fmt(liveVal);
     const rows=G[s.id][curTab];
     const isOpen=!!openAcc[s.id+'_'+curTab];
