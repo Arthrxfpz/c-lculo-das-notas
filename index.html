@@ -9216,6 +9216,32 @@ function _trClosed(sid,tr){
   return _tabFull(sid,tr)||tabScore(sid,tr+'-EAC')!==null;
 }
 
+/* Maior nota ainda alcançável num trimestre que AINDA NÃO fechou o peso:
+   soma a nota já obtida com o peso que ainda falta lançar, assumindo
+   acerto total (10/10) em tudo o que ainda vai ser lançado. Serve pra
+   saber, mesmo antes de o trimestre fechar, se ele ainda tem chance de
+   chegar a 6,0 ou se já está matematicamente decidido. */
+function _trMaxPossible(sid,tr){
+  const enteredW=_tabWeightSum(sid,tr);
+  const score=tabScore(sid,tr);
+  if(score===null)return 10; // nada lançado ainda — nada a prever
+  const remaining=Math.max(0,10-enteredW);
+  return score+remaining;
+}
+
+/* Diz se um trimestre AINDA ABERTO (peso não fechado em 10 pts) já está
+   matematicamente condenado a ficar abaixo de 6,0 — ou seja, mesmo que
+   a pessoa tire nota máxima em tudo que falta lançar, não alcança 6,0.
+   Nesse caso o EAC daquele trimestre já é necessário, mesmo sem esperar
+   o peso fechar. Só considera se já há algum peso lançado (senão não há
+   base pra prever nada) e se o trimestre de fato ainda está aberto. */
+function _trGuaranteedFail(sid,tr){
+  if(_tabFull(sid,tr))return false; // já fechado — a lógica normal de EAC cobre esse caso
+  const enteredW=_tabWeightSum(sid,tr);
+  if(enteredW<=0)return false;
+  return _trMaxPossible(sid,tr)<6-0.001;
+}
+
 function finalGrade(sid){
   const t1=trimGradeClosed(sid,'1T'),t2=trimGradeClosed(sid,'2T'),t3=trimGradeClosed(sid,'3T');
   if(t1===null||t2===null||t3===null)return null;
@@ -9971,6 +9997,27 @@ function _eacBlock(base,eac,trlabel){
   return'';
 }
 
+/**
+ * Monta o alerta de "EAC já é necessário" ANTES de o trimestre fechar o
+ * peso — usado quando, mesmo lançando nota máxima em tudo que ainda
+ * falta, não dá mais pra chegar a 6,0. Ex.: 1/9 numa avaliação e 1/1 em
+ * outra, faltando pouco peso pra completar 10 — mesmo com acerto total
+ * no que resta, a soma não chega a 6.
+ */
+function _eacBlockEarly(sid,tr,trlabel){
+  const base=tabScore(sid,tr);
+  if(base===null)return'';
+  const enteredW=_tabWeightSum(sid,tr);
+  const remaining=Math.max(0,10-enteredW);
+  const maxPossible=base+remaining;
+  return'<div class=\"resumo-recovery-alert impossible\">'+
+    '<div class=\"resumo-recovery-left\">'+
+      '<div class=\"resumo-recovery-badge\">Você já está de EAC — '+trlabel+'</div>'+
+      '<div class=\"resumo-recovery-desc\">Com '+fmtNumBR(base)+' em '+fmtNumBR(enteredW)+' pts de peso já lançados, mesmo tirando nota máxima nos '+fmtNumBR(remaining)+' pts que faltam o total não passa de <strong>'+fmtNumBR(maxPossible)+'</strong> — não dá mais pra fechar o '+trlabel+' com 6,0. O EAC já é necessário.</div>'+
+    '</div>'+
+  '</div>';
+}
+
 /* ═══════════════════════════════
    DESEMPENHO (antigo Resumo)
 ═══════════════════════════════ */
@@ -10196,10 +10243,14 @@ function renderResumo(el){
 
     if(ss!=='pass'){
     if(full1T) recHtml+=_eacBlock(b1,e1,'1° Trimestre');
+    else if(_trGuaranteedFail(s.id,'1T')) recHtml+=_eacBlockEarly(s.id,'1T','1° Trimestre');
+
     if(full2T) recHtml+=_eacBlock(b2,e2,'2° Trimestre');
+    else if(_trGuaranteedFail(s.id,'2T')) recHtml+=_eacBlockEarly(s.id,'2T','2° Trimestre');
 
     // 3°T: usa fórmula final completa para calcular mínimo real e detectar impossibilidade
     if(full3T) recHtml+=_eacBlock3T(t1,t2,b3,e3);
+    else if(_trGuaranteedFail(s.id,'3T')) recHtml+=_eacBlockEarly(s.id,'3T','3° Trimestre');
 
     // 2. Recuperação por trimestre seguinte — só exibe quando os trimestres de referência
     //    têm peso completo (= 10 pts). Para T3: _eacBlock3T já cobre, suprimimos aqui.
@@ -14093,22 +14144,34 @@ function _ncIcon(type){
 function computeNotifications(){
   const list=[];
 
-  // 1) EAC necessário
+  // 1) EAC necessário — trimestre fechado (peso 10) com nota < 6, sem EAC.
+  //    Também dispara ANTES do peso fechar quando já dá pra provar, com o
+  //    que já foi lançado, que mesmo tirando nota máxima no peso restante
+  //    não é mais possível chegar a 6,0 — nesse caso o EAC já é necessário
+  //    mesmo com o trimestre ainda "aberto" (ex.: 1/9 numa avaliação e 1/1
+  //    em outra, faltando pouco peso pra completar 10).
   SUBJECTS.forEach(s=>{
     if(subjApproved(s.id))return; // já aprovado na matéria — EAC deixou de ser necessário
     ['1T','2T','3T'].forEach(tr=>{
       const base=tabScore(s.id,tr);
-      if(base===null||!_tabFull(s.id,tr))return;
+      if(base===null)return;
       const eac=tabScore(s.id,tr+'-EAC');
-      if(_eacSt(base,eac)==='pending'){
-        list.push({
-          id:`eac-${s.id}-${tr}`,type:'eac',sid:s.id,tr,
-          subjName:s.name,color:s.color,
-          title:'EAC necessário',
-          body:`É necessário fazer o EAC do ${NC_TR_LABEL[tr]} de ${s.name} — nota atual ${fmt(base)}.`,
-          severity:'critical',priority:3,variant:null
-        });
-      }
+      const closed=_tabFull(s.id,tr);
+      const closedNeedsEac=closed&&_eacSt(base,eac)==='pending';
+      const earlyGuaranteed=!closed&&eac===null&&_trGuaranteedFail(s.id,tr);
+      if(!closedNeedsEac&&!earlyGuaranteed)return;
+      const enteredW=_tabWeightSum(s.id,tr);
+      const remaining=Math.max(0,10-enteredW);
+      const body=earlyGuaranteed
+        ? `Mesmo tirando nota máxima nos ${fmtNumBR(remaining)} pts que faltam do ${NC_TR_LABEL[tr]} de ${s.name}, a nota não passa de ${fmtNumBR(base+remaining)} — o EAC já é necessário.`
+        : `É necessário fazer o EAC do ${NC_TR_LABEL[tr]} de ${s.name} — nota atual ${fmt(base)}.`;
+      list.push({
+        id:`eac-${s.id}-${tr}`,type:'eac',sid:s.id,tr,
+        subjName:s.name,color:s.color,
+        title:earlyGuaranteed?'Você já está de EAC':'EAC necessário',
+        body,
+        severity:'critical',priority:3,variant:null
+      });
     });
   });
 
