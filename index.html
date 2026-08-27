@@ -5383,6 +5383,32 @@ input, textarea, select {
 .prof-storage-value { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
 [data-fb-auth="out"] .prof-storage-card { display: none; }
 
+/* ── Card "Cópia offline" — salva localmente no navegador (Cache Storage),
+     não tem NENHUMA relação com o Firebase/nuvem, por isso fica visível
+     mesmo com a pessoa deslogada. ── */
+.prof-offline-card {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 15px;
+  background: var(--bg2);
+  border: 0.5px solid var(--line);
+  border-radius: 16px;
+  margin-bottom: 20px;
+}
+.prof-offline-icon {
+  width: 38px; height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+}
+.prof-offline-icon svg { width: 19px; height: 19px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prof-offline-info { flex: 1; min-width: 0; }
+.prof-offline-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
+.prof-offline-value { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
+.prof-offline-updated { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
+
 /* ── SOBRE O SITE ── */
 .about-box { max-width: 420px; }
 .about-hero {
@@ -7042,6 +7068,68 @@ input, textarea, select {
 </style>
 <body>
 
+<!-- ═══════════════════════════════════════════════════════
+     MODO OFFLINE — Service Worker (100% local, no navegador)
+     ▸ Salva o site inteiro (HTML + scripts de terceiros) em
+       Cache Storage, para abrir mesmo sem internet.
+     ▸ Toda vez que a pessoa entra com internet, busca a versão
+       mais nova, atualiza a cópia local sozinho e avisa quando
+       muda algo de fato.
+     ▸ NÃO tem nenhuma relação com o Firebase/Firestore: é só o
+       navegador guardando arquivos, igual um "salvar offline".
+     ═══════════════════════════════════════════════════════ -->
+<script>
+(function(){
+  const OFFLINE_META_KEY='t205_offline_cache_meta';
+
+  window._getOfflineMeta=function(){
+    try{ return JSON.parse(localStorage.getItem(OFFLINE_META_KEY)||'{}')||{}; }
+    catch(e){ return {}; }
+  };
+
+  function _saveOfflineMeta(patch){
+    let meta=window._getOfflineMeta();
+    meta=Object.assign(meta,patch);
+    try{ localStorage.setItem(OFFLINE_META_KEY, JSON.stringify(meta)); }catch(e){}
+    if(typeof window._syncOfflineCacheCard==='function') window._syncOfflineCacheCard();
+  }
+
+  if(!('serviceWorker' in navigator)) return;
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').then((reg) => {
+      // Já existe um Service Worker novo esperando (baixado numa aba
+      // anterior)? Ativa ele de uma vez, sem precisar fechar todas as abas.
+      if(reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+
+      reg.addEventListener('updatefound', () => {
+        const nw=reg.installing;
+        if(!nw) return;
+        nw.addEventListener('statechange', () => {
+          // "installed" + já havia um controller = é uma ATUALIZAÇÃO (não a
+          // primeira instalação). Manda ativar assim que terminar de baixar.
+          if(nw.state==='installed' && navigator.serviceWorker.controller){
+            nw.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+    }).catch((e)=>console.error('Service worker não pôde ser registrado:', e));
+
+    // Mensagens vindas do service-worker.js avisando que a cópia local
+    // (offline) foi criada/atualizada com sucesso.
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const data=event.data||{};
+      if(data.type==='OFFLINE_CACHE_UPDATED'){
+        _saveOfflineMeta({ updatedAt: data.updatedAt||Date.now() });
+        if(typeof window._showNotifToast==='function'){
+          window._showNotifToast(data.hadPrevious ? '✅ Atualização salva para uso offline' : '📥 Site salvo para uso offline');
+        }
+      }
+    });
+  });
+})();
+</script>
+
 <!-- ── Splash de carregamento ── -->
 <style>
 @keyframes splash-spin { to { transform: rotate(360deg); } }
@@ -8116,6 +8204,18 @@ input, textarea, select {
       <div class="prof-storage-info">
         <div class="prof-storage-label">Armazenamento da nuvem consumido pela conta</div>
         <div class="prof-storage-value" id="prof-storage-value">—</div>
+      </div>
+    </div>
+
+    <!-- CARD: Cópia offline salva no navegador (local — não usa a nuvem) -->
+    <div class="prof-offline-card" id="prof-offline-card">
+      <div class="prof-offline-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <div class="prof-offline-info">
+        <div class="prof-offline-label">Cópia offline neste navegador</div>
+        <div class="prof-offline-value" id="prof-offline-value">—</div>
+        <div class="prof-offline-updated" id="prof-offline-updated">Verificando…</div>
       </div>
     </div>
 
@@ -13538,6 +13638,7 @@ function openModal(){
   if (acctEmail) acctEmail.textContent = fbUser ? (fbUser.email||'')              : '—';
   syncMemberSince();
   syncStorageUsage();
+  syncOfflineCache();
 
   const profileSet=!!(stu.nome||stu.escola||stu.turma);
   const hint=document.getElementById('prof-first-visit-hint');
@@ -13591,6 +13692,47 @@ function syncStorageUsage(){
     el.textContent='—';
   }
 }
+
+/* ── Cópia offline salva no navegador (Cache Storage, via Service Worker) ──
+   100% local: não usa Firestore, não depende de estar logado e não conta
+   como "armazenamento da nuvem" — é só o navegador guardando os arquivos
+   do site para ele abrir mesmo sem internet. Atualiza sozinho sempre que
+   o Service Worker percebe uma versão nova do código (ver _syncOfflineCacheCard
+   no topo do arquivo e o service-worker.js). */
+function syncOfflineCache(){
+  const valEl=document.getElementById('prof-offline-value');
+  const updEl=document.getElementById('prof-offline-updated');
+  if(!valEl||!updEl)return;
+
+  const meta=(typeof window._getOfflineMeta==='function')?window._getOfflineMeta():{};
+  if(meta.updatedAt){
+    const diffMin=Math.floor((Date.now()-meta.updatedAt)/60000);
+    let rel;
+    if(diffMin<1) rel='agora mesmo';
+    else if(diffMin<60) rel='há '+diffMin+(diffMin===1?' minuto':' minutos');
+    else if(diffMin<1440){const h=Math.floor(diffMin/60);rel='há '+h+(h===1?' hora':' horas');}
+    else{const dd=Math.floor(diffMin/1440);rel='há '+dd+(dd===1?' dia':' dias');}
+    updEl.textContent='Última atualização local: '+rel;
+  }else if(!('serviceWorker' in navigator)){
+    updEl.textContent='Não suportado neste navegador';
+  }else{
+    updEl.textContent='Salvando cópia local…';
+  }
+
+  if(navigator.storage&&navigator.storage.estimate){
+    navigator.storage.estimate().then((est)=>{
+      const bytes=est.usage||0;
+      let text;
+      if(bytes<1024) text=bytes+' B';
+      else if(bytes<1024*1024) text=(bytes/1024).toFixed(1).replace('.',',')+' KB';
+      else text=(bytes/(1024*1024)).toFixed(2).replace('.',',')+' MB';
+      valEl.textContent=text+' salvos neste aparelho';
+    }).catch(()=>{ valEl.textContent='—'; });
+  }else{
+    valEl.textContent='—';
+  }
+}
+window._syncOfflineCacheCard=syncOfflineCache;
 
 /* ─── SOBRE O SITE ─── */
 const SITE_LAUNCH_DATE = new Date(2026, 2, 6); // 06/03/2026
