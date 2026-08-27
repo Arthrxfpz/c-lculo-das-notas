@@ -77,6 +77,11 @@
   }
 
   window._fbSignIn = function() {
+    // Modo offline: login exige rede, então não deixamos nem tentar.
+    if (window._isOfflineModeActive && window._isOfflineModeActive()) {
+      if (typeof window._showNotifToast === 'function') window._showNotifToast('🔒 Login indisponível no modo offline');
+      return Promise.resolve();
+    }
     // Se já existe um login em andamento, reaproveita a mesma promise em vez
     // de disparar um segundo popup (isso é o que gerava cancelled-popup-request).
     if (_signInInFlight) return _signInInFlight;
@@ -99,7 +104,13 @@
     return _signInInFlight;
   };
 
-  window._fbSignOut = () => { window._intentionalLogout = true; return signOut(auth); };
+  window._fbSignOut = () => {
+    if (window._isOfflineModeActive && window._isOfflineModeActive()) {
+      if (typeof window._showNotifToast === 'function') window._showNotifToast('🔒 Indisponível no modo offline');
+      return Promise.resolve();
+    }
+    window._intentionalLogout = true; return signOut(auth);
+  };
 
   // Trata o retorno do fluxo de redirect (quando o popup foi bloqueado e
   // caímos pro fallback acima). Precisa rodar sempre no carregamento da
@@ -328,6 +339,14 @@
 
   /* ── Carrega dados do Firestore ── */
   async function _fbLoadAll(uid) {
+    // Se o modo offline já estava ativo (persistiu de uma sessão anterior),
+    // nem tentamos falar com o servidor: seguimos direto com os dados locais.
+    if (window._isOfflineModeActive && window._isOfflineModeActive()) {
+      _setSplashProgress(100, 'Modo offline');
+      setTimeout(_hideSplash, 100);
+      if (typeof window._applyOfflineModeUI === 'function') window._applyOfflineModeUI();
+      return;
+    }
     _setSplashProgress(20, 'Conectando ao servidor…');
     _showSyncBadge('checking');
 
@@ -338,6 +357,14 @@
       _setSplashProgress(40, 'Verificando dados…');
       const snap = await getDoc(doc(db, 'users', uid));
       clearTimeout(_splashSlowTimer);
+
+      // O usuário pode ter ativado o modo offline enquanto esse pedido
+      // ainda estava pendente (ex.: clicou em "Usar modo offline" no aviso
+      // de conexão lenta). Nesse caso não aplicamos nada que chegou agora
+      // — nada de sobrescrever dados locais nem de recarregar sozinho.
+      if (window._isOfflineModeActive && window._isOfflineModeActive()) {
+        return;
+      }
 
       if (snap.exists()) {
         const d = snap.data();
@@ -2100,6 +2127,38 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 [data-theme="light"] .app-update-banner-close{background:rgba(99,102,241,.11);color:#4F46E5;}
 .app-update-banner-close:active{opacity:.65;transform:scale(.88);}
+
+/* ── offline-mode-banner — faixa fixa avisando que o modo offline está ligado ── */
+.offline-mode-banner{
+  display:none; /* controlado via JS, ligado quando o modo offline está ativo */
+  align-items:center;justify-content:center;gap:7px;
+  padding:7px 16px;
+  background:rgba(255,159,10,.14);
+  border-bottom:0.5px solid rgba(255,159,10,.3);
+}
+[data-theme="light"] .offline-mode-banner{
+  background:rgba(255,159,10,.1);
+  border-bottom-color:rgba(255,159,10,.22);
+}
+.offline-mode-banner-icon{flex-shrink:0;color:var(--amber)}
+.offline-mode-banner-txt{
+  font-size:11.5px;font-weight:700;color:var(--amber);letter-spacing:.15px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* ── modo offline: desativa visualmente os principais controles de edição ── */
+html.offline-view-only .add-exam-fab,
+html.offline-view-only .add-exam-cta-btn,
+html.offline-view-only .add-eval-btn,
+html.offline-view-only .eval-edit-btn,
+html.offline-view-only .eval-rm-btn,
+html.offline-view-only .fb-login-btn,
+html.offline-view-only .modal-save-btn{
+  opacity:.4!important;
+  filter:grayscale(.5);
+  cursor:not-allowed!important;
+  pointer-events:none!important;
+}
 
 /* ═══════════════════════════════
    PROVAS (EXAM SCHEDULER)
@@ -7074,13 +7133,26 @@ input, textarea, select {
 #splash-slow {
   position:absolute;bottom:44px;left:50%;transform:translateX(-50%);
   display:none;white-space:nowrap;
-  align-items:center;gap:6px;
+  flex-direction:column;align-items:center;gap:10px;
   background:rgba(255,159,10,.08);
   border:1px solid rgba(255,159,10,.22);
-  border-radius:20px;padding:7px 14px;
+  border-radius:16px;padding:10px 14px;
+}
+#splash-slow-txt{
+  display:flex;align-items:center;gap:6px;
   font-size:11px;font-weight:600;
   color:rgba(255,159,10,.8);
 }
+#splash-slow-btn{
+  border:1px solid rgba(255,159,10,.4);
+  background:rgba(255,159,10,.14);
+  color:rgba(255,159,10,.95);
+  font-size:11px;font-weight:700;letter-spacing:-.1px;
+  padding:6px 12px;border-radius:12px;cursor:pointer;
+  font-family:inherit;
+  transition:opacity .15s,transform .1s;
+}
+#splash-slow-btn:active{transform:scale(.95);opacity:.8}
 
 /* ── Saída do splash, estilo "flash" do logo do X/Twitter no iOS: assim
      que o carregamento termina, o resto do conteúdo (nome, texto, barra,
@@ -7364,11 +7436,14 @@ input, textarea, select {
 
   <!-- Aviso de conexão lenta -->
   <div id="splash-slow">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M1 6s4-2 11-2 11 2 11 2"/><path d="M5 10s2.5-1 7-1 7 1 7 1"/>
-      <path d="M9 14s1.5-.5 3-.5 3 .5 3 .5"/><line x1="12" y1="20" x2="12.01" y2="20"/>
-    </svg>
-    Conexão lenta…
+    <div id="splash-slow-txt">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 6s4-2 11-2 11 2 11 2"/><path d="M5 10s2.5-1 7-1 7 1 7 1"/>
+        <path d="M9 14s1.5-.5 3-.5 3 .5 3 .5"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+      Conexão lenta…
+    </div>
+    <button id="splash-slow-btn" onclick="_activateOfflineMode()">Usar modo offline</button>
   </div>
 
 </div>
@@ -7473,6 +7548,14 @@ input, textarea, select {
           <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
         </svg>
       </button>
+    </div>
+
+    <!-- ── Faixa: modo offline ativo — só aparece enquanto o modo estiver ligado ── -->
+    <div id="offline-mode-banner" class="offline-mode-banner" role="status" aria-live="polite">
+      <svg class="offline-mode-banner-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      <span class="offline-mode-banner-txt">Modo offline ativo — somente visualização</span>
     </div>
 
     <div class="topbar">
@@ -16172,7 +16255,8 @@ function _showSlowBanner(ms){
       el.style.transform='translate(-50%,0)';
       el.style.opacity='1';
     });
-    setTimeout(()=>_hideSlowBanner(),6000);
+    clearTimeout(_slowBannerTimer);
+    _slowBannerTimer=setTimeout(()=>_hideSlowBanner(),8000);
   }
 }
 
@@ -16212,37 +16296,215 @@ async function _retryConnection(){
   }
 }
 
+/* ══════════════════════════════════════════
+   MODO OFFLINE (somente visualização)
+   ▸ Ativado manualmente pelo usuário a partir da tela de "sem conexão",
+     do banner de "conexão lenta" ou do splash quando demora demais.
+   ▸ Enquanto ativo: nada pode ser criado/editado/apagado, só visualizado.
+   ▸ Assim que uma conexão de verdade for detectada de novo, perguntamos
+     se o usuário quer sair do modo offline (e recarregamos se ele topar).
+══════════════════════════════════════════ */
+const _OFFLINE_MODE_KEY='t205_offline_mode';
+let _offlineWatchTimer=null;
+let _lastOfflineToastAt=0;
+
+function _isOfflineModeActive(){
+  return localStorage.getItem(_OFFLINE_MODE_KEY)==='1';
+}
+window._isOfflineModeActive=_isOfflineModeActive;
+
+// Chamado por toda função "bloqueada": avisa o usuário (com um pequeno
+// intervalo mínimo entre avisos, pra não empilhar toasts em campos que
+// disparam a cada tecla digitada) e devolve true pra quem chamou parar.
+function _offlineBlocked(){
+  if(!_isOfflineModeActive()) return false;
+  const now=Date.now();
+  if(now-_lastOfflineToastAt>2500){
+    _lastOfflineToastAt=now;
+    if(typeof _showNotifToast==='function') _showNotifToast('🔒 Indisponível no modo offline — só visualização');
+  }
+  return true;
+}
+window._offlineBlocked=_offlineBlocked;
+
+// Toda ação que cria, edita, apaga ou envia algo fica nesta lista.
+// Cada função é "embrulhada": se o modo offline estiver ativo, a ação
+// original nem chega a rodar — só o aviso acima aparece.
+const _OFFLINE_BLOCKED_FNS=[
+  'openAddExamModal','openEditExam','rmExam','saveEditExam','addExam',
+  'toggleEditEval','doneEditEval','addEv','rmEv','updF',
+  'openScheduleEditor','openSubjectsEditor','addNewSubject','confirmDeleteSubject',
+  'addPeriodRow','removePeriodRow','onPeriodNameChange','onPeriodTimeChange',
+  'onSlotSubjectChange','onMasterSubjectChange','onSchedEffectiveDateChange',
+  'confirmResetHorarios','confirmResetMaterias',
+  'saveNotifSchedule','removeExamNotif','removeExamNotifAndClose',
+  'saveStudent','setAccent','setAvatarColor','pickColor',
+  'submitReport',
+  'freqToggleNoClass','freqToggleEditMode','freqDaySheetSet','freqPeriodSheetSet',
+  'freqOverrideSlotChange','freqRestoreDefaultSubjects',
+  'confirmToastDismissForever','dismissToastForever'
+];
+
+function _applyOfflineWriteGuards(){
+  _OFFLINE_BLOCKED_FNS.forEach(name=>{
+    const original=window[name];
+    if(typeof original!=='function'||original._offlineGuarded) return;
+    const guarded=function(...args){
+      if(_offlineBlocked()) return;
+      return original.apply(this,args);
+    };
+    guarded._offlineGuarded=true;
+    window[name]=guarded;
+  });
+}
+
+function _applyOfflineModeUI(){
+  document.documentElement.classList.add('offline-view-only');
+  const banner=document.getElementById('offline-mode-banner');
+  if(banner) banner.style.display='flex';
+  if(typeof syncLayout==='function') setTimeout(syncLayout,50);
+  _applyOfflineWriteGuards();
+  _startOfflineReconnectWatch();
+}
+
+function _activateOfflineMode(){
+  const alreadyOn=_isOfflineModeActive();
+  localStorage.setItem(_OFFLINE_MODE_KEY,'1');
+  if(alreadyOn){
+    // Já estava ativo (ex.: clique redundante no botão) — nada a recarregar.
+    _applyOfflineModeUI();
+    return;
+  }
+  // Em vez de tentar "remontar" o app no meio do carregamento (escondendo
+  // splash/overlay na mão e torcendo pra tudo ficar coerente), recarregamos
+  // a página. Splash, shell e dados dependem de rodar a sequência normal de
+  // inicialização (o listener de 'load' abaixo) já sabendo, desde o início,
+  // que o modo offline está ativo — sem isso a UI (ex.: o conteúdo por trás
+  // do splash) ficava num estado quebrado até a pessoa dar F5 manualmente.
+  // Guardamos um aviso para exibir um toast assim que a página recarregar.
+  try{ sessionStorage.setItem('t205_offline_just_activated','1'); }catch(e){}
+  location.reload();
+}
+window._activateOfflineMode=_activateOfflineMode;
+
+// Pergunta se o usuário quer sair do modo offline (reaproveita o popup
+// de confirmação padrão do app) e recarrega a página se ele confirmar.
+function _promptExitOfflineMode(){
+  if(!_isOfflineModeActive()) return;
+  if(document.getElementById('confirm-overlay').classList.contains('open')) return;
+  showConfirm({
+    title:'Conexão foi restaurada',
+    msg:'Deseja sair do modo offline? A página vai recarregar com tudo funcionando normalmente.',
+    okLabel:'Sair do modo offline',
+    danger:false,
+    iconSvg:'<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
+    onOk:()=>{
+      localStorage.removeItem(_OFFLINE_MODE_KEY);
+      location.reload();
+    }
+  });
+}
+
+// Enquanto o modo offline estiver ativo, fica de olho numa conexão real
+// voltar — inclusive quando o navegador nunca chegou a disparar 'offline'
+// (caso comum de quem ativou o modo por lentidão, não por queda total).
+function _startOfflineReconnectWatch(){
+  clearInterval(_offlineWatchTimer);
+  _offlineWatchTimer=setInterval(async()=>{
+    if(!_isOfflineModeActive()){clearInterval(_offlineWatchTimer);return;}
+    const ok=await _checkConnectivity();
+    if(ok) _promptExitOfflineMode();
+  },20000);
+}
+
+// Mede o ping real da conexão e decide se mostra o banner de "conexão
+// lenta" ou o overlay de "sem conexão". Extraído para função nomeada
+// porque agora é chamado tanto no carregamento normal quanto depois de
+// reconfirmarmos que a internet voltou enquanto o modo offline estava
+// salvo (ver listener de 'load' abaixo).
+async function _runInitialConnectivityCheck(){
+  try{
+    const ctrl=new AbortController();
+    const tid=setTimeout(()=>ctrl.abort(),6000);
+    const t0=performance.now();
+    await fetch('https://www.google.com/favicon.ico?_='+Date.now(),{
+      method:'GET',cache:'no-store',mode:'no-cors',signal:ctrl.signal
+    });
+    clearTimeout(tid);
+    const ms=Math.round(performance.now()-t0);
+    if(ms>1500){
+      // Conexão lenta: mostra banner com o ping
+      _showSlowBanner(ms);
+    }
+  }catch(e){
+    // fetch abortado ou falhou = muito lento / sem internet
+    if(!navigator.onLine){_showOfflineOverlay();}
+    else{_showSlowBanner(null);}
+  }
+}
+
 // Inicia: checa ao carregar se está offline
 window.addEventListener('load',()=>{
+  // Se o usuário já tinha escolhido o modo offline numa sessão anterior,
+  // NÃO confiamos cegamente nisso pra sempre: a cada carregamento da
+  // página reconferimos se a internet realmente ainda está indisponível.
+  // Sem essa checagem, quem ativasse o modo offline uma vez ficava preso
+  // nele mesmo depois de fechar o site, esperar a conexão voltar e abrir
+  // de novo — já que o valor gravado no localStorage nunca era revalidado.
+  if(_isOfflineModeActive()){
+    const justActivated=(function(){
+      try{
+        const v=sessionStorage.getItem('t205_offline_just_activated')==='1';
+        sessionStorage.removeItem('t205_offline_just_activated');
+        return v;
+      }catch(e){ return false; }
+    })();
+    if(justActivated){
+      // A pessoa acabou de escolher o modo offline agora mesmo (o clique
+      // que disparou o reload automático) — respeitamos a escolha dela e
+      // não saímos sozinhos, mesmo que a conexão pareça ok neste instante.
+      _applyOfflineModeUI();
+      if(typeof _showNotifToast==='function'){
+        setTimeout(()=>_showNotifToast('🔒 Modo offline ativado — apenas visualização'),500);
+      }
+      return;
+    }
+    (async()=>{
+      const reallyOnline=await _checkConnectivity();
+      if(reallyOnline){
+        // A conexão voltou enquanto o site estava fechado: sai do modo
+        // offline sozinho em vez de manter a pessoa presa nele, e segue o
+        // carregamento normal (checagem de ping) como se nunca tivesse
+        // sido ativado.
+        localStorage.removeItem(_OFFLINE_MODE_KEY);
+        if(typeof _showNotifToast==='function'){
+          setTimeout(()=>_showNotifToast('✅ Conexão disponível — modo offline desativado'),500);
+        }
+        _runInitialConnectivityCheck();
+      }else{
+        _applyOfflineModeUI();
+      }
+    })();
+    return;
+  }
   if(!navigator.onLine){
     _showOfflineOverlay();
     return;
   }
-  // Mede ping real imediatamente no carregamento
-  (async()=>{
-    try{
-      const ctrl=new AbortController();
-      const tid=setTimeout(()=>ctrl.abort(),6000);
-      const t0=performance.now();
-      await fetch('https://www.google.com/favicon.ico?_='+Date.now(),{
-        method:'GET',cache:'no-store',mode:'no-cors',signal:ctrl.signal
-      });
-      clearTimeout(tid);
-      const ms=Math.round(performance.now()-t0);
-      if(ms>1500){
-        // Conexão lenta: mostra banner com o ping
-        _showSlowBanner(ms);
-      }
-    }catch(e){
-      // fetch abortado ou falhou = muito lento / sem internet
-      if(!navigator.onLine){_showOfflineOverlay();}
-      else{_showSlowBanner(null);}
-    }
-  })();
+  _runInitialConnectivityCheck();
 });
 
-window.addEventListener('offline',()=>{_showOfflineOverlay();});
+window.addEventListener('offline',()=>{
+  if(_isOfflineModeActive())return; // já estamos restritos, overlay seria redundante
+  _showOfflineOverlay();
+});
 window.addEventListener('online',async()=>{
+  if(_isOfflineModeActive()){
+    // Não recarrega sozinho: pergunta antes, como pedido.
+    const ok=await _checkConnectivity();
+    if(ok) _promptExitOfflineMode();
+    return;
+  }
   // Confirma conectividade real antes de recarregar
   const ok=await _checkConnectivity();
   if(ok) location.reload();
@@ -16286,6 +16548,21 @@ window.addEventListener('online',async()=>{
   " onmousedown="this.style.transform='scale(.96)'" onmouseup="this.style.transform='scale(1)'">
     Tentar novamente
   </button>
+  <button id="offline-mode-btn" onclick="_activateOfflineMode()" style="
+    margin-top:14px;
+    padding:10px 22px;
+    background:transparent;color:rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.16);border-radius:14px;
+    font-size:13px;font-weight:600;
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+    cursor:pointer;letter-spacing:-.1px;
+    transition:opacity .15s,transform .1s,background .15s;
+  " onmousedown="this.style.transform='scale(.96)'" onmouseup="this.style.transform='scale(1)'">
+    Usar modo offline
+  </button>
+  <div style="font-size:11px;color:rgba(255,255,255,.28);margin-top:10px;text-align:center;padding:0 40px;line-height:1.5">
+    Você poderá visualizar tudo normalmente, mas não vai conseguir criar, editar ou apagar nada.
+  </div>
 </div>
 
 <!-- ── Banner: conexão lenta ── -->
@@ -16296,22 +16573,32 @@ window.addEventListener('online',async()=>{
   background:rgba(255,159,10,.12);
   border:1px solid rgba(255,159,10,.3);
   backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
-  border-radius:12px;padding:9px 16px;
-  align-items:center;gap:8px;
+  border-radius:12px;padding:9px 14px 9px 16px;
+  align-items:center;gap:10px;
   font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
   font-size:12px;font-weight:600;
   color:rgba(255,159,10,.9);
   white-space:nowrap;
   transition:opacity .28s ease,transform .28s ease;
-  pointer-events:none;
 ">
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
     <path d="M1 6s4-2 11-2 11 2 11 2"/>
     <path d="M5 10s2.5-1 7-1 7 1 7 1"/>
     <path d="M9 14s1.5-.5 3-.5 3 .5 3 .5"/>
     <line x1="12" y1="20" x2="12.01" y2="20"/>
   </svg>
   <span id="slow-banner-txt">Conexão lenta</span>
+  <button onclick="_activateOfflineMode()" style="
+    border:1px solid rgba(255,159,10,.4);
+    background:rgba(255,159,10,.16);
+    color:rgba(255,159,10,1);
+    font-size:11px;font-weight:700;letter-spacing:-.1px;
+    padding:5px 10px;border-radius:9px;cursor:pointer;
+    font-family:inherit;flex-shrink:0;
+    transition:opacity .15s,transform .1s;
+  " onmousedown="this.style.transform='scale(.94)'" onmouseup="this.style.transform='scale(1)'">
+    Usar offline
+  </button>
 </div>
 
 <!-- THEME POPOVER -->
