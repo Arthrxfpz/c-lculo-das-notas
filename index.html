@@ -1643,66 +1643,95 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .sfv-num.pending{color:var(--t4);font-size:11px;font-weight:500;font-family:var(--ff)}
 
 /* ═══════════════════════════════
-   RESULTADO — redesign premium
+   RESULTADO — redesign premium 2.0
 ═══════════════════════════════ */
 /* Hero card — média geral */
 .res-hero{
-  background:var(--bg1);border:1px solid var(--line2);
-  border-radius:22px;padding:22px 22px 18px;margin-bottom:12px;
+  position:relative;overflow:hidden;
+  background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 130%);
+  border:1px solid var(--line2);
+  border-radius:24px;padding:24px 22px 20px;margin-bottom:14px;
   box-shadow:0 2px 14px rgba(0,0,0,.07);
 }
-[data-theme="dark"] .res-hero{box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 4px 14px rgba(0,0,0,.65)}
-.res-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px}
-.res-hero-left{}
-.res-hero-eyebrow{font-size:11px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px}
-.res-hero-avg{font-family:var(--ffm);font-size:52px;font-weight:700;line-height:1;letter-spacing:-2px;transition:color .3s}
-.res-hero-denom{font-family:var(--ffm);font-size:20px;font-weight:400;color:var(--t3);letter-spacing:0;margin-left:2px}
+[data-theme="dark"] .res-hero{box-shadow:0 1px 0 rgba(255,255,255,.05) inset, 0 8px 28px rgba(0,0,0,.55)}
+.res-hero::before{
+  content:'';position:absolute;top:-70px;right:-50px;width:220px;height:220px;
+  background:radial-gradient(circle,var(--res-glow,rgba(255,214,10,.16)) 0%,transparent 70%);
+  pointer-events:none;
+}
+.res-hero-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:14px}
+.res-hero-left{min-width:0}
+.res-hero-eyebrow{font-size:11px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:1.3px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.res-hero-eyebrow::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);display:inline-block;flex-shrink:0}
+.res-hero-avg{font-family:var(--ffm);font-size:54px;font-weight:800;line-height:1;letter-spacing:-2.2px;transition:color .3s}
+.res-hero-denom{font-family:var(--ffm);font-size:19px;font-weight:500;color:var(--t3);letter-spacing:0;margin-left:3px}
 .res-hero-badge{
-  margin-top:8px;display:inline-flex;align-items:center;gap:5px;
-  font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;
+  margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:700;padding:6px 13px;border-radius:20px;
 }
 .res-hero-badge.pass{background:var(--greenbg);color:var(--green);border:1px solid var(--greenbd)}
 .res-hero-badge.fail{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
 .res-hero-badge.warn{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
 .res-hero-badge.pending{background:var(--bg3);color:var(--t3);border:1px solid var(--line2)}
-.res-hero-formula-wrap{text-align:right}
-.res-hero-formula{font-family:var(--ffm);font-size:10px;color:var(--t4);line-height:1.7;text-align:right}
-/* 3 stat pills */
-.res-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.res-stat{
-  background:var(--bg2);border:1px solid var(--line3);border-radius:14px;
-  padding:13px 8px;text-align:center;
+.res-hero-formula-wrap{flex-shrink:0}
+.res-hero-formula{
+  font-family:var(--ffm);font-size:10.5px;color:var(--t3);line-height:1.75;text-align:right;
+  background:var(--bg2);border:1px solid var(--line3);border-radius:12px;
+  padding:10px 13px;white-space:pre;
 }
-.res-stat .label{font-size:10px;color:var(--t4);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
-.res-stat .value{font-family:var(--ffm);font-size:26px;font-weight:700;line-height:1}
-.res-stat .sub{font-size:10px;color:var(--t4);margin-top:3px}
+[data-theme="dark"] .res-hero-formula{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+/* 3 stat pills */
+.res-stats{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.res-stat{
+  background:var(--bg2);border:1px solid var(--line3);border-top:2px solid var(--stat-c,var(--line3));
+  border-radius:14px;padding:14px 8px 12px;text-align:center;
+}
+.res-stat .icon{font-size:14px;margin-bottom:4px;line-height:1}
+.res-stat .label{font-size:9.5px;color:var(--t4);font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.res-stat .value{font-family:var(--ffm);font-size:27px;font-weight:800;line-height:1}
+.res-stat .sub{font-size:10px;color:var(--t4);margin-top:3px;font-weight:500}
 
 /* analytics grid */
-.res-analytics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.res-analytics{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px}
 .res-analytic-card{
-  background:var(--bg1);border:1px solid var(--line2);border-radius:16px;
-  padding:14px 16px;
+  position:relative;overflow:hidden;
+  background:var(--bg1);border:1px solid var(--line2);border-radius:18px;
+  padding:15px 15px 13px;
   box-shadow:0 1px 6px rgba(0,0,0,.04);
+  transition:transform .18s var(--ease-premium),border-color .18s var(--ease-premium);
 }
-[data-theme="dark"] .res-analytic-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
-.rac-eyebrow{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
-.rac-subj{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rac-val{font-family:var(--ffm);font-size:30px;font-weight:700;line-height:1;letter-spacing:-1px}
+[data-theme="dark"] .res-analytic-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 12px rgba(0,0,0,.35)}
+.res-analytic-card:active{transform:scale(.965)}
+.rac-icon{
+  width:28px;height:28px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;margin-bottom:9px;flex-shrink:0;
+}
+.rac-icon.tone-green{background:var(--greenbg);color:var(--green)}
+.rac-icon.tone-red{background:var(--redbg);color:var(--red)}
+.rac-icon.tone-amber{background:var(--amberbg);color:var(--amber)}
+.rac-icon.tone-gold{background:var(--goldbg);color:var(--gold)}
+.rac-icon.tone-violet{background:var(--violetbg);color:var(--violet)}
+.rac-icon.tone-neutral{background:var(--bg3);color:var(--t3)}
+.rac-eyebrow{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}
+.rac-subj{font-size:12px;font-weight:600;color:var(--t2);margin-bottom:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rac-val{font-family:var(--ffm);font-size:27px;font-weight:800;line-height:1;letter-spacing:-1px}
 .rac-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle;margin-bottom:1px}
 
 /* trend row */
 .res-trend-row{
-  background:var(--bg1);border:1px solid var(--line2);border-radius:16px;
-  padding:16px 18px;margin-bottom:12px;
+  background:var(--bg1);border:1px solid var(--line2);border-radius:18px;
+  padding:17px 18px 16px;margin-bottom:12px;
   box-shadow:0 1px 6px rgba(0,0,0,.04);
 }
-[data-theme="dark"] .res-trend-row{box-shadow:inset 0 1px 0 rgba(255,255,255,.09)}
-.res-trend-title{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
-.res-trend-bars{display:flex;align-items:flex-end;gap:6px;height:56px}
-.res-trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
-.res-trend-bar{width:100%;border-radius:5px 5px 0 0;transition:height .7s cubic-bezier(.22,1,.36,1);min-height:3px}
-.res-trend-lbl{font-size:10px;font-weight:600;color:var(--t4)}
-.res-trend-val{font-family:var(--ffm);font-size:11px;font-weight:700;color:var(--t2)}
+[data-theme="dark"] .res-trend-row{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 12px rgba(0,0,0,.3)}
+.res-trend-title{font-size:11.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.res-trend-title::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--gold);display:inline-block;opacity:.85}
+.res-trend-bars{display:flex;align-items:flex-end;gap:8px;height:58px}
+.res-trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.res-trend-bar{width:100%;border-radius:6px 6px 2px 2px;transition:height .7s cubic-bezier(.22,1,.36,1);min-height:3px}
+.res-trend-lbl{font-size:10px;font-weight:700;color:var(--t4)}
+.res-trend-val{font-family:var(--ffm);font-size:11.5px;font-weight:800;color:var(--t2)}
 
 /* ── RES CHARTS ── */
 .res-charts-card{
@@ -1730,56 +1759,67 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* section label */
 .section-label{
-  font-size:10.5px;font-weight:600;color:var(--t4);
-  text-transform:uppercase;letter-spacing:.8px;
-  margin:20px 0 9px;padding-left:2px;
+  font-size:10.5px;font-weight:700;color:var(--t4);
+  text-transform:uppercase;letter-spacing:.9px;
+  margin:22px 0 10px;padding-left:2px;
+  display:flex;align-items:center;gap:7px;
 }
+.section-label::before{content:'';width:3px;height:11px;border-radius:2px;background:var(--gold);display:inline-block;opacity:.7}
 /* subject result rows */
-.res-rows-wrap{display:flex;flex-direction:column;gap:10px}
+.res-rows-wrap{display:flex;flex-direction:column;gap:9px}
 .res-row{
-  background:var(--bg1);border:1px solid var(--line2);border-radius:14px;
-  padding:13px 16px;
+  position:relative;overflow:hidden;
+  background:var(--bg1);border:1px solid var(--line2);border-radius:16px;
+  padding:14px 16px 14px 18px;
   display:flex;align-items:center;gap:12px;
-  transition:background .12s var(--ease-ios);
+  transition:transform .15s var(--ease-premium),background .12s var(--ease-ios);
   box-shadow:0 1px 5px rgba(0,0,0,.04);
   animation:fadeIn .22s var(--ease-ios) both;
 }
-[data-theme="dark"] .res-row{box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
-.res-row:active{background:var(--bg2)}
+[data-theme="dark"] .res-row{box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.res-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--row-accent,var(--line2))}
+.res-row:active{transform:scale(.985);background:var(--bg2)}
 .res-row-dot{display:none}
 .res-row-info{flex:1;min-width:0}
-.res-row-name{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:5px;letter-spacing:-0.2px}
+.res-row-name{font-size:13.5px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;letter-spacing:-0.2px}
 .chips{display:flex;gap:4px;flex-wrap:wrap}
 .chip{font-family:var(--ffm);font-size:10px;font-weight:600;padding:3px 7px;border-radius:6px;background:var(--bg2);color:var(--t3);border:1px solid var(--line3)}
-.pbar{height:3px;background:var(--bg3);border-radius:2px;margin-top:7px;overflow:hidden}
+.pbar{height:3px;background:var(--bg3);border-radius:2px;margin-top:8px;overflow:hidden}
 .pbar-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.22,1,.36,1)}
 .res-row-final{text-align:right;flex-shrink:0}
-.res-row-num{font-family:var(--ffm);font-size:22px;font-weight:700;display:block;transition:color .25s;letter-spacing:-0.5px}
+.res-row-num{font-family:var(--ffm);font-size:22px;font-weight:800;display:block;transition:color .25s;letter-spacing:-0.5px}
 .res-row-status{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-top:1px;display:block}
 .res-row.pass .res-row-num,.res-row.pass .res-row-status{color:var(--green)}
 .res-row.fail .res-row-num,.res-row.fail .res-row-status{color:var(--red)}
 .res-row.warn .res-row-num,.res-row.warn .res-row-status{color:var(--amber)}
 .res-row.pending .res-row-num,.res-row.pending .res-row-status{color:var(--t4)}
+.res-row.pass{--row-accent:var(--green)}
+.res-row.fail{--row-accent:var(--red)}
+.res-row.warn{--row-accent:var(--amber)}
+.res-row.pending{--row-accent:var(--line2)}
 
 /* risk section */
 .res-risk-card{
-  background:var(--redbg);border:1px solid var(--redbd);border-radius:16px;
-  padding:16px 18px;margin-bottom:12px;
+  position:relative;overflow:hidden;
+  background:var(--redbg);border:1px solid var(--redbd);border-radius:18px;
+  padding:17px 18px 16px;margin-bottom:12px;
 }
-.res-risk-title{font-size:12px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.res-risk-title{font-size:11.5px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
 .risk-row{
-  background:var(--bg1);border:1px solid var(--line2);border-radius:12px;
-  padding:12px 14px;margin-bottom:6px;
+  background:var(--bg1);border:1px solid var(--line2);border-radius:14px;
+  padding:13px 14px;margin-bottom:7px;
   display:flex;align-items:center;gap:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
 }
+[data-theme="dark"] .risk-row{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .risk-row:last-child{margin-bottom:0}
 .risk-dot{display:none}
 .risk-info{flex:1;min-width:0}
-.risk-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.risk-name{font-size:13px;font-weight:700;color:var(--t1);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .risk-chips{display:flex;gap:4px;flex-wrap:wrap}
 .risk-right{text-align:right;flex-shrink:0}
-.risk-current{font-family:var(--ffm);font-size:20px;font-weight:700;line-height:1}
-.risk-gap{font-size:10px;font-weight:600;color:var(--t4);margin-top:2px;letter-spacing:.3px}
+.risk-current{font-family:var(--ffm);font-size:20px;font-weight:800;line-height:1}
+.risk-gap{font-size:10px;font-weight:600;color:var(--t4);margin-top:3px;letter-spacing:.3px}
 
 .res-highlights{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
 .res-highlight-card{background:var(--bg1);border:1px solid var(--line2);border-radius:16px;padding:14px 16px;box-shadow:0 1px 6px rgba(0,0,0,.04)}
@@ -1813,6 +1853,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-banner-badge.fail{background:var(--redbg);color:var(--red);border:1px solid var(--redbd)}
 .resumo-banner-badge.warn{background:var(--amberbg);color:var(--amber);border:1px solid var(--amberbd)}
 .resumo-banner-badge.pending{background:var(--bg3);color:var(--t4);border:1px solid var(--line2)}
+.resumo-banner-badge.progress{background:var(--goldbg);color:var(--gold);border:1px solid var(--goldbd)}
 
 /* stat pills — cada uma com cor de status */
 .resumo-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -1960,6 +2001,19 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .ano-result-card.pass .ano-rd-val{color:var(--green)}
 .ano-result-card.fail .ano-rd-val{color:var(--red)}
 .ano-rd-lbl{font-size:9px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+
+/* botão Baixar boletim */
+.ano-boletim-btn{
+  margin-top:16px;display:inline-flex;align-items:center;gap:8px;
+  background:var(--green);color:#04240C;border:none;border-radius:14px;
+  padding:12px 22px;font-size:14px;font-weight:700;letter-spacing:-.1px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  cursor:pointer;transition:transform .12s var(--ease-premium),opacity .15s;
+  box-shadow:0 4px 16px rgba(50,215,75,.28);
+}
+[data-theme="light"] .ano-boletim-btn{color:#FFFFFF}
+.ano-boletim-btn:active{transform:scale(.96)}
+.ano-boletim-btn svg{flex-shrink:0}
 
 /* pilulinha EAC na célula do trimestre */
 .resumo-trim-eac-pill{
@@ -7061,8 +7115,137 @@ input, textarea, select {
 #wiz-step-1 .tipo-seg-btn-lbl{font-size:14.5px}
 
 @media (min-width:768px){
-  .provas-page-wrap .wiz-progress{justify-content:flex-start;padding:0 2px}
-  .provas-page-wrap .wiz-step-title{font-size:18px}
+  /* ═══════════════════════════════════════════════════════════
+     REFORMULAÇÃO DESKTOP — aba "Atividades" (Provas/Trabalhos)
+     ▸ No mobile nada muda: essas regras só valem a partir de 768px
+       e a estrutura HTML/JS por trás continua a mesma — a pessoa
+       clicando em "Adicionar" no computador usa exatamente os
+       mesmos campos e funções de sempre, só que apresentados de
+       um jeito mais adequado a uma tela grande.
+  ═══════════════════════════════════════════════════════════ */
+
+  /* ── Formulário sem "passo a passo": no mobile faz sentido guiar
+     um campo de cada vez (tela pequena, dedo), mas no desktop há
+     espaço de sobra pra ver tudo junto — então mostramos os 3
+     "passos" como seções de um único formulário contínuo, sem a
+     necessidade de clicar em "Continuar" a cada campo. ── */
+  .provas-page-wrap .wiz-progress,
+  .provas-page-wrap .wiz-back-btn,
+  .provas-page-wrap .wiz-continue-btn{display:none!important}
+  .provas-page-wrap .wiz-step{display:block!important;animation:none!important}
+  .provas-page-wrap .wiz-step+.wiz-step{
+    margin-top:22px;padding-top:22px;border-top:1px solid var(--line3);
+  }
+  .provas-page-wrap .wiz-step-title{font-size:13px;font-weight:800;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .provas-page-wrap .wiz-step-sub{font-size:12px;margin-bottom:16px}
+  .provas-page-wrap #wiz-step-1 .tipo-seg-btn{padding:16px 12px}
+  .provas-page-wrap #wiz-step-1 .tipo-seg-btn-icon{width:36px;height:36px;border-radius:11px}
+
+  /* ── Cartão do formulário: cabeçalho mais discreto, contorno e
+     leve sombra pra se destacar como "coluna fixa" ao lado da lista.
+     Com os 3 passos agora visíveis de uma vez (ver acima), o cartão
+     pode ficar bem mais alto que a lista ao lado — por isso ele tem
+     seu próprio scroll interno, limitado à altura da tela, em vez de
+     esticar a página toda e deixar um vão vazio do lado da lista. ── */
+  .provas-page-wrap .add-exam-card{
+    border-radius:20px;
+    box-shadow:0 8px 28px -14px rgba(0,0,0,.16);
+    max-height:calc(100vh - 40px);
+    display:flex;flex-direction:column;
+  }
+  .provas-page-wrap .add-exam-card .aec-body-wrap{
+    grid-template-rows:auto!important;
+    flex:1 1 auto;
+    min-height:0;
+    overflow-y:auto;
+  }
+  .provas-page-wrap .add-exam-card .aec-body-inner{
+    overflow:visible;
+  }
+  [data-theme="dark"] .provas-page-wrap .add-exam-card{
+    box-shadow:0 8px 28px -14px rgba(0,0,0,.5);
+  }
+  .provas-page-wrap .aec-header{padding:20px 22px 16px}
+  .provas-page-wrap .aec-header-title{font-size:16px}
+  .provas-page-wrap .aec-body{padding:4px 22px 24px}
+
+  /* ── Hero da próxima prova: mais respiro e tipografia maior ── */
+  .provas-page-wrap .next-exam-hero{
+    padding:24px 26px 22px;border-radius:22px;
+    box-shadow:0 10px 30px -18px rgba(0,0,0,.18);
+  }
+  [data-theme="dark"] .provas-page-wrap .next-exam-hero{
+    box-shadow:0 10px 30px -18px rgba(0,0,0,.55);
+  }
+  .provas-page-wrap .neh-subj{font-size:21px}
+  .provas-page-wrap .neh-cd-num{font-size:32px}
+
+  /* ── Cards de estatística: leve elevação ao passar o mouse ── */
+  .provas-page-wrap .ps2-card{
+    padding:16px 18px;border-radius:18px;
+    transition:transform .15s var(--ease-ios),box-shadow .15s var(--ease-ios);
+  }
+  .provas-page-wrap .ps2-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 10px 22px -14px rgba(0,0,0,.22);
+  }
+  [data-theme="dark"] .provas-page-wrap .ps2-card:hover{
+    box-shadow:0 10px 22px -14px rgba(0,0,0,.6);
+  }
+  .provas-page-wrap .ps2-val{font-size:25px}
+
+  /* ── Nova barra de ferramentas (busca em destaque + matéria/ordenar) ── */
+  .provas-toolbar{
+    display:flex;flex-direction:column;
+    background:var(--bg1);border:1px solid var(--line2);border-radius:16px;
+    padding:14px 16px;margin-bottom:16px;
+  }
+  .provas-search-wrap{
+    min-width:0;position:relative;display:flex;align-items:center;
+  }
+  .provas-search-icon{
+    position:absolute;left:13px;width:16px;height:16px;stroke:var(--t4);
+    pointer-events:none;
+  }
+  .provas-search-input{
+    width:100%;font-family:inherit;font-size:13.5px;font-weight:500;color:var(--t1);
+    background:var(--bg2);border:1.5px solid var(--line2);border-radius:12px;
+    padding:11px 36px 11px 38px;outline:none;
+    transition:border-color .15s var(--ease-ios),background .15s var(--ease-ios);
+  }
+  .provas-search-input::placeholder{color:var(--t4);font-weight:400}
+  .provas-search-input:focus{border-color:var(--gold);background:var(--bg1)}
+  .provas-search-clear{
+    position:absolute;right:9px;width:22px;height:22px;border-radius:7px;
+    display:flex;align-items:center;justify-content:center;
+    background:none;border:none;color:var(--t4);cursor:pointer;
+    transition:background .12s,color .12s;
+  }
+  .provas-search-clear svg{width:13px;height:13px;stroke:currentColor;fill:none}
+  .provas-search-clear:hover{background:var(--bg3);color:var(--t2)}
+  .provas-toolbar-divider{height:1px;background:var(--line3);margin:12px -16px}
+  .provas-toolbar-row2{display:flex;align-items:center;gap:10px}
+  .provas-toolbar-lbl{
+    flex-shrink:0;font-size:10.5px;font-weight:800;color:var(--t4);
+    text-transform:uppercase;letter-spacing:.5px;
+  }
+  .provas-sort-btn{
+    flex-shrink:0;display:flex;align-items:center;gap:6px;
+    padding:8px 13px;border:1.5px solid var(--line2);background:var(--bg2);
+    border-radius:12px;font-size:12.5px;font-weight:700;color:var(--t2);
+    cursor:pointer;font-family:inherit;white-space:nowrap;
+    transition:background .12s,border-color .12s;
+  }
+  .provas-sort-btn:hover{background:var(--bg3);border-color:var(--line)}
+  .provas-toolbar .provas-filter{
+    flex:1;display:flex;flex-wrap:wrap;gap:6px;overflow:visible;
+    margin-bottom:0;padding-bottom:0;
+  }
+
+  /* ── Itens da lista: um pouco mais de respiro no desktop ── */
+  .provas-page-wrap .exam-item{padding:14px 16px}
+  .provas-page-wrap .section-label{margin:18px 0 10px;font-size:12px}
+  .provas-page-wrap .section-label:first-child{margin-top:0}
 }
 
 </style>
@@ -7643,7 +7826,7 @@ input, textarea, select {
       <svg class="offline-mode-banner-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
       </svg>
-      <span class="offline-mode-banner-txt">Modo offline ativo — somente visualização</span>
+      <span class="offline-mode-banner-txt" id="offline-mode-banner-txt">Modo offline ativo — somente visualização</span>
     </div>
 
     <div class="topbar">
@@ -9872,8 +10055,79 @@ function renderResultado(el){
   const abovePass=scored.filter(x=>x.g>=6).length;
   const abovePassPct=scored.length?Math.round((abovePass/scored.length)*100):0;
 
+  // mediana das notas
+  const sortedG=scored.map(x=>x.g).sort((a,b)=>a-b);
+  let median=null;
+  if(sortedG.length){
+    const mid=Math.floor(sortedG.length/2);
+    median=sortedG.length%2!==0?sortedG[mid]:(sortedG[mid-1]+sortedG[mid])/2;
+  }
+
+  // amplitude (maior − menor nota)
+  const range=(best&&worst&&best!==worst)?(best.g-worst.g):null;
+
+  // tendência: comparação entre o 1° trimestre preenchido e o último preenchido
+  const trimFilled=trimVals.filter(v=>v!==null);
+  let trendDelta=null,trendDir=null;
+  if(trimFilled.length>=2){
+    trendDelta=trimFilled[trimFilled.length-1]-trimFilled[0];
+    trendDir=trendDelta>0.05?'up':trendDelta<-0.05?'down':'flat';
+  }
+
+  // avaliações lançadas no ano inteiro (todas as matérias, todos os tabs)
+  const EVAL_TABS_RES=['1T','1T-EAC','2T','2T-EAC','3T','3T-EAC'];
+  let totalEvalsRes=0,filledEvalsRes=0;
+  SUBJECTS.forEach(s=>{
+    EVAL_TABS_RES.forEach(tab=>{
+      const rows=(G[s.id][tab]||[]).filter(r=>!r._isNew);
+      rows.forEach(r=>{totalEvalsRes++;if(nf(r.got)!==null)filledEvalsRes++;});
+    });
+  });
+  const evalsPctRes=totalEvalsRes>0?Math.round((filledEvalsRes/totalEvalsRes)*100):0;
+
+  // melhor trimestre (maior média entre 1°T, 2°T, 3°T)
+  const trimNamed=[['1°T',ta1],['2°T',ta2],['3°T',ta3]].filter(([,v])=>v!==null);
+  const bestTrim=trimNamed.length?trimNamed.reduce((a,b)=>b[1]>a[1]?b:a):null;
+
+  // consistência por matéria — desvio padrão entre os 3 trimestres da própria matéria
+  const subjConsistency=SUBJECTS.map(s=>{
+    const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T');
+    if(t1===null||t2===null||t3===null)return null;
+    const m=(t1+t2+t3)/3;
+    const v=Math.sqrt(([t1,t2,t3]).reduce((a,x)=>a+(x-m)**2,0)/3);
+    return{s,v};
+  }).filter(x=>x!==null);
+  const mostStable=subjConsistency.length?subjConsistency.reduce((a,b)=>b.v<a.v?b:a):null;
+  const mostVolatile=subjConsistency.length?subjConsistency.reduce((a,b)=>b.v>a.v?b:a):null;
+
+  // quantos trimestres (matéria × trimestre) precisaram ou precisam de EAC no ano
+  let eacNeededCount=0;
+  SUBJECTS.forEach(s=>{
+    ['1T','2T','3T'].forEach(tr=>{
+      const base=tabScore(s.id,tr);
+      if(base!==null&&base<6)eacNeededCount++;
+    });
+  });
+
+  // progresso real do ano — peso de avaliações já lançado sobre o total possível (30 pts por matéria)
+  let weightEntered=0;
+  SUBJECTS.forEach(s=>{['1T','2T','3T'].forEach(tr=>{weightEntered+=_tabWeightSum(s.id,tr);});});
+  const weightMax=SUBJECTS.length*30;
+  const weightPct=weightMax>0?Math.round((weightEntered/weightMax)*100):0;
+
+  // helper — monta um card de estatística com ícone colorido
+  const racCard=(icon,tone,eyebrow,subj,val,valColor)=>`<div class="res-analytic-card">
+    <div class="rac-icon tone-${tone}">${icon}</div>
+    <div class="rac-eyebrow">${eyebrow}</div>
+    <div class="rac-subj">${subj}</div>
+    <div class="rac-val" style="color:${valColor}">${val}</div>
+  </div>`;
+  // mapeia status (pass/warn/fail/pending) para o tom visual do ícone
+  const stTone=s2=>s2==='pass'?'green':s2==='fail'?'red':s2==='warn'?'amber':'neutral';
+
   // ── HERO
-  let h=`<div class="res-hero">
+  const heroGlow=avgSt==='pass'?'rgba(50,215,75,.14)':avgSt==='fail'?'rgba(255,69,58,.14)':avgSt==='warn'?'rgba(255,159,10,.14)':'rgba(255,214,10,.14)';
+  let h=`<div class="res-hero" style="--res-glow:${heroGlow}">
     <div class="res-hero-top">
       <div class="res-hero-left">
         <div class="res-hero-eyebrow">Média Geral</div>
@@ -9887,44 +10141,29 @@ function renderResultado(el){
       </div>
     </div>
     <div class="res-stats">
-      <div class="res-stat"><div class="label">Aprovadas</div><div class="value" style="color:var(--green)">${pass}</div><div class="sub">de ${total}</div></div>
-      <div class="res-stat"><div class="label">Em Risco</div><div class="value" style="color:var(--amber)">${warn}</div><div class="sub">matérias</div></div>
-      <div class="res-stat"><div class="label">Reprovadas</div><div class="value" style="color:var(--red)">${fail}</div><div class="sub">matérias</div></div>
+      <div class="res-stat" style="--stat-c:var(--green)"><div class="icon">✓</div><div class="label">Aprovadas</div><div class="value" style="color:var(--green)">${pass}</div><div class="sub">de ${total}</div></div>
+      <div class="res-stat" style="--stat-c:var(--amber)"><div class="icon">⚠</div><div class="label">Em Risco</div><div class="value" style="color:var(--amber)">${warn}</div><div class="sub">matérias</div></div>
+      <div class="res-stat" style="--stat-c:var(--red)"><div class="icon">✗</div><div class="label">Reprovadas</div><div class="value" style="color:var(--red)">${fail}</div><div class="sub">matérias</div></div>
     </div>
   </div>`;
 
   // ── ANALYTICS GRID
   h+=`<div class="res-analytics">`;
-  if(best)h+=`<div class="res-analytic-card">
-    <div class="rac-eyebrow" style="color:var(--green)">↑ Melhor matéria</div>
-    <div class="rac-subj">${best.s.name}</div>
-    <div class="rac-val" style="color:var(--green)">${fmt(best.g)}</div>
-  </div>`;
-  if(worst&&worst!==best)h+=`<div class="res-analytic-card">
-    <div class="rac-eyebrow" style="color:var(--red)">↓ Mais difícil</div>
-    <div class="rac-subj">${worst.s.name}</div>
-    <div class="rac-val" style="color:var(--red)">${fmt(worst.g)}</div>
-  </div>`;
-  h+=`<div class="res-analytic-card">
-    <div class="rac-eyebrow">Preenchidas</div>
-    <div class="rac-subj">${filledSubjs} de ${total} matérias</div>
-    <div class="rac-val" style="color:var(--gold)">${completionPct}%</div>
-  </div>`;
-  h+=`<div class="res-analytic-card">
-    <div class="rac-eyebrow">Acima da média</div>
-    <div class="rac-subj">nota ≥ 6.0</div>
-    <div class="rac-val" style="color:${abovePassPct>=50?'var(--green)':'var(--amber)'}">${abovePassPct}%</div>
-  </div>`;
-  if(variance!==null)h+=`<div class="res-analytic-card">
-    <div class="rac-eyebrow">Consistência</div>
-    <div class="rac-subj">desvio padrão</div>
-    <div class="rac-val" style="color:${variance<1.5?'var(--green)':variance<2.5?'var(--amber)':'var(--red)'}">${variance.toFixed(2)}</div>
-  </div>`;
-  h+=`<div class="res-analytic-card">
-    <div class="rac-eyebrow">Pendentes</div>
-    <div class="rac-subj">sem nota final</div>
-    <div class="rac-val" style="color:var(--t3)">${pend}</div>
-  </div>`;
+  if(best)h+=racCard('↑','green','Melhor matéria',best.s.name,fmt(best.g),'var(--green)');
+  if(worst&&worst!==best)h+=racCard('↓','red','Mais difícil',worst.s.name,fmt(worst.g),'var(--red)');
+  h+=racCard('◉','gold','Preenchidas',`${filledSubjs} de ${total} matérias`,completionPct+'%','var(--gold)');
+  h+=racCard('★',abovePassPct>=50?'green':'amber','Acima da média','nota ≥ 6.0',abovePassPct+'%',abovePassPct>=50?'var(--green)':'var(--amber)');
+  if(variance!==null)h+=racCard('≈',variance<1.5?'green':variance<2.5?'amber':'red','Consistência','desvio padrão',variance.toFixed(2),variance<1.5?'var(--green)':variance<2.5?'var(--amber)':'var(--red)');
+  h+=racCard('⏳','neutral','Pendentes','sem nota final',pend,'var(--t3)');
+  if(median!==null)h+=racCard('⦿',stTone(st(median)),'Mediana','nota do meio',fmt(median),SC(st(median)));
+  if(range!==null)h+=racCard('↔','gold','Amplitude','melhor − pior nota',range.toFixed(1),'var(--gold)');
+  if(trendDir!==null)h+=racCard(trendDir==='up'?'↑':trendDir==='down'?'↓':'→',trendDir==='up'?'green':trendDir==='down'?'red':'neutral','Tendência',`1°T → ${trimFilled.length>=3?'3°T':'2°T'}`,Math.abs(trendDelta).toFixed(1),trendDir==='up'?'var(--green)':trendDir==='down'?'var(--red)':'var(--t3)');
+  if(totalEvalsRes>0)h+=racCard('✎','gold','Avaliações lançadas',`${filledEvalsRes} de ${totalEvalsRes} no ano`,evalsPctRes+'%','var(--gold)');
+  if(bestTrim)h+=racCard('🗓','green','Melhor trimestre','média da turma',`${bestTrim[0]} · ${fmt(bestTrim[1])}`,'var(--green)');
+  if(mostStable)h+=racCard('⚖','green','Mais estável',mostStable.s.name,'±'+mostStable.v.toFixed(2),'var(--green)');
+  if(mostVolatile&&mostVolatile!==mostStable)h+=racCard('⚡','amber','Mais oscilante',mostVolatile.s.name,'±'+mostVolatile.v.toFixed(2),'var(--amber)');
+  if(eacNeededCount>0)h+=racCard('↻','violet','EACs necessários','trimestres no ano',eacNeededCount,'var(--violet)');
+  if(weightMax>0)h+=racCard('◔','gold','Progresso do ano','peso de provas lançado',weightPct+'%','var(--gold)');
   h+=`</div>`;
 
   // ── TRIMESTER TREND
@@ -9942,6 +10181,33 @@ function renderResultado(el){
           <div class="res-trend-bar" style="height:${Math.max(pct,3)}%;background:${c};width:100%"></div>
         </div>
         <div class="res-trend-lbl">${lbl}</div>
+      </div>`;
+    });
+    h+=`</div></div>`;
+  }
+
+  // ── DISTRIBUIÇÃO DE NOTAS
+  if(scored.length){
+    const distBuckets=[
+      {lbl:'0–4',lo:0,hi:4,c:'var(--red)'},
+      {lbl:'4–6',lo:4,hi:6,c:'var(--amber)'},
+      {lbl:'6–8',lo:6,hi:8,c:'var(--green)'},
+      {lbl:'8–10',lo:8,hi:10.01,c:'var(--green)'}
+    ];
+    const distCounts=distBuckets.map(b=>scored.filter(x=>x.g>=b.lo&&x.g<b.hi).length);
+    const maxDist=Math.max(...distCounts,1);
+    h+=`<div class="res-trend-row">
+      <div class="res-trend-title">Distribuição de notas</div>
+      <div class="res-trend-bars">`;
+    distBuckets.forEach((b,i)=>{
+      const cnt=distCounts[i];
+      const pct=cnt>0?(cnt/maxDist)*100:0;
+      h+=`<div class="res-trend-bar-wrap">
+        <div class="res-trend-val">${cnt}</div>
+        <div style="flex:1;width:100%;display:flex;align-items:flex-end">
+          <div class="res-trend-bar" style="height:${cnt>0?Math.max(pct,6):3}%;background:${cnt>0?b.c:'var(--bg3)'};width:100%;opacity:${cnt>0?1:.4}"></div>
+        </div>
+        <div class="res-trend-lbl">${b.lbl}</div>
       </div>`;
     });
     h+=`</div></div>`;
@@ -10266,11 +10532,16 @@ function renderResumo(el){
   const failedSubjs=yearClosed?allSubjFinal.filter(x=>x.g<6):[];
 
   // ── Banner hero ──
+  // O badge só mostra "Aprovado" quando TODAS as matérias já têm nota final;
+  // enquanto o ano ainda está em andamento, mostramos "Em Andamento" mesmo
+  // que a média parcial já esteja acima de 6.0.
+  let bannerSt=avgSt,bannerLabel=SL[avgSt];
+  if(avgSt==='pass'&&!yearClosed){bannerSt='progress';bannerLabel='Em Andamento';}
   const bannerHtml=`<div class="resumo-banner">
     <div class="resumo-banner-ring"></div>
     <div class="resumo-banner-eyebrow"><span class="dot"></span>Visão geral · ${completionR}% concluído</div>
     <div class="resumo-banner-avg" style="color:${avgColor}">${fmt(avgAll)}<span style="font-size:22px;font-weight:400;color:var(--t3);letter-spacing:0"> / 10</span></div>
-    <div class="resumo-banner-badge ${avgSt}">${SL[avgSt]}</div>
+    <div class="resumo-banner-badge ${bannerSt}">${bannerLabel}</div>
     <div class="resumo-stats-grid">
       <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--green)">${passCount}</div><div class="sp-lbl">Aprovadas</div></div>
       <div class="resumo-stat-pill"><div class="sp-val" style="color:var(--amber)">${warnCount}</div><div class="sp-lbl">Em risco</div></div>
@@ -10293,6 +10564,10 @@ function renderResumo(el){
           <div class="ano-rd-item"><div class="ano-rd-val">${passCount}</div><div class="ano-rd-lbl">Aprovadas</div></div>
           <div class="ano-rd-item"><div class="ano-rd-val">${abovePassPctR}%</div><div class="ano-rd-lbl">Acima de 6.0</div></div>
         </div>
+        <button class="ano-boletim-btn" onclick="downloadBoletim()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Baixar boletim
+        </button>
       </div>`;
     }else{
       const failNames=failedSubjs.map(x=>x.s.name).join(', ');
@@ -10533,6 +10808,162 @@ function renderResumo(el){
   h+='</div>';
   el.innerHTML=h;
   setTimeout(()=>_initResCharts(_chartData),0);
+}
+
+/* ═══════════════════════════════
+   BOLETIM — gera e baixa uma imagem (PNG) com o resumo do ano,
+   desenhada em canvas puro (sem libs externas), usando as cores
+   do tema atual (claro/escuro) lidas via CSS custom properties.
+═══════════════════════════════ */
+function _bltRoundRect(ctx,x,y,w,h,r){
+  if(typeof ctx.roundRect==='function'){ctx.beginPath();ctx.roundRect(x,y,w,h,r);return;}
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function downloadBoletim(){
+  try{
+    const cs=getComputedStyle(document.documentElement);
+    const cv=v=>(cs.getPropertyValue(v)||'').trim()||'#888';
+    const bg0=cv('--bg0'),bg1=cv('--bg1'),bg2=cv('--bg2'),line=cv('--line2');
+    const t1c=cv('--t1'),t2c=cv('--t2'),t3c=cv('--t3'),t4c=cv('--t4');
+    const gold=cv('--gold'),green=cv('--green'),red=cv('--red'),amber=cv('--amber');
+    const colorFor=s2=>s2==='pass'?green:s2==='fail'?red:s2==='warn'?amber:t4c;
+
+    // ── dados ──
+    const rows=SUBJECTS.map(s=>{
+      const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T');
+      const g=finalGrade(s.id);
+      return{name:s.name,t1,t2,t3,g,s2:stFinal(s.id,g)};
+    });
+    let sum=0,cnt=0;
+    rows.forEach(r=>{if(r.g!==null){sum+=r.g;cnt++;}});
+    const avg=cnt?sum/cnt:null;
+
+    // ── layout ──
+    const DPR=Math.min(3,Math.max(2,window.devicePixelRatio||2));
+    const W=1000,pad=40;
+    const headerH=170,tableHeadH=40,rowH=56,footerH=120;
+    const H=headerH+tableHeadH+rows.length*rowH+footerH;
+
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+    const ctx=canvas.getContext('2d');
+    ctx.scale(DPR,DPR);
+    ctx.textBaseline='alphabetic';
+
+    // fundo
+    ctx.fillStyle=bg0;ctx.fillRect(0,0,W,H);
+
+    // ── cartão do cabeçalho ──
+    _bltRoundRect(ctx,pad,pad,W-pad*2,headerH-16,20);ctx.fillStyle=bg1;ctx.fill();
+
+    ctx.fillStyle=gold;
+    ctx.beginPath();ctx.arc(pad+28,pad+34,4,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=t4c;ctx.font='700 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText('BOLETIM ESCOLAR · CÁLCULO DAS NOTAS',pad+40,pad+38);
+
+    ctx.fillStyle=t1c;ctx.font='800 27px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.fillText(stu.nome||'Aluno(a)',pad+28,pad+76);
+
+    const infoParts=[stu.escola,stu.turma?('Turma '+stu.turma):'',stu.serie].filter(Boolean);
+    ctx.fillStyle=t3c;ctx.font='500 13px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.fillText(infoParts.length?infoParts.join('  ·  '):'Ano letivo',pad+28,pad+98);
+
+    const hoje=new Date();
+    ctx.textAlign='right';
+    ctx.fillStyle=t4c;ctx.font='500 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.fillText('Gerado em '+hoje.toLocaleDateString('pt-BR'),W-pad-28,pad+38);
+
+    ctx.fillStyle=avg!==null?colorFor(st(avg)):t4c;
+    ctx.font='800 42px ui-monospace,"SF Mono",Menlo,monospace';
+    ctx.fillText(avg!==null?fmt(avg):'—',W-pad-28,pad+80);
+    ctx.fillStyle=t3c;ctx.font='700 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.fillText('MÉDIA FINAL',W-pad-28,pad+98);
+
+    // selo aprovado
+    const approvedAll=rows.length>0&&rows.every(r=>r.g!==null&&r.g>=6);
+    if(approvedAll){
+      ctx.fillStyle=green;
+      _bltRoundRect(ctx,W-pad-150,pad+108,150,26,13);ctx.fill();
+      ctx.fillStyle='#04240C';ctx.font='800 12px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+      ctx.textAlign='center';
+      ctx.fillText('✓ APROVADO DE ANO',W-pad-75,pad+125);
+    }
+    ctx.textAlign='left';
+
+    // ── cabeçalho da tabela ──
+    const colName=pad+28,colT1=440,colT2=560,colT3=680,colFinal=800,colStatus=900;
+    let y=headerH+22;
+    ctx.fillStyle=t4c;ctx.font='700 10.5px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.textAlign='left';ctx.fillText('MATÉRIA',colName,y);
+    ctx.textAlign='center';
+    ctx.fillText('1°T',colT1,y);ctx.fillText('2°T',colT2,y);ctx.fillText('3°T',colT3,y);ctx.fillText('FINAL',colFinal,y);
+    ctx.textAlign='left';ctx.fillText('SITUAÇÃO',colStatus,y);
+
+    y+=16;
+    ctx.strokeStyle=line;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad,y);ctx.lineTo(W-pad,y);ctx.stroke();
+    y+=10;
+
+    // ── linhas ──
+    rows.forEach((r,i)=>{
+      const rowY=y+i*rowH;
+      if(i%2===1){ctx.fillStyle=bg2;_bltRoundRect(ctx,pad,rowY,W-pad*2,rowH-8,12);ctx.fill();}
+      const midY=rowY+(rowH-8)/2+5;
+
+      ctx.fillStyle=t1c;ctx.font='700 14.5px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+      ctx.textAlign='left';
+      let name=r.name;
+      while(ctx.measureText(name).width>330&&name.length>3){name=name.slice(0,-2);}
+      if(name!==r.name)name=name.slice(0,-1)+'…';
+      ctx.fillText(name,colName,midY);
+
+      const drawGrade=(val,cx)=>{
+        ctx.textAlign='center';
+        ctx.font='700 15px ui-monospace,"SF Mono",Menlo,monospace';
+        ctx.fillStyle=val!==null?colorFor(st(val)):t4c;
+        ctx.fillText(val!==null?fmt(val):'—',cx,midY);
+      };
+      drawGrade(r.t1,colT1);drawGrade(r.t2,colT2);drawGrade(r.t3,colT3);drawGrade(r.g,colFinal);
+
+      ctx.textAlign='left';
+      ctx.fillStyle=colorFor(r.s2);
+      ctx.font='700 10.5px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+      ctx.fillText((SL[r.s2]||'').toUpperCase(),colStatus,midY);
+    });
+
+    // ── rodapé ──
+    const tableEndY=y+rows.length*rowH+6;
+    ctx.strokeStyle=line;
+    ctx.beginPath();ctx.moveTo(pad,tableEndY);ctx.lineTo(W-pad,tableEndY);ctx.stroke();
+
+    ctx.fillStyle=t4c;ctx.font='500 11px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+    ctx.textAlign='left';
+    ctx.fillText(`${rows.length} matérias · ${rows.filter(r=>r.s2==='pass').length} aprovadas`,pad,tableEndY+28);
+    ctx.textAlign='right';
+    ctx.fillText('Documento gerado automaticamente — não substitui o boletim oficial da escola.',W-pad,tableEndY+28);
+
+    // ── download ──
+    canvas.toBlob(blob=>{
+      if(!blob){if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Não foi possível gerar o boletim');return;}
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const safeName=(stu.nome||'boletim').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
+      a.href=url;a.download=`boletim-${safeName||'aluno'}.png`;
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),4000);
+      if(typeof _showNotifToast==='function')_showNotifToast('📄 Boletim baixado com sucesso');
+    },'image/png');
+  }catch(e){
+    console.error('Erro ao gerar boletim:',e);
+    if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Erro ao gerar o boletim');
+  }
 }
 
 /* ═══════════════════════════════
@@ -11654,10 +12085,30 @@ function validateExDate(){return true;}
 /* filter state */
 let provasFilter='all';
 let provasSortAZ=false;
+let provasSearch='';
 function setProvasFilter(val){provasFilter=val;render(null);}
 function toggleProvasSort(){provasSortAZ=!provasSortAZ;render(null);}
+// Busca (só aparece no desktop, na barra de ferramentas ao lado dos filtros).
+// Como o render() reconstrói o innerHTML inteiro, preservamos o foco e a
+// posição do cursor no campo de busca — sem isso a pessoa perderia o foco
+// a cada letra digitada.
+function setProvasSearch(val){
+  provasSearch=val;
+  const active=document.activeElement;
+  const wasSearch=active&&active.id==='provas-search-input';
+  const selStart=wasSearch?active.selectionStart:null;
+  const selEnd=wasSearch?active.selectionEnd:null;
+  render(null);
+  if(wasSearch){
+    const el=document.getElementById('provas-search-input');
+    if(el){el.focus();try{el.setSelectionRange(selStart,selEnd);}catch(e){}}
+  }
+}
+function clearProvasSearch(){provasSearch='';render(null);}
 
 function renderProvas(el){
+  const _isDesktopUI=window.innerWidth>=768;
+  window._provasLastIsDesktop=_isDesktopUI;
   const upcoming=exams.filter(e=>!isExamPast(e));
   const done=exams.filter(e=>isExamPast(e));
   const soon=exams.filter(e=>{const d=daysDiff(e.examDate);return !isExamPast(e)&&d>=0&&d<=7;});
@@ -11771,7 +12222,40 @@ function renderProvas(el){
 
   const examSubjs=[...new Set(exams.map(e=>e.subj))];
   let filterHtml='';
-  if(examSubjs.length>1){
+  if(_isDesktopUI){
+    // Desktop: barra de ferramentas própria — busca em destaque numa linha só,
+    // e embaixo (separado por uma linha fina) o filtro de matéria com a
+    // ordenação alinhada à direita. Sempre visível quando há provas, já que
+    // a busca sozinha se justifica mesmo com uma única matéria cadastrada.
+    if(exams.length>0){
+      const chipsHtml=`<div class="pf-chip${provasFilter==='all'?' active':''}" onclick="setProvasFilter('all')">Todas</div>`+
+        examSubjs.map(s=>{const act=provasFilter===s;return`<div class="pf-chip${act?' active':''}" onclick="setProvasFilter('${s.replace(/'/g,"\\'")}')">${escHtml(s)}</div>`;}).join('');
+      filterHtml=`<div class="provas-toolbar">
+        <div class="provas-search-wrap">
+          <svg class="provas-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input id="provas-search-input" class="provas-search-input" type="text" placeholder="Buscar por matéria, título ou conteúdo..." value="${escHtml(provasSearch)}" oninput="setProvasSearch(this.value)">
+          ${provasSearch?`<button class="provas-search-clear" onclick="clearProvasSearch()" title="Limpar busca" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
+        </div>
+        ${examSubjs.length>1?`<div class="provas-toolbar-divider"></div>
+        <div class="provas-toolbar-row2">
+          <span class="provas-toolbar-lbl">Matéria</span>
+          <div class="provas-filter" style="margin:0">${chipsHtml}</div>
+          <button onclick="toggleProvasSort()" class="provas-sort-btn" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+            ${provasSortAZ?'A–Z':'Por data'}
+          </button>
+        </div>`:`<div class="provas-toolbar-divider"></div>
+        <div class="provas-toolbar-row2">
+          <span class="provas-toolbar-lbl">Ordenar</span>
+          <div style="flex:1"></div>
+          <button onclick="toggleProvasSort()" class="provas-sort-btn" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+            ${provasSortAZ?'A–Z':'Por data'}
+          </button>
+        </div>`}
+      </div>`;
+    }
+  }else if(examSubjs.length>1){
     filterHtml=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <div class="provas-filter" style="flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0;padding-bottom:2px">
         <div class="pf-chip${provasFilter==='all'?' active':''}" onclick="setProvasFilter('all')">Todas</div>
@@ -11786,9 +12270,6 @@ function renderProvas(el){
 
   const subjPickerOptions=SUBJECTS.map(s=>{const safeName=s.name.replace(/'/g,"\\'");return`<div class="subj-picker-option" data-name="${s.name.replace(/"/g,'&quot;')}" onclick="pickSubj('${safeName}','${s.color}')"><span class="subj-picker-opt-dot" style="background:${s.color}"></span><span class="subj-picker-opt-name">${escHtml(s.name)}</span><svg class="subj-picker-opt-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>`;}).join('');
   const minDate=todayStr();
-
-  const _isDesktopUI=window.innerWidth>=768;
-  window._provasLastIsDesktop=_isDesktopUI;
 
   const wizBodyHtml=`<div class="aec-body-wrap">
       <div class="aec-body-inner">
@@ -11948,7 +12429,12 @@ function renderProvas(el){
     <span>Adicionar prova ou trabalho</span>
   </button>`;
 
-  const filtered=provasFilter==='all'?[...exams]:exams.filter(e=>e.subj===provasFilter);
+  const _normTxt=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const searchQ=_normTxt(provasSearch.trim());
+  let filtered=provasFilter==='all'?[...exams]:exams.filter(e=>e.subj===provasFilter);
+  if(searchQ){
+    filtered=filtered.filter(e=>_normTxt(e.subj).includes(searchQ)||_normTxt(e.title).includes(searchQ)||_normTxt(e.conteudo).includes(searchQ));
+  }
   let sorted;
   if(provasSortAZ){
     sorted=[...filtered].sort((a,b)=>{if(a.subj<b.subj)return -1;if(a.subj>b.subj)return 1;return a.examDate.localeCompare(b.examDate);});
@@ -11959,6 +12445,8 @@ function renderProvas(el){
   let listHtml='';
   if(exams.length===0){
     listHtml=`<div class="exam-empty"><strong>Nenhuma prova marcada</strong>Toque no botão abaixo para marcar suas próximas provas e trabalhos.</div>`;
+  }else if(sorted.length===0&&searchQ){
+    listHtml=`<div class="exam-empty" style="padding:28px 16px"><strong>Nada encontrado</strong>Nenhum resultado para "${escHtml(provasSearch.trim())}".</div>`;
   }else if(sorted.length===0){
     listHtml=`<div class="exam-empty" style="padding:28px 16px"><strong>Nenhuma prova desta matéria</strong>Selecione outra matéria no filtro.</div>`;
   }else{
@@ -16448,6 +16936,7 @@ async function _retryConnection(){
 ══════════════════════════════════════════ */
 const _OFFLINE_MODE_KEY='t205_offline_mode';
 let _offlineWatchTimer=null;
+let _offlineBannerTimer=null;
 let _lastOfflineToastAt=0;
 
 function _isOfflineModeActive(){
@@ -16500,10 +16989,35 @@ function _applyOfflineWriteGuards(){
   });
 }
 
+// Mostra, dentro da própria faixa de "modo offline ativo", há quanto tempo
+// foi o último salvamento (sincronização com a nuvem) — assim a pessoa sabe
+// se o que está vendo é recente ou se ficou defasado desde então. Usa o
+// mesmo timestamp gravado pelo _fbSaveAll (t205_updatedAt) e o mesmo
+// formatador relativo já usado na central de notificações (_ncRelTime).
+function _updateOfflineBannerSaveInfo(){
+  const txt=document.getElementById('offline-mode-banner-txt');
+  if(!txt) return;
+  const ts=parseInt(localStorage.getItem('t205_updatedAt')||'0');
+  if(ts && typeof _ncRelTime==='function'){
+    txt.textContent='Modo offline ativo · salvo '+_ncRelTime(ts);
+  } else {
+    txt.textContent='Modo offline ativo — somente visualização';
+  }
+}
+window._updateOfflineBannerSaveInfo=_updateOfflineBannerSaveInfo;
+
 function _applyOfflineModeUI(){
   document.documentElement.classList.add('offline-view-only');
   const banner=document.getElementById('offline-mode-banner');
   if(banner) banner.style.display='flex';
+  _updateOfflineBannerSaveInfo();
+  // Mantém o "salvo há X min" fresco enquanto a faixa estiver visível —
+  // sem isso ficaria congelado no valor de quando o modo foi ativado.
+  clearInterval(_offlineBannerTimer);
+  _offlineBannerTimer=setInterval(()=>{
+    if(!_isOfflineModeActive()){clearInterval(_offlineBannerTimer);return;}
+    _updateOfflineBannerSaveInfo();
+  },30000);
   if(typeof syncLayout==='function') setTimeout(syncLayout,50);
   _applyOfflineWriteGuards();
   _startOfflineReconnectWatch();
