@@ -1965,8 +1965,11 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-recovery-val-lbl{font-size:8px;font-weight:600;color:var(--gold);letter-spacing:.2px;text-align:center;line-height:1.2;max-width:58px}
 .resumo-recovery-alert.impossible .resumo-recovery-val-lbl{color:var(--red)}
 /* ── EAC / success variants ── */
-.resumo-recovery-alert.eac-pending{background:var(--goldbg);border-top-color:var(--goldbd)}
-.resumo-recovery-alert.eac-pending::before{content:'↻'}
+.resumo-recovery-alert.eac-pending{background:var(--redbg);border-top-color:var(--redbd)}
+.resumo-recovery-alert.eac-pending::before{content:'↻';background:var(--red);color:#2A0402}
+.resumo-recovery-alert.eac-pending .resumo-recovery-badge{color:var(--red)}
+.resumo-recovery-alert.eac-pending .resumo-recovery-val{color:var(--red);border-color:var(--redbd)}
+.resumo-recovery-alert.eac-pending .resumo-recovery-val-lbl{color:var(--red)}
 .resumo-recovery-alert.eac-recovered,
 .resumo-recovery-alert.success{background:var(--greenbg);border-top-color:var(--greenbd)}
 .resumo-recovery-alert.eac-recovered::before,
