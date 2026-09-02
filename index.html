@@ -1914,39 +1914,69 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-trim-val.fail{color:var(--red)}.resumo-trim-val.pending{color:var(--t4)}
 .resumo-trim-pbar{height:3px;background:var(--bg4);border-radius:2px;overflow:hidden;margin:5px 4px 0}
 .resumo-trim-pbar-fill{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.22,1,.36,1);opacity:.9}
-/* ── Trimester recovery alert (resumo cards) ── */
+/* ── Trimester recovery alert (resumo cards) — avisinhos ──
+   Agora fundidos ao container: full-width, sem cantos/margens
+   próprios — viram uma "seção" do card, igual aos trimestres e
+   à barra de progresso, separados só por uma linha fina no topo.
+   O border-radius e o overflow:hidden do .resumo-subj-card cuidam
+   de arredondar automaticamente o último aviso (fecha o card).
+   Cor: usa a cor de destaque escolhida pela pessoa no app (--gold)
+   nos avisos neutros; vermelho/verde ficam só nos estados
+   realmente críticos (impossível de passar / já recuperado). */
 .resumo-recovery-alert{
-  margin:0 12px 12px;
-  padding:10px 14px;
-  background:var(--amberbg);
-  border:1px solid var(--amberbd);
-  border-radius:12px;
+  position:relative;
+  margin:0;
+  padding:13px 16px;
+  background:var(--goldbg);
+  border:none;
+  border-top:1px solid var(--goldbd);
   display:flex;align-items:center;gap:12px;
+  animation:fadeIn .25s var(--ease-ios) both;
 }
-.resumo-recovery-alert.impossible{
-  background:var(--redbg);border-color:var(--redbd);
+/* selo — vira o primeiro item da linha, com leve giro pra dar personalidade */
+.resumo-recovery-alert::before{
+  content:'!';
+  width:24px;height:24px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:12px;font-weight:800;line-height:1;
+  background:var(--gold);color:var(--accent-text,#000);
+  transform:rotate(-6deg);
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
 }
+.resumo-recovery-alert.impossible{background:var(--redbg);border-top-color:var(--redbd)}
+.resumo-recovery-alert.impossible::before{content:'✕';background:var(--red);color:#2A0402}
 .resumo-recovery-left{flex:1;min-width:0}
 .resumo-recovery-badge{
   font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
-  color:var(--amber);margin-bottom:2px;
+  color:var(--gold);margin-bottom:3px;
 }
 .resumo-recovery-alert.impossible .resumo-recovery-badge{color:var(--red)}
-.resumo-recovery-desc{font-size:12px;font-weight:500;color:var(--t2);line-height:1.4}
-.resumo-recovery-right{text-align:right;flex-shrink:0}
+.resumo-recovery-desc{font-size:12px;font-weight:500;color:var(--t2);line-height:1.42}
+.resumo-recovery-right{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:4px}
 .resumo-recovery-val{
-  font-family:var(--ffm);font-size:24px;font-weight:700;color:var(--amber);
-  line-height:1;letter-spacing:-0.5px;
+  width:42px;height:42px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--ffm);font-size:14.5px;font-weight:800;color:var(--gold);
+  background:var(--bg1);border:2px solid var(--goldbd);
+  line-height:1;letter-spacing:-0.3px;
 }
-.resumo-recovery-alert.impossible .resumo-recovery-val{color:var(--red)}
-.resumo-recovery-val-lbl{font-size:9px;font-weight:600;color:var(--amber);margin-top:2px;letter-spacing:.2px;white-space:nowrap}
+.resumo-recovery-alert.impossible .resumo-recovery-val{color:var(--red);border-color:var(--redbd)}
+.resumo-recovery-val-lbl{font-size:8px;font-weight:600;color:var(--gold);letter-spacing:.2px;text-align:center;line-height:1.2;max-width:58px}
 .resumo-recovery-alert.impossible .resumo-recovery-val-lbl{color:var(--red)}
-/* ── EAC variants ── */
-.resumo-recovery-alert.eac-pending{background:var(--amberbg);border-color:var(--amberbd)}
-.resumo-recovery-alert.eac-recovered{background:var(--greenbg);border-color:var(--greenbd)}
-.resumo-recovery-alert.eac-recovered .resumo-recovery-badge{color:var(--green)}
-.resumo-recovery-alert.eac-recovered .resumo-recovery-val{color:var(--green)}
-.resumo-recovery-alert.eac-recovered .resumo-recovery-val-lbl{color:var(--green)}
+/* ── EAC / success variants ── */
+.resumo-recovery-alert.eac-pending{background:var(--goldbg);border-top-color:var(--goldbd)}
+.resumo-recovery-alert.eac-pending::before{content:'↻'}
+.resumo-recovery-alert.eac-recovered,
+.resumo-recovery-alert.success{background:var(--greenbg);border-top-color:var(--greenbd)}
+.resumo-recovery-alert.eac-recovered::before,
+.resumo-recovery-alert.success::before{content:'✓';background:var(--green);color:#02240B}
+.resumo-recovery-alert.eac-recovered .resumo-recovery-badge,
+.resumo-recovery-alert.success .resumo-recovery-badge{color:var(--green)}
+.resumo-recovery-alert.eac-recovered .resumo-recovery-val,
+.resumo-recovery-alert.success .resumo-recovery-val{color:var(--green);border-color:var(--greenbd)}
+.resumo-recovery-alert.eac-recovered .resumo-recovery-val-lbl,
+.resumo-recovery-alert.success .resumo-recovery-val-lbl{color:var(--green)}
 
 /* ── Médias por trimestre (linha de cards) ── */
 .resumo-trim-avgs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
@@ -4930,6 +4960,76 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   background: var(--bg1);
 }
 .resumo-subj-num { font-size: 25px; letter-spacing: -.5px; }
+
+/* ═══════════════════════════════════════════════════════════
+   ✦ Cards de nota (aba Resultado) — refino visual
+═══════════════════════════════════════════════════════════ */
+.resumo-subj-list{ gap:12px; }
+
+.resumo-subj-card{
+  position:relative;
+  border-radius:20px;
+  overflow:hidden;
+  isolation:isolate;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 42%),
+    var(--bg1);
+}
+[data-theme="light"] .resumo-subj-card{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.7) 0%, rgba(255,255,255,0) 46%),
+    var(--bg1);
+}
+.resumo-subj-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+  pointer-events:none;
+}
+
+.resumo-subj-head{ padding:16px 16px 14px; gap:14px; }
+.resumo-subj-name{ font-size:15px; letter-spacing:-.3px; }
+.resumo-subj-trend{ font-size:11px; margin-top:3px; opacity:.9; }
+
+.resumo-subj-final{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; }
+.resumo-subj-num{
+  font-size:22px; line-height:1; padding:5px 12px 6px; border-radius:13px;
+  background:var(--bg3);
+}
+.resumo-subj-num.pass{ background:var(--greenbg); }
+.resumo-subj-num.warn{ background:var(--amberbg); }
+.resumo-subj-num.fail{ background:var(--redbg); }
+.resumo-subj-num.pending{ background:var(--bg3); }
+
+.resumo-subj-status{
+  margin-top:0; padding:3px 10px; border-radius:20px; font-size:8.5px;
+  border:1px solid transparent;
+}
+.resumo-subj-status.pass{ background:var(--greenbg); border-color:var(--greenbd); }
+.resumo-subj-status.warn{ background:var(--amberbg); border-color:var(--amberbd); }
+.resumo-subj-status.fail{ background:var(--redbg); border-color:var(--redbd); }
+.resumo-subj-status.pending{ background:var(--bg3); border-color:var(--line3); color:var(--t4); }
+
+/* trimestres → mini chips com respiro, em vez de grade dividida */
+.resumo-trims{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  background:transparent; border-top:1px solid var(--line3);
+  padding:13px 13px 4px;
+}
+[data-theme="light"] .resumo-trims{ background:transparent; }
+.resumo-trim{
+  padding:10px 4px 9px; text-align:center; border-right:none;
+  border-radius:14px; background:var(--bg2);
+  transition:background .2s var(--ease-ios);
+}
+[data-theme="light"] .resumo-trim{ background:var(--bg3); }
+.resumo-trim-val{ font-size:15.5px; }
+.resumo-trim-pbar{ margin:6px 10px 0; height:3px; }
+
+/* barra de progresso geral — mais generosa e arredondada */
+.resumo-pbar-wrap{ padding:2px 16px 15px; background:transparent; }
+[data-theme="light"] .resumo-pbar-wrap{ background:transparent; }
+.resumo-pbar{ height:5px; border-radius:5px; background:var(--bg3); }
+.resumo-pbar-fill{ border-radius:5px; opacity:1; }
 
 /* ══════════════════════════════════════
    RESULT ROWS
@@ -10729,9 +10829,9 @@ function renderResumo(el){
       if(showIt){
         if(rec.phase==='t2'){
           if(rec.alreadyPassed){
-            recHtml+='<div class="resumo-recovery-alert" style="background:var(--greenbg);border-color:var(--greenbd)">'+
+            recHtml+='<div class="resumo-recovery-alert success">'+
               '<div class="resumo-recovery-left">'+
-                '<div class="resumo-recovery-badge" style="color:var(--green)">Aprovação garantida</div>'+
+                '<div class="resumo-recovery-badge">Aprovação garantida</div>'+
                 '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+', os pontos já lançados no 2° Trimestre já garantem a aprovação</div>'+
               '</div>'+
             '</div>';
@@ -10756,9 +10856,9 @@ function renderResumo(el){
           }
         }else{
           if(rec.alreadyPassed){
-            recHtml+='<div class="resumo-recovery-alert" style="background:var(--greenbg);border-color:var(--greenbd)">'+
+            recHtml+='<div class="resumo-recovery-alert success">'+
               '<div class="resumo-recovery-left">'+
-                '<div class="resumo-recovery-badge" style="color:var(--green)">Aprovação garantida</div>'+
+                '<div class="resumo-recovery-badge">Aprovação garantida</div>'+
                 '<div class="resumo-recovery-desc">Com 1°T '+fmt(rec.t1)+' e 2°T '+fmt(rec.t2)+', você já está aprovado independente da nota do 3° Trimestre</div>'+
               '</div>'+
             '</div>';
