@@ -6623,41 +6623,52 @@ input, textarea, select {
 
 /* ══════════════════════════════════════════
    COR EXPANSIVA — a cor de destaque escolhida deixa
-   de viver só em botões/ícones e passa a "tingir" o
-   fundo e as superfícies inteiras do app (containers,
-   cards, popovers, barra de navegação, bordas).
-   Funciona pra qualquer uma das cores acima — em vez
-   de fundo neutro (preto/branco puro), cada superfície
-   passa a ser uma mistura sutil e crescente da própria
-   var(--gold) já resolvida pelo accent ativo, então é
-   gerado automaticamente e fica "sob medida" pra cor,
-   tanto no claro quanto no escuro. ── */
+   de viver só em botões/ícones e passa a "tingir" de
+   forma bem visível o fundo e as superfícies inteiras
+   do app (containers, cards, popovers, barra de
+   navegação, bordas) — cada nível (bg0→bg5) recebe uma
+   variação mais forte da cor conforme a superfície fica
+   mais "elevada", enquanto os botões continuam com a
+   cor cheia, 100%. Funciona pra qualquer uma das cores
+   acima: a cor é recalibrada (--exp-src) pra um brilho
+   consistente antes de tingir, então TODAS rendem o
+   mesmo nível de presença e contraste — tanto no claro
+   quanto no escuro — sem precisar ajustar cor por cor. ── */
 [data-theme="dark"][data-expansive="1"] {
-  --bg0: color-mix(in oklab, var(--gold) 16%, #000000 84%);
-  --bg1: color-mix(in oklab, var(--gold) 15%, #0E0E0E 85%);
-  --bg2: color-mix(in oklab, var(--gold) 17%, #161616 83%);
-  --bg3: color-mix(in oklab, var(--gold) 19%, #1E1E1E 81%);
-  --bg4: color-mix(in oklab, var(--gold) 22%, #292929 78%);
-  --bg5: color-mix(in oklab, var(--gold) 27%, #3A3A3A 73%);
-  --line:  color-mix(in oklab, var(--gold) 28%, rgba(255,255,255,.12));
-  --line2: color-mix(in oklab, var(--gold) 23%, rgba(255,255,255,.07));
-  --line3: color-mix(in oklab, var(--gold) 18%, rgba(255,255,255,.035));
-  --nav-bg: color-mix(in oklab, var(--gold) 14%, rgba(10,10,10,.96));
-  --bg-grid-line: color-mix(in oklab, var(--gold) 32%, rgba(255,255,255,.007));
+  /* fonte da cor "recalibrada" pra um brilho médio único, pra que TODAS as
+     cores (claras como dourado, escuras como roxo2) rendam o mesmo nível
+     de presença — preserva o matiz e a saturação originais do accent. */
+  --exp-src: oklch(from var(--gold) 60% c h);
+  --bg0: color-mix(in srgb, var(--exp-src) 26%, #000000 74%);
+  --bg1: color-mix(in srgb, var(--exp-src) 32%, #0A0A0A 68%);
+  --bg2: color-mix(in srgb, var(--exp-src) 40%, #141414 60%);
+  --bg3: color-mix(in srgb, var(--exp-src) 48%, #1C1C1C 52%);
+  --bg4: color-mix(in srgb, var(--exp-src) 58%, #262626 42%);
+  --bg5: color-mix(in srgb, var(--exp-src) 70%, #363636 30%);
+  --line:  color-mix(in srgb, var(--exp-src) 55%, rgba(255,255,255,.12));
+  --line2: color-mix(in srgb, var(--exp-src) 46%, rgba(255,255,255,.07));
+  --line3: color-mix(in srgb, var(--exp-src) 36%, rgba(255,255,255,.035));
+  --nav-bg: color-mix(in srgb, var(--exp-src) 30%, rgba(10,10,10,.96));
+  --bg-grid-line: color-mix(in srgb, var(--exp-src) 50%, rgba(255,255,255,.007));
 }
 [data-theme="light"][data-expansive="1"] {
-  --bg0: color-mix(in oklab, var(--gold) 9%, #F5F5F7 91%);
-  --bg1: color-mix(in oklab, var(--gold) 6%, #FFFFFF 94%);
-  --bg2: color-mix(in oklab, var(--gold) 10%, #F2F2F7 90%);
-  --bg3: color-mix(in oklab, var(--gold) 13%, #E5E5EA 87%);
-  --bg4: color-mix(in oklab, var(--gold) 17%, #D1D1D6 83%);
-  --bg5: color-mix(in oklab, var(--gold) 23%, #AEAEB2 77%);
-  --line:  color-mix(in oklab, var(--gold) 24%, rgba(0,0,0,.10));
-  --line2: color-mix(in oklab, var(--gold) 19%, rgba(0,0,0,.06));
-  --line3: color-mix(in oklab, var(--gold) 15%, rgba(0,0,0,.032));
-  --nav-bg: color-mix(in oklab, var(--gold) 7%, rgba(250,250,252,.92));
-  --nav-solid: color-mix(in oklab, var(--gold) 7%, #FAFAFA);
-  --bg-grid-line: color-mix(in oklab, var(--gold) 24%, rgba(0,0,0,.014));
+  /* mesma ideia, mas recalibrando pra um tom claro único — assim cores que
+     no botão precisam ser bem escuras pra contraste (ex.: cinza bem
+     escuro, vinho) não escurecem o fundo/containers a ponto de brigar
+     com o texto; todo mundo vira uma versão clara e legível da própria cor. */
+  --exp-src: oklch(from var(--gold) 88% c h);
+  --bg0: color-mix(in srgb, var(--exp-src) 22%, #F5F5F7 78%);
+  --bg1: color-mix(in srgb, var(--exp-src) 16%, #FFFFFF 84%);
+  --bg2: color-mix(in srgb, var(--exp-src) 30%, #F2F2F7 70%);
+  --bg3: color-mix(in srgb, var(--exp-src) 40%, #E5E5EA 60%);
+  --bg4: color-mix(in srgb, var(--exp-src) 52%, #D1D1D6 48%);
+  --bg5: color-mix(in srgb, var(--exp-src) 66%, #AEAEB2 34%);
+  --line:  color-mix(in srgb, var(--exp-src) 42%, rgba(0,0,0,.10));
+  --line2: color-mix(in srgb, var(--exp-src) 34%, rgba(0,0,0,.06));
+  --line3: color-mix(in srgb, var(--exp-src) 26%, rgba(0,0,0,.032));
+  --nav-bg: color-mix(in srgb, var(--exp-src) 22%, rgba(250,250,252,.92));
+  --nav-solid: color-mix(in srgb, var(--exp-src) 22%, #FAFAFA);
+  --bg-grid-line: color-mix(in srgb, var(--exp-src) 32%, rgba(0,0,0,.014));
 }
 
 /* toggle "Cor expansiva" — linha no sheet "Escolher cor" */
