@@ -684,6 +684,7 @@
       var s=JSON.parse(raw);
       if(s&&s.accentKey)document.documentElement.setAttribute('data-accent',s.accentKey);
       if(s&&s.expansiveColor)document.documentElement.setAttribute('data-expansive','1');
+      if(s&&s.expansiveBg)document.documentElement.setAttribute('data-expansive-bg','1');
     }
   }catch(e){}
 })();
@@ -2535,7 +2536,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   gap:1px;
   padding:7px 7px;
   border-radius:32px;
-  background:rgba(8,8,9,.86);
+  background:var(--nav-bg);
   backdrop-filter:saturate(150%) blur(18px);
   -webkit-backdrop-filter:saturate(150%) blur(18px);
   border:0.5px solid rgba(255,255,255,.08);
@@ -2547,7 +2548,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
              border-color .35s var(--ease-ios), transform .3s var(--ease-spring);
 }
 [data-theme="light"] .nav{
-  background:rgba(245,245,247,.92);
+  background:var(--nav-bg);
   backdrop-filter:saturate(140%) blur(14px);
   -webkit-backdrop-filter:saturate(140%) blur(14px);
   border:0.5px solid rgba(0,0,0,.07);
@@ -3775,7 +3776,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   /* ─ body / shell ─ */
   body { justify-content:flex-start; }
   [data-theme="dark"] body {
-    background:#06070C;
+    background:var(--bg0);
     background-image:
       linear-gradient(var(--bg-grid-line,rgba(255,214,10,.013)) 1px, transparent 1px),
       linear-gradient(90deg, var(--bg-grid-line,rgba(255,214,10,.013)) 1px, transparent 1px);
@@ -4760,7 +4761,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 
 /* ── Backgrounds melhorados ── */
 [data-theme="dark"] body {
-  background: #000000;
+  background: var(--bg0);
 }
 [data-theme="light"] body {
   background: var(--bg0);
@@ -4773,10 +4774,10 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   border-bottom: 0.5px solid var(--line3);
 }
 [data-theme="dark"] .top-fixed {
-  background: rgba(8,8,8,.94);
+  background: var(--nav-bg);
 }
 [data-theme="light"] .top-fixed {
-  background: rgba(250,250,252,.92);
+  background: var(--nav-bg);
   border-bottom-color: rgba(0,0,0,.08);
 }
 
@@ -5134,7 +5135,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 [data-theme="dark"] .exam-sheet,
 [data-theme="dark"] .wx-sheet,
 [data-theme="dark"] .notif-box {
-  background: #141414;
+  background: var(--bg2);
   border-top: 1px solid rgba(255,255,255,.09);
 }
 
@@ -5202,7 +5203,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   border-color: rgba(255,255,255,.10);
 }
 [data-theme="light"] .confirm-box {
-  background: #FFFFFF;
+  background: var(--bg1);
 }
 
 /* ══════════════════════════════════════
@@ -6702,6 +6703,17 @@ input, textarea, select {
   background: color-mix(in oklch, var(--gold) 48%, var(--bg4));
 }
 
+/* ── "Aplicar cor de fundo" ────────────────────────────────────────
+   Sub-opção da cor expansiva: estende --bg0 até o <html> (por trás
+   do body), cobrindo a área de overscroll/bounce no mobile e
+   qualquer gutter/letterbox — assim a cor vai até a borda física da
+   tela, sem faixa neutra sobrando. Só age quando as DUAS flags estão
+   ativas; sem "cor expansiva" ligada, essa opção não existe. ── */
+html[data-expansive="1"][data-expansive-bg="1"] {
+  background: var(--bg0);
+  transition: background .38s var(--ease-ios);
+}
+
 /* ── Pacotes de paleta dedicados por cor ──────────────────────────
    Os dois blocos genéricos acima (com color-mix + oklch) são o
    fallback de segurança, caso uma cor nova apareça um dia sem
@@ -7872,6 +7884,21 @@ input, textarea, select {
 }
 .exp-switch.on .exp-switch-knob{transform:translateX(19px)}
 .exp-switch:active .exp-switch-knob{width:26px}
+
+/* sub-opção "Aplicar cor de fundo" — só existe visualmente com a cor
+   expansiva ligada; usa max-height (em vez de display) pra poder
+   animar a entrada/saída suavemente, sem pulo de layout. */
+.exp-bg-row{
+  max-height:0;opacity:0;margin-bottom:0;padding-top:0;padding-bottom:0;
+  overflow:hidden;pointer-events:none;border-color:transparent;
+  transition:max-height .28s var(--ease-premium),opacity .2s var(--ease-premium),
+             margin-bottom .28s var(--ease-premium),padding .28s var(--ease-premium),
+             border-color .28s var(--ease-premium);
+}
+.exp-bg-row.show{
+  max-height:90px;opacity:1;margin-bottom:14px;padding-top:13px;padding-bottom:13px;
+  pointer-events:auto;border-color:var(--line);
+}
 
 /* ══════════════════════════════════════════
    PEARL SLATE LIGHT THEME — refinamentos visuais
@@ -9851,6 +9878,20 @@ input, textarea, select {
       </button>
     </div>
 
+    <!-- APLICAR COR DE FUNDO — só aparece com a cor expansiva ligada -->
+    <div class="exp-color-row exp-bg-row" id="exp-bg-row">
+      <div class="exp-color-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 14.5c3-2.5 6 2.5 9 0s6-2.5 9 0" fill="none"/></svg>
+      </div>
+      <div class="exp-color-info">
+        <div class="exp-color-title">Aplicar cor de fundo</div>
+        <div class="exp-color-sub">Estende a mesma cor até o fundo da tela inteira, sem faixas neutras nas bordas</div>
+      </div>
+      <button class="exp-switch" id="exp-bg-switch" onclick="toggleExpansiveBg()" aria-pressed="false" title="Aplicar cor de fundo">
+        <div class="exp-switch-knob"></div>
+      </button>
+    </div>
+
     <div id="cp-groups"></div>
   </div>
 </div>
@@ -10899,6 +10940,8 @@ function applyAccent(key){
 function applyExpansive(on){
   if(on) document.documentElement.setAttribute('data-expansive','1');
   else document.documentElement.removeAttribute('data-expansive');
+  applyExpansiveBg(on&&!!stu.expansiveBg);
+  syncExpansiveBgRow();
 }
 function syncExpansiveSwitch(){
   const b=document.getElementById('exp-switch');
@@ -10911,6 +10954,34 @@ function toggleExpansiveColor(){
   stu.expansiveColor=!stu.expansiveColor;
   applyExpansive(stu.expansiveColor);
   syncExpansiveSwitch();
+  saveStudentLS();
+}
+
+/* "Aplicar cor de fundo" — sub-opção que só faz sentido com a cor
+   expansiva ligada: estende a mesma cor adaptada até o <html> (fundo
+   por trás do body, área de overscroll/bounce no mobile), pra não
+   sobrar nenhuma faixa neutra quando o resto da tela já está tingido. */
+function applyExpansiveBg(on){
+  if(on) document.documentElement.setAttribute('data-expansive-bg','1');
+  else document.documentElement.removeAttribute('data-expansive-bg');
+}
+function syncExpansiveBgSwitch(){
+  const b=document.getElementById('exp-bg-switch');
+  if(!b)return;
+  const on=!!stu.expansiveBg;
+  b.classList.toggle('on',on);
+  b.setAttribute('aria-pressed',String(on));
+}
+function syncExpansiveBgRow(){
+  const row=document.getElementById('exp-bg-row');
+  if(!row)return;
+  row.classList.toggle('show',!!stu.expansiveColor);
+}
+function toggleExpansiveBg(){
+  if(!stu.expansiveColor)return; // só ativa com a cor expansiva ligada
+  stu.expansiveBg=!stu.expansiveBg;
+  applyExpansiveBg(stu.expansiveBg);
+  syncExpansiveBgSwitch();
   saveStudentLS();
 }
 
@@ -15773,6 +15844,8 @@ function pickColor(key,btn){
 function openColorPicker(){
   renderColorPickerGrid();
   syncExpansiveSwitch();
+  syncExpansiveBgSwitch();
+  syncExpansiveBgRow();
   document.getElementById('color-picker-overlay').classList.add('open');
 }
 function closeColorPicker(){
