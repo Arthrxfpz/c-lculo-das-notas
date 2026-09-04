@@ -8663,6 +8663,22 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   if(!('serviceWorker' in navigator)) return;
 
   window.addEventListener('load', () => {
+    // Se a página já nasceu controlada por um Service Worker (não é a
+    // primeiríssima visita), qualquer troca de controller depois disso
+    // é uma ATUALIZAÇÃO de verdade — recarregamos sozinhos pra garantir
+    // que a aba nunca fique rodando o JS antigo enquanto o cache já foi
+    // trocado pro novo (a causa mais comum de "bug esquisito só depois
+    // que atualizei o site"). Na primeiríssima visita (sem controller
+    // ainda) não precisa recarregar: a página já carregou com o conteúdo
+    // certo desde o início.
+    const hadControllerAlready = !!navigator.serviceWorker.controller;
+    let _swRefreshed = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if(!hadControllerAlready || _swRefreshed) return;
+      _swRefreshed = true;
+      location.reload();
+    });
+
     navigator.serviceWorker.register('./service-worker.js').then((reg) => {
       // Já existe um Service Worker novo esperando (baixado numa aba
       // anterior)? Ativa ele de uma vez, sem precisar fechar todas as abas.
@@ -18393,8 +18409,9 @@ async function _retryConnection(){
    ▸ Ativado manualmente pelo usuário a partir da tela de "sem conexão",
      do banner de "conexão lenta" ou do splash quando demora demais.
    ▸ Enquanto ativo: nada pode ser criado/editado/apagado, só visualizado.
-   ▸ Assim que uma conexão de verdade for detectada de novo, perguntamos
-     se o usuário quer sair do modo offline (e recarregamos se ele topar).
+   ▸ Assim que uma conexão de verdade for detectada de novo, saímos do
+     modo offline sozinhos e recarregamos — só avisando com um toast
+     rápido ("Saindo do modo offline…"), sem perguntar nada.
 ══════════════════════════════════════════ */
 const _OFFLINE_MODE_KEY='t205_offline_mode';
 let _offlineWatchTimer=null;
@@ -18505,22 +18522,15 @@ function _activateOfflineMode(){
 }
 window._activateOfflineMode=_activateOfflineMode;
 
-// Pergunta se o usuário quer sair do modo offline (reaproveita o popup
-// de confirmação padrão do app) e recarrega a página se ele confirmar.
-function _promptExitOfflineMode(){
+// Sai do modo offline sozinho assim que a conexão realmente volta —
+// sem perguntar (o pop-up de confirmação foi trocado por um toast
+// rápido, discreto, avisando o que está acontecendo antes de recarregar).
+function _exitOfflineModeAuto(){
   if(!_isOfflineModeActive()) return;
-  if(document.getElementById('confirm-overlay').classList.contains('open')) return;
-  showConfirm({
-    title:'Conexão foi restaurada',
-    msg:'Deseja sair do modo offline? A página vai recarregar com tudo funcionando normalmente.',
-    okLabel:'Sair do modo offline',
-    danger:false,
-    iconSvg:'<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>',
-    onOk:()=>{
-      localStorage.removeItem(_OFFLINE_MODE_KEY);
-      location.reload();
-    }
-  });
+  localStorage.removeItem(_OFFLINE_MODE_KEY);
+  if(typeof _showNotifToast==='function') _showNotifToast('📶 Saindo do modo offline…');
+  // pequeno atraso só pra pessoa conseguir ler o toast antes da página recarregar
+  setTimeout(()=>location.reload(), 900);
 }
 
 // Enquanto o modo offline estiver ativo, fica de olho numa conexão real
@@ -18531,7 +18541,7 @@ function _startOfflineReconnectWatch(){
   _offlineWatchTimer=setInterval(async()=>{
     if(!_isOfflineModeActive()){clearInterval(_offlineWatchTimer);return;}
     const ok=await _checkConnectivity();
-    if(ok) _promptExitOfflineMode();
+    if(ok) _exitOfflineModeAuto();
   },20000);
 }
 
@@ -18618,9 +18628,9 @@ window.addEventListener('offline',()=>{
 });
 window.addEventListener('online',async()=>{
   if(_isOfflineModeActive()){
-    // Não recarrega sozinho: pergunta antes, como pedido.
+    // Sai sozinho, sem perguntar — só avisa com um toast (ver _exitOfflineModeAuto).
     const ok=await _checkConnectivity();
-    if(ok) _promptExitOfflineMode();
+    if(ok) _exitOfflineModeAuto();
     return;
   }
   // Confirma conectividade real antes de recarregar
