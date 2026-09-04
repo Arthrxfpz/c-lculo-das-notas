@@ -1115,8 +1115,7 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
 html{font-size:16px}
 body{font-family:var(--ff);background:var(--bg0);color:var(--t1);min-height:100dvh;display:flex;justify-content:center;font-size:13.5px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   transition:background .38s var(--ease-ios),color .38s var(--ease-ios);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;letter-spacing:-0.015em}
-[data-theme="dark"] body{background:#000000;color:#EBEBEB}
-[data-theme="light"] body{background:#F5F5F7}
+[data-theme="dark"] body{color:#EBEBEB}
 
 input,button,select{font-family:inherit;letter-spacing:inherit}
 input:focus,button:focus,select:focus,textarea:focus{outline:none!important;box-shadow:none!important}
@@ -3894,7 +3893,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     z-index:100;
   }
   [data-theme="dark"] .nav {
-    background:#0A0A0A;
+    background:var(--nav-bg);
     box-shadow:1px 0 0 rgba(255,255,255,.04), 4px 0 24px rgba(0,0,0,.35);
   }
   [data-theme="light"] .nav {
@@ -4031,7 +4030,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     transform:translateX(-4px); opacity:0;
   }
   [data-theme="dark"] .sb-expand-btn {
-    background:#0A0A0A;
+    background:var(--nav-bg);
     box-shadow:0 2px 20px rgba(0,0,0,.45), 0 1px 4px rgba(0,0,0,.2);
   }
   .sb-expand-btn:hover { background:var(--bg2); box-shadow:0 4px 20px rgba(0,0,0,.22); transform:translateX(0) translateY(-1px) !important; }
@@ -5337,12 +5336,12 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 ══════════════════════════════════════ */
 @media (min-width:768px) {
   [data-theme="dark"] .nav {
-    background: #0A0A0A;
+    background: var(--nav-bg);
     border-right: 1px solid rgba(255,255,255,.07);
     box-shadow: 1px 0 0 rgba(255,255,255,.06);
   }
   [data-theme="light"] .nav {
-    background: #FAFAFA;
+    background: var(--nav-solid);
     border-right: 1px solid rgba(0,0,0,.07);
     box-shadow: 1px 0 0 rgba(0,0,0,.05);
   }
@@ -6639,17 +6638,22 @@ input, textarea, select {
      cores (claras como dourado, escuras como roxo2) rendam o mesmo nível
      de presença — preserva o matiz e a saturação originais do accent. */
   --exp-src: oklch(from var(--gold) 60% c h);
-  --bg0: color-mix(in srgb, var(--exp-src) 26%, #000000 74%);
-  --bg1: color-mix(in srgb, var(--exp-src) 32%, #0A0A0A 68%);
-  --bg2: color-mix(in srgb, var(--exp-src) 40%, #141414 60%);
-  --bg3: color-mix(in srgb, var(--exp-src) 48%, #1C1C1C 52%);
-  --bg4: color-mix(in srgb, var(--exp-src) 58%, #262626 42%);
-  --bg5: color-mix(in srgb, var(--exp-src) 70%, #363636 30%);
-  --line:  color-mix(in srgb, var(--exp-src) 55%, rgba(255,255,255,.12));
-  --line2: color-mix(in srgb, var(--exp-src) 46%, rgba(255,255,255,.07));
-  --line3: color-mix(in srgb, var(--exp-src) 36%, rgba(255,255,255,.035));
-  --nav-bg: color-mix(in srgb, var(--exp-src) 30%, rgba(10,10,10,.96));
-  --bg-grid-line: color-mix(in srgb, var(--exp-src) 50%, rgba(255,255,255,.007));
+  /* mistura em oklch (não srgb): o degradê bg0→bg5 sobe em L de forma
+     perceptualmente uniforme, sem o "cinza sujo" que o srgb produz nos
+     tons médios — o resultado é uma progressão mais limpa e con-
+     sistente entre matizes diferentes (dourado, roxo, verde…). */
+  --bg0: color-mix(in oklch, var(--exp-src) 24%, #000000 76%);
+  --bg1: color-mix(in oklch, var(--exp-src) 30%, #0A0A0A 70%);
+  --bg2: color-mix(in oklch, var(--exp-src) 38%, #141414 62%);
+  --bg3: color-mix(in oklch, var(--exp-src) 46%, #1C1C1C 54%);
+  --bg4: color-mix(in oklch, var(--exp-src) 56%, #262626 44%);
+  --bg5: color-mix(in oklch, var(--exp-src) 68%, #363636 32%);
+  --line:  color-mix(in oklch, var(--exp-src) 55%, rgba(255,255,255,.12));
+  --line2: color-mix(in oklch, var(--exp-src) 46%, rgba(255,255,255,.07));
+  --line3: color-mix(in oklch, var(--exp-src) 36%, rgba(255,255,255,.035));
+  --nav-bg: color-mix(in oklch, var(--exp-src) 30%, rgba(10,10,10,.96));
+  --nav-solid: color-mix(in oklch, var(--exp-src) 30%, #0A0A0A);
+  --bg-grid-line: color-mix(in oklch, var(--exp-src) 50%, rgba(255,255,255,.007));
 }
 [data-theme="light"][data-expansive="1"] {
   /* mesma ideia, mas recalibrando pra um tom claro único — assim cores que
@@ -6657,18 +6661,45 @@ input, textarea, select {
      escuro, vinho) não escurecem o fundo/containers a ponto de brigar
      com o texto; todo mundo vira uma versão clara e legível da própria cor. */
   --exp-src: oklch(from var(--gold) 88% c h);
-  --bg0: color-mix(in srgb, var(--exp-src) 22%, #F5F5F7 78%);
-  --bg1: color-mix(in srgb, var(--exp-src) 16%, #FFFFFF 84%);
-  --bg2: color-mix(in srgb, var(--exp-src) 30%, #F2F2F7 70%);
-  --bg3: color-mix(in srgb, var(--exp-src) 40%, #E5E5EA 60%);
-  --bg4: color-mix(in srgb, var(--exp-src) 52%, #D1D1D6 48%);
-  --bg5: color-mix(in srgb, var(--exp-src) 66%, #AEAEB2 34%);
-  --line:  color-mix(in srgb, var(--exp-src) 42%, rgba(0,0,0,.10));
-  --line2: color-mix(in srgb, var(--exp-src) 34%, rgba(0,0,0,.06));
-  --line3: color-mix(in srgb, var(--exp-src) 26%, rgba(0,0,0,.032));
-  --nav-bg: color-mix(in srgb, var(--exp-src) 22%, rgba(250,250,252,.92));
-  --nav-solid: color-mix(in srgb, var(--exp-src) 22%, #FAFAFA);
-  --bg-grid-line: color-mix(in srgb, var(--exp-src) 32%, rgba(0,0,0,.014));
+  /* mesma mudança pra oklch aqui: no claro isso evita que tons como
+     azul/roxo passem por um cinza-azulado esverdeado no meio da escala —
+     a transição fica limpa do branco até o tom saturado do accent. */
+  --bg0: color-mix(in oklch, var(--exp-src) 22%, #F5F5F7 78%);
+  --bg1: color-mix(in oklch, var(--exp-src) 16%, #FFFFFF 84%);
+  --bg2: color-mix(in oklch, var(--exp-src) 30%, #F2F2F7 70%);
+  --bg3: color-mix(in oklch, var(--exp-src) 40%, #E5E5EA 60%);
+  --bg4: color-mix(in oklch, var(--exp-src) 52%, #D1D1D6 48%);
+  --bg5: color-mix(in oklch, var(--exp-src) 64%, #AEAEB2 36%);
+  --line:  color-mix(in oklch, var(--exp-src) 42%, rgba(0,0,0,.10));
+  --line2: color-mix(in oklch, var(--exp-src) 34%, rgba(0,0,0,.06));
+  --line3: color-mix(in oklch, var(--exp-src) 26%, rgba(0,0,0,.032));
+  --nav-bg: color-mix(in oklch, var(--exp-src) 22%, rgba(250,250,252,.92));
+  --nav-solid: color-mix(in oklch, var(--exp-src) 22%, #FAFAFA);
+  --bg-grid-line: color-mix(in oklch, var(--exp-src) 32%, rgba(0,0,0,.014));
+}
+
+/* ── Coesão extra da cor expansiva ────────────────────────────────
+   Usa var(--gold) direto (que já muda com data-accent, dedicado ou
+   não) pra amarrar seleção de texto, scrollbar e sombra de elevação
+   à mesma identidade — funciona automaticamente com o fallback
+   genérico OU com qualquer um dos pacotes dedicados abaixo, sem
+   precisar repetir isso 42×2 vezes. ── */
+[data-expansive="1"] {
+  --exp-ring: color-mix(in oklch, var(--gold) 45%, transparent);
+}
+[data-theme="dark"][data-expansive="1"] ::selection {
+  background: color-mix(in oklch, var(--gold) 40%, transparent);
+  color: #fff;
+}
+[data-theme="light"][data-expansive="1"] ::selection {
+  background: color-mix(in oklch, var(--gold) 30%, transparent);
+  color: #1C1C1E;
+}
+[data-expansive="1"] ::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--gold) 32%, var(--bg4));
+}
+[data-expansive="1"] ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--gold) 48%, var(--bg4));
 }
 
 /* ── Pacotes de paleta dedicados por cor ──────────────────────────
