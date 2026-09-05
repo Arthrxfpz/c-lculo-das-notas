@@ -2255,6 +2255,15 @@ html.offline-view-only .modal-save-btn{
   pointer-events:none!important;
 }
 
+/* Comunidade também some no modo offline — mas sem pointer-events:none,
+   pra deixar o toque passar até o setPage() e mostrar o toast explicando
+   por que está bloqueada, em vez de simplesmente não fazer nada */
+html.offline-view-only #n-comunidade{
+  opacity:.35!important;
+  filter:grayscale(.6);
+  cursor:not-allowed!important;
+}
+
 /* ═══════════════════════════════
    PROVAS (EXAM SCHEDULER)
 ═══════════════════════════════ */
@@ -15624,6 +15633,13 @@ function enableDragScroll(elId){
 
 function setPage(page,btn){
   if(curPage===page)return;
+  // Comunidade fica bloqueada no modo offline: sem internet não dá pra
+  // confiar que o feed vai carregar/ficar atualizado, então nem deixamos
+  // entrar na aba (em vez de deixar entrar e mostrar uma mensagem vazia lá dentro)
+  if(page==='comunidade'&&window._isOfflineModeActive&&window._isOfflineModeActive()){
+    if(typeof window._showNotifToast==='function') window._showNotifToast('🔒 Comunidade indisponível no modo offline');
+    return;
+  }
   if(btn)iosHaptic(btn);
   // Limpa timer do hero ao sair da aba de provas
   if(curPage==='provas'&&window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
@@ -17736,6 +17752,13 @@ let _comuPosts=null; // null = ainda não carregou; [] = carregou e está vazio
 let _comuLastSig=null; // assinatura do último feed renderizado — evita recriar
                         // o DOM (e "sumir"/piscar a tela) quando nada mudou de fato
 let _comuTimesTimerStarted=false;
+let _comuFeedEl=null; // referência direta ao <div id="comu-feed"> da aba ATUAL.
+                       // Importante usar essa referência (e não
+                       // document.getElementById) porque a página é montada
+                       // ANTES de entrar na tela (por causa da animação de
+                       // troca de aba) — nesse instante document.getElementById
+                       // não encontra nada (o elemento ainda não está "no
+                       // documento"), e as publicações somem até dar F5.
 
 const COMU_TIPOS={
   aviso:    {label:'Aviso',     className:'comu-badge-aviso'},
@@ -17752,6 +17775,10 @@ function renderComunidade(el){
     </div>
     <div id="comu-feed" class="comu-feed"></div>
   </div>`;
+  // Pega a referência do elemento AQUI, direto do "el" recém-montado —
+  // funciona mesmo antes da página entrar na tela (ao contrário de
+  // document.getElementById, que só acha elementos já visíveis no documento)
+  _comuFeedEl=el.querySelector('#comu-feed');
   _comuLastSig=null; // o container acima de comu-feed é novo (troca de aba
                       // recria o HTML) — força preencher mesmo se o conteúdo
                       // for igual ao que já tinha sido mostrado antes
@@ -17767,7 +17794,7 @@ function renderComunidade(el){
 
 function _comuRefreshTimes(){
   if(curPage!=='comunidade') return;
-  const feed=document.getElementById('comu-feed');
+  const feed=_comuFeedEl;
   if(!feed) return;
   feed.querySelectorAll('.comu-post-time[data-ms]').forEach(el=>{
     const ms=Number(el.getAttribute('data-ms'));
@@ -17787,7 +17814,7 @@ function _startComuListener(){
   // elas continuam aparecendo normalmente.
   if(window._isOfflineModeActive && window._isOfflineModeActive()){
     if(_comuPosts===null){
-      const feed=document.getElementById('comu-feed');
+      const feed=_comuFeedEl;
       if(feed) feed.innerHTML=`<div class="comu-empty">
         <svg viewBox="0 0 24 24"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
         <span>Comunidade indisponível no modo offline. Conecte-se à internet para ver as publicações.</span>
@@ -17810,12 +17837,12 @@ function _startComuListener(){
     _comuAttempts++;
     if(!window._fbDb||!window._fbCollection||!window._fbQuery||!window._fbOrderBy||!window._fbOnSnapshot){
       if(_comuAttempts===12&&_comuPosts===null){
-        const feed=document.getElementById('comu-feed');
+        const feed=_comuFeedEl;
         if(feed) feed.innerHTML=`<div class="comu-loading"><div class="comu-spinner"></div>Conexão um pouco lenta — ainda carregando a Comunidade...</div>`;
       }
       if(_comuAttempts>=90){ // ~45s de tentativas antes de desistir de vez
         if(_comuPosts===null){
-          const feed=document.getElementById('comu-feed');
+          const feed=_comuFeedEl;
           if(feed) feed.innerHTML=`<div class="comu-empty"><span>Não foi possível conectar à Comunidade agora. Verifique sua conexão e volte a esta aba mais tarde.</span></div>`;
         }
         return;
@@ -17834,7 +17861,7 @@ function _startComuListener(){
       },(err)=>{
         console.error('[Comunidade] erro ao ouvir publicações:',err);
         if(curPage==='comunidade'&&(!_comuPosts||!_comuPosts.length)){
-          const feed=document.getElementById('comu-feed');
+          const feed=_comuFeedEl;
           if(feed) feed.innerHTML=`<div class="comu-empty"><span>Não foi possível carregar as publicações agora. Puxe pra atualizar mais tarde.</span></div>`;
         }
       });
@@ -17846,7 +17873,7 @@ function _startComuListener(){
 }
 
 function _renderComuFeed(){
-  const feed=document.getElementById('comu-feed');
+  const feed=_comuFeedEl;
   if(!feed) return;
 
   if(_comuPosts===null){
