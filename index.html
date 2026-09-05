@@ -15627,8 +15627,12 @@ function setPage(page,btn){
   if(btn)iosHaptic(btn);
   // Limpa timer do hero ao sair da aba de provas
   if(curPage==='provas'&&window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
-  // Encerra o listener em tempo real da Comunidade ao sair da aba
-  if(curPage==='comunidade'&&window._comuUnsub){window._comuUnsub();window._comuUnsub=null;}
+  // Comunidade: o listener em tempo real do Firestore FICA ATIVO o tempo
+  // todo (não é encerrado ao trocar de aba). Antes ele era desligado aqui
+  // e recriado do zero sempre que a pessoa voltava pra aba, o que podia
+  // causar uma publicação "sumir" da tela até a página ser recarregada.
+  // Mantendo um único listener contínuo, a publicação só desaparece
+  // quando ela é realmente excluída pelo admin no Firestore.
   const pi=PAGE_ORDER.indexOf(curPage);
   const ci=PAGE_ORDER.indexOf(page);
   const dir=ci>=pi?'push':'pop';
