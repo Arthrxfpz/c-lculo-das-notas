@@ -3984,6 +3984,18 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .topbar-auth-slot { order:1; }
   .topbar-actions { order:2; }
 
+  /* Com a sidebar aberta (não minimizada), a topbar fica centralizada
+     numa coluna de 760px — então os ícones de tema, notificação e
+     configurações, presos dentro dela, não ficavam de fato no canto
+     direito da tela. Fixamos esse grupo no canto superior direito da
+     janela, mantendo tudo o resto exatamente como estava. */
+  .shell:not(.collapsed) .topbar-actions {
+    position: fixed;
+    top: 14px;
+    right: 44px;
+    z-index: 200;
+  }
+
   /* desktop, logado com Google e sidebar aberta: nome + foto já aparecem
      no canto esquerdo (sidebar) — some com a repetição na topbar */
   [data-fb-auth="in"] .topbar-greeting { display:none; }
@@ -4341,6 +4353,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     margin-right: auto !important;
   }
 
+  /* Com a barra de navegação lateral aberta (não minimizada), sobra menos
+     largura na tela — os containers ficam um pouco menores pra não
+     parecerem espremidos/desproporcionais ao espaço disponível. */
+  .shell:not(.collapsed) .page-slide > .provas-page-wrap {
+    max-width: 860px !important;
+  }
+
   /* Stats: 4 colunas no wrapper */
   .provas-page-wrap .provas-stats-v2 {
     grid-template-columns: repeat(4,1fr);
@@ -4363,28 +4382,31 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     align-items: start;
   }
 
-  /* Form: sempre expandido no desktop — esconde o toggle header, mostra só o corpo */
-  .provas-page-wrap .add-exam-card {
+  /* Form solto (fora do pop-up): não é mais usado no desktop, mas as regras
+     ficam com ":not(--modal)" só por segurança, pra nunca vazar pro pop-up
+     central usado agora (senão o pop-up ganharia "position:sticky" e o
+     botão de fechar ficaria sem clique com pointer-events:none). */
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) {
     margin-bottom: 0;
     position: sticky;
     top: 20px;
   }
-  .provas-page-wrap .add-exam-card .aec-header {
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-header {
     pointer-events: none;
     cursor: default;
   }
-  .provas-page-wrap .add-exam-card .aec-header-sub {
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-header-sub {
     display: none;
   }
-  .provas-page-wrap .add-exam-card .aec-header-badge,
-  .provas-page-wrap .add-exam-card .aec-chevron {
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-header-badge,
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-chevron {
     display: none;
   }
   /* Força o corpo aberto */
-  .provas-page-wrap .add-exam-card .aec-body-wrap {
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-body-wrap {
     grid-template-rows: 1fr !important;
   }
-  .provas-page-wrap .add-exam-card .aec-header {
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-header {
     border-bottom: 1px solid var(--line3);
   }
   .provas-page-wrap .add-exam-card .aec-header-icon {
@@ -4421,6 +4443,9 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .page-slide > .provas-page-wrap {
     max-width: 1080px !important;
   }
+  .shell:not(.collapsed) .page-slide > .provas-page-wrap {
+    max-width: 960px !important;
+  }
   .provas-page-wrap .provas-2col {
     grid-template-columns: 370px 1fr;
     gap: 28px;
@@ -4439,6 +4464,9 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 @media (min-width:1300px) {
   .page-slide > .provas-page-wrap {
     max-width: 1200px !important;
+  }
+  .shell:not(.collapsed) .page-slide > .provas-page-wrap {
+    max-width: 1060px !important;
   }
   .provas-page-wrap .provas-2col {
     grid-template-columns: 400px 1fr;
@@ -8733,33 +8761,44 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   .provas-page-wrap #wiz-step-1 .tipo-seg-btn{padding:16px 12px}
   .provas-page-wrap #wiz-step-1 .tipo-seg-btn-icon{width:36px;height:36px;border-radius:11px}
 
-  /* ── Cartão do formulário: cabeçalho mais discreto, contorno e
-     leve sombra pra se destacar como "coluna fixa" ao lado da lista.
-     Com os 3 passos agora visíveis de uma vez (ver acima), o cartão
-     pode ficar bem mais alto que a lista ao lado — por isso ele tem
-     seu próprio scroll interno, limitado à altura da tela, em vez de
-     esticar a página toda e deixar um vão vazio do lado da lista. ── */
-  .provas-page-wrap .add-exam-card{
+  /* ── Cartão do formulário fora do pop-up (não é mais usado no desktop,
+     mantido só por segurança/compatibilidade — ":not(--modal)" garante
+     que essas regras não interfiram no pop-up central usado agora). ── */
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal){
     border-radius:20px;
     box-shadow:0 8px 28px -14px rgba(0,0,0,.16);
     max-height:calc(100vh - 40px);
     display:flex;flex-direction:column;
   }
-  .provas-page-wrap .add-exam-card .aec-body-wrap{
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-body-wrap{
     grid-template-rows:auto!important;
     flex:1 1 auto;
     min-height:0;
     overflow-y:auto;
   }
-  .provas-page-wrap .add-exam-card .aec-body-inner{
+  .provas-page-wrap .add-exam-card:not(.add-exam-card--modal) .aec-body-inner{
     overflow:visible;
   }
-  [data-theme="dark"] .provas-page-wrap .add-exam-card{
+  [data-theme="dark"] .provas-page-wrap .add-exam-card:not(.add-exam-card--modal){
     box-shadow:0 8px 28px -14px rgba(0,0,0,.5);
   }
+  /* Cabeçalho e corpo: respiro maior, vale tanto pro cartão solto quanto
+     pro pop-up (dá o mesmo acabamento refinado nos dois casos). */
   .provas-page-wrap .aec-header{padding:20px 22px 16px}
   .provas-page-wrap .aec-header-title{font-size:16px}
   .provas-page-wrap .aec-body{padding:4px 22px 24px}
+
+  /* ── Pop-up "Nova prova/trabalho" no desktop: mesmo componente do
+     mobile, só que centralizado na tela e um pouco mais espaçoso —
+     ganha uma sombra de "janela flutuante" e mais largura, já que
+     aqui sobra espaço horizontal pra ver o formulário inteiro. ── */
+  .provas-page-wrap .add-exam-card.add-exam-card--modal{
+    max-width:580px;
+    box-shadow:0 24px 60px -12px rgba(0,0,0,.35),0 4px 18px rgba(0,0,0,.1);
+  }
+  [data-theme="dark"] .provas-page-wrap .add-exam-card.add-exam-card--modal{
+    box-shadow:0 24px 60px -12px rgba(0,0,0,.6),0 4px 18px rgba(0,0,0,.3);
+  }
 
   /* ── Hero da próxima prova: mais respiro e tipografia maior ── */
   .provas-page-wrap .next-exam-hero{
@@ -8792,9 +8831,27 @@ html[data-expansive="1"][data-expansive-bg="1"] {
     background:var(--bg1);border:1px solid var(--line2);border-radius:16px;
     padding:14px 16px;margin-bottom:16px;
   }
-  .provas-search-wrap{
-    min-width:0;position:relative;display:flex;align-items:center;
+  .provas-toolbar-row1{
+    display:flex;align-items:center;gap:10px;
   }
+  .provas-search-wrap{
+    flex:1;min-width:0;position:relative;display:flex;align-items:center;
+  }
+  /* ── Botão "Nova": o gatilho do formulário agora mora aqui, colado na
+     busca — em vez de ocupar uma coluna inteira do lado da lista. ── */
+  .provas-add-btn{
+    flex-shrink:0;display:flex;align-items:center;gap:7px;
+    padding:11px 17px;border:none;border-radius:12px;cursor:pointer;
+    background:var(--gold);color:var(--accent-text,#000);
+    font-family:inherit;font-size:13px;font-weight:800;letter-spacing:-.1px;
+    white-space:nowrap;
+    box-shadow:0 5px 16px rgba(255,214,10,.24);
+    transition:transform .15s var(--ease-ios),box-shadow .15s var(--ease-ios);
+  }
+  .provas-add-btn svg{width:15px;height:15px;stroke:currentColor;fill:none;flex-shrink:0}
+  .provas-add-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(255,214,10,.3)}
+  .provas-add-btn:active{transform:translateY(0) scale(.97);box-shadow:0 3px 10px rgba(255,214,10,.2)}
+  [data-theme="dark"] .provas-add-btn{box-shadow:0 5px 18px rgba(255,214,10,.16)}
   .provas-search-icon{
     position:absolute;left:13px;width:16px;height:16px;stroke:var(--t4);
     pointer-events:none;
@@ -8838,6 +8895,24 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   .provas-page-wrap .exam-item{padding:14px 16px}
   .provas-page-wrap .section-label{margin:18px 0 10px;font-size:12px}
   .provas-page-wrap .section-label:first-child{margin-top:0}
+
+  /* ── Estado vazio (nenhuma prova/trabalho ainda): um cartão central
+     e convidativo em vez do formulário inteiro pré-aberto na tela. ── */
+  .provas-empty-state{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    padding:56px 32px;margin:4px 0 8px;
+    border:1.5px dashed var(--line2);border-radius:22px;
+    background:var(--bg1);
+  }
+  .provas-empty-icon{
+    width:56px;height:56px;border-radius:16px;margin-bottom:18px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--goldbg);color:var(--gold);
+  }
+  .provas-empty-icon svg{width:26px;height:26px}
+  .provas-empty-title{font-size:16px;font-weight:800;color:var(--t1);letter-spacing:-.3px;margin-bottom:6px}
+  .provas-empty-sub{font-size:13px;color:var(--t3);max-width:360px;line-height:1.5;margin-bottom:24px}
+  .provas-empty-state .add-exam-cta-btn{width:auto;min-width:260px}
 }
 
 </style>
@@ -13924,38 +13999,44 @@ function renderProvas(el){
   const examSubjs=[...new Set(exams.map(e=>e.subj))];
   let filterHtml='';
   if(_isDesktopUI){
-    // Desktop: barra de ferramentas própria — busca em destaque numa linha só,
-    // e embaixo (separado por uma linha fina) o filtro de matéria com a
-    // ordenação alinhada à direita. Sempre visível quando há provas, já que
-    // a busca sozinha se justifica mesmo com uma única matéria cadastrada.
-    if(exams.length>0){
-      const chipsHtml=`<div class="pf-chip${provasFilter==='all'?' active':''}" onclick="setProvasFilter('all')">Todas</div>`+
-        examSubjs.map(s=>{const act=provasFilter===s;return`<div class="pf-chip${act?' active':''}" onclick="setProvasFilter('${s.replace(/'/g,"\\'")}')">${escHtml(s)}</div>`;}).join('');
-      filterHtml=`<div class="provas-toolbar">
+    // Desktop: barra de ferramentas própria — busca + botão "Nova" numa
+    // linha só, sempre visível (mesmo sem nenhuma prova/trabalho ainda,
+    // pra ter sempre o mesmo lugar pra abrir o formulário). A segunda
+    // linha (matéria/ordenar) só aparece quando já existe algo pra
+    // filtrar ou ordenar.
+    const chipsHtml=`<div class="pf-chip${provasFilter==='all'?' active':''}" onclick="setProvasFilter('all')">Todas</div>`+
+      examSubjs.map(s=>{const act=provasFilter===s;return`<div class="pf-chip${act?' active':''}" onclick="setProvasFilter('${s.replace(/'/g,"\\'")}')">${escHtml(s)}</div>`;}).join('');
+    const row2Html=exams.length===0?'':(examSubjs.length>1?`<div class="provas-toolbar-divider"></div>
+      <div class="provas-toolbar-row2">
+        <span class="provas-toolbar-lbl">Matéria</span>
+        <div class="provas-filter" style="margin:0">${chipsHtml}</div>
+        <button onclick="toggleProvasSort()" class="provas-sort-btn" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+          ${provasSortAZ?'A–Z':'Por data'}
+        </button>
+      </div>`:`<div class="provas-toolbar-divider"></div>
+      <div class="provas-toolbar-row2">
+        <span class="provas-toolbar-lbl">Ordenar</span>
+        <div style="flex:1"></div>
+        <button onclick="toggleProvasSort()" class="provas-sort-btn" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
+          ${provasSortAZ?'A–Z':'Por data'}
+        </button>
+      </div>`);
+    filterHtml=`<div class="provas-toolbar">
+      <div class="provas-toolbar-row1">
         <div class="provas-search-wrap">
           <svg class="provas-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input id="provas-search-input" class="provas-search-input" type="text" placeholder="Buscar por matéria, título ou conteúdo..." value="${escHtml(provasSearch)}" oninput="setProvasSearch(this.value)">
           ${provasSearch?`<button class="provas-search-clear" onclick="clearProvasSearch()" title="Limpar busca" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
         </div>
-        ${examSubjs.length>1?`<div class="provas-toolbar-divider"></div>
-        <div class="provas-toolbar-row2">
-          <span class="provas-toolbar-lbl">Matéria</span>
-          <div class="provas-filter" style="margin:0">${chipsHtml}</div>
-          <button onclick="toggleProvasSort()" class="provas-sort-btn" type="button">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
-            ${provasSortAZ?'A–Z':'Por data'}
-          </button>
-        </div>`:`<div class="provas-toolbar-divider"></div>
-        <div class="provas-toolbar-row2">
-          <span class="provas-toolbar-lbl">Ordenar</span>
-          <div style="flex:1"></div>
-          <button onclick="toggleProvasSort()" class="provas-sort-btn" type="button">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="9" y1="18" x2="15" y2="18"/></svg>
-            ${provasSortAZ?'A–Z':'Por data'}
-          </button>
-        </div>`}
-      </div>`;
-    }
+        <button class="provas-add-btn" type="button" onclick="openAddExamModal()" title="Adicionar prova ou trabalho">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Nova</span>
+        </button>
+      </div>
+      ${row2Html}
+    </div>`;
   }else if(examSubjs.length>1){
     filterHtml=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <div class="provas-filter" style="flex:1;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0;padding-bottom:2px">
@@ -14254,11 +14335,20 @@ function renderProvas(el){
   const isDesktop=_isDesktopUI;
   let inner;
   if(isDesktop){
-    // Desktop: formulário sempre visível ao lado da lista (comportamento original)
+    // Desktop: em vez de um formulário fixo ocupando uma coluna inteira ao
+    // lado da lista, a lista usa a largura toda e um botão "Nova" (na
+    // barra de ferramentas, junto da busca) abre o formulário num pop-up
+    // central — igual ao padrão do mobile, só que com o gatilho num lugar
+    // melhor para tela grande em vez de "do lado".
     if(hasExams){
-      inner=`<div class="provas-2col">`+formHtml+`<div class="provas-list-col">`+filterHtml+listHtml+`</div></div>`;
+      inner=`<div class="provas-list-col provas-list-col--desktop">`+filterHtml+listHtml+`</div>`+modalHtml;
     }else{
-      inner=`<div class="provas-form-centered">`+formHtml+`</div>`;
+      inner=`<div class="provas-empty-state">
+        <div class="provas-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="provas-empty-title">Nenhuma prova ou trabalho ainda</div>
+        <div class="provas-empty-sub">Adicione a primeira prova ou trabalho para acompanhar os prazos por aqui.</div>
+        ${addExamCtaHtml}
+      </div>`+modalHtml;
     }
   }else{
     // Mobile: sem card para expandir — um botão abre o formulário em pop-up
@@ -14269,11 +14359,6 @@ function renderProvas(el){
     }
   }
   el.innerHTML=`<div class="provas-page-wrap">`+heroHtml+todayAlertHtml+statsHtml+(hasExams?'':filterHtml)+inner+`</div>`;
-  // Desktop: força o form sempre aberto
-  if(isDesktop){
-    const card=document.getElementById('add-exam-card');
-    if(card)card.classList.add('open');
-  }
   // ── Timer ao vivo do hero (atualiza a cada segundo) ──
   if(window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
   if(sortedUp.length>0){
