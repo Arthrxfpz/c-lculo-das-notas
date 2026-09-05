@@ -129,6 +129,11 @@
   let _syncTimer = null;
   let _currentUid = null;
   let _docCreatedAt = null; // data de entrada na plataforma (gravada uma única vez)
+  let _pendingLocalSave = false; // true entre "algo mudou aqui" e a gravação
+                                  // no Firestore terminar — usado pra não
+                                  // deixar uma atualização vinda de outro
+                                  // dispositivo, em tempo real, sobrescrever
+                                  // uma edição local que ainda nem foi salva
 
   /* ── Controle do splash com progresso ── */
   let _splashSlowTimer = null;
@@ -269,6 +274,7 @@
   window._fbSaveAll = function() {
     if (!_currentUid) return;
     clearTimeout(_syncTimer);
+    _pendingLocalSave = true;
     _showSyncBadge('saving');
     _syncTimer = setTimeout(async () => {
       try {
@@ -302,6 +308,8 @@
       } catch(e) {
         _showSyncBadge('err');
         console.error('Firebase save error:', e);
+      } finally {
+        _pendingLocalSave = false;
       }
     }, 800);
   };
@@ -335,7 +343,9 @@
     if (typeof migrateScheduleFix2026Ago === 'function') migrateScheduleFix2026Ago();
     if (typeof _autoRemovePastExams === 'function') _autoRemovePastExams();
     if (typeof loadStudentLS    === 'function') loadStudentLS();
-    if (typeof renderCurrentPage === 'function') renderCurrentPage();
+    if (typeof render           === 'function') render(null); // redesenha a aba atual com os dados novos (renderCurrentPage nunca existiu — isso aqui é o que realmente atualiza a tela)
+    if (typeof syncLayout       === 'function') syncLayout();
+    if (typeof updateExamBadge  === 'function') updateExamBadge();
     if (typeof updateGreeting    === 'function') updateGreeting();
     if (typeof applyThemeFromLS  === 'function') applyThemeFromLS();
     if (typeof updateNotifCenter === 'function') updateNotifCenter();
@@ -450,6 +460,51 @@
     }
   }
 
+  /* ── Sincronização em tempo real entre dispositivos ──
+     Sem isso, um segundo aparelho (ou aba) só via os dados mais novos no
+     próximo login/reload. Agora, qualquer alteração salva por QUALQUER
+     dispositivo chega aqui na hora, sem precisar recarregar a página.
+
+     Cuidados pra não quebrar nada:
+     • Ignora o próprio eco da nossa gravação (hasPendingWrites) — senão
+       reprocessaríamos nossa própria escrita como se fosse "de fora".
+     • Se ESTE dispositivo tem uma edição local ainda não salva
+       (_pendingLocalSave), não aplica nada agora — deixa essa gravação
+       terminar primeiro (ela vai gerar seu próprio updatedAt mais novo,
+       então nada se perde).
+     • Só aplica se o timestamp remoto for realmente mais novo que o local
+       (mesmo critério "quem salvou por último" já usado no carregamento
+       inicial) — evita ficar re-aplicando a mesma coisa em loop. */
+  let _userDocUnsub = null;
+  function _startUserDocListener(uid) {
+    if (_userDocUnsub) return;
+    if (window._isOfflineModeActive && window._isOfflineModeActive()) return;
+    try {
+      _userDocUnsub = onSnapshot(doc(db, 'users', uid), (snap) => {
+        if (!snap.exists() || snap.metadata.hasPendingWrites) return;
+        if (_pendingLocalSave) return;
+        const d = snap.data();
+        const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
+        const remoteTs = d.updatedAt || 0;
+        if (remoteTs <= localTs) return;
+        if (d.createdAt) _docCreatedAt = d.createdAt;
+        localStorage.setItem('t205_updatedAt', String(remoteTs));
+        _applyCloudData(d);
+        if (typeof window._showNotifToast === 'function') {
+          window._showNotifToast('🔄 Dados atualizados em outro dispositivo');
+        }
+      }, (err) => {
+        console.error('[Sync] erro no listener em tempo real:', err);
+      });
+    } catch(e) {
+      console.error('[Sync] falha ao iniciar listener em tempo real:', e);
+    }
+  }
+  function _stopUserDocListener() {
+    if (_userDocUnsub) { _userDocUnsub(); _userDocUnsub = null; }
+  }
+  window._stopUserDocListener = _stopUserDocListener;
+
   /* ── Observer: login / logout ── */
   onAuthStateChanged(auth, async (user) => {
     clearTimeout(_splashSlowTimer);
@@ -461,7 +516,9 @@
       _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
       _applyGoogleProfile(user);
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
+      _startUserDocListener(user.uid);
     } else {
+      _stopUserDocListener();
       // Sem login — pula direto pra 100% sem animação
       const bar = document.getElementById('splash-bar');
       const pctEl = document.getElementById('splash-pct');
