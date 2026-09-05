@@ -360,6 +360,10 @@
           </div>
         </div>
         <div class="field-group">
+          <span class="field-label">Nome de exibição</span>
+          <input class="input" id="comu-autor" placeholder="Cálculo das notas" maxlength="40">
+        </div>
+        <div class="field-group">
           <span class="field-label">Texto</span>
           <textarea class="input comu-textarea" id="comu-texto" placeholder="Escreva o aviso ou a novidade que vai aparecer na aba Comunidade..." maxlength="1200"></textarea>
         </div>
@@ -1076,6 +1080,7 @@
   let comuRemovedImage = false;  // usuário removeu a imagem existente ao editar
   let comuEditingId = null;      // null = criando; senão = editando esse doc
 
+  const comuAutor        = document.getElementById('comu-autor');
   const comuTexto        = document.getElementById('comu-texto');
   const comuLink         = document.getElementById('comu-link');
   const comuLinkLabel    = document.getElementById('comu-linklabel');
@@ -1089,8 +1094,17 @@
   const comuCancelBtn    = document.getElementById('comu-cancel-edit-btn');
   const comuStatusEl     = document.getElementById('comu-compose-status');
 
+  const COMU_AUTOR_KEY = 'comu_last_autor';
+
   function initComunidade(){
     if(comuUnsub) return; // já iniciado (evita duplicar listener em re-logins)
+
+    // lembra o último nome de exibição usado, pra não precisar redigitar
+    // toda vez que for publicar (fica só como sugestão pré-preenchida)
+    try{
+      const lastAutor = localStorage.getItem(COMU_AUTOR_KEY);
+      if(lastAutor) comuAutor.value = lastAutor;
+    }catch(e){}
 
     // tipo (geral/aviso/novidade/dica)
     document.querySelectorAll('.comu-tipo-pill').forEach(p=>{
@@ -1153,6 +1167,9 @@
     comuEditingId = null;
     comuSelectedFile = null;
     comuRemovedImage = false;
+    try{
+      comuAutor.value = localStorage.getItem(COMU_AUTOR_KEY) || '';
+    }catch(e){}
     comuTexto.value = '';
     comuLink.value = '';
     comuLinkLabel.value = '';
@@ -1181,6 +1198,7 @@
     comuLinkLabel.value = p.linkLabel || '';
     comuLinkLabelGrp.style.display = p.link ? '' : 'none';
     comuFixado.checked = !!p.fixado;
+    comuAutor.value = p.autor || '';
     comuSelectedTipo = p.tipo || 'geral';
     document.querySelectorAll('.comu-tipo-pill').forEach(x=>x.classList.toggle('active', x.dataset.tipo===comuSelectedTipo));
     if(p.imagemUrl){
@@ -1201,6 +1219,7 @@
 
   async function publishComuPost(){
     const texto = comuTexto.value.trim();
+    const autor = comuAutor.value.trim();
     const link  = comuLink.value.trim();
     const linkLabel = comuLinkLabel.value.trim();
     if(!texto && !comuSelectedFile && !(comuEditingId && !comuRemovedImage && comuPosts.find(p=>p.id===comuEditingId)?.imagemUrl) && !link){
@@ -1243,6 +1262,7 @@
 
       const payload = {
         texto: texto || null,
+        autor: autor || null,
         link: link || null,
         linkLabel: link ? (linkLabel || null) : null,
         imagemUrl: imagemUrl || null,
@@ -1259,6 +1279,9 @@
         await addDoc(collection(db, 'comunidade_posts'), payload);
         toast('Publicado na Comunidade!', 'ok');
       }
+      try{
+        if(autor) localStorage.setItem(COMU_AUTOR_KEY, autor);
+      }catch(e){}
       resetComuForm();
     }catch(e){
       console.error('[Comunidade] erro ao publicar:', e);
@@ -1314,7 +1337,7 @@
       const thumb = p.imagemUrl
         ? `<img src="${escapeHtml(p.imagemUrl)}" alt="">`
         : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>`;
-      const badges = `${p.fixado?'<span class="comu-admin-badge pin">Fixado</span>':''}<span class="comu-admin-badge">${COMU_TIPO_LABELS[p.tipo]||'Geral'}</span>`;
+      const badges = `${p.fixado?'<span class="comu-admin-badge pin">Fixado</span>':''}<span class="comu-admin-badge">${COMU_TIPO_LABELS[p.tipo]||'Geral'}</span><span class="comu-admin-badge">${escapeHtml(p.autor || 'Cálculo das notas')}</span>`;
       const textHtml = p.texto ? `<div class="comu-admin-card-text">${escapeHtml(p.texto)}</div>` : '';
       const linkHtml = p.link ? `<span class="comu-admin-card-link">🔗 ${escapeHtml(p.linkLabel || p.link)}</span>` : '';
       return `<div class="comu-admin-card" data-id="${p.id}">
