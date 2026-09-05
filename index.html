@@ -2722,6 +2722,22 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .nav-badge{display:none !important;}
 }
 
+/* ── ajuste fino pra caber as 7 abas (incluindo Comunidade) direitinho
+   na pílula flutuante do mobile, sem cortar ícone/label nem apertar
+   demais o toque ── */
+@media (max-width:767px){
+  .nav{padding:7px 4px;gap:0}
+  .nav-btn{padding:4px 1px;min-height:48px}
+  .nav-btn-icon{width:42px}
+  .nav-btn svg{width:20px;height:20px}
+  .nav-btn span{font-size:9px;letter-spacing:.1px}
+}
+@media (max-width:380px){
+  .nav-btn-icon{width:38px}
+  .nav-btn svg{width:19px;height:19px}
+  .nav-btn span{font-size:8.4px}
+}
+
 /* ═══════════════════════════════════════════════════════════
    NAV "ATIVIDADES" → BOTÃO "+"
    No mobile, enquanto a aba Atividades está aberta, o próprio
@@ -8103,17 +8119,21 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   background:var(--bg1);border:1.5px solid var(--line2);border-radius:18px;
   padding:14px 15px 15px;display:flex;flex-direction:column;gap:10px;
   animation:fadeIn .28s var(--ease-ios);
+  box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 20px -14px rgba(0,0,0,.5);
+  transition:border-color .2s var(--ease-ios);
 }
 .comu-post-head{display:flex;align-items:center;gap:10px}
 .comu-post-avatar{
-  width:36px;height:36px;border-radius:11px;flex-shrink:0;
-  background:var(--goldbg);border:1px solid var(--goldbd);
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(160deg, color-mix(in srgb, var(--gold) 85%, white 15%), var(--gold));
+  border:1px solid var(--goldbd);
   display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px -2px var(--goldbg);
 }
-.comu-post-avatar svg{width:17px;height:17px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comu-post-avatar-txt{font-size:14.5px;font-weight:800;color:var(--accent-text,#000);letter-spacing:-.2px}
 .comu-post-headinfo{flex:1;min-width:0}
-.comu-post-author{font-size:13.5px;font-weight:800;color:var(--t1);letter-spacing:-.2px}
-.comu-post-time{font-size:11px;font-weight:500;color:var(--t4);margin-top:1px}
+.comu-post-author{font-size:13.5px;font-weight:800;color:var(--t1);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comu-post-time{font-size:11px;font-weight:500;color:var(--t4);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .comu-post-pin{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--gold);opacity:.85}
 .comu-post-pin svg{width:14px;height:14px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .comu-post-badge{
@@ -17709,6 +17729,9 @@ function closeCalDaySheet(){
 ══════════════════════════════════════════ */
 let _comuUnsub=null;
 let _comuPosts=null; // null = ainda não carregou; [] = carregou e está vazio
+let _comuLastSig=null; // assinatura do último feed renderizado — evita recriar
+                        // o DOM (e "sumir"/piscar a tela) quando nada mudou de fato
+let _comuTimesTimerStarted=false;
 
 const COMU_TIPOS={
   aviso:    {label:'Aviso',     className:'comu-badge-aviso'},
@@ -17725,8 +17748,30 @@ function renderComunidade(el){
     </div>
     <div id="comu-feed" class="comu-feed"></div>
   </div>`;
+  _comuLastSig=null; // o container acima de comu-feed é novo (troca de aba
+                      // recria o HTML) — força preencher mesmo se o conteúdo
+                      // for igual ao que já tinha sido mostrado antes
   _renderComuFeed(); // usa cache, se já tiver (troca de aba instantânea)
   _startComuListener();
+  if(!_comuTimesTimerStarted){
+    _comuTimesTimerStarted=true;
+    // atualiza só o texto de data/hora dos posts já na tela, sem recriar
+    // nada — mantém "há X min" fresquinho sem qualquer flicker no feed
+    setInterval(_comuRefreshTimes,30000);
+  }
+}
+
+function _comuRefreshTimes(){
+  if(curPage!=='comunidade') return;
+  const feed=document.getElementById('comu-feed');
+  if(!feed) return;
+  feed.querySelectorAll('.comu-post-time[data-ms]').forEach(el=>{
+    const ms=Number(el.getAttribute('data-ms'));
+    if(!ms) return;
+    const abs=_comuAbsTime(ms);
+    const rel=_comuTimeAgo(ms);
+    el.textContent=abs?`${abs} · ${rel}`:rel;
+  });
 }
 
 function _startComuListener(){
@@ -17781,10 +17826,12 @@ function _renderComuFeed(){
   if(!feed) return;
 
   if(_comuPosts===null){
+    _comuLastSig=null;
     feed.innerHTML=`<div class="comu-loading"><div class="comu-spinner"></div>Carregando publicações...</div>`;
     return;
   }
   if(!_comuPosts.length){
+    _comuLastSig=null;
     feed.innerHTML=`<div class="comu-empty">
       <svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
       <span>Nenhuma publicação por aqui ainda. Quando a equipe postar um aviso ou novidade, ele aparece nesta aba.</span>
@@ -17794,7 +17841,33 @@ function _renderComuFeed(){
 
   // fixados primeiro (mantendo a ordem cronológica dentro de cada grupo)
   const sorted=[..._comuPosts].sort((a,b)=>(b.fixado?1:0)-(a.fixado?1:0));
+
+  // Só recria o DOM se o conteúdo realmente mudou. O listener em tempo real
+  // dispara de novo por qualquer motivo (até metadados internos do Firestore),
+  // e recriar tudo a cada disparo fazia o post que a pessoa estava lendo
+  // "sumir" e reaparecer na tela. Comparando uma assinatura do feed, evitamos
+  // esse re-render desnecessário e mantemos a posição de leitura estável.
+  const sig=_comuFeedSig(sorted);
+  if(sig===_comuLastSig) return;
+  _comuLastSig=sig;
+
+  const scrollBefore=feed.scrollTop;
   feed.innerHTML=sorted.map(_comuPostHtml).join('');
+  feed.scrollTop=scrollBefore;
+}
+
+function _comuFeedSig(posts){
+  return JSON.stringify(posts.map(p=>({
+    id:p.id,
+    texto:p.texto||'',
+    autor:p.autor||'',
+    tipo:p.tipo||'',
+    fixado:!!p.fixado,
+    link:p.link||'',
+    linkLabel:p.linkLabel||'',
+    imagemUrl:p.imagemUrl||'',
+    ms:_comuPostMs(p)
+  })));
 }
 
 function _comuPostHtml(p){
@@ -17814,16 +17887,21 @@ function _comuPostHtml(p){
       <svg class="comu-post-link-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
     </a>`;
   }
-  const timeAgo=_comuTimeAgo(_comuPostMs(p));
+  const postMs=_comuPostMs(p);
+  const timeAgo=_comuTimeAgo(postMs);
+  const timeAbs=_comuAbsTime(postMs);
+  const timeTitle=timeAbs?` title="${escHtml(timeAbs)}"`:'';
+  const authorName=(p.autor&&p.autor.trim())?p.autor.trim():'Cálculo das notas';
+  const initial=authorName.trim().charAt(0).toUpperCase()||'?';
 
-  return `<div class="comu-post">
+  return `<div class="comu-post" data-comu-id="${escHtml(p.id||'')}">
     <div class="comu-post-head">
       <div class="comu-post-avatar">
-        <svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        <span class="comu-post-avatar-txt">${escHtml(initial)}</span>
       </div>
       <div class="comu-post-headinfo">
-        <div class="comu-post-author">Cálculo das notas</div>
-        <div class="comu-post-time">${timeAgo}</div>
+        <div class="comu-post-author">${escHtml(authorName)}</div>
+        <div class="comu-post-time" data-ms="${postMs||''}"${timeTitle}>${timeAbs?`${timeAbs} · `:''}${timeAgo}</div>
       </div>
       ${pinHtml}${badgeHtml}
     </div>
@@ -17840,6 +17918,21 @@ function _comuPostMs(p){
   if(typeof c.toMillis==='function') return c.toMillis();
   if(typeof c.seconds==='number') return c.seconds*1000;
   return null;
+}
+
+function _comuAbsTime(ms){
+  if(!ms) return '';
+  const d=new Date(ms);
+  const now=new Date();
+  const hh=String(d.getHours()).padStart(2,'0');
+  const mm=String(d.getMinutes()).padStart(2,'0');
+  if(d.toDateString()===now.toDateString()) return `Hoje, ${hh}:${mm}`;
+  const yest=new Date(now); yest.setDate(now.getDate()-1);
+  if(d.toDateString()===yest.toDateString()) return `Ontem, ${hh}:${mm}`;
+  const dd=String(d.getDate()).padStart(2,'0');
+  const mo=String(d.getMonth()+1).padStart(2,'0');
+  const sameYear=d.getFullYear()===now.getFullYear();
+  return sameYear ? `${dd}/${mo}, ${hh}:${mm}` : `${dd}/${mo}/${d.getFullYear()}, ${hh}:${mm}`;
 }
 
 function _comuLinebreaks(escapedText){
