@@ -3967,6 +3967,13 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     max-width:760px;
     margin-left:auto; margin-right:auto;
     transition:padding .3s var(--ease-ios), max-width .3s var(--ease-ios);
+    /* Garante altura mínima mesmo quando saudação/avatar/chip somem (logado
+       com sidebar aberta) e a tabs-strip não existe (todas as abas exceto
+       "Notas") — sem isso a topbar encolhia só ao tamanho do padding e os
+       ícones fixos de tema/notificação/config (34px, ancorados em top:14px)
+       ficavam pendurados pra fora da barra. */
+    min-height:58px;
+    box-sizing:border-box;
   }
   .topbar-avatar { display:none; }         /* avatar fica na sidebar */
   .topbar-hamburger { display:none; }      /* escondido quando sidebar aberta */
