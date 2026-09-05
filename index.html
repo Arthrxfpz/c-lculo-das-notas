@@ -18,7 +18,7 @@
   import { getAnalytics }    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot }
+  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, limit }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -42,6 +42,10 @@
   window._fbSetDoc  = setDoc;
   window._fbGetDoc  = getDoc;
   window._fbOnSnapshot = onSnapshot;
+  window._fbCollection = collection;
+  window._fbQuery      = query;
+  window._fbOrderBy    = orderBy;
+  window._fbLimit      = limit;
 
   /* ── Login com Google — robusto contra os "bugs" intermitentes ──
      Motivos mais comuns do login "às vezes não funcionar":
@@ -8084,6 +8088,55 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .cal-disclaimer svg{width:14px;height:14px;stroke:var(--t4);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
 .cal-disclaimer-text{font-size:11px;font-weight:500;color:var(--t3);line-height:1.5}
 
+/* ── COMUNIDADE — mural de avisos ── */
+.comu-wrap{padding:0 0 40px}
+.comu-feed{display:flex;flex-direction:column;gap:12px;padding:2px 14px 0}
+.comu-loading,.comu-empty{
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  text-align:center;padding:44px 24px;color:var(--t3);font-size:13px;font-weight:500;line-height:1.5;
+}
+.comu-empty svg{width:26px;height:26px;stroke:var(--t4);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+.comu-spinner{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line2);border-top-color:var(--gold);animation:comuSpin .7s linear infinite}
+@keyframes comuSpin{to{transform:rotate(360deg)}}
+
+.comu-post{
+  background:var(--bg1);border:1.5px solid var(--line2);border-radius:18px;
+  padding:14px 15px 15px;display:flex;flex-direction:column;gap:10px;
+  animation:fadeIn .28s var(--ease-ios);
+}
+.comu-post-head{display:flex;align-items:center;gap:10px}
+.comu-post-avatar{
+  width:36px;height:36px;border-radius:11px;flex-shrink:0;
+  background:var(--goldbg);border:1px solid var(--goldbd);
+  display:flex;align-items:center;justify-content:center;
+}
+.comu-post-avatar svg{width:17px;height:17px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comu-post-headinfo{flex:1;min-width:0}
+.comu-post-author{font-size:13.5px;font-weight:800;color:var(--t1);letter-spacing:-.2px}
+.comu-post-time{font-size:11px;font-weight:500;color:var(--t4);margin-top:1px}
+.comu-post-pin{flex-shrink:0;display:flex;align-items:center;justify-content:center;width:22px;height:22px;color:var(--gold);opacity:.85}
+.comu-post-pin svg{width:14px;height:14px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comu-post-badge{
+  flex-shrink:0;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;
+  padding:4px 9px;border-radius:20px;white-space:nowrap;
+}
+.comu-badge-aviso{background:var(--redbg,rgba(255,90,95,.12));color:var(--red)}
+.comu-badge-novidade{background:var(--goldbg);color:var(--gold)}
+.comu-badge-dica{background:var(--amberbg);color:var(--amber)}
+.comu-badge-geral{display:none}
+.comu-post-img{border-radius:14px;overflow:hidden;background:var(--bg2);border:1px solid var(--line2)}
+.comu-post-img img{width:100%;max-height:340px;object-fit:cover;display:block}
+.comu-post-text{font-size:14px;font-weight:500;color:var(--t2);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.comu-post-link{
+  display:flex;align-items:center;gap:9px;
+  background:var(--bg2);border:1.5px solid var(--line2);border-radius:13px;
+  padding:11px 12px;text-decoration:none;transition:background .15s,transform .1s;
+}
+.comu-post-link:active{background:var(--bg3);transform:scale(.99)}
+.comu-post-link svg:first-child{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.comu-post-link span{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.comu-post-link-chev{width:14px!important;height:14px!important;stroke:var(--t4)!important;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
 /* ── Banner do horário ativo (Frequência) ── */
 .freq-sched-banner{
   display:flex;align-items:center;gap:8px;
@@ -9391,6 +9444,13 @@ html[data-expansive="1"][data-expansive-bg="1"] {
         <i data-lucide="calendar-1" class="nav-ico"></i>
       </div>
       <span>Calendário</span>
+    </button>
+
+    <button class="nav-btn" id="n-comunidade" onclick="setPage('comunidade',this)">
+      <div class="nav-btn-icon">
+        <i data-lucide="megaphone" class="nav-ico"></i>
+      </div>
+      <span>Comunidade</span>
     </button>
 
   </nav>
@@ -11300,7 +11360,7 @@ function syncLayout(){
    Abordagem: ambos os slides são position:absolute
    e a transição usa CSS transition (não animation)
 ══════════════════════════════════════════ */
-const PAGE_ORDER=['notas','horarios','provas','resumo','frequencia','calendario'];
+const PAGE_ORDER=['notas','horarios','provas','resumo','frequencia','calendario','comunidade'];
 
 function _buildSlide(){
   const s=document.createElement('div');
@@ -11310,6 +11370,7 @@ function _buildSlide(){
   else if(curPage==='resumo'||curPage==='resultado')renderResumo(s);
   else if(curPage==='frequencia')renderFrequencia(s);
   else if(curPage==='calendario')renderCalendario(s);
+  else if(curPage==='comunidade')renderComunidade(s);
   else renderNotasTab(s);
   return s;
 }
@@ -15546,6 +15607,8 @@ function setPage(page,btn){
   if(btn)iosHaptic(btn);
   // Limpa timer do hero ao sair da aba de provas
   if(curPage==='provas'&&window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
+  // Encerra o listener em tempo real da Comunidade ao sair da aba
+  if(curPage==='comunidade'&&window._comuUnsub){window._comuUnsub();window._comuUnsub=null;}
   const pi=PAGE_ORDER.indexOf(curPage);
   const ci=PAGE_ORDER.indexOf(page);
   const dir=ci>=pi?'push':'pop';
@@ -15564,7 +15627,7 @@ function setPage(page,btn){
 
 function setNavActive(p){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',frequencia:'n-frequencia',calendario:'n-calendario'};
+  const m={notas:'n-notas',horarios:'n-horarios',provas:'n-provas',resumo:'n-resumo',frequencia:'n-frequencia',calendario:'n-calendario',comunidade:'n-comunidade'};
   const el=document.getElementById(m[p]||'n-notas');
   if(el)el.classList.add('active');
   syncProvasNavMode();
@@ -17638,6 +17701,166 @@ function closeCalDaySheet(){
 }
 
 /* ══════════════════════════════════════════
+   COMUNIDADE — mural de avisos/publicações
+   ▸ Somente leitura aqui: quem publica é a equipe, pelo Painel Admin
+   ▸ Lê em tempo real (onSnapshot) a coleção "comunidade_posts" do Firestore
+   ▸ Cada publicação pode ter: texto, link e/ou imagem, tipo (aviso/
+     novidade/dica/geral) e um marcador opcional de "fixado" (destaque)
+══════════════════════════════════════════ */
+let _comuUnsub=null;
+let _comuPosts=null; // null = ainda não carregou; [] = carregou e está vazio
+
+const COMU_TIPOS={
+  aviso:    {label:'Aviso',     className:'comu-badge-aviso'},
+  novidade: {label:'Novidade',  className:'comu-badge-novidade'},
+  dica:     {label:'Dica',      className:'comu-badge-dica'},
+  geral:    {label:'',          className:'comu-badge-geral'}
+};
+
+function renderComunidade(el){
+  el.innerHTML=`<div class="comu-wrap">
+    <div class="cal-disclaimer">
+      <svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+      <span class="cal-disclaimer-text">Avisos e novidades publicados pela equipe do Cálculo das notas.</span>
+    </div>
+    <div id="comu-feed" class="comu-feed"></div>
+  </div>`;
+  _renderComuFeed(); // usa cache, se já tiver (troca de aba instantânea)
+  _startComuListener();
+}
+
+function _startComuListener(){
+  // Modo offline: nem tenta conectar — mostra aviso amigável
+  if(window._isOfflineModeActive && window._isOfflineModeActive()){
+    _comuPosts=null;
+    const feed=document.getElementById('comu-feed');
+    if(feed) feed.innerHTML=`<div class="comu-empty">
+      <svg viewBox="0 0 24 24"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+      <span>Comunidade indisponível no modo offline. Conecte-se à internet para ver as publicações.</span>
+    </div>`;
+    return;
+  }
+  if(_comuUnsub) return; // já existe um listener ativo, não duplica
+
+  const tryAttach=(attemptsLeft)=>{
+    if(!window._fbDb||!window._fbCollection||!window._fbQuery||!window._fbOrderBy||!window._fbOnSnapshot){
+      if(attemptsLeft<=0){
+        if(_comuPosts===null){
+          const feed=document.getElementById('comu-feed');
+          if(feed) feed.innerHTML=`<div class="comu-empty"><span>Não foi possível conectar à Comunidade agora. Tente novamente em instantes.</span></div>`;
+        }
+        return;
+      }
+      setTimeout(()=>tryAttach(attemptsLeft-1),350);
+      return;
+    }
+    try{
+      const q=window._fbQuery(
+        window._fbCollection(window._fbDb,'comunidade_posts'),
+        window._fbOrderBy('criadoEm','desc')
+      );
+      _comuUnsub=window._fbOnSnapshot(q,(snap)=>{
+        _comuPosts=snap.docs.map(d=>({id:d.id,...d.data()}));
+        if(curPage==='comunidade')_renderComuFeed();
+      },(err)=>{
+        console.error('[Comunidade] erro ao ouvir publicações:',err);
+        if(curPage==='comunidade'&&(!_comuPosts||!_comuPosts.length)){
+          const feed=document.getElementById('comu-feed');
+          if(feed) feed.innerHTML=`<div class="comu-empty"><span>Não foi possível carregar as publicações agora. Puxe pra atualizar mais tarde.</span></div>`;
+        }
+      });
+    }catch(e){
+      console.error('[Comunidade] falha ao iniciar listener:',e);
+    }
+  };
+  tryAttach(12); // ~4s de tentativas até o firebase módulo terminar de carregar
+}
+
+function _renderComuFeed(){
+  const feed=document.getElementById('comu-feed');
+  if(!feed) return;
+
+  if(_comuPosts===null){
+    feed.innerHTML=`<div class="comu-loading"><div class="comu-spinner"></div>Carregando publicações...</div>`;
+    return;
+  }
+  if(!_comuPosts.length){
+    feed.innerHTML=`<div class="comu-empty">
+      <svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+      <span>Nenhuma publicação por aqui ainda. Quando a equipe postar um aviso ou novidade, ele aparece nesta aba.</span>
+    </div>`;
+    return;
+  }
+
+  // fixados primeiro (mantendo a ordem cronológica dentro de cada grupo)
+  const sorted=[..._comuPosts].sort((a,b)=>(b.fixado?1:0)-(a.fixado?1:0));
+  feed.innerHTML=sorted.map(_comuPostHtml).join('');
+}
+
+function _comuPostHtml(p){
+  const tipoInfo=COMU_TIPOS[p.tipo]||COMU_TIPOS.geral;
+  const badgeHtml=tipoInfo.label?`<span class="comu-post-badge ${tipoInfo.className}">${tipoInfo.label}</span>`:'';
+  const pinHtml=p.fixado?`<span class="comu-post-pin" title="Fixado"><svg viewBox="0 0 24 24"><path d="M12 2 L12 2c1.1 0 2 .9 2 2v5.5l2.5 4.5H7.5L10 9.5V4c0-1.1.9-2 2-2z"/><line x1="12" y1="14" x2="12" y2="22"/></svg></span>`:'';
+  const imgHtml=p.imagemUrl?`<div class="comu-post-img"><img src="${escHtml(p.imagemUrl)}" alt="" loading="lazy"></div>`:'';
+  const textoHtml=p.texto?`<div class="comu-post-text">${_comuLinebreaks(escHtml(p.texto))}</div>`:'';
+  let linkHtml='';
+  if(p.link){
+    let domain='';
+    try{ domain=new URL(p.link).hostname.replace(/^www\./,''); }catch(e){ domain=p.link; }
+    const label=p.linkLabel?p.linkLabel:domain;
+    linkHtml=`<a class="comu-post-link" href="${escHtml(p.link)}" target="_blank" rel="noopener noreferrer">
+      <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+      <span>${escHtml(label)}</span>
+      <svg class="comu-post-link-chev" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>`;
+  }
+  const timeAgo=_comuTimeAgo(_comuPostMs(p));
+
+  return `<div class="comu-post">
+    <div class="comu-post-head">
+      <div class="comu-post-avatar">
+        <svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+      </div>
+      <div class="comu-post-headinfo">
+        <div class="comu-post-author">Cálculo das notas</div>
+        <div class="comu-post-time">${timeAgo}</div>
+      </div>
+      ${pinHtml}${badgeHtml}
+    </div>
+    ${imgHtml}
+    ${textoHtml}
+    ${linkHtml}
+  </div>`;
+}
+
+function _comuPostMs(p){
+  const c=p.criadoEm;
+  if(!c) return null;
+  if(typeof c==='number') return c;
+  if(typeof c.toMillis==='function') return c.toMillis();
+  if(typeof c.seconds==='number') return c.seconds*1000;
+  return null;
+}
+
+function _comuLinebreaks(escapedText){
+  return escapedText.replace(/\n/g,'<br>');
+}
+
+function _comuTimeAgo(ms){
+  if(!ms) return '';
+  const diff=Date.now()-ms;
+  const min=Math.floor(diff/60000);
+  if(min<1) return 'agora mesmo';
+  if(min<60) return `há ${min} min`;
+  const h=Math.floor(min/60);
+  if(h<24) return `há ${h}h`;
+  const d=Math.floor(h/24);
+  if(d<30) return `há ${d} dia${d===1?'':'s'}`;
+  const mo=Math.floor(d/30);
+  return `há ${mo} ${mo===1?'mês':'meses'}`;
+}
+
+/* ══════════════════════════════════════════
    FREQUÊNCIA — página
    ▸ Calendário do mês (só dias úteis são clicáveis)
    ▸ Toque num dia → sheet com as matérias que têm aula
@@ -18821,7 +19044,3 @@ window.addEventListener('online',async()=>{
     </div>
   </div>
 </div>
-
-
-
-
