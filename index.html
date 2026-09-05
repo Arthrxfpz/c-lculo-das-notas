@@ -2731,6 +2731,17 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .nav-badge{display:none !important;}
 }
 
+/* Pontinho de "tem publicação nova não vista" no ícone da Comunidade.
+   Diferente do .nav-badge (número, escondido no mobile), esse é só um
+   indicador simples e continua aparecendo também na barra inferior. */
+.nav-dot{
+  position:absolute;top:3px;right:calc(50% - 19px);
+  width:9px;height:9px;border-radius:50%;
+  background:var(--red);border:1.5px solid var(--bg0);
+  box-shadow:0 1px 4px rgba(255,69,58,.45);
+  z-index:2;
+}
+
 /* ── ajuste fino pra caber as 7 abas (incluindo Comunidade) direitinho
    na pílula flutuante do mobile, sem cortar ícone/label nem apertar
    demais o toque ── */
@@ -4047,6 +4058,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 
   /* badge repositioned for sidebar */
   .nav-badge { top:7px; right:10px; left:auto; }
+  .nav-dot { top:9px; right:22px; left:auto; }
 
   /* expand button — top-anchored pill */
   .sb-expand-btn {
@@ -15206,6 +15218,22 @@ function updateExamBadge(){
   }else if(existing){existing.remove();}
 }
 
+// Pontinho no ícone da Comunidade, na barra de navegação, indicando que
+// tem publicação ainda não vista (mesmo botão/local do badge de provas,
+// mas como um indicador simples — sem número — pra caber bem no mobile).
+function _updateComuNavBadge(){
+  const btn=document.getElementById('n-comunidade');
+  if(!btn) return;
+  const meta=_ncLoadMeta()||{};
+  const hasUnread=Object.keys(meta).some(id=>id.indexOf('comu-')===0&&meta[id]&&!meta[id].read);
+  const existing=btn.querySelector('.nav-dot');
+  if(hasUnread){
+    if(!existing){const d=document.createElement('div');d.className='nav-dot';btn.appendChild(d);}
+  }else if(existing){
+    existing.remove();
+  }
+}
+
 /* ═══════════════════════════════
    ACCORDION / EVAL ACTIONS
 ═══════════════════════════════ */
@@ -16453,6 +16481,7 @@ function _ncIcon(type){
   if(type==='lowperf')return'<svg viewBox="0 0 24 24"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>';
   if(type==='freq')return'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/></svg>';
   if(type==='approved')return'<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+  if(type==='comunidade')return'<svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>';
   return'<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 }
 
@@ -16572,6 +16601,20 @@ function computeNotifications(){
     }
   });
 
+  // 6) Publicações da Comunidade ainda não vistas
+  if(_comuPosts){
+    _comuPosts.forEach(p=>{
+      const autor=(p.autor&&p.autor.trim())?p.autor.trim():'Cálculo das notas';
+      const texto=(p.texto||'').trim();
+      list.push({
+        id:`comu-${p.id}`,type:'comunidade',
+        title:`Nova publicação de ${autor}`,
+        body:texto?(texto.length>110?texto.slice(0,110)+'…':texto):'Toque para ver na Comunidade.',
+        severity:'info',priority:4,variant:null
+      });
+    });
+  }
+
   list.sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id));
   return list;
 }
@@ -16587,11 +16630,27 @@ function updateNotifCenter(){
   const now=Date.now();
   const seenIds=new Set();
 
+  // As publicações da Comunidade têm uma "primeira vez" própria, separada
+  // do firstRun geral: sem isso, no dia em que essa função ganhou o tipo
+  // "comunidade", TODAS as publicações antigas (que todo mundo já tinha
+  // visto há tempos) apareceriam de repente como não lidas pra todo mundo.
+  // Assim, só publicações que chegam DEPOIS dessa marca contam como novas.
+  let comuFirstRun=false;
+  if(_comuPosts!==null){ // só decide isso quando já veio alguma resposta real
+                          // do Firestore — evita "consumir" a marcação antes
+                          // da hora, com base num estado ainda vazio/carregando
+    try{
+      comuFirstRun = localStorage.getItem('t205_comu_notif_seeded')!=='1';
+      if(comuFirstRun) localStorage.setItem('t205_comu_notif_seeded','1');
+    }catch(e){}
+  }
+
   list.forEach(n=>{
     seenIds.add(n.id);
     const m=meta[n.id];
     if(!m){
-      meta[n.id]={read:firstRun,firstSeenAt:now,variant:n.variant,toasted:firstRun};
+      const baselineRead = n.type==='comunidade' ? comuFirstRun : firstRun;
+      meta[n.id]={read:baselineRead,firstSeenAt:now,variant:n.variant,toasted:baselineRead};
     }else if(n.type==='exam' && m.variant!==n.variant){
       // reabre como não lida quando a urgência muda (ex.: faltavam 2 dias, agora falta 1)
       m.variant=n.variant;m.read=false;m.toasted=false;
@@ -16603,6 +16662,7 @@ function updateNotifCenter(){
 
   const unreadCount=list.filter(n=>meta[n.id]&&!meta[n.id].read).length;
   _ncRenderBadge(unreadCount);
+  if(typeof _updateComuNavBadge==='function') _updateComuNavBadge();
 
   // toast para o item mais urgente ainda não avisado
   const pendingToast=list.filter(n=>meta[n.id]&&!meta[n.id].toasted);
@@ -16730,6 +16790,10 @@ function handleNCClick(id){
   }
   if(n.type==='freq'){
     if(typeof setPage==='function')setPage('frequencia');
+    return;
+  }
+  if(n.type==='comunidade'){
+    if(typeof setPage==='function')setPage('comunidade');
     return;
   }
   if(n.type==='approved'){
@@ -17412,6 +17476,11 @@ window.addEventListener('load',()=>{
   setTimeout(checkExamToasts, 1200);
   setTimeout(()=>{ if(typeof updateNotifCenter==='function') updateNotifCenter(); }, 1500);
   setInterval(()=>{ if(typeof updateNotifCenter==='function') updateNotifCenter(); }, 60000);
+  // Começa a ouvir a Comunidade já no início (não só quando a pessoa abre
+  // a aba), pra dar pra avisar sobre publicação nova mesmo sem ter
+  // entrado lá ainda — é isso que alimenta o popup, a central de
+  // notificações e o pontinho na barra de navegação.
+  if(typeof _startComuListener==='function') _startComuListener();
   document.addEventListener('click',e=>{
     const wrap=document.querySelector('.subj-picker-wrap');
     if(wrap&&!wrap.contains(e.target)){
@@ -17776,12 +17845,35 @@ function renderComunidade(el){
                       // for igual ao que já tinha sido mostrado antes
   _renderComuFeed(); // usa cache, se já tiver (troca de aba instantânea)
   _startComuListener();
+  _comuMarkAllRead(); // a pessoa está vendo a aba agora — some com o
+                       // pontinho/badge e não dispara popup pra isso depois
   if(!_comuTimesTimerStarted){
     _comuTimesTimerStarted=true;
     // atualiza só o texto de data/hora dos posts já na tela, sem recriar
     // nada — mantém "há X min" fresquinho sem qualquer flicker no feed
     setInterval(_comuRefreshTimes,30000);
   }
+}
+
+// Marca as publicações atualmente carregadas como "vistas" — usado tanto
+// ao abrir a aba Comunidade quanto quando uma publicação chega via
+// tempo real enquanto a pessoa já está olhando pra ela.
+function _comuMarkAllRead(){
+  if(!_comuPosts||!_comuPosts.length) return;
+  const meta=_ncLoadMeta()||{};
+  let changed=false;
+  _comuPosts.forEach(p=>{
+    const id='comu-'+p.id;
+    if(meta[id]){
+      if(!meta[id].read){meta[id].read=true;meta[id].toasted=true;changed=true;}
+    }else{
+      meta[id]={read:true,firstSeenAt:Date.now(),variant:null,toasted:true};
+      changed=true;
+    }
+  });
+  if(changed) _ncSaveMeta(meta);
+  if(typeof updateNotifCenter==='function') updateNotifCenter();
+  if(typeof _updateComuNavBadge==='function') _updateComuNavBadge();
 }
 
 function _comuRefreshTimes(){
@@ -17849,7 +17941,14 @@ function _startComuListener(){
       );
       _comuUnsub=window._fbOnSnapshot(q,(snap)=>{
         _comuPosts=snap.docs.map(d=>({id:d.id,...d.data()}));
-        if(curPage==='comunidade')_renderComuFeed();
+        if(curPage==='comunidade'){
+          _renderComuFeed();
+          _comuMarkAllRead(); // já está na aba vendo — não gera notificação
+        }else if(typeof updateNotifCenter==='function'){
+          // fora da aba: entra no fluxo normal de notificações (popup,
+          // central de notificações e pontinho na barra)
+          updateNotifCenter();
+        }
       },(err)=>{
         console.error('[Comunidade] erro ao ouvir publicações:',err);
         if(curPage==='comunidade'&&(!_comuPosts||!_comuPosts.length)){
