@@ -17779,28 +17779,48 @@ function _comuRefreshTimes(){
 }
 
 function _startComuListener(){
-  // Modo offline: nem tenta conectar — mostra aviso amigável
+  // Modo offline: se ESSE MODO ligar bem na hora em que a pessoa abre a
+  // aba (comum numa oscilação rápida de conexão), antes isso apagava os
+  // posts já carregados e mostrava "indisponível" mesmo com tudo certo
+  // fresquinho na tela. Agora só mostramos esse aviso quando realmente
+  // não tem nada carregado ainda — se já tem publicações na memória,
+  // elas continuam aparecendo normalmente.
   if(window._isOfflineModeActive && window._isOfflineModeActive()){
-    _comuPosts=null;
-    const feed=document.getElementById('comu-feed');
-    if(feed) feed.innerHTML=`<div class="comu-empty">
-      <svg viewBox="0 0 24 24"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
-      <span>Comunidade indisponível no modo offline. Conecte-se à internet para ver as publicações.</span>
-    </div>`;
+    if(_comuPosts===null){
+      const feed=document.getElementById('comu-feed');
+      if(feed) feed.innerHTML=`<div class="comu-empty">
+        <svg viewBox="0 0 24 24"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+        <span>Comunidade indisponível no modo offline. Conecte-se à internet para ver as publicações.</span>
+      </div>`;
+    }
     return;
   }
   if(_comuUnsub) return; // já existe um listener ativo, não duplica
 
-  const tryAttach=(attemptsLeft)=>{
+  // Enquanto o SDK do Firebase ainda está carregando (comum em conexões
+  // mais lentas — são vários arquivos grandes vindos de CDN), a gente
+  // espera. Antes, depois de ~4s a tentativa desistia de vez e só um F5
+  // resolvia (o F5 "funcionava" só porque, na segunda vez, os arquivos já
+  // estavam no cache do navegador e carregavam mais rápido). Agora a
+  // gente insiste por bem mais tempo e continua tentando sozinho — assim
+  // que o Firebase fica pronto, a Comunidade aparece automaticamente,
+  // sem precisar recarregar a página.
+  let _comuAttempts=0;
+  const tryAttach=()=>{
+    _comuAttempts++;
     if(!window._fbDb||!window._fbCollection||!window._fbQuery||!window._fbOrderBy||!window._fbOnSnapshot){
-      if(attemptsLeft<=0){
+      if(_comuAttempts===12&&_comuPosts===null){
+        const feed=document.getElementById('comu-feed');
+        if(feed) feed.innerHTML=`<div class="comu-loading"><div class="comu-spinner"></div>Conexão um pouco lenta — ainda carregando a Comunidade...</div>`;
+      }
+      if(_comuAttempts>=90){ // ~45s de tentativas antes de desistir de vez
         if(_comuPosts===null){
           const feed=document.getElementById('comu-feed');
-          if(feed) feed.innerHTML=`<div class="comu-empty"><span>Não foi possível conectar à Comunidade agora. Tente novamente em instantes.</span></div>`;
+          if(feed) feed.innerHTML=`<div class="comu-empty"><span>Não foi possível conectar à Comunidade agora. Verifique sua conexão e volte a esta aba mais tarde.</span></div>`;
         }
         return;
       }
-      setTimeout(()=>tryAttach(attemptsLeft-1),350);
+      setTimeout(tryAttach,500);
       return;
     }
     try{
@@ -17822,7 +17842,7 @@ function _startComuListener(){
       console.error('[Comunidade] falha ao iniciar listener:',e);
     }
   };
-  tryAttach(12); // ~4s de tentativas até o firebase módulo terminar de carregar
+  tryAttach();
 }
 
 function _renderComuFeed(){
