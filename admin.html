@@ -197,6 +197,49 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .toast.ok{color:var(--green)}
   .toast.err{color:var(--red)}
+
+  /* ── Alternador de seção de topo (Usuários / Comunidade) ── */
+  .section-tabs{display:flex;gap:8px;margin-bottom:20px}
+  .section-tab-pill{flex:1;background:var(--bg2);border:.5px solid var(--line);color:var(--t3);font-size:13px;font-weight:700;padding:11px 10px;border-radius:12px;cursor:pointer;transition:background .18s var(--ease),color .18s var(--ease),border-color .18s var(--ease)}
+  .section-tab-pill.active{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+  .section-tab-pill:active{transform:scale(.98)}
+
+  /* ── Comunidade — composer ── */
+  .comu-compose{background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:16px;margin-bottom:24px}
+  .comu-tipo-row{display:flex;gap:7px;flex-wrap:wrap}
+  .comu-tipo-pill{background:var(--bg3);border:.5px solid var(--line);color:var(--t3);font-size:12px;font-weight:700;padding:8px 13px;border-radius:10px;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+  .comu-tipo-pill.active{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+  .comu-textarea{font-family:inherit!important;font-size:14px!important;min-height:90px!important;resize:vertical}
+  .comu-img-picker{position:relative}
+  .comu-img-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:26px 12px;background:var(--bg3);border:1.5px dashed var(--line);border-radius:13px;color:var(--t3);font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .15s,color .15s}
+  .comu-img-empty:hover{border-color:var(--goldbd);color:var(--gold)}
+  .comu-img-empty svg{width:22px;height:22px}
+  .comu-img-preview{position:relative;border-radius:13px;overflow:hidden;background:var(--bg3);border:.5px solid var(--line)}
+  .comu-img-preview img{width:100%;max-height:220px;object-fit:cover;display:block}
+  .comu-img-remove{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:9px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .comu-img-remove svg{width:14px;height:14px}
+  .comu-pin-check{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600;color:var(--t2);cursor:pointer}
+  .comu-pin-check input{width:17px;height:17px;accent-color:var(--gold);cursor:pointer}
+
+  /* ── Comunidade — lista de publicações já feitas ── */
+  .comu-admin-list{display:flex;flex-direction:column;gap:10px}
+  .comu-admin-card{background:var(--bg2);border:.5px solid var(--line);border-radius:15px;padding:13px 14px;display:flex;gap:12px}
+  .comu-admin-card-thumb{width:52px;height:52px;border-radius:11px;flex-shrink:0;background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--t4)}
+  .comu-admin-card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .comu-admin-card-thumb svg{width:20px;height:20px}
+  .comu-admin-card-body{flex:1;min-width:0}
+  .comu-admin-card-top{display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap}
+  .comu-admin-badge{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--t3)}
+  .comu-admin-badge.pin{background:var(--goldbg);color:var(--gold)}
+  .comu-admin-card-time{font-size:10.5px;color:var(--t4);margin-left:auto;flex-shrink:0}
+  .comu-admin-card-text{font-size:13px;color:var(--t2);line-height:1.45;word-break:break-word;white-space:pre-wrap;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .comu-admin-card-link{font-size:11.5px;color:var(--gold);font-weight:600;word-break:break-all;margin-bottom:6px;display:block}
+  .comu-admin-card-actions{display:flex;gap:8px}
+  .comu-admin-card-actions button{flex:none;background:var(--bg3);border:.5px solid var(--line);color:var(--t2);font-size:11.5px;font-weight:700;padding:7px 12px;border-radius:9px;cursor:pointer;transition:border-color .15s,color .15s,background .15s}
+  .comu-admin-card-actions button:active{transform:scale(.96)}
+  .comu-admin-card-actions .comu-edit-btn:hover{border-color:var(--goldbd);color:var(--gold)}
+  .comu-admin-card-actions .comu-del-btn{color:var(--red);border-color:rgba(255,90,95,.25);background:var(--redbg)}
+  .comu-admin-card-actions .comu-del-btn:hover{background:rgba(255,90,95,.16)}
 </style>
 
 <!-- Microsoft Clarity — análise de sessão / heatmaps / gravação deste painel admin -->
@@ -242,6 +285,12 @@
       </div>
     </div>
 
+    <div class="section-tabs" id="section-tabs">
+      <button class="section-tab-pill active" data-section="users">Usuários</button>
+      <button class="section-tab-pill" data-section="comunidade">Comunidade</button>
+    </div>
+
+    <div id="section-users">
     <div class="stats" id="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Armazenamento</div>
@@ -296,6 +345,64 @@
     <div id="loading"><div class="spinner"></div>Carregando dados do Firestore...</div>
     <div id="list" class="user-list" style="display:none" data-clarity-mask="True"></div>
     <div id="empty-state" class="empty" style="display:none">Nenhum usuário encontrado.</div>
+    </div>
+
+    <div id="section-comunidade" style="display:none">
+      <div class="section-label">Nova publicação</div>
+      <div class="comu-compose">
+        <div class="field-group">
+          <span class="field-label">Tipo</span>
+          <div class="comu-tipo-row" id="comu-tipo-row">
+            <button type="button" class="comu-tipo-pill active" data-tipo="geral">Geral</button>
+            <button type="button" class="comu-tipo-pill" data-tipo="aviso">Aviso</button>
+            <button type="button" class="comu-tipo-pill" data-tipo="novidade">Novidade</button>
+            <button type="button" class="comu-tipo-pill" data-tipo="dica">Dica</button>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Texto</span>
+          <textarea class="input comu-textarea" id="comu-texto" placeholder="Escreva o aviso ou a novidade que vai aparecer na aba Comunidade..." maxlength="1200"></textarea>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Imagem (opcional)</span>
+          <div class="comu-img-picker" id="comu-img-picker">
+            <input type="file" id="comu-img-input" accept="image/*" style="display:none">
+            <div class="comu-img-empty" id="comu-img-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+              <span>Toque para escolher uma foto</span>
+            </div>
+            <div class="comu-img-preview" id="comu-img-preview" style="display:none">
+              <img id="comu-img-preview-el" src="" alt="">
+              <button type="button" class="comu-img-remove" id="comu-img-remove" title="Remover imagem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Link (opcional)</span>
+          <input class="input" id="comu-link" placeholder="https://...">
+        </div>
+        <div class="field-group" id="comu-linklabel-group" style="display:none">
+          <span class="field-label">Texto do botão do link</span>
+          <input class="input" id="comu-linklabel" placeholder="Ex.: Ver mais, Acessar formulário...">
+        </div>
+        <div class="field-group">
+          <label class="comu-pin-check">
+            <input type="checkbox" id="comu-fixado">
+            <span>Fixar esta publicação no topo</span>
+          </label>
+        </div>
+        <button class="btn-primary" id="comu-publish-btn">Publicar na Comunidade</button>
+        <button class="btn-secondary" id="comu-cancel-edit-btn" style="display:none;margin-top:8px">Cancelar edição</button>
+        <div class="save-status" id="comu-compose-status"></div>
+      </div>
+
+      <div class="section-label">Publicações</div>
+      <div id="comu-admin-loading"><div class="spinner"></div>Carregando publicações...</div>
+      <div id="comu-admin-list" class="comu-admin-list" style="display:none"></div>
+      <div id="comu-admin-empty" class="empty" style="display:none">Nenhuma publicação ainda. Use o formulário acima para criar a primeira.</div>
+    </div>
   </div>
 </div>
 
@@ -331,8 +438,11 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch }
+  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch,
+            addDoc, updateDoc, query, orderBy, onSnapshot, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
+    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-storage.js";
 
   // ── Mesmo projeto Firebase do app principal ──
   const firebaseConfig = {
@@ -353,6 +463,7 @@
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
+  const storage = getStorage(app);
 
   /* ═══════════ Referência de matérias padrão (mat_id → nome/cor) ═══════════
      Desde a sincronização de horário/matérias (ver index.html), o campo
@@ -570,6 +681,7 @@
         clarity('set', 'role', 'admin');
       }
       loadData();
+      initComunidade();
     } else {
       if (user) signOut(auth); // conta errada: encerra a sessão local deste painel
       panel.style.display = 'none';
@@ -940,6 +1052,291 @@
     e.currentTarget.classList.add('spin');
     loadData().finally(()=> e.currentTarget.classList.remove('spin'));
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // ALTERNADOR DE SEÇÃO — Usuários / Comunidade
+  // ─────────────────────────────────────────────────────────────
+  document.querySelectorAll('.section-tab-pill').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.section-tab-pill').forEach(b=>b.classList.toggle('active', b===btn));
+      const isUsers = btn.dataset.section === 'users';
+      document.getElementById('section-users').style.display = isUsers ? '' : 'none';
+      document.getElementById('section-comunidade').style.display = isUsers ? 'none' : '';
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // COMUNIDADE — publicações exibidas na aba "Comunidade" do app
+  // (coleção Firestore: comunidade_posts · imagens no Storage: /comunidade/)
+  // ─────────────────────────────────────────────────────────────
+  let comuPosts = [];
+  let comuUnsub = null;
+  let comuSelectedTipo = 'geral';
+  let comuSelectedFile = null;   // File novo escolhido nesta sessão de edição
+  let comuRemovedImage = false;  // usuário removeu a imagem existente ao editar
+  let comuEditingId = null;      // null = criando; senão = editando esse doc
+
+  const comuTexto        = document.getElementById('comu-texto');
+  const comuLink         = document.getElementById('comu-link');
+  const comuLinkLabel    = document.getElementById('comu-linklabel');
+  const comuLinkLabelGrp = document.getElementById('comu-linklabel-group');
+  const comuFixado       = document.getElementById('comu-fixado');
+  const comuImgInput     = document.getElementById('comu-img-input');
+  const comuImgEmpty     = document.getElementById('comu-img-empty');
+  const comuImgPreview   = document.getElementById('comu-img-preview');
+  const comuImgPreviewEl = document.getElementById('comu-img-preview-el');
+  const comuPublishBtn   = document.getElementById('comu-publish-btn');
+  const comuCancelBtn    = document.getElementById('comu-cancel-edit-btn');
+  const comuStatusEl     = document.getElementById('comu-compose-status');
+
+  function initComunidade(){
+    if(comuUnsub) return; // já iniciado (evita duplicar listener em re-logins)
+
+    // tipo (geral/aviso/novidade/dica)
+    document.querySelectorAll('.comu-tipo-pill').forEach(p=>{
+      p.addEventListener('click', ()=>{
+        comuSelectedTipo = p.dataset.tipo;
+        document.querySelectorAll('.comu-tipo-pill').forEach(x=>x.classList.toggle('active', x===p));
+      });
+    });
+
+    // link → mostra campo de texto do botão só quando há um link digitado
+    comuLink.addEventListener('input', ()=>{
+      comuLinkLabelGrp.style.display = comuLink.value.trim() ? '' : 'none';
+    });
+
+    // imagem — escolher / pré-visualizar / remover
+    comuImgEmpty.addEventListener('click', ()=> comuImgInput.click());
+    comuImgInput.addEventListener('change', ()=>{
+      const file = comuImgInput.files && comuImgInput.files[0];
+      if(!file) return;
+      if(file.size > 5*1024*1024){
+        toast('Imagem muito grande. Escolha uma de até 5 MB.', 'err');
+        comuImgInput.value = '';
+        return;
+      }
+      comuSelectedFile = file;
+      comuRemovedImage = false;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        comuImgPreviewEl.src = reader.result;
+        comuImgEmpty.style.display = 'none';
+        comuImgPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('comu-img-remove').addEventListener('click', ()=>{
+      comuSelectedFile = null;
+      comuRemovedImage = true;
+      comuImgInput.value = '';
+      comuImgPreviewEl.src = '';
+      comuImgPreview.style.display = 'none';
+      comuImgEmpty.style.display = 'flex';
+    });
+
+    comuPublishBtn.addEventListener('click', publishComuPost);
+    comuCancelBtn.addEventListener('click', resetComuForm);
+
+    // escuta a coleção em tempo real, mais recentes primeiro
+    const q = query(collection(db, 'comunidade_posts'), orderBy('criadoEm', 'desc'));
+    comuUnsub = onSnapshot(q, (snap)=>{
+      comuPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderComuAdminList();
+    }, (err)=>{
+      console.error('[Comunidade] erro ao carregar publicações:', err);
+      document.getElementById('comu-admin-loading').style.display = 'none';
+      toast('Erro ao carregar publicações: ' + err.message, 'err');
+    });
+  }
+
+  function resetComuForm(){
+    comuEditingId = null;
+    comuSelectedFile = null;
+    comuRemovedImage = false;
+    comuTexto.value = '';
+    comuLink.value = '';
+    comuLinkLabel.value = '';
+    comuLinkLabelGrp.style.display = 'none';
+    comuFixado.checked = false;
+    comuSelectedTipo = 'geral';
+    document.querySelectorAll('.comu-tipo-pill').forEach(x=>x.classList.toggle('active', x.dataset.tipo==='geral'));
+    comuImgInput.value = '';
+    comuImgPreviewEl.src = '';
+    comuImgPreview.style.display = 'none';
+    comuImgEmpty.style.display = 'flex';
+    comuPublishBtn.textContent = 'Publicar na Comunidade';
+    comuCancelBtn.style.display = 'none';
+    comuStatusEl.textContent = '';
+    comuStatusEl.className = 'save-status';
+  }
+
+  function startEditComuPost(id){
+    const p = comuPosts.find(x=>x.id===id);
+    if(!p) return;
+    comuEditingId = id;
+    comuSelectedFile = null;
+    comuRemovedImage = false;
+    comuTexto.value = p.texto || '';
+    comuLink.value = p.link || '';
+    comuLinkLabel.value = p.linkLabel || '';
+    comuLinkLabelGrp.style.display = p.link ? '' : 'none';
+    comuFixado.checked = !!p.fixado;
+    comuSelectedTipo = p.tipo || 'geral';
+    document.querySelectorAll('.comu-tipo-pill').forEach(x=>x.classList.toggle('active', x.dataset.tipo===comuSelectedTipo));
+    if(p.imagemUrl){
+      comuImgPreviewEl.src = p.imagemUrl;
+      comuImgEmpty.style.display = 'none';
+      comuImgPreview.style.display = 'block';
+    }else{
+      comuImgPreviewEl.src = '';
+      comuImgPreview.style.display = 'none';
+      comuImgEmpty.style.display = 'flex';
+    }
+    comuPublishBtn.textContent = 'Salvar alterações';
+    comuCancelBtn.style.display = 'block';
+    comuStatusEl.textContent = '';
+    // leva o admin até o formulário
+    document.getElementById('comu-texto').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  async function publishComuPost(){
+    const texto = comuTexto.value.trim();
+    const link  = comuLink.value.trim();
+    const linkLabel = comuLinkLabel.value.trim();
+    if(!texto && !comuSelectedFile && !(comuEditingId && !comuRemovedImage && comuPosts.find(p=>p.id===comuEditingId)?.imagemUrl) && !link){
+      toast('Escreva um texto, adicione um link ou uma imagem antes de publicar.', 'err');
+      return;
+    }
+    if(link && !/^https?:\/\//i.test(link)){
+      toast('O link precisa começar com http:// ou https://', 'err');
+      return;
+    }
+
+    comuPublishBtn.disabled = true;
+    const originalLabel = comuPublishBtn.textContent;
+    comuPublishBtn.textContent = 'Publicando...';
+    comuStatusEl.textContent = '';
+    comuStatusEl.className = 'save-status';
+
+    try{
+      const editingPost = comuEditingId ? comuPosts.find(p=>p.id===comuEditingId) : null;
+      let imagemUrl = editingPost ? (editingPost.imagemUrl || null) : null;
+      let imagemPath = editingPost ? (editingPost.imagemPath || null) : null;
+
+      // remove a imagem antiga do Storage se: o admin removeu manualmente,
+      // ou escolheu uma nova foto pra substituir a anterior
+      if((comuRemovedImage || comuSelectedFile) && imagemPath){
+        try{ await deleteObject(ref(storage, imagemPath)); }catch(e){ console.warn('Não foi possível remover imagem antiga:', e); }
+        imagemUrl = null; imagemPath = null;
+      }
+
+      // envia a nova foto, se houver
+      if(comuSelectedFile){
+        comuPublishBtn.textContent = 'Enviando imagem...';
+        const safeName = comuSelectedFile.name.replace(/[^\w.\-]+/g,'_');
+        imagemPath = `comunidade/${Date.now()}_${safeName}`;
+        const storageRef = ref(storage, imagemPath);
+        await uploadBytes(storageRef, comuSelectedFile);
+        imagemUrl = await getDownloadURL(storageRef);
+        comuPublishBtn.textContent = comuEditingId ? 'Salvando...' : 'Publicando...';
+      }
+
+      const payload = {
+        texto: texto || null,
+        link: link || null,
+        linkLabel: link ? (linkLabel || null) : null,
+        imagemUrl: imagemUrl || null,
+        imagemPath: imagemPath || null,
+        tipo: comuSelectedTipo,
+        fixado: !!comuFixado.checked,
+      };
+
+      if(comuEditingId){
+        await updateDoc(doc(db, 'comunidade_posts', comuEditingId), payload);
+        toast('Publicação atualizada!', 'ok');
+      }else{
+        payload.criadoEm = serverTimestamp();
+        await addDoc(collection(db, 'comunidade_posts'), payload);
+        toast('Publicado na Comunidade!', 'ok');
+      }
+      resetComuForm();
+    }catch(e){
+      console.error('[Comunidade] erro ao publicar:', e);
+      comuStatusEl.textContent = 'Erro ao publicar: ' + e.message;
+      comuStatusEl.className = 'save-status err';
+    }finally{
+      comuPublishBtn.disabled = false;
+      if(comuPublishBtn.textContent!=='Publicar na Comunidade' && comuPublishBtn.textContent!=='Salvar alterações'){
+        comuPublishBtn.textContent = originalLabel;
+      }
+    }
+  }
+
+  async function deleteComuPost(id){
+    const p = comuPosts.find(x=>x.id===id);
+    if(!p) return;
+    if(!confirm('Excluir esta publicação da Comunidade? Essa ação não pode ser desfeita.')) return;
+    try{
+      if(p.imagemPath){
+        try{ await deleteObject(ref(storage, p.imagemPath)); }catch(e){ console.warn('Não foi possível remover a imagem do Storage:', e); }
+      }
+      await deleteDoc(doc(db, 'comunidade_posts', id));
+      if(comuEditingId===id) resetComuForm();
+      toast('Publicação excluída.', 'ok');
+    }catch(e){
+      toast('Erro ao excluir: ' + e.message, 'err');
+    }
+  }
+
+  const COMU_TIPO_LABELS = {aviso:'Aviso', novidade:'Novidade', dica:'Dica', geral:'Geral'};
+
+  function comuTimeAgo(p){
+    const c = p.criadoEm;
+    let ms = null;
+    if(c && typeof c.toMillis === 'function') ms = c.toMillis();
+    else if(c && typeof c.seconds === 'number') ms = c.seconds*1000;
+    if(!ms) return 'agora mesmo';
+    return timeAgo(ms);
+  }
+
+  function renderComuAdminList(){
+    document.getElementById('comu-admin-loading').style.display = 'none';
+    const listEl = document.getElementById('comu-admin-list');
+    const emptyEl = document.getElementById('comu-admin-empty');
+    if(!comuPosts.length){
+      listEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'flex';
+    listEl.innerHTML = comuPosts.map(p=>{
+      const thumb = p.imagemUrl
+        ? `<img src="${escapeHtml(p.imagemUrl)}" alt="">`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>`;
+      const badges = `${p.fixado?'<span class="comu-admin-badge pin">Fixado</span>':''}<span class="comu-admin-badge">${COMU_TIPO_LABELS[p.tipo]||'Geral'}</span>`;
+      const textHtml = p.texto ? `<div class="comu-admin-card-text">${escapeHtml(p.texto)}</div>` : '';
+      const linkHtml = p.link ? `<span class="comu-admin-card-link">🔗 ${escapeHtml(p.linkLabel || p.link)}</span>` : '';
+      return `<div class="comu-admin-card" data-id="${p.id}">
+        <div class="comu-admin-card-thumb">${thumb}</div>
+        <div class="comu-admin-card-body">
+          <div class="comu-admin-card-top">${badges}<span class="comu-admin-card-time">${comuTimeAgo(p)}</span></div>
+          ${textHtml}
+          ${linkHtml}
+          <div class="comu-admin-card-actions">
+            <button class="comu-edit-btn">Editar</button>
+            <button class="comu-del-btn">Excluir</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('.comu-admin-card').forEach(card=>{
+      const id = card.dataset.id;
+      card.querySelector('.comu-edit-btn').addEventListener('click', ()=>startEditComuPost(id));
+      card.querySelector('.comu-del-btn').addEventListener('click', ()=>deleteComuPost(id));
+    });
+  }
 
   // ─────────────────────────────────────────────────────────────
   // SHEET DE DETALHES
