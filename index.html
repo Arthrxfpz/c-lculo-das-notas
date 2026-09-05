@@ -6,6 +6,15 @@
 <title>Cálculo das notas</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2313141A'/%3E%3Crect x='7' y='5' width='13' height='17' rx='2' fill='none' stroke='%23FFD60A' stroke-width='1.2' opacity='.9'/%3E%3Cline x1='10' y1='10' x2='17' y2='10' stroke='%23FFD60A' stroke-width='1' stroke-linecap='round' opacity='.65'/%3E%3Cline x1='10' y1='13' x2='16' y2='13' stroke='%23FFD60A' stroke-width='1' stroke-linecap='round' opacity='.4'/%3E%3Cline x1='10' y1='16' x2='17' y2='16' stroke='%23FFD60A' stroke-width='1' stroke-linecap='round' opacity='.4'/%3E%3Ccircle cx='21' cy='22' r='6' fill='%2313141A'/%3E%3Ccircle cx='21' cy='22' r='5' fill='%23FFD60A'/%3E%3Cpolyline points='18.5,22 20.2,23.8 23.5,20.2' fill='none' stroke='%2313141A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
+<!-- Adianta a conexão (DNS+TLS) com os servidores do Firebase antes mesmo
+     de precisar deles — tira uns bons milissegundos do carregamento
+     inicial, sem mudar nada no funcionamento. -->
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="dns-prefetch" href="https://www.gstatic.com">
+<link rel="dns-prefetch" href="https://firestore.googleapis.com">
+
 <!-- ═══════════════════════════════════════════════════════
      FIREBASE — Auth Google + Firestore (sync entre aparelhos)
      ▸ Crie um projeto em https://console.firebase.google.com
@@ -15,7 +24,6 @@
      ═══════════════════════════════════════════════════════ -->
 <script type="module">
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-  import { getAnalytics }    from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, limit }
@@ -32,7 +40,6 @@
   };
 
   const app      = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
   const auth     = getAuth(app);
   const db       = getFirestore(app);
 
@@ -361,6 +368,27 @@
       if (typeof window._applyOfflineModeUI === 'function') window._applyOfflineModeUI();
       return;
     }
+
+    // ── Otimização de carregamento ──
+    // Se já existem dados salvos localmente de uma visita anterior, não
+    // faz sentido segurar a tela toda esperando a ida-e-volta até o
+    // servidor pra mostrar praticamente a mesma coisa: liberamos a
+    // interface na hora com o que já está aqui, e conferimos/sincronizamos
+    // com o Firestore por trás, sem travar nada. Se o servidor tiver algo
+    // mais novo (editado em outro aparelho), ele é aplicado na hora assim
+    // que a checagem terminar — sem precisar recarregar a página, pelo
+    // mesmo caminho já usado pela sincronização em tempo real.
+    // Só o PRIMEIRO acesso deste dispositivo (sem nada local ainda) espera
+    // o servidor de verdade, porque aí não tem o que mostrar antes disso.
+    const hasLocalData = !!localStorage.getItem('t205_stu') || !!localStorage.getItem('t205_grades');
+    if (hasLocalData) {
+      _setSplashProgress(100, 'Pronto!');
+      _showSyncBadge('checking');
+      setTimeout(_hideSplash, 80);
+      _fbBackgroundSync(uid);
+      return;
+    }
+
     _setSplashProgress(20, 'Conectando ao servidor…');
     _showSyncBadge('checking');
 
@@ -429,6 +457,33 @@
     setTimeout(_hideSplash, 150);
   }
 
+  /* ── Confere/sincroniza com o Firestore em segundo plano, sem travar a
+     tela (usado quando já liberamos a interface com dados locais). Reusa
+     o mesmo "aplica sem reload" da sincronização em tempo real. ── */
+  async function _fbBackgroundSync(uid) {
+    try {
+      const snap = await getDoc(doc(db, 'users', uid));
+      if (window._isOfflineModeActive && window._isOfflineModeActive()) return;
+      if (!snap.exists()) {
+        if (!_docCreatedAt) _docCreatedAt = Date.now();
+        _showSyncBadge('idle');
+        return;
+      }
+      const d = snap.data();
+      if (d.createdAt) _docCreatedAt = d.createdAt;
+      const localTs  = parseInt(localStorage.getItem('t205_updatedAt') || '0');
+      const remoteTs = d.updatedAt || 0;
+      if (remoteTs > localTs && !_pendingLocalSave) {
+        localStorage.setItem('t205_updatedAt', String(remoteTs));
+        _applyCloudData(d);
+      }
+      _showSyncBadge('ok');
+    } catch(e) {
+      _showSyncBadge('err');
+      console.error('Firebase background sync error:', e);
+    }
+  }
+
   /* ── Preenche o perfil com dados do Google ── */
   function _applyGoogleProfile(user) {
     // Só preenche nome se o usuário ainda não configurou manualmente
@@ -490,8 +545,8 @@
         if (d.createdAt) _docCreatedAt = d.createdAt;
         localStorage.setItem('t205_updatedAt', String(remoteTs));
         _applyCloudData(d);
-        if (typeof window._showNotifToast === 'function') {
-          window._showNotifToast('🔄 Dados atualizados em outro dispositivo');
+        if (typeof window._showSyncUpdateToast === 'function') {
+          window._showSyncUpdateToast();
         }
       }, (err) => {
         console.error('[Sync] erro no listener em tempo real:', err);
@@ -16539,6 +16594,7 @@ function _ncIcon(type){
   if(type==='freq')return'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/></svg>';
   if(type==='approved')return'<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
   if(type==='comunidade')return'<svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>';
+  if(type==='sync')return'<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>';
   return'<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 }
 
@@ -16913,6 +16969,21 @@ function _dismissNCToast(){
   toast.classList.add('hide');
   setTimeout(()=>toast.classList.remove('hide'),400);
 }
+
+// Aviso de "sincronizado com outro dispositivo" — usa o mesmo popup
+// elegante das outras notificações (ícone + título + descrição), em vez
+// de um balãozinho de texto simples.
+function _showSyncUpdateToast(){
+  if(typeof _showNCToast!=='function') return;
+  _showNCToast({
+    id:'_sync_update',type:'sync',
+    title:'Dados sincronizados',
+    body:'Suas informações foram atualizadas com o que você editou em outro dispositivo.',
+    severity:'info'
+  },0);
+}
+window._showSyncUpdateToast=_showSyncUpdateToast;
+
 function _ncToastClick(){
   const id=_ncToastId,extra=_ncToastExtra;
   _dismissNCToast();
