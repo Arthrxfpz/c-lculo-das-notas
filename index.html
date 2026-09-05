@@ -17509,10 +17509,6 @@ function _buildCalHtml(){
   const canNext=mo<11;
 
   let html=`<div class="cal-wrap">
-    <div class="cal-disclaimer">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span class="cal-disclaimer-text">Os feriados exibidos são baseados no calendário oficial da rede estadual do RS.</span>
-    </div>
     <div class="cal-nav">
       <button class="cal-nav-btn" onclick="calNavMonth(-1)"${canPrev?'':' disabled'}>
         <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -17769,10 +17765,6 @@ const COMU_TIPOS={
 
 function renderComunidade(el){
   el.innerHTML=`<div class="comu-wrap">
-    <div class="cal-disclaimer">
-      <svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
-      <span class="cal-disclaimer-text">Avisos e novidades publicados pela equipe do Cálculo das notas.</span>
-    </div>
     <div id="comu-feed" class="comu-feed"></div>
   </div>`;
   // Pega a referência do elemento AQUI, direto do "el" recém-montado —
@@ -18020,10 +18012,6 @@ function renderFrequencia(el){
 
 function _buildFreqHtml(){
   return `<div class="cal-wrap freq-wrap">
-    <div class="cal-disclaimer">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      <span class="cal-disclaimer-text">Toque num dia de aula (seg–sex) para registrar presença ou falta em cada aula — inclusive quando a mesma matéria se repete no dia.</span>
-    </div>
     ${_buildFreqCalHtml()}
     ${_buildFreqStatsHtml()}
   </div>`;
@@ -19188,3 +19176,7 @@ window.addEventListener('online',async()=>{
     </div>
   </div>
 </div>
+
+
+
+
