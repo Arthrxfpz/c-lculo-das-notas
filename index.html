@@ -26,7 +26,7 @@
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, orderBy, limit }
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, collection, query, orderBy, limit }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -48,6 +48,8 @@
   window._fbDoc     = doc;
   window._fbSetDoc  = setDoc;
   window._fbGetDoc  = getDoc;
+  window._fbUpdateDoc   = updateDoc;
+  window._fbDeleteField = deleteField;
   window._fbOnSnapshot = onSnapshot;
   window._fbCollection = collection;
   window._fbQuery      = query;
@@ -565,6 +567,9 @@
     clearTimeout(_splashSlowTimer);
     _currentUid = user ? user.uid : null;
     _updateAuthUI(user);
+    // Login/logout muda quem "sou eu" pra fins de reação nas publicações da
+    // Comunidade — força a aba a redesenhar pra destacar/desmarcar certinho.
+    if (typeof window._comuRefreshOnAuth === 'function') window._comuRefreshOnAuth();
     if (user) {
       _setSplashProgress(10, 'Verificando sessão…');
       // Aviso de conexão lenta só quando há tentativa de sync com servidor
@@ -958,6 +963,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .tab-btn:hover:not(.active){background:var(--bg3);border-color:var(--line);}
   .topbar-btn:hover{background:var(--bg3);box-shadow:0 4px 14px -6px rgba(0,0,0,.3);}
   button:not(:disabled):hover{filter:brightness(1.03);}
+
+  .comu-react-btn:hover{
+    background:var(--bg3);border-color:var(--line);transform:translateY(-1px);
+    box-shadow:0 4px 12px -5px rgba(0,0,0,.28);
+  }
+  .comu-react-btn.active:hover{background:var(--goldbg);border-color:var(--goldbd);}
 }
 
 /* toque/press mais elástico e premium em qualquer dispositivo */
@@ -8324,6 +8335,32 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .comu-post-link svg:first-child{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .comu-post-link span{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .comu-post-link-chev{width:14px!important;height:14px!important;stroke:var(--t4)!important;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ── Reações nas publicações da Comunidade (👍👎🙏💪❤️, igual WhatsApp) ──
+   Fica como uma fileira de "badges" pill separada do resto do post por uma
+   linha fina, igual o rodapé de reação do WhatsApp/Messenger. ── */
+.comu-reactions{
+  display:flex;flex-wrap:wrap;gap:7px;
+  margin-top:2px;padding-top:11px;
+  border-top:1px solid var(--line2);
+}
+.comu-react-btn{
+  display:flex;align-items:center;gap:4px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:999px;
+  padding:5px 11px 5px 9px;margin:0;font:inherit;line-height:1;
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  box-shadow:0 1px 2px rgba(0,0,0,.06);
+  transition:background .15s var(--ease-ios),border-color .15s var(--ease-ios),
+             transform .12s var(--ease-premium),box-shadow .18s var(--ease-ios);
+}
+.comu-react-btn:active{transform:scale(.88)}
+.comu-react-emoji{font-size:15px;line-height:1}
+.comu-react-count{font-size:11.5px;font-weight:800;color:var(--t3);letter-spacing:-.1px}
+.comu-react-btn.active{
+  background:var(--goldbg);border-color:var(--goldbd);
+  box-shadow:0 2px 8px -2px var(--goldbg);
+}
+.comu-react-btn.active .comu-react-count{color:var(--gold)}
 
 /* ── Banner do horário ativo (Frequência) ── */
 .freq-sched-banner{
@@ -18052,6 +18089,128 @@ const COMU_TIPOS={
   geral:    {label:'',          className:'comu-badge-geral'}
 };
 
+/* ── Reações nas publicações (igual WhatsApp) ──────────────────
+   ▸ Guardadas no próprio doc: reactions = { "👍":{uid1:true,...}, "❤️":{...} }
+   ▸ Cada pessoa só pode ter UMA reação ativa por publicação: tocar de novo
+     no mesmo emoji remove; tocar em outro emoji troca.
+   ▸ Só quem está logado com Google pode reagir (usa o uid da conta).
+   ▸ A contagem que aparece em cada emoji é sempre a contagem GLOBAL — vem
+     direto do Firestore em tempo real, então todo mundo vê o mesmo número,
+     de todo mundo que reagiu, igual/sincronizado em qualquer aparelho. ── */
+const COMU_REACTION_EMOJIS=['👍','👎','🙏','💪','❤️'];
+const _comuReactBusy=new Set(); // ids de posts com uma escrita em andamento —
+                                 // trava novos toques nesse post até terminar,
+                                 // pra não duplicar/embaralhar a reação com
+                                 // toques duplos rápidos
+
+function _comuMyUid(){
+  const u=window._fbCurrentUser&&window._fbCurrentUser();
+  return u?u.uid:null;
+}
+
+// Qual emoji (se algum) a PESSOA LOGADA já usou nessa publicação
+function _comuMyReaction(post){
+  const uid=_comuMyUid();
+  if(!uid||!post||!post.reactions) return null;
+  for(const emo of COMU_REACTION_EMOJIS){
+    const m=post.reactions[emo];
+    if(m&&m[uid]) return emo;
+  }
+  return null;
+}
+
+// Contagem GLOBAL (todo mundo que reagiu) de cada emoji nessa publicação
+function _comuReactionCounts(post){
+  const out={};
+  COMU_REACTION_EMOJIS.forEach(emo=>{
+    const m=post&&post.reactions&&post.reactions[emo];
+    out[emo]=m?Object.keys(m).length:0;
+  });
+  return out;
+}
+
+function _comuReactionsHtml(p){
+  const mine=_comuMyReaction(p);
+  const counts=_comuReactionCounts(p);
+  const btns=COMU_REACTION_EMOJIS.map(emo=>{
+    const c=counts[emo];
+    const active=mine===emo;
+    return `<button type="button" class="comu-react-btn${active?' active':''}"
+      onclick="comuReact('${escHtml(p.id||'')}','${emo}')" aria-pressed="${active?'true':'false'}" aria-label="Reagir com ${emo}">
+      <span class="comu-react-emoji">${emo}</span>${c>0?`<span class="comu-react-count">${c}</span>`:''}
+    </button>`;
+  }).join('');
+  return `<div class="comu-reactions">${btns}</div>`;
+}
+
+async function comuReact(postId,emoji){
+  // Modo offline: reagir precisa de rede (é uma escrita no Firestore)
+  if(window._isOfflineModeActive&&window._isOfflineModeActive()){
+    if(typeof window._showNotifToast==='function') window._showNotifToast('🔒 Reações indisponíveis no modo offline');
+    return;
+  }
+  const uid=_comuMyUid();
+  if(!uid){
+    // Só reage quem tem conta Google vinculada — sem login, chama o login
+    if(typeof window._showNotifToast==='function') window._showNotifToast('🔒 Entre com sua conta Google pra reagir');
+    if(typeof window._fbLoginClick==='function') window._fbLoginClick();
+    return;
+  }
+  if(_comuReactBusy.has(postId)) return; // já tem uma escrita em andamento pra esse post
+  if(!window._fbDb||!window._fbDoc||!window._fbUpdateDoc||!window._fbDeleteField) return;
+  const post=(_comuPosts||[]).find(pp=>pp.id===postId);
+  if(!post) return;
+
+  const current=_comuMyReaction(post);
+  // guarda o estado de antes pra poder desfazer se a escrita falhar
+  const prevReactions=post.reactions?JSON.parse(JSON.stringify(post.reactions)):null;
+
+  const updates={};
+  if(current===emoji){
+    // tocou de novo no mesmo emoji → remove a reação
+    updates[`reactions.${emoji}.${uid}`]=window._fbDeleteField();
+  }else{
+    // trocando de emoji (ou reagindo pela primeira vez) → tira do emoji
+    // antigo (se tinha) e põe no novo — os dois campos vão juntos na
+    // mesma escrita, então nunca fica "duas reações" nem "nenhuma" no meio
+    if(current) updates[`reactions.${current}.${uid}`]=window._fbDeleteField();
+    updates[`reactions.${emoji}.${uid}`]=true;
+  }
+
+  // Atualização otimista: já mostra o resultado na hora, sem esperar a
+  // rede — some sozinha se a escrita der erro (fica com sensação instantânea
+  // igual WhatsApp, mas sem arriscar mostrar algo que não foi salvo de verdade)
+  if(!post.reactions) post.reactions={};
+  if(current&&post.reactions[current]) delete post.reactions[current][uid];
+  if(current!==emoji){
+    if(!post.reactions[emoji]) post.reactions[emoji]={};
+    post.reactions[emoji][uid]=true;
+  }
+  _comuLastSig=null;
+  _renderComuFeed();
+
+  _comuReactBusy.add(postId);
+  try{
+    const ref=window._fbDoc(window._fbDb,'comunidade_posts',postId);
+    await window._fbUpdateDoc(ref,updates);
+  }catch(e){
+    console.error('[Comunidade] erro ao salvar reação:',e);
+    post.reactions=prevReactions;
+    _comuLastSig=null;
+    _renderComuFeed();
+    if(typeof window._showNotifToast==='function') window._showNotifToast('⚠️ Não foi possível registrar sua reação agora. Tente de novo.');
+  }finally{
+    _comuReactBusy.delete(postId);
+  }
+}
+window.comuReact=comuReact;
+
+function _comuRefreshOnAuth(){
+  _comuLastSig=null;
+  if(curPage==='comunidade') _renderComuFeed();
+}
+window._comuRefreshOnAuth=_comuRefreshOnAuth;
+
 function renderComunidade(el){
   el.innerHTML=`<div class="comu-wrap">
     <div id="comu-feed" class="comu-feed"></div>
@@ -18219,6 +18378,7 @@ function _renderComuFeed(){
 }
 
 function _comuFeedSig(posts){
+  const uid=_comuMyUid();
   return JSON.stringify(posts.map(p=>({
     id:p.id,
     texto:p.texto||'',
@@ -18228,7 +18388,11 @@ function _comuFeedSig(posts){
     link:p.link||'',
     linkLabel:p.linkLabel||'',
     imagemUrl:p.imagemUrl||'',
-    ms:_comuPostMs(p)
+    ms:_comuPostMs(p),
+    reacoes:p.reactions||{}, // conta as reações globais na assinatura, senão
+                              // uma reação nova (minha ou de outra pessoa)
+                              // não disparava o redesenho do feed
+    euUid:uid // login/logout muda qual reação fica destacada como "minha"
   })));
 }
 
@@ -18270,6 +18434,7 @@ function _comuPostHtml(p){
     ${imgHtml}
     ${textoHtml}
     ${linkHtml}
+    ${_comuReactionsHtml(p)}
   </div>`;
 }
 
