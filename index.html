@@ -1700,14 +1700,13 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 /* badge unificado: data + hora */
 .exam-info-badge{
   display:inline-flex;align-items:center;gap:5px;
-  background:var(--bg3);border:1px solid var(--line2);
-  border-radius:8px;
+  background:var(--bg2);border-radius:8px;
   padding:4px 9px;
-  font-size:11px;font-weight:500;color:var(--t2);
+  font-size:11.5px;font-weight:600;color:var(--t2);
   font-family:var(--ffm);white-space:nowrap;
 }
-.exam-info-badge svg{width:10px;height:10px;stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.exam-dow-label{font-weight:600;color:var(--t2);letter-spacing:-.1px}
+.exam-info-badge svg{width:11px;height:11px;stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.exam-dow-label{font-weight:700;color:var(--t1);letter-spacing:-.1px}
 .exam-dow-label::after{content:'·';margin:0 4px;color:var(--t4);font-weight:400}
 .exam-info-badge-tipo{display:none}
 .exam-info-badge-meta{font-family:var(--ffm);font-size:11px;font-weight:600;color:var(--t2)}
@@ -2539,16 +2538,14 @@ html.offline-view-only #n-comunidade{
              box-shadow .2s var(--ease-ios),transform .18s var(--ease-ios);
   animation:fadeIn .22s var(--ease-ios) both;
   overflow:hidden;cursor:default;
-  box-shadow:0 1px 2px rgba(0,0,0,.04),0 1px 12px rgba(0,0,0,.03);
 }
 .exam-item::before{
   content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
   background:var(--line2);opacity:0;transition:opacity .18s var(--ease-ios);
 }
 .exam-item[onclick]{cursor:pointer}
-.exam-item[onclick]:hover{box-shadow:0 4px 18px rgba(0,0,0,.08);transform:translateY(-1px)}
-.exam-item[onclick]:hover::before{opacity:1;background:var(--gold)}
-.exam-item:active{background:var(--bg2)}
+.exam-item[onclick]:hover{transform:translateY(-1px)}
+.exam-item:active{transform:scale(.99)}
 .exam-item.done{opacity:.45;filter:saturate(.4);box-shadow:none}
 .exam-item.soon{border-color:var(--amberbd)}
 .exam-item.soon::before{opacity:1;background:var(--amber)}
@@ -2556,6 +2553,23 @@ html.offline-view-only #n-comunidade{
 .exam-item.today-exam::before{opacity:1;background:var(--red)}
 .exam-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .exam-item-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
+/* ── Cabeçalho no estilo dos cards de totais (ps2-card): ícone em
+   quadrado colorido + valor grande com label pequena ao lado ── */
+.exam-item-top{display:flex;align-items:center;gap:12px}
+.exam-item-icon{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg2);color:var(--t2);
+}
+.exam-item-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.exam-item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.exam-item-type-lbl{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.3px}
+.exam-item-days-block{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;line-height:1}
+.exam-item-days-val{font-family:var(--ffm);font-size:20px;font-weight:700;line-height:1;white-space:nowrap}
+.exam-item-days-lbl{font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
+.exam-item.today-exam .exam-item-type-lbl{color:rgba(255,255,255,.7)}
+.exam-item.today-exam .exam-item-icon{background:rgba(255,255,255,.15) !important;color:#fff !important}
+.exam-item.today-exam .exam-item-days-val{color:#fff !important}
 .exam-tipo-pill{letter-spacing:.2px;
   display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
   padding:3px 8px 3px 6px;border-radius:7px;
@@ -2577,7 +2591,7 @@ html.offline-view-only #n-comunidade{
 .exam-date-chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--t3);background:var(--bg3);padding:3px 7px;border-radius:4px}
 .exam-date-chip svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .exam-date-chip span{font-family:var(--ffm);font-size:11px;font-weight:600;color:var(--t2)}
-.exam-valor-chip{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:3px 7px;border-radius:5px}
+.exam-valor-chip{display:inline-flex;align-items:center;gap:4px;background:var(--bg2);border-radius:8px;padding:4px 9px;font-size:11.5px;font-weight:600;color:var(--t2);font-family:var(--ffm)}
 
 .exam-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
 .exam-days-badge{
@@ -3366,14 +3380,12 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 /* ─── NEXT EXAM HERO BANNER ─── */
 .next-exam-hero{
   background:var(--bg1);border:1px solid var(--line2);
-  border-left:3.5px solid var(--accent-color,var(--gold));
   border-radius:20px;padding:18px 20px 16px;margin-bottom:14px;
   position:relative;overflow:hidden;cursor:pointer;
   transition:background .12s var(--ease-ios);
 }
-.next-exam-hero:active{background:var(--bg2)}
-.neh-eyebrow{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:7px;display:flex;align-items:center;gap:5px}
-.neh-eyebrow .dot{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:blink 1.4s ease-in-out infinite}
+.next-exam-hero:active{transform:scale(.99)}
+.neh-eyebrow{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:7px}
 .neh-subj{font-size:17px;font-weight:700;color:var(--t1);margin-bottom:1px;letter-spacing:-0.3px}
 .neh-title{font-size:12px;color:var(--t2);margin-bottom:12px;font-style:italic}
 .neh-cd{display:flex;gap:0;align-items:baseline}
@@ -4358,7 +4370,7 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
   .res-row:hover { background:var(--bg2) !important; transform:translateX(3px); }
 
   .exam-item { cursor:pointer; transition:background .14s var(--ease-ios), transform .14s !important; }
-  .exam-item:hover { background:var(--bg2) !important; transform:translateX(3px); }
+  .exam-item:hover { transform:translateX(3px); }
 
   .sched-item:hover { background:var(--bg2) !important; transform:translateX(3px); }
 
@@ -4483,7 +4495,6 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     transition: background .14s var(--ease-ios), transform .14s !important;
   }
   .provas-page-wrap .exam-item:hover {
-    background: var(--bg2) !important;
     transform: translateX(3px);
   }
 }
@@ -5328,7 +5339,6 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 .exam-item {
   border-radius: var(--r-lg);
   border: 1.5px solid var(--line2);
-  box-shadow: var(--shadow-card);
 }
 [data-theme="dark"] .exam-item {
   background: var(--bg1);
@@ -5339,8 +5349,6 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 .next-exam-hero {
   border-radius: var(--r-xl);
   border: 1.5px solid var(--line2);
-  border-left-width: 4px;
-  box-shadow: var(--shadow-card);
 }
 [data-theme="dark"] .next-exam-hero {
   background: var(--bg1);
@@ -5618,7 +5626,6 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     box-shadow: var(--shadow-card-hover) !important;
   }
   .res-row:hover { background: var(--bg2) !important; }
-  .exam-item:hover { background: var(--bg2) !important; }
 }
 
 /* ══════════════════════════════════════
@@ -8878,10 +8885,6 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   /* ── Hero da próxima prova: mais respiro e tipografia maior ── */
   .provas-page-wrap .next-exam-hero{
     padding:24px 26px 22px;border-radius:22px;
-    box-shadow:0 10px 30px -18px rgba(0,0,0,.18);
-  }
-  [data-theme="dark"] .provas-page-wrap .next-exam-hero{
-    box-shadow:0 10px 30px -18px rgba(0,0,0,.55);
   }
   .provas-page-wrap .neh-subj{font-size:21px}
   .provas-page-wrap .neh-cd-num{font-size:32px}
@@ -14178,7 +14181,6 @@ function renderProvas(el){
   let heroHtml='';
   if(sortedUp.length>0){
     const nx=sortedUp[0];
-    const nxColor=SUBJECTS.find(s=>s.name===nx.subj)?.color||'var(--gold)';
     const diff=daysDiff(nx.examDate);
     const ms=msUntilExam(nx.examDate,nx.examTime);
     const cd=fmtCd(ms);
@@ -14186,12 +14188,13 @@ function renderProvas(el){
     const isTomorrow=diff===1;
     const tipoLabel=nx.tipo==='trabalho'?'Próximo Trabalho':'Próxima Prova';
 
-    /* Status label: Hoje / Amanhã / Xd */
-    let statusTxt, statusColor, statusBg;
-    if(isToday){statusTxt='HOJE';statusColor='var(--red)';statusBg='var(--redbg)';}
-    else if(isTomorrow){statusTxt='Amanhã';statusColor='var(--amber)';statusBg='var(--amberbg)';}
-    else if(diff<=7){statusTxt=`${diff} dias`;statusColor='var(--amber)';statusBg='var(--amberbg)';}
-    else{statusTxt=`${diff} dias`;statusColor=nxColor;statusBg=nxColor+'22';}
+    /* Status label: Hoje / Amanhã / Xd — cor só carrega urgência real,
+       sem pílula de fundo nem cor arbitrária da matéria */
+    let statusTxt, statusColor;
+    if(isToday){statusTxt='HOJE';statusColor='var(--red)';}
+    else if(isTomorrow){statusTxt='Amanhã';statusColor='var(--amber)';}
+    else if(diff<=7){statusTxt=`${diff} dias`;statusColor='var(--amber)';}
+    else{statusTxt=`${diff} dias`;statusColor='var(--t2)';}
 
     /* Dia, data e hora formatados */
     const _DIAS_COMPLETO=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
@@ -14202,12 +14205,12 @@ function renderProvas(el){
     const mes=_MESES[nxDate.getMonth()];
     const timeStart=nx.examTime?nx.examTime.split(/[–\-]/)[0].trim():'';
     const dateBlock=`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px">
-      <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);background:var(--bg2);border:1px solid var(--line2);padding:5px 10px;border-radius:8px">
-        <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);background:var(--bg2);padding:5px 10px;border-radius:8px">
+        <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         ${dowFull}, ${dia} de ${mes}
       </span>
-      ${timeStart?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);background:var(--bg2);border:1px solid var(--line2);padding:5px 10px;border-radius:8px">
-        <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:var(--t3);fill:none;stroke-width:2;stroke-linecap:round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      ${timeStart?`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--t2);background:var(--bg2);padding:5px 10px;border-radius:8px">
+        <svg viewBox="0 0 24 24" width="12" height="12" style="stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         ${timeStart}
       </span>`:''}
     </div>`;
@@ -14217,9 +14220,10 @@ function renderProvas(el){
       ${nx.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span style="font-size:11px;font-weight:500;color:var(--t3);background:var(--bg2);border:1px solid var(--line2);padding:3px 8px;border-radius:6px">${escHtml(t)}</span>`).join('')}
     </div>`:'';
 
-    /* Barra de urgência */
+    /* Barra de urgência — cor só muda quando é hoje/breve; fora isso usa
+       o dourado padrão do site em vez da cor (qualquer uma das 42) da matéria */
     const pct=Math.max(0,Math.min(100,Math.round((1-Math.min(diff,14)/14)*100)));
-    const barColor=isToday?'var(--red)':diff<=3?'var(--amber)':nxColor;
+    const barColor=isToday?'var(--red)':diff<=3?'var(--amber)':'var(--gold)';
 
     /* Cronômetro ao vivo só aparece quando faltar menos de 24 horas */
     const _msDay=24*60*60*1000;
@@ -14234,17 +14238,17 @@ function renderProvas(el){
         </div>`
       :'';
 
-    const valorBadge=nx.valor?`<span style="flex-shrink:0;font-size:11px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:4px 10px;border-radius:8px;white-space:nowrap;margin-top:2px">${fmtPts(nx.valor)}</span>`:'';
+    const valorBadge=nx.valor?`<span style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--t2);background:var(--bg2);padding:4px 11px;border-radius:20px;white-space:nowrap;margin-top:2px;font-family:var(--ffm)">${fmtPts(nx.valor)}</span>`:'';
 
-    heroHtml=`<div class="next-exam-hero" style="--accent-color:${nxColor};border-left-color:${nxColor}" onclick="openExamDetail('${nx.id}')">
+    heroHtml=`<div class="next-exam-hero" onclick="openExamDetail('${nx.id}')">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div style="min-width:0;flex:1">
-          <div class="neh-eyebrow" style="color:${nxColor}"><span class="dot" style="background:${nxColor}"></span>${tipoLabel}</div>
+          <div class="neh-eyebrow">${tipoLabel}</div>
           <div class="neh-subj">${escHtml(nx.subj)}</div>
           ${nx.title?`<div class="neh-title">${escHtml(nx.title)}</div>`:''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">
-          <div style="padding:5px 12px;border-radius:10px;background:${statusBg};color:${statusColor};font-size:13px;font-weight:800;font-family:var(--ffm);letter-spacing:-.3px;white-space:nowrap">${statusTxt}</div>
+          <div style="padding:5px 12px;border-radius:20px;background:var(--bg2);color:${statusColor};font-size:12.5px;font-weight:800;font-family:var(--ffm);letter-spacing:-.2px;white-space:nowrap">${statusTxt}</div>
           ${valorBadge}
         </div>
       </div>
@@ -14255,28 +14259,9 @@ function renderProvas(el){
     </div>`;
   }
 
-  /* ── todayExams (usado nas stats) ── */
-  const todayExams=upcoming.filter(e=>daysDiff(e.examDate)===0);
   let todayAlertHtml='';
 
   let statsHtml='';
-  if(exams.length>0){
-    const todayCount=todayExams.length;
-    statsHtml=`<div class="provas-stats-v2">
-      <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${upcoming.length}</div><div class="ps2-lbl">Próximas</div></div>
-      </div>
-      <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--amberbg)"><svg viewBox="0 0 24 24" style="stroke:var(--amber)"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--amber)">${soon.length}</div><div class="ps2-lbl">Esta semana</div>${todayCount>0?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">${todayCount} hoje</div>`:''}</div>
-      </div>
-      <div class="ps2-card">
-        <div class="ps2-icon" style="background:var(--goldbg)"><svg viewBox="0 0 24 24" style="stroke:var(--gold)"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-        <div class="ps2-info"><div class="ps2-val" style="color:var(--gold)">${totalValor>0?fmtNumBR(totalValor):'—'}</div><div class="ps2-lbl">Pontos em jogo</div></div>
-      </div>
-    </div>`;
-  }
 
   /* ── Tudo o que já foi lançado em Notas aparece automaticamente nos
      blocos de trimestre, sem precisar cadastrar nada de novo em
@@ -14573,19 +14558,27 @@ function renderProvas(el){
     const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--gold)" stroke="var(--gold)"/>':''}</svg></button>`;
     const conteudoHtml=(e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
     const subjLine=opts.hideSubj?'':`<span class="exam-subj-name">${escHtml(e.subj)}</span>`;
+    // tom do ícone/valor — mesma paleta usada nos cards de totais (ps2-card)
+    let toneColor,valMain,valLbl;
+    if(isPast){toneColor='var(--t4)';valMain='✓';valLbl='Feita';}
+    else if(isToday){toneColor='var(--red)';valMain='Hoje';valLbl='';}
+    else if(diff===1){toneColor='var(--amber)';valMain='1';valLbl='dia';}
+    else if(isSoon){toneColor='var(--amber)';valMain=diff;valLbl='dias';}
+    else{toneColor='var(--gold)';valMain=diff;valLbl='dias';}
     return`<div class="exam-item ${itemCls}" ${clickAttr}>
-      <div class="exam-item-head">
-        <div class="exam-item-head-left">
+      <div class="exam-item-top">
+        <div class="exam-item-main">
           ${subjLine}
+          <div class="exam-item-type-lbl">${tipoLabel}</div>
         </div>
-        <div class="exam-item-actions">
-          <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
+        <div class="exam-item-days-block">
+          <div class="exam-item-days-val" style="color:${toneColor}">${valMain}</div>
+          ${valLbl?`<div class="exam-item-days-lbl">${valLbl}</div>`:''}
         </div>
       </div>
       <div class="exam-item-body">
         <div class="exam-meta-row">
           ${infoBadge}
-          <span class="exam-tipo-pill">${tipoIcon}${tipoLabel}</span>
           ${valorHtml}
         </div>
         ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
