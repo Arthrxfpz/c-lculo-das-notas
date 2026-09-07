@@ -1686,17 +1686,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .tipo-seg-btn.active .tipo-seg-btn-icon svg{stroke:var(--accent-text,#000)}
 .tipo-seg-btn.active .tipo-seg-btn-sub{color:var(--t3)}
 
-/* exam tipo chip na lista */
-.exam-tipo-chip{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;
-  padding:3px 8px;border-radius:7px;
-  background:var(--violetbg);color:var(--violet);border:1px solid var(--violetbd);
-}
-.exam-tipo-chip.prova{background:var(--redbg);color:var(--red);border-color:var(--redbd)}
-.exam-tipo-chip.trabalho{background:var(--violetbg);color:var(--violet);border-color:var(--violetbd)}
-.exam-tipo-chip svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round}
-
 /* badge unificado: data + hora */
 .exam-info-badge{
   display:inline-flex;align-items:center;gap:5px;
@@ -2526,14 +2515,14 @@ html.offline-view-only #n-comunidade{
 .field-wrap input::placeholder{color:var(--t3)}
 
 /* exam list — visual modernizado */
-.exam-list{display:flex;flex-direction:column;gap:10px}
+.exam-list{display:flex;flex-direction:column;gap:6px}
 .exam-item{
   position:relative;
   background:var(--bg1);
   border:1px solid var(--line2);
-  border-radius:18px;
-  padding:15px 16px 13px;
-  display:flex;flex-direction:column;gap:10px;
+  border-radius:14px;
+  padding:10px 12px 9px;
+  display:flex;flex-direction:column;gap:6px;
   transition:background .18s var(--ease-ios),border-color .18s var(--ease-ios),
              box-shadow .2s var(--ease-ios),transform .18s var(--ease-ios);
   animation:fadeIn .22s var(--ease-ios) both;
@@ -2547,42 +2536,48 @@ html.offline-view-only #n-comunidade{
 .exam-item[onclick]:hover{transform:translateY(-1px)}
 .exam-item:active{transform:scale(.99)}
 .exam-item.done{opacity:.45;filter:saturate(.4);box-shadow:none}
-.exam-item.soon{border-color:var(--amberbd)}
-.exam-item.soon::before{opacity:1;background:var(--amber)}
 .exam-item.today-exam{border-color:var(--redbd);background:var(--redbg)}
 .exam-item.today-exam::before{opacity:1;background:var(--red)}
 .exam-item-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .exam-item-head-left{display:flex;align-items:center;gap:7px;min-width:0;flex:1}
-/* ── Cabeçalho no estilo dos cards de totais (ps2-card): ícone em
-   quadrado colorido + valor grande com label pequena ao lado ── */
-.exam-item-top{display:flex;align-items:center;gap:12px}
-.exam-item-icon{
-  width:34px;height:34px;border-radius:10px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--bg2);color:var(--t2);
+/* ── Cabeçalho: matéria + tipo à esquerda, prazo ("7 dias") num pill organizado à direita ── */
+.exam-item-row1{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.exam-subj-name{font-size:14px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px;display:block}
+.exam-item.today-exam .exam-subj-name{color:#fff}
+.exam-item-body{display:flex;flex-direction:column;gap:6px}
+/* ── Coluna esquerda do cabeçalho: matéria + tipo (texto simples) ── */
+.exam-item-row1-left{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+.exam-tipo-sub{font-size:10.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.3px}
+.exam-item.today-exam .exam-tipo-sub{color:rgba(255,255,255,.65)}
+/* ── Prazo ("7 dias") organizado num pill discreto, sempre no mesmo
+   lugar — sem depender de haver valor cadastrado ou não ── */
+.exam-days-pill{
+  flex-shrink:0;font-family:var(--ffm);font-size:11.5px;font-weight:800;
+  background:var(--bg2);padding:4px 11px;border-radius:20px;white-space:nowrap;
 }
-.exam-item-icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-.exam-item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.exam-item-type-lbl{font-size:10px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.3px}
-.exam-item-days-block{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;line-height:1}
-.exam-item-days-val{font-family:var(--ffm);font-size:20px;font-weight:700;line-height:1;white-space:nowrap}
-.exam-item-days-lbl{font-size:9px;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.3px;margin-top:3px}
-.exam-item.today-exam .exam-item-type-lbl{color:rgba(255,255,255,.7)}
-.exam-item.today-exam .exam-item-icon{background:rgba(255,255,255,.15) !important;color:#fff !important}
-.exam-item.today-exam .exam-item-days-val{color:#fff !important}
-.exam-tipo-pill{letter-spacing:.2px;
-  display:inline-flex;align-items:center;gap:4px;flex-shrink:0;
-  padding:3px 8px 3px 6px;border-radius:7px;
-  background:var(--goldbg);color:var(--gold);border:1px solid var(--goldbd);
-  font-size:10px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;
-  white-space:nowrap;
+.exam-item.today-exam .exam-days-pill{background:rgba(255,255,255,.16);color:#fff !important}
+/* ── Linha data · horário · valor: fundo único e discreto, apenas
+   divisórias finas internas — sem caixa em volta nem seta ── */
+.exam-divider-row{
+  display:flex;align-items:stretch;
+  background:var(--bg2);border-radius:12px;overflow:hidden;
 }
-.exam-tipo-pill svg{width:9px;height:9px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.exam-item.done .exam-tipo-pill{background:var(--bg3);color:var(--t4);border-color:var(--line2)}
-.exam-item.today-exam .exam-tipo-pill{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.25)}
-.exam-subj-name{font-size:14px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.2px}
-.exam-item-body{display:flex;flex-direction:column;gap:4px}
-.exam-meta-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.exam-divider-cell{
+  flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;
+  padding:9px 12px;
+}
+.exam-divider-cell+.exam-divider-cell{border-left:1px solid var(--line2)}
+.exam-divider-sub{font-size:9px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.exam-divider-main{font-family:var(--ffm);font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.exam-item.today-exam .exam-divider-row{background:rgba(255,255,255,.13)}
+.exam-item.today-exam .exam-divider-cell+.exam-divider-cell{border-left-color:rgba(255,255,255,.22)}
+.exam-item.today-exam .exam-divider-sub{color:rgba(255,255,255,.6)}
+.exam-item.today-exam .exam-divider-main{color:#fff}
+/* ── Conteúdo em texto corrido, com o rótulo em destaque sutil ── */
+.exam-conteudo-line{font-size:12px;color:var(--t3);line-height:1.45}
+.exam-conteudo-label{font-weight:700;color:var(--t2)}
+.exam-item.today-exam .exam-conteudo-line{color:rgba(255,255,255,.7)}
+.exam-item.today-exam .exam-conteudo-label{color:rgba(255,255,255,.9)}
 .exam-item-actions{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
 
 .exam-info{flex:1;min-width:0}
@@ -2605,27 +2600,28 @@ html.offline-view-only #n-comunidade{
 
 /* ── Rodapé de ações (editar / lembrete / excluir) ── */
 .exam-item-foot{
-  padding-top:9px;margin-top:2px !important;
+  display:flex;align-items:center;justify-content:flex-end;gap:7px;
+  padding-top:9px;margin-top:2px;
   border-top:1px solid var(--line2);
 }
 .exam-rm-btn{
-  width:30px;height:30px;background:transparent;border:1.5px solid var(--line2);border-radius:9px;
+  width:28px;height:28px;background:var(--bg2);border:none;border-radius:50%;
   color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .16s var(--ease-ios),border-color .16s var(--ease-ios),color .16s var(--ease-ios),transform .12s var(--ease-spring);
+  transition:background .16s var(--ease-ios),color .16s var(--ease-ios),transform .12s var(--ease-spring);
 }
-.exam-rm-btn:hover{background:var(--redbg);border-color:var(--redbd);color:var(--red)}
-.exam-rm-btn:active{transform:scale(.88);background:var(--redbg);border-color:var(--redbd);color:var(--red)}
+.exam-rm-btn:hover{background:var(--redbg);color:var(--red)}
+.exam-rm-btn:active{transform:scale(.88);background:var(--redbg);color:var(--red)}
 .exam-rm-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Botão lápis (editar prova) ── */
 .exam-edit-btn{
-  width:30px;height:30px;background:transparent;border:1.5px solid var(--line2);border-radius:9px;
+  width:28px;height:28px;background:var(--bg2);border:none;border-radius:50%;
   color:var(--t3);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:background .16s var(--ease-ios),border-color .16s var(--ease-ios),color .16s var(--ease-ios),transform .12s var(--ease-spring);
+  transition:background .16s var(--ease-ios),color .16s var(--ease-ios),transform .12s var(--ease-spring);
   flex-shrink:0;
 }
-.exam-edit-btn:hover{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
-.exam-edit-btn:active{transform:scale(.88);background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
+.exam-edit-btn:hover{background:var(--goldbg);color:var(--gold)}
+.exam-edit-btn:active{transform:scale(.88);background:var(--goldbg);color:var(--gold)}
 .exam-edit-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
 /* ── Modal de edição de prova ── */
@@ -4510,13 +4506,15 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
     grid-template-columns: 370px 1fr;
     gap: 28px;
   }
-  /* Lista em 2 colunas quando há espaço suficiente */
-  .provas-page-wrap .exam-list {
+  /* Por padrão os cards continuam empilhados (um embaixo do outro) —
+     só viram grid de 2 colunas lado a lado quando a pessoa liga essa
+     opção pelo botão da barra de ferramentas (.exam-list-wide). */
+  .provas-page-wrap .exam-list.exam-list-wide {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 13px;
   }
-  .provas-page-wrap .exam-list .exam-item {
+  .provas-page-wrap .exam-list.exam-list-wide .exam-item {
     margin: 0;
   }
 }
@@ -4538,15 +4536,15 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
    NOTIFICATION BELL BUTTON (on exam item)
 ═══════════════════════════════ */
 .exam-notif-btn {
-  width:32px;height:32px;
-  background:transparent;border:1.5px solid var(--line2);
+  width:28px;height:28px;
+  background:var(--bg2);border:none;
   border-radius:50%;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;transition:all .18s var(--ease-ios);
   color:var(--t4);
 }
 .exam-notif-btn svg {
-  width:14px;height:14px;stroke:currentColor;fill:none;
+  width:13px;height:13px;stroke:currentColor;fill:none;
   stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
   transition:stroke .18s;
 }
@@ -4898,24 +4896,6 @@ textarea.exam-edit-input{resize:none;line-height:1.55;min-height:76px;}
 
 }
 
-
-/* ─── Exam topic chips on list ─── */
-.exam-topics-row{
-  display:flex;flex-wrap:wrap;gap:5px;
-  margin-top:8px;
-}
-.exam-topic-chip{
-  font-size:11px;font-weight:600;color:var(--t2);
-  background:var(--bg2);border:1px solid var(--line2);
-  border-radius:20px;padding:3px 9px;
-  letter-spacing:-0.1px;line-height:1.4;
-}
-.exam-item.today-exam .exam-topic-chip{
-  background:var(--redbg);border-color:var(--redbd);color:var(--red);
-}
-.exam-item.soon .exam-topic-chip{
-  background:var(--amberbg);border-color:var(--amberbd);color:var(--amber);
-}
 
 /* ─── Exam detail conteudo ─── */
 .edc-conteudo{
@@ -8950,6 +8930,18 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   }
   .provas-search-clear svg{width:13px;height:13px;stroke:currentColor;fill:none}
   .provas-search-clear:hover{background:var(--bg3);color:var(--t2)}
+  /* ── Botão "empilhado / lado a lado": escondido por padrão aqui e só
+     ligado lá embaixo, no @media (min-width:1060px) — mesmo breakpoint
+     em que .exam-list-wide de fato vira grid de 2 colunas. ── */
+  .provas-cols-btn{
+    display:none;flex-shrink:0;align-items:center;justify-content:center;
+    width:40px;height:40px;border:1.5px solid var(--line2);background:var(--bg2);
+    border-radius:12px;color:var(--t2);cursor:pointer;
+    transition:background .12s,border-color .12s,color .12s;
+  }
+  .provas-cols-btn svg{width:15px;height:15px}
+  .provas-cols-btn:hover{background:var(--bg3);border-color:var(--line)}
+  .provas-cols-btn.active{background:var(--goldbg);border-color:var(--goldbd);color:var(--gold)}
   .provas-toolbar-divider{height:1px;background:var(--line3);margin:12px -16px}
   .provas-toolbar-row2{display:flex;align-items:center;gap:10px}
   .provas-toolbar-lbl{
@@ -8969,8 +8961,12 @@ html[data-expansive="1"][data-expansive-bg="1"] {
     margin-bottom:0;padding-bottom:0;
   }
 
-  /* ── Itens da lista: um pouco mais de respiro no desktop ── */
-  .provas-page-wrap .exam-item{padding:14px 16px}
+  /* ── Itens da lista: um pouco mais de respiro no desktop (containers
+     levemente maiores: mais padding, cantos um pouco mais arredondados
+     e mais espaço entre um card e outro) ── */
+  .provas-page-wrap .exam-list{gap:9px}
+  .provas-page-wrap .exam-item{padding:17px 19px;border-radius:16px;gap:9px}
+  .provas-page-wrap .exam-item-foot{padding-top:12px}
   .provas-page-wrap .section-label{margin:18px 0 10px;font-size:12px}
   .provas-page-wrap .section-label:first-child{margin-top:0}
 
@@ -8991,6 +8987,11 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   .provas-empty-title{font-size:16px;font-weight:800;color:var(--t1);letter-spacing:-.3px;margin-bottom:6px}
   .provas-empty-sub{font-size:13px;color:var(--t3);max-width:360px;line-height:1.5;margin-bottom:24px}
   .provas-empty-state .add-exam-cta-btn{width:auto;min-width:260px}
+}
+@media (min-width:1060px){
+  /* O botão de "lado a lado" só faz sentido a partir daqui — é o mesmo
+     breakpoint em que .exam-list-wide realmente vira grid de 2 colunas. */
+  .provas-cols-btn{display:flex}
 }
 
 </style>
@@ -11563,7 +11564,7 @@ function finalGrade(sid){
 
 const fmt=n=>n===null?'—':Number(n).toFixed(1);
 /* Formata um valor de pontuação no padrão BR: "3,0 pontos" (em vez de "3.0 pts") */
-const fmtPts=n=>{const v=parseFloat(n);return isNaN(v)?'':v.toFixed(1).replace('.',',')+' pontos';};
+const fmtPts=n=>{const v=parseFloat(n);if(isNaN(v))return'';const r=Math.round(v*10)/10;const txt=(r%1===0)?String(r):r.toFixed(1).replace('.',',');return txt+' pontos';};
 /* Só o número no padrão BR (vírgula), sem a palavra "pontos" — usado quando o rótulo já deixa isso claro */
 const fmtNumBR=n=>{const v=parseFloat(n);return isNaN(v)?'—':v.toFixed(1).replace('.',',');};
 const st=n=>n===null?'pending':n>=6?'pass':n>=5?'warn':'fail';
@@ -14051,9 +14052,14 @@ let provasFilter='all';
 let provasSortAZ=false;
 let provasSearch='';
 let provasViewMode='lista';
+/* No desktop, por padrão os cards de prova/trabalho ficam empilhados
+   (um embaixo do outro) — quem quiser pode alternar pra lado a lado
+   através do botão dedicado na barra de ferramentas. */
+let provasWideCols=false;
 function setProvasFilter(val){provasFilter=val;render(null);}
 function toggleProvasSort(){provasSortAZ=!provasSortAZ;render(null);}
 function setProvasViewMode(v){provasViewMode=v;render(null);}
+function toggleProvasCols(){provasWideCols=!provasWideCols;render(null);}
 /* Estimativa do trimestre pela data, usada quando a prova/trabalho não
    está vinculada explicitamente a um trimestre nas Notas (calendário
    escolar aproximado: fev-abr = 1°T, mai-jul = 2°T, ago-jan = 3°T). */
@@ -14174,7 +14180,7 @@ function renderProvas(el){
   const done=exams.filter(e=>isExamPast(e));
   const soon=exams.filter(e=>{const d=daysDiff(e.examDate);return !isExamPast(e)&&d>=0&&d<=7;});
   const totalValor=upcoming.reduce((a,e)=>a+(parseFloat(e.valor)||0),0);
-  const _DOW_PT=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const _DOW_PT=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
   const sortedUp=[...upcoming].sort((a,b)=>a.examDate.localeCompare(b.examDate));
 
   /* ── Hero: próxima prova ── */
@@ -14320,6 +14326,9 @@ function renderProvas(el){
           <input id="provas-search-input" class="provas-search-input" type="text" placeholder="Buscar por matéria, título ou conteúdo..." value="${escHtml(provasSearch)}" oninput="setProvasSearch(this.value)">
           ${provasSearch?`<button class="provas-search-clear" onclick="clearProvasSearch()" title="Limpar busca" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
         </div>
+        <button class="provas-cols-btn${provasWideCols?' active':''}" type="button" onclick="toggleProvasCols()" title="${provasWideCols?'Ver empilhado (uma coluna)':'Ver lado a lado (duas colunas)'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${provasWideCols?'<rect x="3" y="3" width="7" height="18" rx="1.5"/><rect x="14" y="3" width="7" height="18" rx="1.5"/>':'<rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/>'}</svg>
+        </button>
         <button class="provas-add-btn" type="button" onclick="openAddExamModal()" title="Adicionar prova ou trabalho">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           <span>Nova</span>
@@ -14543,48 +14552,56 @@ function renderProvas(el){
     else if(diff===1){badgeCls='soon-badge';badgeTxt='Amanhã';itemCls='soon';}
     else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff} dias`;itemCls='soon';}
     else{badgeCls='future-badge';badgeTxt=`${diff} dias`;itemCls='';}
-    const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${fmtPts(e.valor)}</span>`:'';
     const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
-    const tipoIcon=e.tipo==='trabalho'
-      ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
-      :`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
     const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
-    const metaTxt=timeStart?`${fmtDateBR(e.examDate)} · ${timeStart}`:fmtDateBR(e.examDate);
     const dowLabel=_DOW_PT[new Date(e.examDate+'T00:00:00').getDay()];
-    const dateSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-    const infoBadge=`<div class="exam-info-badge">${dateSvg}<span class="exam-dow-label">${dowLabel}</span>${metaTxt}</div>`;
     const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
     const notifScheduled=getExamNotif(e.id);
     const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--gold)" stroke="var(--gold)"/>':''}</svg></button>`;
-    const conteudoHtml=(e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
-    const subjLine=opts.hideSubj?'':`<span class="exam-subj-name">${escHtml(e.subj)}</span>`;
-    // tom do ícone/valor — mesma paleta usada nos cards de totais (ps2-card)
-    let toneColor,valMain,valLbl;
-    if(isPast){toneColor='var(--t4)';valMain='✓';valLbl='Feita';}
-    else if(isToday){toneColor='var(--red)';valMain='Hoje';valLbl='';}
-    else if(diff===1){toneColor='var(--amber)';valMain='1';valLbl='dia';}
-    else if(isSoon){toneColor='var(--amber)';valMain=diff;valLbl='dias';}
-    else{toneColor='var(--gold)';valMain=diff;valLbl='dias';}
+    /* ── Conteúdo em texto corrido, sem chips/bolinhas ── */
+    const conteudoHtml=(e.conteudo)?`<div class="exam-conteudo-line"><span class="exam-conteudo-label">Conteúdo:</span> ${escHtml(e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).join(', '))}</div>`:'';
+    // tom do prazo — só hoje (vermelho) e passada (cinza) se destacam;
+    // o resto fica neutro no dourado padrão do site.
+    let toneColor,diasTxt;
+    if(isPast){toneColor='var(--t4)';diasTxt='Feita';}
+    else if(isToday){toneColor='var(--red)';diasTxt='Hoje';}
+    else if(diff===1){toneColor='var(--gold)';diasTxt='1 dia';}
+    else{toneColor='var(--gold)';diasTxt=`${diff} dias`;}
+    /* ── Valor em pontos — só aparece quando existe, sem duplicar o
+       prazo (que já tem seu próprio lugar organizado acima) ── */
+    let ptsMain=null;
+    if(e.valor){
+      const v=parseFloat(e.valor);const r=Math.round(v*10)/10;
+      ptsMain=(r%1===0)?String(r):r.toFixed(1).replace('.',',');
+    }
+    /* ── Linha data · horário · valor: fundo único, divisórias finas
+       entre colunas, sem seta e sem caixa em volta ── */
+    const dividerRowHtml=`<div class="exam-divider-row">
+      <div class="exam-divider-cell">
+        <span class="exam-divider-sub">${dowLabel}</span>
+        <span class="exam-divider-main">${fmtDateBR(e.examDate)}</span>
+      </div>
+      ${timeStart?`<div class="exam-divider-cell">
+        <span class="exam-divider-sub">Horário</span>
+        <span class="exam-divider-main">${timeStart}</span>
+      </div>`:''}
+      ${ptsMain?`<div class="exam-divider-cell">
+        <span class="exam-divider-sub">Valor</span>
+        <span class="exam-divider-main">${ptsMain} pontos</span>
+      </div>`:''}
+    </div>`;
     return`<div class="exam-item ${itemCls}" ${clickAttr}>
-      <div class="exam-item-top">
-        <div class="exam-item-main">
-          ${subjLine}
-          <div class="exam-item-type-lbl">${tipoLabel}</div>
+      <div class="exam-item-row1">
+        <div class="exam-item-row1-left">
+          <span class="exam-subj-name">${escHtml(e.subj)}</span>
+          <span class="exam-tipo-sub">${tipoLabel}</span>
         </div>
-        <div class="exam-item-days-block">
-          <div class="exam-item-days-val" style="color:${toneColor}">${valMain}</div>
-          ${valLbl?`<div class="exam-item-days-lbl">${valLbl}</div>`:''}
-        </div>
+        <span class="exam-days-pill" style="color:${toneColor}">${diasTxt}</span>
       </div>
-      <div class="exam-item-body">
-        <div class="exam-meta-row">
-          ${infoBadge}
-          ${valorHtml}
-        </div>
-        ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
-        ${conteudoHtml}
-      </div>
-      <div class="exam-item-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:-2px">
+      ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
+      ${dividerRowHtml}
+      ${conteudoHtml}
+      <div class="exam-item-foot">
         ${bellBtn}
         ${isPast?'':`<button class="exam-edit-btn" onclick="event.stopPropagation();openEditExam('${e.id}')" title="Editar prova"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`}
         <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
@@ -14679,18 +14696,22 @@ function renderProvas(el){
       return`<div class="section-label" style="color:${color||'var(--t3)'};display:flex;align-items:center">${dot}${txt}<span style="margin-left:6px;font-size:11px;font-weight:700;background:var(--bg3);color:${color||'var(--t4)'};padding:1px 7px;border-radius:10px">${n}</span></div>`;
     };
 
+    /* modificador que ativa o lado-a-lado (só tem efeito visual no
+       desktop largo — ver CSS de .exam-list-wide) */
+    const examListCls=`exam-list${provasWideCols?' exam-list-wide':''}`;
+
     if(provasSortAZ){
       if(upcomingExams.length>0){
-        listHtml+=secLabel('Próximas',upcomingExams,'')+`<div class="exam-list">`;
+        listHtml+=secLabel('Próximas',upcomingExams,'')+`<div class="${examListCls}">`;
         upcomingExams.forEach(e=>{listHtml+=buildItem(e);});
         listHtml+='</div>';
       }
     }else{
-      if(todayList.length>0){listHtml+=secLabel('Hoje',todayList,'var(--red)')+`<div class="exam-list">`;todayList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
-      if(urgList.length>0){listHtml+=secLabel('Próximos 3 dias',urgList,'var(--amber)')+`<div class="exam-list">`;urgList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
-      if(weekList.length>0){listHtml+=secLabel('Esta semana',weekList,'')+`<div class="exam-list">`;weekList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
-      if(nextWeekList.length>0){listHtml+=secLabel('Semana que vem',nextWeekList,'')+`<div class="exam-list">`;nextWeekList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
-      if(laterList.length>0){listHtml+=secLabel('Em breve',laterList,'')+`<div class="exam-list">`;laterList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(todayList.length>0){listHtml+=secLabel('Hoje',todayList,'var(--red)')+`<div class="${examListCls}">`;todayList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(urgList.length>0){listHtml+=secLabel('Próximos 3 dias',urgList,'var(--amber)')+`<div class="${examListCls}">`;urgList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(weekList.length>0){listHtml+=secLabel('Esta semana',weekList,'')+`<div class="${examListCls}">`;weekList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(nextWeekList.length>0){listHtml+=secLabel('Semana que vem',nextWeekList,'')+`<div class="${examListCls}">`;nextWeekList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
+      if(laterList.length>0){listHtml+=secLabel('Em breve',laterList,'')+`<div class="${examListCls}">`;laterList.forEach(e=>{listHtml+=buildItem(e);});listHtml+='</div>';}
     }
   }
 
