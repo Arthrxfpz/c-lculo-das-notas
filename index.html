@@ -9050,6 +9050,18 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .tri-seg-btn.full.active{border-color:var(--line2);background:var(--bg2);color:var(--t4)}
 .ex-tri-full-hint{font-size:11px;color:var(--t3);margin-top:7px;line-height:1.5}
 
+/* ── Piscada de destaque ao navegar de Atividades → Notas: usada tanto
+   no card da avaliação (.eval-item) quanto na matéria (.subj-item) como
+   fallback quando o item exato não é encontrado. box-shadow/border-color
+   animados sempre "ganham" da regra estática enquanto a animação roda,
+   então funciona nos dois sem precisar de !important. ── */
+@keyframes pisca-destaque-anim{
+  0%,100%{box-shadow:none;border-color:var(--line2)}
+  20%,60%{box-shadow:0 0 0 3px var(--goldbg),0 0 18px 2px var(--goldbg);border-color:var(--gold)}
+  40%,80%{box-shadow:none;border-color:var(--line2)}
+}
+.pisca-destaque{animation:pisca-destaque-anim 1.4s ease-in-out 1}
+
 /* ── Selo em avaliações vindas das Atividades ── */
 .eval-from-atv-badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:2px 7px;border-radius:7px;margin-left:6px;white-space:nowrap;vertical-align:middle}
 .eval-from-atv-badge svg{width:8px;height:8px;flex-shrink:0}
@@ -14086,7 +14098,7 @@ function collectNotasActivityItems(){
   return out;
 }
 
-function goToNotaEval(sid,tab){
+function goToNotaEval(sid,tab,idx){
   curTab=tab;
   curPage='notas';
   setNavActive('notas');
@@ -14100,6 +14112,22 @@ function goToNotaEval(sid,tab){
   openAcc[sid+'_'+tab]=true;
   render('push');
   syncLayout();
+  // Rola até a avaliação específica dentro da matéria e dá uma piscada
+  // nela — sem isso a pessoa só via a matéria abrir, sem saber qual das
+  // avaliações da lista era a que tinha vindo de Atividades.
+  setTimeout(()=>{
+    const targetId=(typeof idx==='number'&&!isNaN(idx))?`ei-${sid}-${tab}-${idx}`:null;
+    const el=(targetId&&document.getElementById(targetId))||document.getElementById('si-'+sid);
+    if(!el)return;
+    el.scrollIntoView({behavior:'smooth',block:'center'});
+    el.classList.remove('pisca-destaque');
+    void el.offsetWidth; // força reflow pra poder reiniciar a animação em cliques seguidos
+    el.classList.add('pisca-destaque');
+    el.addEventListener('animationend',function _rmPisca(){
+      el.classList.remove('pisca-destaque');
+      el.removeEventListener('animationend',_rmPisca);
+    });
+  },340);
 }
 
 // Busca (só aparece no desktop, na barra de ferramentas ao lado dos filtros).
@@ -14259,7 +14287,7 @@ function renderProvas(el){
     const gotV=nf(it.got),totV=nf(it.total);
     const resTxt=gotV!==null?(totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV)):(totV!==null?`— / ${fmt(totV)}`:'Pendente');
     const resCls=gotV!==null?'':' pending';
-    return `<button type="button" class="nota-atv-item" onclick="goToNotaEval('${it.sid}','${it.tab}')">
+    return `<button type="button" class="nota-atv-item" onclick="goToNotaEval('${it.sid}','${it.tab}',${it.idx})">
       <span class="nota-atv-item-icon" style="color:var(--t3);background:var(--bg3)">${notaAtvIconEval}</span>
       <span class="nota-atv-item-body">
         <span class="nota-atv-item-title">${escHtml(it.name)}</span>
@@ -14270,7 +14298,7 @@ function renderProvas(el){
 
   const viewToggleHtml=(exams.length>0||notasActivityItems.length>0)?`<div class="provas-view-toggle">
     <button type="button" class="pvt-btn${provasViewMode==='lista'?' active':''}" onclick="setProvasViewMode('lista')">Lista</button>
-    <button type="button" class="pvt-btn${provasViewMode==='trimestre'?' active':''}" onclick="setProvasViewMode('trimestre')">Por trimestre</button>
+    <button type="button" class="pvt-btn${provasViewMode==='trimestre'?' active':''}" onclick="setProvasViewMode('trimestre')">Atividades Gerais</button>
   </div>`:'';
 
   const examSubjs=[...new Set(exams.map(e=>e.subj))];
@@ -17623,17 +17651,12 @@ function _dismissNCToast(){
   setTimeout(()=>toast.classList.remove('hide'),400);
 }
 
-// Aviso de "sincronizado com outro dispositivo" — usa o mesmo popup
-// elegante das outras notificações (ícone + título + descrição), em vez
-// de um balãozinho de texto simples.
+// Aviso de "sincronizado com outro dispositivo" — toast simples de texto
+// (mesmo estilo do "Saindo do modo offline"), em vez do popup grande com
+// ícone + título + descrição usado pelas notificações normais.
 function _showSyncUpdateToast(){
-  if(typeof _showNCToast!=='function') return;
-  _showNCToast({
-    id:'_sync_update',type:'sync',
-    title:'Dados sincronizados',
-    body:'Suas informações foram atualizadas com o que você editou em outro dispositivo.',
-    severity:'info'
-  },0);
+  if(typeof _showNotifToast!=='function') return;
+  _showNotifToast('🔄 Dados sincronizados com outro dispositivo');
 }
 window._showSyncUpdateToast=_showSyncUpdateToast;
 
