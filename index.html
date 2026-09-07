@@ -1888,6 +1888,14 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .res-chart-pane{display:none}
 .res-chart-pane.visible{display:block;animation:fadeIn .2s var(--ease-ios) both}
 .res-chart-pane canvas{display:block;width:100%}
+/* Wrapper do canvas dos Gráficos: altura sempre fixa — o card nunca
+   "pula" de tamanho ao trocar Radar/Barras/Linha ou trimestre. Quando o
+   gráfico (ex.: Barras com muitas matérias) precisa de mais espaço do
+   que isso, rola dentro do próprio wrapper em vez de esticar o card. */
+.res-chart-canvas-wrap{margin-top:12px;height:320px;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.res-chart-canvas-wrap::-webkit-scrollbar{width:5px}
+.res-chart-canvas-wrap::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+.res-chart-canvas-wrap::-webkit-scrollbar-track{background:transparent}
 
 /* section label */
 .section-label{
@@ -9005,7 +9013,9 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .trim-subj-group{padding-top:14px}
 .trim-subj-group:first-child{padding-top:0}
 .trim-subj-group+.trim-subj-group{border-top:1px solid var(--line2);margin-top:14px;padding-top:14px}
-.trim-subj-head{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--bg3);padding:4px 10px;border-radius:7px;margin-bottom:10px}
+.trim-subj-head-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.trim-subj-head{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--bg3);padding:4px 10px;border-radius:7px}
+.trim-subj-head-res{font-size:12.5px;font-weight:800;font-family:var(--ffm);color:var(--t2);white-space:nowrap;flex-shrink:0}
 
 /* ── Seção "Avaliações lançadas em Notas" (sempre visível, automática) ── */
 .notas-activity-section{margin-bottom:18px;padding:16px;border:1.5px solid var(--line2);border-radius:18px;background:var(--bg1)}
@@ -12578,7 +12588,7 @@ function renderResumo(el){
       <button class="res-chart-seg" onclick="switchResType('barras',this)">Barras</button>
       <button class="res-chart-seg res-chart-seg-linha" onclick="switchResType('linha',this)" style="display:none">Linha</button>
     </div>
-    <div style="margin-top:12px"><canvas id="rc-canvas-main"></canvas></div>
+    <div class="res-chart-canvas-wrap" id="rc-canvas-wrap"><canvas id="rc-canvas-main"></canvas></div>
   </div>`;
 
   const _normTxtRes=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -14590,8 +14600,14 @@ function renderProvas(el){
         .sort((a,b)=>a.localeCompare(b,'pt-BR'));
       const groupsHtml=subjNames.map(subjName=>{
         const subjNotaItems=notaItems.filter(it=>it.subj===subjName);
+        // Quanto já ficou nessa matéria, nesse trimestre — soma das notas
+        // já lançadas (campo "got") sobre os 10 pts possíveis. Só mostra
+        // se já tem alguma nota lançada (senão fica tudo "Pendente").
+        let subjSum=0,subjHasGot=false;
+        subjNotaItems.forEach(it=>{const g=nf(it.got);if(g!==null){subjSum+=g;subjHasGot=true;}});
+        const resTag=subjHasGot?`<span class="trim-subj-head-res">${fmt(subjSum)}/10</span>`:'';
         return`<div class="trim-subj-group">
-          <span class="trim-subj-head">${escHtml(subjName)}</span>
+          <div class="trim-subj-head-row"><span class="trim-subj-head">${escHtml(subjName)}</span>${resTag}</div>
           <div class="nota-atv-list">${subjNotaItems.map(buildNotaAtvCard).join('')}</div>
         </div>`;
       }).join('');
