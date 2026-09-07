@@ -1635,6 +1635,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 [data-theme="dark"] .eval-res-cell{ background:var(--bg0); }
 .eval-res-lbl{font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.7px}
 .eval-res-val{font-family:var(--ffm);font-size:16px;font-weight:700;color:var(--gold);letter-spacing:-0.3px;line-height:1}
+.eval-res-val.pending{color:var(--amber);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 
 /* ── modo edição ── */
 .eval-item.editing .eval-name-text{display:none}
@@ -1896,6 +1897,28 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;gap:7px;
 }
 .section-label::before{content:'';width:3px;height:11px;border-radius:2px;background:var(--gold);display:inline-block;opacity:.7}
+/* barra de pesquisa de matéria (aba Resultado) */
+.res-search-wrap{position:relative;display:flex;align-items:center;margin:0 0 12px}
+.res-search-icon{position:absolute;left:14px;width:16px;height:16px;stroke:var(--t4);pointer-events:none;transition:stroke .15s var(--ease-ios)}
+.res-search-input{
+  width:100%;font-family:inherit;font-size:14px;font-weight:500;color:var(--t1);
+  background:var(--bg1);border:1.5px solid var(--line2);border-radius:14px;
+  padding:12.5px 40px 12.5px 41px;outline:none;
+  box-shadow:0 1px 5px rgba(0,0,0,.04);
+  transition:border-color .15s var(--ease-ios),background .15s var(--ease-ios),box-shadow .15s var(--ease-ios);
+}
+[data-theme="dark"] .res-search-input{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.res-search-input::placeholder{color:var(--t4);font-weight:400}
+.res-search-input:focus{border-color:var(--line2);background:var(--bg1)}
+.res-search-clear{
+  position:absolute;right:9px;width:24px;height:24px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:none;border:none;color:var(--t4);cursor:pointer;
+  transition:background .12s,color .12s;
+}
+.res-search-clear svg{width:13px;height:13px;stroke:currentColor;fill:none}
+.res-search-clear:hover{background:var(--bg3);color:var(--t2)}
+.res-search-clear:active{transform:scale(.92)}
 /* subject result rows */
 .res-rows-wrap{display:flex;flex-direction:column;gap:9px}
 .res-row{
@@ -8960,6 +8983,86 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 }
 
 </style>
+<style>
+/* ══════════════════════════════════════════
+   PONTE ATIVIDADES ⇄ NOTAS
+══════════════════════════════════════════ */
+/* ── Toggle de visualização (Lista / Por trimestre) na aba Atividades ── */
+.provas-view-toggle{display:flex;gap:6px;margin-bottom:14px;background:var(--bg2);border:1px solid var(--line2);border-radius:12px;padding:4px}
+.pvt-btn{flex:1;border:none;background:transparent;color:var(--t3);font-family:inherit;font-size:12.5px;font-weight:700;padding:8px 10px;border-radius:9px;cursor:pointer;transition:background .18s ease,color .18s ease}
+.pvt-btn.active{background:var(--bg1);color:var(--t1);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+
+/* ── Agrupamento por trimestre ── */
+.provas-trim-view{display:flex;flex-direction:column;gap:14px}
+.trim-block{background:var(--bg1);border:1.5px solid var(--line2);border-radius:18px;padding:16px}
+.trim-block-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:14px}
+.trim-block-title{font-size:14px;font-weight:800;color:var(--t1);letter-spacing:-.3px}
+.trim-block-meta{font-size:11.5px;font-weight:600;color:var(--t3)}
+.trim-block-empty{font-size:12.5px;color:var(--t4);padding:20px 4px;text-align:center}
+/* ── Sub-agrupamento por matéria dentro de cada trimestre (visão "Por
+   trimestre") — só um rótulo neutro (sem cor por matéria) separando os
+   grupos, pra ficar limpo mesmo com várias matérias na lista. ── */
+.trim-subj-group{padding-top:14px}
+.trim-subj-group:first-child{padding-top:0}
+.trim-subj-group+.trim-subj-group{border-top:1px solid var(--line2);margin-top:14px;padding-top:14px}
+.trim-subj-head{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--bg3);padding:4px 10px;border-radius:7px;margin-bottom:10px}
+
+/* ── Seção "Avaliações lançadas em Notas" (sempre visível, automática) ── */
+.notas-activity-section{margin-bottom:18px;padding:16px;border:1.5px solid var(--line2);border-radius:18px;background:var(--bg1)}
+.notas-activity-header{display:flex;flex-direction:column;gap:2px;margin-bottom:14px}
+.notas-activity-title{font-size:14px;font-weight:800;color:var(--t1);letter-spacing:-.2px}
+.notas-activity-sub{font-size:11.5px;color:var(--t3)}
+.nota-atv-list{display:flex;flex-direction:column;gap:7px}
+.nota-atv-item{display:flex;align-items:center;gap:11px;padding:11px 12px;border:1.5px solid transparent;border-radius:14px;background:var(--bg2);cursor:pointer;text-align:left;width:100%;transition:border-color .15s ease,background .15s ease,transform .1s ease}
+.nota-atv-item:hover{border-color:var(--gold);background:var(--goldbg)}
+.nota-atv-item:active{transform:scale(.985)}
+.nota-atv-item-icon{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.nota-atv-item-icon svg{width:14px;height:14px}
+.nota-atv-item-body{min-width:0;flex:1}
+.nota-atv-item-title{display:block;font-size:12.5px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nota-atv-item-meta{display:block;font-size:11px;color:var(--t3);margin-top:1px}
+.nota-atv-item-res{flex-shrink:0;font-size:12.5px;font-weight:800;font-family:var(--ffm);color:var(--gold);white-space:nowrap;background:var(--goldbg);padding:3px 9px;border-radius:8px}
+.nota-atv-item-res.pending{color:var(--t4);font-weight:600;font-family:inherit;font-size:10.5px;background:var(--bg3);letter-spacing:.2px;text-transform:uppercase}
+
+/* ── Toggle "enviar para Notas" no formulário de prova/trabalho ── */
+.send-notas-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg2);border:1.5px solid var(--line2);border-radius:14px;padding:12px 14px;cursor:pointer;transition:border-color .18s ease,background .18s ease}
+.send-notas-toggle.on{border-color:var(--gold);background:var(--goldbg)}
+.send-notas-toggle-txt{font-size:12.5px;font-weight:600;color:var(--t2);line-height:1.4}
+.send-notas-toggle.on .send-notas-toggle-txt{color:var(--t1)}
+.send-notas-switch{flex-shrink:0;width:38px;height:22px;border-radius:20px;background:var(--line2);position:relative;transition:background .18s ease}
+.send-notas-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s ease}
+.send-notas-toggle.on .send-notas-switch{background:var(--gold)}
+.send-notas-toggle.on .send-notas-switch::after{transform:translateX(16px)}
+.tri-seg{display:flex;gap:6px}
+.tri-seg-btn{flex:1;border:1.5px solid var(--line2);background:var(--bg2);color:var(--t2);font-family:inherit;font-size:12.5px;font-weight:700;padding:9px 6px;border-radius:10px;cursor:pointer;transition:border-color .16s ease,background .16s ease,color .16s ease}
+.tri-seg-btn.active{border-color:var(--gold);background:var(--goldbg);color:var(--t1)}
+.tri-seg-btn.full{opacity:.4;cursor:not-allowed;text-decoration:line-through;background:var(--bg2);color:var(--t4)}
+.tri-seg-btn.full.active{border-color:var(--line2);background:var(--bg2);color:var(--t4)}
+.ex-tri-full-hint{font-size:11px;color:var(--t3);margin-top:7px;line-height:1.5}
+
+/* ── Selo em avaliações vindas das Atividades ── */
+.eval-from-atv-badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:var(--gold);background:var(--goldbg);border:1px solid var(--goldbd);padding:2px 7px;border-radius:7px;margin-left:6px;white-space:nowrap;vertical-align:middle}
+.eval-from-atv-badge svg{width:8px;height:8px;flex-shrink:0}
+
+/* ── Pop-up "aproveitar prova/trabalho já cadastrado" ao adicionar avaliação ── */
+.link-exam-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(3px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .2s ease}
+.link-exam-overlay.open{opacity:1}
+.link-exam-card{width:100%;max-width:420px;max-height:80vh;overflow-y:auto;background:var(--bg1);border:1px solid var(--line2);border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3);transform:translateY(10px);transition:transform .2s ease;position:relative}
+.link-exam-overlay.open .link-exam-card{transform:translateY(0)}
+.link-exam-title{font-size:15px;font-weight:800;color:var(--t1);margin-bottom:4px;padding-right:24px}
+.link-exam-sub{font-size:12.5px;color:var(--t3);margin-bottom:16px;line-height:1.5}
+.link-exam-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1.5px solid var(--line2);border-radius:13px;margin-bottom:8px;cursor:pointer;transition:border-color .15s ease,background .15s ease;text-align:left;width:100%;background:var(--bg2)}
+.link-exam-item:hover{border-color:var(--gold);background:var(--goldbg)}
+.link-exam-item-icon{width:34px;height:34px;border-radius:10px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--gold)}
+.link-exam-item-icon svg{width:16px;height:16px}
+.link-exam-item-body{min-width:0;flex:1}
+.link-exam-item-title{font-size:13px;font-weight:700;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.link-exam-item-meta{font-size:11.5px;color:var(--t3);margin-top:1px}
+.link-exam-blank-btn{width:100%;margin-top:6px;background:transparent;border:1.5px dashed var(--line2);color:var(--t2);font-family:inherit;font-size:12.5px;font-weight:700;padding:11px;border-radius:13px;cursor:pointer}
+.link-exam-blank-btn:hover{border-color:var(--t4)}
+.link-exam-close-btn{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;background:var(--bg2);border:1px solid var(--line2);color:var(--t3);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid var(--line2)}
+.link-exam-close-btn svg{width:13px;height:13px}
+</style>
 <body>
 
 <!-- ═══════════════════════════════════════════════════════
@@ -12478,9 +12581,21 @@ function renderResumo(el){
     <div style="margin-top:12px"><canvas id="rc-canvas-main"></canvas></div>
   </div>`;
 
-  let h=anoCardHtml+bannerHtml+chartsHtml+trimAvgsHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div><div class="resumo-subj-list">';
+  const _normTxtRes=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const resSearchQ=_normTxtRes(resultadoSearch.trim());
+  const resSearchHtml=`<div class="res-search-wrap">
+    <input id="resultado-search-input" class="res-search-input" type="text" placeholder="Buscar matéria..." value="${escHtml(resultadoSearch)}" oninput="setResultadoSearch(this.value)">
+    <svg class="res-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    ${resultadoSearch?`<button class="res-search-clear" onclick="clearResultadoSearch()" title="Limpar busca" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
+  </div>`;
+  const resSubjList=resSearchQ?SUBJECTS.filter(s=>_normTxtRes(s.name).includes(resSearchQ)):SUBJECTS;
+
+  let h=anoCardHtml+bannerHtml+chartsHtml+trimAvgsHtml+analyticsHtml+trendHtml+'<div class="section-label">Todas as matérias</div>'+resSearchHtml+'<div class="resumo-subj-list">';
   const tr=(a,b)=>a!==null&&b!==null?(b>a?'↑':b<a?'↓':'→'):'—';
-  SUBJECTS.forEach((s,i)=>{
+  if(resSearchQ&&resSubjList.length===0){
+    h+=`<div class="exam-empty"><strong>Nenhuma matéria encontrada</strong>Não achamos nada para "${escHtml(resultadoSearch.trim())}".</div>`;
+  }
+  resSubjList.forEach((s,i)=>{
     const t1=trimGrade(s.id,'1T'),t2=trimGrade(s.id,'2T'),t3=trimGrade(s.id,'3T'),g=finalGrade(s.id);
     let ss=stFinal(s.id,g);
     // Se 1° e 2° trimestre já fecharam o peso mas o 3° ainda está aberto,
@@ -13643,6 +13758,10 @@ function onExSubjChange(){
   const slotGrid=document.getElementById('ex-slot-grid');
   if(slotGrid)slotGrid.innerHTML='';
   if(dateWrap){dateWrap.style.display='none';dateWrap.innerHTML='';}
+  // Mudou a matéria: reavalia quais trimestres já estão com o peso
+  // máximo em Notas (a checagem só tem efeito visível se o toggle
+  // "Lançar já nas Notas" estiver ativo, mas já deixamos atualizado).
+  if(typeof _updateExTriFullState==='function')_updateExTriFullState();
   if(!subjName){
     if(slotWrap)slotWrap.style.display='none';
     return;
@@ -13906,8 +14025,73 @@ function validateExDate(){return true;}
 let provasFilter='all';
 let provasSortAZ=false;
 let provasSearch='';
+let provasViewMode='lista';
 function setProvasFilter(val){provasFilter=val;render(null);}
 function toggleProvasSort(){provasSortAZ=!provasSortAZ;render(null);}
+function setProvasViewMode(v){provasViewMode=v;render(null);}
+/* Estimativa do trimestre pela data, usada quando a prova/trabalho não
+   está vinculada explicitamente a um trimestre nas Notas (calendário
+   escolar aproximado: fev-abr = 1°T, mai-jul = 2°T, ago-jan = 3°T). */
+function inferTrimestre(dateStr){
+  if(!dateStr)return '3T';
+  const m=parseInt(dateStr.slice(5,7),10);
+  if(m>=2&&m<=4)return '1T';
+  if(m>=5&&m<=7)return '2T';
+  return '3T';
+}
+
+/* ══════════════════════════════════════════
+   TUDO O QUE FOI LANÇADO EM NOTAS, VISÍVEL
+   AUTOMATICAMENTE EM ATIVIDADES (visão "Por
+   trimestre") — a fonte de verdade é sempre
+   G (Notas): a avaliação aparece e conta o
+   peso aqui enquanto existir em Notas, mesmo
+   que a prova/trabalho de origem em Atividades
+   já tenha sido apagada. Só some quando for
+   apagada em Notas também.
+══════════════════════════════════════════ */
+function collectNotasActivityItems(){
+  const out=[];
+  const trims=['1T','2T','3T'];
+  SUBJECTS.forEach(s=>{
+    if(!G[s.id])return;
+    trims.forEach(tab=>{
+      const rows=G[s.id][tab]||[];
+      rows.forEach((r,i)=>{
+        if(r._isNew)return;              // rascunho não salvo, ignora
+        if(!r.name&&!r.total&&!r.got)return; // linha vazia, ignora
+        out.push({
+          sid:s.id,
+          tab,
+          idx:i,
+          subj:s.name,
+          color:s.color,
+          name:r.name||'Avaliação sem nome',
+          total:r.total,
+          got:r.got
+        });
+      });
+    });
+  });
+  return out;
+}
+
+function goToNotaEval(sid,tab){
+  curTab=tab;
+  curPage='notas';
+  setNavActive('notas');
+  const ts=document.getElementById('tabs-strip');
+  if(ts){
+    ts.style.display='';
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    const btn=document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if(btn)btn.classList.add('active');
+  }
+  openAcc[sid+'_'+tab]=true;
+  render('push');
+  syncLayout();
+}
+
 // Busca (só aparece no desktop, na barra de ferramentas ao lado dos filtros).
 // Como o render() reconstrói o innerHTML inteiro, preservamos o foco e a
 // posição do cursor no campo de busca — sem isso a pessoa perderia o foco
@@ -13925,6 +14109,22 @@ function setProvasSearch(val){
   }
 }
 function clearProvasSearch(){provasSearch='';render(null);}
+
+/* busca por matéria na aba Resultado — mesmo padrão de preservar foco/cursor */
+let resultadoSearch='';
+function setResultadoSearch(val){
+  resultadoSearch=val;
+  const active=document.activeElement;
+  const wasSearch=active&&active.id==='resultado-search-input';
+  const selStart=wasSearch?active.selectionStart:null;
+  const selEnd=wasSearch?active.selectionEnd:null;
+  render(null);
+  if(wasSearch){
+    const el=document.getElementById('resultado-search-input');
+    if(el){el.focus();try{el.setSelectionRange(selStart,selEnd);}catch(e){}}
+  }
+}
+function clearResultadoSearch(){resultadoSearch='';render(null);}
 
 function renderProvas(el){
   const _isDesktopUI=window.innerWidth>=768;
@@ -14040,6 +14240,29 @@ function renderProvas(el){
     </div>`;
   }
 
+  /* ── Tudo o que já foi lançado em Notas aparece automaticamente nos
+     blocos de trimestre, sem precisar cadastrar nada de novo em
+     Atividades. ── */
+  const notasActivityItems=collectNotasActivityItems();
+  const notaAtvIconEval='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>';
+  const buildNotaAtvCard=(it)=>{
+    const gotV=nf(it.got),totV=nf(it.total);
+    const resTxt=gotV!==null?(totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV)):(totV!==null?`— / ${fmt(totV)}`:'Pendente');
+    const resCls=gotV!==null?'':' pending';
+    return `<button type="button" class="nota-atv-item" onclick="goToNotaEval('${it.sid}','${it.tab}')">
+      <span class="nota-atv-item-icon" style="color:var(--t3);background:var(--bg3)">${notaAtvIconEval}</span>
+      <span class="nota-atv-item-body">
+        <span class="nota-atv-item-title">${escHtml(it.name)}</span>
+      </span>
+      <span class="nota-atv-item-res${resCls}">${resTxt}</span>
+    </button>`;
+  };
+
+  const viewToggleHtml=(exams.length>0||notasActivityItems.length>0)?`<div class="provas-view-toggle">
+    <button type="button" class="pvt-btn${provasViewMode==='lista'?' active':''}" onclick="setProvasViewMode('lista')">Lista</button>
+    <button type="button" class="pvt-btn${provasViewMode==='trimestre'?' active':''}" onclick="setProvasViewMode('trimestre')">Por trimestre</button>
+  </div>`:'';
+
   const examSubjs=[...new Set(exams.map(e=>e.subj))];
   let filterHtml='';
   if(_isDesktopUI){
@@ -14152,7 +14375,7 @@ function renderProvas(el){
             </div>
             <div id="ex-date-wrap" style="display:none;margin-top:14px"></div>
             <div class="aec-step" style="margin-top:14px">
-              <div class="aec-step-lbl"><span>4</span>Valor em pontos <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional · 0,1 a 10</span></div>
+              <div class="aec-step-lbl" id="ex-valor-step-lbl"><span>4</span>Valor em pontos <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional · 0,1 a 10</span></div>
               <input class="aec-input" type="number" id="ex-valor" min="0.1" max="10" step="0.1" placeholder="Ex: 3.0">
             </div>
             <button class="wiz-continue-btn" type="button" onclick="_wizNext()">Continuar<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
@@ -14188,6 +14411,23 @@ function renderProvas(el){
                 </div>
                 <div class="aviso-preview-tag" id="aviso-preview-tag">1 dia</div>
                 <div class="aviso-preview-bar" id="aviso-preview-bar" style="background:var(--gold)"></div>
+              </div>
+            </div>
+            <div class="aec-step" style="margin-top:14px">
+              <div class="aec-step-lbl"><span>8</span>Lançar já nas Notas <span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span></div>
+              <div class="send-notas-toggle" id="send-notas-toggle" onclick="toggleSendNotas()">
+                <span class="send-notas-toggle-txt">Criar automaticamente uma avaliação pendente na aba Notas para essa matéria</span>
+                <span class="send-notas-switch"></span>
+              </div>
+              <input type="hidden" id="ex-send-notas" value="0">
+              <div id="ex-trimestre-wrap" style="display:none;margin-top:10px">
+                <div class="aec-step-lbl" style="margin-bottom:7px"><span>·</span>Para qual trimestre?</div>
+                <div class="tri-seg" id="ex-tri-seg">
+                  <button type="button" class="tri-seg-btn" data-tri="1T" onclick="setExTrimestre('1T')">1°T</button>
+                  <button type="button" class="tri-seg-btn" data-tri="2T" onclick="setExTrimestre('2T')">2°T</button>
+                  <button type="button" class="tri-seg-btn" data-tri="3T" onclick="setExTrimestre('3T')">3°T</button>
+                </div>
+                <input type="hidden" id="ex-trimestre" value="">
               </div>
             </div>
             <div class="aec-dup-banner" id="aec-dup-banner">
@@ -14268,8 +14508,102 @@ function renderProvas(el){
     sorted=[...filtered].sort((a,b)=>a.examDate.localeCompare(b.examDate));
   }
 
+  const buildItem=(e,opts)=>{
+    opts=opts||{};
+    const diff=daysDiff(e.examDate);
+    const isPast=isExamPast(e);
+    const isToday=diff===0&&!isPast;
+    const isSoon=diff>0&&diff<=3&&!isPast;
+    let badgeCls,badgeTxt,itemCls;
+    if(isPast){badgeCls='done-badge';badgeTxt='Realizada';itemCls='done';}
+    else if(isToday){badgeCls='today-badge';badgeTxt='HOJE';itemCls='today-exam';}
+    else if(diff===1){badgeCls='soon-badge';badgeTxt='Amanhã';itemCls='soon';}
+    else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff} dias`;itemCls='soon';}
+    else{badgeCls='future-badge';badgeTxt=`${diff} dias`;itemCls='';}
+    const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${fmtPts(e.valor)}</span>`:'';
+    const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
+    const tipoIcon=e.tipo==='trabalho'
+      ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
+      :`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+    const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
+    const metaTxt=timeStart?`${fmtDateBR(e.examDate)} · ${timeStart}`:fmtDateBR(e.examDate);
+    const dowLabel=_DOW_PT[new Date(e.examDate+'T00:00:00').getDay()];
+    const dateSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    const infoBadge=`<div class="exam-info-badge">${dateSvg}<span class="exam-dow-label">${dowLabel}</span>${metaTxt}</div>`;
+    const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
+    const notifScheduled=getExamNotif(e.id);
+    const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--gold)" stroke="var(--gold)"/>':''}</svg></button>`;
+    const conteudoHtml=(e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
+    const subjLine=opts.hideSubj?'':`<span class="exam-subj-name">${escHtml(e.subj)}</span>`;
+    return`<div class="exam-item ${itemCls}" ${clickAttr}>
+      <div class="exam-item-head">
+        <div class="exam-item-head-left">
+          ${subjLine}
+        </div>
+        <div class="exam-item-actions">
+          <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
+        </div>
+      </div>
+      <div class="exam-item-body">
+        <div class="exam-meta-row">
+          ${infoBadge}
+          <span class="exam-tipo-pill">${tipoIcon}${tipoLabel}</span>
+          ${valorHtml}
+        </div>
+        ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
+        ${conteudoHtml}
+      </div>
+      <div class="exam-item-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:-2px">
+        ${bellBtn}
+        ${isPast?'':`<button class="exam-edit-btn" onclick="event.stopPropagation();openEditExam('${e.id}')" title="Editar prova"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`}
+        <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
+      </div>
+    </div>`;
+  };
+
   let listHtml='';
-  if(exams.length===0){
+  /* IMPORTANTE: a visão "Por trimestre" precisa aparecer mesmo quando
+     ainda não existe nenhuma prova/trabalho cadastrado em Atividades —
+     é justamente o caso em que só há avaliações pendentes lançadas em
+     Notas. Por isso ela roda ANTES (e independente) do bloco de "estado
+     vazio" da Lista, que só se aplica ao modo Lista. */
+  if(provasViewMode==='trimestre'){
+    // ── Visão organizada por trimestre (1°T / 2°T / 3°T) e, dentro de
+    // cada trimestre, por matéria. Mostra só o que está lançado em
+    // Notas (não os cards de prova/trabalho de Atividades) — é a mesma
+    // regra do peso: a fonte de verdade é sempre Notas, então uma
+    // avaliação continua aparecendo (e contando) aqui até ser apagada
+    // lá, mesmo que a prova/trabalho de origem em Atividades já tenha
+    // sido removida. Sem depender de cor por matéria: só um rótulo
+    // neutro separando os grupos.
+    const trims=[['1T','1° Trimestre'],['2T','2° Trimestre'],['3T','3° Trimestre']];
+    listHtml='<div class="provas-trim-view">';
+    trims.forEach(([key,label])=>{
+      const notaItems=notasActivityItems.filter(it=>it.tab===key);
+      const totalVal=notaItems.reduce((a,it)=>a+(nf(it.total)||0),0);
+      const metaParts=[`${notaItems.length} ${notaItems.length===1?'avaliação':'avaliações'}`];
+      if(totalVal>0)metaParts.push(`${fmtNumBR(totalVal)} pts`);
+      const metaTxt=metaParts.join(' · ');
+
+      // Agrupa por matéria (ordem alfabética, previsível e sem cor)
+      const subjNames=[...new Set(notaItems.map(it=>it.subj))]
+        .sort((a,b)=>a.localeCompare(b,'pt-BR'));
+      const groupsHtml=subjNames.map(subjName=>{
+        const subjNotaItems=notaItems.filter(it=>it.subj===subjName);
+        return`<div class="trim-subj-group">
+          <span class="trim-subj-head">${escHtml(subjName)}</span>
+          <div class="nota-atv-list">${subjNotaItems.map(buildNotaAtvCard).join('')}</div>
+        </div>`;
+      }).join('');
+
+      const emptyHtml=!notaItems.length?`<div class="trim-block-empty">Nenhuma avaliação lançada em Notas neste trimestre</div>`:'';
+      listHtml+=`<div class="trim-block">
+        <div class="trim-block-head"><span class="trim-block-title">${label}</span><span class="trim-block-meta">${metaTxt}</span></div>
+        ${groupsHtml}${emptyHtml}
+      </div>`;
+    });
+    listHtml+='</div>';
+  }else if(exams.length===0){
     listHtml=`<div class="exam-empty"><strong>Nenhuma prova marcada</strong>Toque no botão abaixo para marcar suas próximas provas e trabalhos.</div>`;
   }else if(sorted.length===0&&searchQ){
     listHtml=`<div class="exam-empty" style="padding:28px 16px"><strong>Nada encontrado</strong>Nenhum resultado para "${escHtml(provasSearch.trim())}".</div>`;
@@ -14279,58 +14613,6 @@ function renderProvas(el){
     const upcomingExams=sorted.filter(e=>!isExamPast(e));
     const doneExams=sorted.filter(e=>isExamPast(e)).reverse();
     const _DOW_COMPAT=_DOW_PT; // alias
-
-    const buildItem=(e)=>{
-      const diff=daysDiff(e.examDate);
-      const isPast=isExamPast(e);
-      const isToday=diff===0&&!isPast;
-      const isSoon=diff>0&&diff<=3&&!isPast;
-      let badgeCls,badgeTxt,itemCls;
-      if(isPast){badgeCls='done-badge';badgeTxt='Realizada';itemCls='done';}
-      else if(isToday){badgeCls='today-badge';badgeTxt='HOJE';itemCls='today-exam';}
-      else if(diff===1){badgeCls='soon-badge';badgeTxt='Amanhã';itemCls='soon';}
-      else if(isSoon){badgeCls='soon-badge';badgeTxt=`${diff} dias`;itemCls='soon';}
-      else{badgeCls='future-badge';badgeTxt=`${diff} dias`;itemCls='';}
-      const subjColor=SUBJECTS.find(s=>s.name===e.subj)?.color||'var(--gold)';
-      const valorHtml=e.valor?`<span class="exam-valor-chip">\u2b21 ${fmtPts(e.valor)}</span>`:'';
-      const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
-      const tipoIcon=e.tipo==='trabalho'
-        ?`<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`
-        :`<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
-      const timeStart=e.examTime?e.examTime.split(/[–\-]/)[0].trim():'';
-      const metaTxt=timeStart?`${fmtDateBR(e.examDate)} · ${timeStart}`:fmtDateBR(e.examDate);
-      const dowLabel=_DOW_PT[new Date(e.examDate+'T00:00:00').getDay()];
-      const dateSvg=`<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
-      const infoBadge=`<div class="exam-info-badge">${dateSvg}<span class="exam-dow-label">${dowLabel}</span>${metaTxt}</div>`;
-      const clickAttr=isPast?'':`onclick="openExamDetail('${e.id}')"`;
-      const notifScheduled=getExamNotif(e.id);
-      const bellBtn=isPast?'':`<button class="exam-notif-btn${notifScheduled?' active':''}" onclick="event.stopPropagation();openNotifPopup('${e.id}')" title="${notifScheduled?'Lembrete agendado — clique para alterar':'Agendar lembrete de estudo'}"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>${notifScheduled?'<circle cx="18" cy="8" r="3" fill="var(--gold)" stroke="var(--gold)"/>':''}</svg></button>`;
-      const conteudoHtml=(e.conteudo)?`<div class="exam-topics-row">${e.conteudo.split(/\n|,|;/).map(t=>t.trim()).filter(t=>t.length>0).map(t=>`<span class="exam-topic-chip">${escHtml(t)}</span>`).join('')}</div>`:'';
-      return`<div class="exam-item ${itemCls}" ${clickAttr}>
-        <div class="exam-item-head">
-          <div class="exam-item-head-left">
-            <span class="exam-subj-name">${escHtml(e.subj)}</span>
-          </div>
-          <div class="exam-item-actions">
-            <span class="exam-days-badge ${badgeCls}">${badgeTxt}</span>
-          </div>
-        </div>
-        <div class="exam-item-body">
-          <div class="exam-meta-row">
-            ${infoBadge}
-            <span class="exam-tipo-pill">${tipoIcon}${tipoLabel}</span>
-            ${valorHtml}
-          </div>
-          ${e.title?`<div class="exam-title-txt">${escHtml(e.title)}</div>`:''}
-          ${conteudoHtml}
-        </div>
-        <div class="exam-item-foot" style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-top:-2px">
-          ${bellBtn}
-          ${isPast?'':`<button class="exam-edit-btn" onclick="event.stopPropagation();openEditExam('${e.id}')" title="Editar prova"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`}
-          <button class="exam-rm-btn" onclick="event.stopPropagation();rmExam('${e.id}')" title="Excluir"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg></button>
-        </div>
-      </div>`;
-    };
 
     // Agrupa por período
     const todayList=upcomingExams.filter(e=>daysDiff(e.examDate)===0);
@@ -14402,7 +14684,7 @@ function renderProvas(el){
       inner=`<div class="add-exam-empty-cta">`+addExamCtaHtml+`</div>`+modalHtml;
     }
   }
-  el.innerHTML=`<div class="provas-page-wrap">`+heroHtml+todayAlertHtml+statsHtml+(hasExams?'':filterHtml)+inner+`</div>`;
+  el.innerHTML=`<div class="provas-page-wrap">`+heroHtml+todayAlertHtml+statsHtml+viewToggleHtml+(hasExams?'':filterHtml)+inner+`</div>`;
   // ── Timer ao vivo do hero (atualiza a cada segundo) ──
   if(window._heroTimer){clearInterval(window._heroTimer);window._heroTimer=null;}
   if(sortedUp.length>0){
@@ -14565,12 +14847,31 @@ function setExamTipo(tipo){
   // Atualiza título do header do formulário
   const headerTitle=document.getElementById('aec-form-header-title');
   if(headerTitle)headerTitle.textContent=tipo==='trabalho'?'Novo Trabalho':'Nova Prova';
-  // Atualiza label do step de título
-  const titleStepLbl=document.getElementById('ex-title-step-lbl');
-  if(titleStepLbl){const opt='<span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span>';titleStepLbl.innerHTML='<span>2</span>'+(tipo==="trabalho"?"Título do trabalho ":"Título da prova ")+opt;}
+  // Atualiza label do step de título e do step de valor (opcional vira
+  // obrigatório quando "Lançar já nas Notas" estiver ativado)
+  _updateNotasReqLabels();
   if(typeof _updateAvisoPreview==='function')_updateAvisoPreview();
 }
 
+/* Alterna os rótulos de "Título" e "Valor em pontos" entre opcional/
+   obrigatório: quando "Lançar já nas Notas" está ativado, a avaliação
+   pendente criada na aba Notas precisa nascer com nome e peso definidos,
+   então esses dois campos passam a ser obrigatórios no formulário. */
+function _updateNotasReqLabels(){
+  const sendNotas=document.getElementById('ex-send-notas')?.value==='1';
+  const tipo=document.getElementById('ex-tipo')?.value||'prova';
+  const reqTag='<span style="font-size:9px;color:var(--red);background:none;font-weight:700;width:auto;height:auto;border-radius:0">obrigatório</span>';
+  const optTag='<span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional</span>';
+  const titleStepLbl=document.getElementById('ex-title-step-lbl');
+  if(titleStepLbl){
+    titleStepLbl.innerHTML='<span>2</span>'+(tipo==='trabalho'?'Título do trabalho ':'Título da prova ')+(sendNotas?reqTag:optTag);
+  }
+  const valorStepLbl=document.getElementById('ex-valor-step-lbl');
+  if(valorStepLbl){
+    const valorOptTag='<span style="font-size:9px;color:var(--t4);background:none;font-weight:400;width:auto;height:auto;border-radius:0">opcional · 0,1 a 10</span>';
+    valorStepLbl.innerHTML='<span>4</span>Valor em pontos '+(sendNotas?reqTag:valorOptTag);
+  }
+}
 function setAvisoDias(dias){
   // atualiza hidden input
   const inp=document.getElementById('ex-aviso-dias');
@@ -14630,6 +14931,67 @@ function _updateAvisoPreview(){
   if(previewSub)previewSub.textContent=subTxt||'Selecione matéria e data';
 }
 
+function toggleSendNotas(){
+  const inp=document.getElementById('ex-send-notas');
+  const toggle=document.getElementById('send-notas-toggle');
+  const wrap=document.getElementById('ex-trimestre-wrap');
+  const on=inp.value!=='1';
+  inp.value=on?'1':'0';
+  if(toggle)toggle.classList.toggle('on',on);
+  if(wrap)wrap.style.display=on?'':'none';
+  if(!on){
+    const triInp=document.getElementById('ex-trimestre');
+    if(triInp)triInp.value='';
+    document.querySelectorAll('#ex-tri-seg .tri-seg-btn').forEach(b=>b.classList.remove('active'));
+  }else{
+    // Ao ativar, já atualiza quais trimestres estão com o peso máximo
+    // (10 pts) lançado em Notas para a matéria escolhida, pra não deixar
+    // a pessoa escolher um trimestre que não tem mais espaço.
+    _updateExTriFullState();
+  }
+  _updateNotasReqLabels();
+}
+/* Marca (e desabilita) no seletor de trimestre do formulário de prova/
+   trabalho os trimestres cujo peso em Notas já chegou a 10 pts para a
+   matéria selecionada — mesma regra usada no botão "Peso máximo atingido"
+   da aba Notas. Isso é calculado sempre a partir de G (Notas), a fonte de
+   verdade: mesmo que a prova/trabalho de origem seja apagada depois, a
+   avaliação continua contando o peso em Notas até ser apagada lá. */
+function _updateExTriFullState(){
+  const seg=document.getElementById('ex-tri-seg');
+  if(!seg)return;
+  const subjName=document.getElementById('ex-subj')?.value||'';
+  const subj=SUBJECTS.find(s=>s.name===subjName);
+  const triInp=document.getElementById('ex-trimestre');
+  const curTri=triInp?triInp.value:'';
+  let clearedCur=false;
+  seg.querySelectorAll('.tri-seg-btn').forEach(b=>{
+    const tri=b.dataset.tri;
+    const full=!!subj&&_tabFull(subj.id,tri);
+    b.classList.toggle('full',full);
+    b.disabled=full;
+    b.title=full?'Peso máximo (10,0 pontos) já lançado em Notas nesse trimestre':'';
+    if(full&&tri===curTri)clearedCur=true;
+  });
+  if(clearedCur){
+    if(triInp)triInp.value='';
+    seg.querySelectorAll('.tri-seg-btn').forEach(b=>b.classList.remove('active'));
+  }
+}
+function setExTrimestre(tri){
+  const subjName=document.getElementById('ex-subj')?.value||'';
+  const subj=SUBJECTS.find(s=>s.name===subjName);
+  // Trimestre já com peso máximo (10 pts) lançado em Notas: não deixa
+  // selecionar — o próprio botão já aparece desabilitado, isso é só
+  // uma proteção extra.
+  if(subj&&_tabFull(subj.id,tri))return;
+  const inp=document.getElementById('ex-trimestre');
+  if(inp)inp.value=tri;
+  document.querySelectorAll('#ex-tri-seg .tri-seg-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.tri===tri);
+  });
+}
+
 function setExamDif(val){
   const inp=document.getElementById('ex-dif');
   if(inp){
@@ -14643,6 +15005,27 @@ function setExamDif(val){
     b.style.background=active?'var(--goldbg)':'var(--bg2)';
     b.style.color=active?'var(--t1)':'var(--t3)';
   });
+}
+
+/* ── Cria (ou reaproveita espaço) uma avaliação pendente na aba Notas a
+   partir de uma prova/trabalho cadastrado em Atividades. Retorna o índice
+   da linha criada em G[sid][trimestre], ou null se não foi possível. ── */
+function linkExamToNotas(examId,subjName,trimestre,title,valor,tipo){
+  const subj=SUBJECTS.find(s=>s.name===subjName);
+  if(!subj||!G[subj.id]||!G[subj.id][trimestre])return null;
+  const rows=G[subj.id][trimestre];
+  const otherSum=rows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
+  let totalVal='';
+  if(valor){
+    let v=parseFloat(valor);
+    const maxAllowed=parseFloat((10-otherSum).toFixed(2));
+    if(maxAllowed<=0)v=0;else if(v>maxAllowed)v=maxAllowed;
+    if(v>0)totalVal=String(parseFloat(v.toFixed(2)));
+  }
+  const name=title||(tipo==='trabalho'?'Trabalho (Atividades)':'Prova (Atividades)');
+  rows.push({name,got:'',total:totalVal,_isNew:false,_fromExamId:examId});
+  saveGrades();
+  return rows.length-1;
 }
 
 function addExam(){
@@ -14685,6 +15068,29 @@ function addExam(){
     if(isNaN(v)||v<0.1||v>10){showDup('O valor deve ser entre 0,1 e 10 pontos.');return;}
   }
 
+  // envio opcional para a aba Notas
+  const sendNotas=document.getElementById('ex-send-notas')?.value==='1';
+  const notasTrimestre=document.getElementById('ex-trimestre')?.value||'';
+  if(sendNotas&&!notasTrimestre){showDup('Escolha o trimestre para lançar nas Notas, ou desative essa opção.');return;}
+  // Com "Lançar já nas Notas" ativado, a avaliação pendente criada lá
+  // precisa nascer com nome e peso — por isso os dois passam a ser
+  // obrigatórios neste caso.
+  if(sendNotas&&!title){showDup('Preencha o título: ele vira o nome da avaliação pendente em Notas.');return;}
+  if(sendNotas&&!valor){showDup('Preencha o valor em pontos: ele vira o peso da avaliação pendente em Notas.');return;}
+  // Peso máximo (10 pts) já lançado em Notas para essa matéria/trimestre:
+  // não deixa criar mais uma avaliação pendente lá. Checagem feita em
+  // cima de G (Notas), a fonte de verdade do peso — os botões de
+  // trimestre já vêm desabilitados nesse caso, isso é a validação final
+  // (cobre também quem tenta enviar com o formulário num estado antigo).
+  if(sendNotas&&notasTrimestre){
+    const subjObjChk=SUBJECTS.find(s=>s.name===subj);
+    if(subjObjChk&&_tabFull(subjObjChk.id,notasTrimestre)){
+      const triLbl=notasTrimestre==='1T'?'1° trimestre':notasTrimestre==='2T'?'2° trimestre':'3° trimestre';
+      showDup(`O peso do ${triLbl} de ${subj} já atingiu o máximo (10,0 pontos) em Notas. Escolha outro trimestre ou desative "Lançar já nas Notas".`);
+      return;
+    }
+  }
+
   // ── Verificação de duplicata ──
   const dup=exams.find(e=>{
     if(e.subj!==subj||e.examDate!==examDate)return false;
@@ -14702,7 +15108,12 @@ function addExam(){
 
   const reminderDays=parseInt(document.getElementById('ex-aviso-dias')?.value||'1');
   const id='ex_'+Date.now();
-  exams.push({id,subj,examDate,title,valor,examTime,conteudo,tipo,reminderDays});
+  const examObj={id,subj,examDate,title,valor,examTime,conteudo,tipo,reminderDays};
+  if(sendNotas&&notasTrimestre){
+    const linked=linkExamToNotas(id,subj,notasTrimestre,title,valor,tipo);
+    if(linked)examObj.notaTrimestre=notasTrimestre;
+  }
+  exams.push(examObj);
   window._exSlotDow=null;window._exSlotTime=null;
   hideDup();
   saveExams();
@@ -15529,7 +15940,7 @@ function cancelEditEval(sid,tab,i){
   const ts=document.getElementById(`ett-${sid}-${tab}-${i}`);
   if(ts){ts.textContent=totV!==null?fmt(totV):'—';ts.className='eval-sc-text'+(totV===null?' ph':'');}
   const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
-  if(badge){badge.textContent=gotV!==null?(totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV)):'—';}
+  if(badge){badge.textContent=gotV!==null?(totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV)):'Pendente';badge.className='eval-res-val'+(gotV===null?' pending':'');}
   // Re-sincroniza pill de nota e footer do card
   updateCardDisplay(sid,tab);
 }
@@ -15598,9 +16009,11 @@ function _buildOneEvalHtml(sid,tab,i){
   const rows=G[sid][tab];
   const r=rows[i];
   const gotV=nf(r.got),totV=nf(r.total);
-  let resVal='—';
+  let resVal='Pendente';
+  let resValCls=' pending';
   if(gotV!==null){
     resVal=totV!==null&&totV>0?`${fmt(gotV)}/${fmt(totV)}`:fmt(gotV);
+    resValCls='';
   }
   // otherSum: só rows salvas (não rascunhos), excluindo o próprio item
   const otherSum=rows.reduce((acc,rr,j)=>j===i||rr._isNew?acc:acc+(nf(rr.total)||0),0);
@@ -15615,6 +16028,7 @@ function _buildOneEvalHtml(sid,tab,i){
     </div>
     <div class="eval-head">
       <span class="eval-name-text${r.name?'':' ph'}" id="ent-${sid}-${tab}-${i}">${escHtml(r.name||'sem nome')}</span>
+      ${r._fromExamId?'<span class="eval-from-atv-badge" title="Criada a partir de uma prova/trabalho das Atividades"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Atividades</span>':''}
       <input class="eval-name-inp" id="eni-${sid}-${tab}-${i}" type="text" placeholder="Nome da avaliação"
         value="${escHtml(r.name||'')}"
         oninput="updF('${sid}','${tab}',${i},'name',this.value)">
@@ -15650,7 +16064,7 @@ function _buildOneEvalHtml(sid,tab,i){
       </div>
       <div class="eval-res-cell">
         <span class="eval-res-lbl">Resultado</span>
-        <span class="eval-res-val" id="erb-${sid}-${tab}-${i}">${resVal}</span>
+        <span class="eval-res-val${resValCls}" id="erb-${sid}-${tab}-${i}">${resVal}</span>
       </div>
     </div>
   </div>`;
@@ -15690,35 +16104,125 @@ function _refreshEvList(sid,tab){
   updateCardDisplay(sid,tab);
 }
 
-function addEv(sid,tab){
-  // Se houver alguma avaliação em edição, fecha/descarta antes de criar nova
+/* Fecha/descarta qualquer avaliação em edição no momento (usado antes de
+   criar uma nova avaliação, seja em branco ou reaproveitada). */
+function _discardEditingEvalDraft(){
   const editingEl=document.querySelector('.eval-item.editing');
-  if(editingEl){
-    // parse do id: ei-{eSid}-{eTab}-{eIdx}
-    const raw=editingEl.id.slice(3);         // remove 'ei-'
-    const lastDash=raw.lastIndexOf('-');
-    const eIdx=parseInt(raw.slice(lastDash+1),10);
-    const rest=raw.slice(0,lastDash);
-    const lastDash2=rest.lastIndexOf('-');
-    const eTab=rest.slice(lastDash2+1);
-    const eSid=rest.slice(0,lastDash2);
-    const er=G[eSid]&&G[eSid][eTab]&&G[eSid][eTab][eIdx];
-    if(er&&er._isNew){
-      // rascunho não salvo — descarta silenciosamente
-      G[eSid][eTab].splice(eIdx,1);
-      delete _evalSnaps[`${eSid}-${eTab}-${eIdx}`];
-      _refreshEvList(eSid,eTab);
-    }else{
-      // avaliação válida — só fecha o modo edição (force=true)
-      doneEditEval(eSid,eTab,eIdx,true);
-    }
+  if(!editingEl)return;
+  // parse do id: ei-{eSid}-{eTab}-{eIdx}
+  const raw=editingEl.id.slice(3);         // remove 'ei-'
+  const lastDash=raw.lastIndexOf('-');
+  const eIdx=parseInt(raw.slice(lastDash+1),10);
+  const rest=raw.slice(0,lastDash);
+  const lastDash2=rest.lastIndexOf('-');
+  const eTab=rest.slice(lastDash2+1);
+  const eSid=rest.slice(0,lastDash2);
+  const er=G[eSid]&&G[eSid][eTab]&&G[eSid][eTab][eIdx];
+  if(er&&er._isNew){
+    // rascunho não salvo — descarta silenciosamente
+    G[eSid][eTab].splice(eIdx,1);
+    delete _evalSnaps[`${eSid}-${eTab}-${eIdx}`];
+    _refreshEvList(eSid,eTab);
+  }else{
+    // avaliação válida — só fecha o modo edição (force=true)
+    doneEditEval(eSid,eTab,eIdx,true);
   }
+}
+
+/* IDs de provas/trabalhos (Atividades) já usados em alguma avaliação de
+   Notas, em qualquer matéria/trimestre. */
+function _linkedExamIds(){
+  const set=new Set();
+  Object.keys(G).forEach(sid=>{
+    ALL_TABS.forEach(t=>{
+      (G[sid][t]||[]).forEach(r=>{if(r._fromExamId)set.add(r._fromExamId);});
+    });
+  });
+  return set;
+}
+
+function addEv(sid,tab){
+  const subj=SUBJECTS.find(s=>s.id===sid);
+  const subjName=subj?subj.name:null;
+  const linkedIds=_linkedExamIds();
+  const candidates=subjName?exams.filter(e=>e.subj===subjName&&!linkedIds.has(e.id)):[];
+  if(candidates.length){
+    openLinkExamChooser(sid,tab,candidates);
+    return;
+  }
+  _addEvBlank(sid,tab);
+}
+
+/* Cria uma avaliação em branco (comportamento original do "Adicionar avaliação") */
+function _addEvBlank(sid,tab){
+  _discardEditingEvalDraft();
   openAcc[sid+'_'+tab]=true;
   G[sid][tab].push({name:'',got:'',total:'',_isNew:true});
   // NÃO salva imediatamente — só salva após preenchimento mínimo (nota + peso)
   _refreshEvList(sid,tab);
   // auto-open edit mode on the new item
   const newIdx=G[sid][tab].length-1;
+  setTimeout(()=>toggleEditEval(sid,tab,newIdx),50);
+}
+
+/* ── Pop-up: "aproveitar uma prova/trabalho já cadastrado nas Atividades?" ── */
+function openLinkExamChooser(sid,tab,candidates){
+  closeLinkExamChooser();
+  const sortedC=[...candidates].sort((a,b)=>(a.examDate||'').localeCompare(b.examDate||''));
+  const tipoIconProva='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+  const tipoIconTrabalho='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+  const itemsHtml=sortedC.map(e=>{
+    const tipoLabel=e.tipo==='trabalho'?'Trabalho':'Prova';
+    const dateTxt=e.examDate?fmtDateBR(e.examDate):'';
+    const valorTxt=e.valor?` · ${fmtPts(e.valor)}`:'';
+    return `<button type="button" class="link-exam-item" onclick="useExamForEval('${sid}','${tab}','${e.id}')">
+      <span class="link-exam-item-icon">${e.tipo==='trabalho'?tipoIconTrabalho:tipoIconProva}</span>
+      <span class="link-exam-item-body">
+        <span class="link-exam-item-title">${escHtml(e.title||tipoLabel)}</span>
+        <span class="link-exam-item-meta">${tipoLabel}${dateTxt?' · '+dateTxt:''}${valorTxt}</span>
+      </span>
+    </button>`;
+  }).join('');
+  const overlay=document.createElement('div');
+  overlay.className='link-exam-overlay';
+  overlay.id='link-exam-overlay';
+  overlay.onclick=(ev)=>{if(ev.target===overlay)closeLinkExamChooser();};
+  overlay.innerHTML=`<div class="link-exam-card">
+    <button type="button" class="link-exam-close-btn" onclick="closeLinkExamChooser()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="link-exam-title">Aproveitar prova/trabalho das Atividades?</div>
+    <div class="link-exam-sub">Encontramos ${sortedC.length===1?'1 item':sortedC.length+' itens'} dessa matéria já cadastrado em Atividades. Toque para usar como base da avaliação — ou crie uma em branco.</div>
+    ${itemsHtml}
+    <button type="button" class="link-exam-blank-btn" onclick="closeLinkExamChooser();_addEvBlank('${sid}','${tab}')">Criar avaliação em branco</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+}
+function closeLinkExamChooser(){
+  const overlay=document.getElementById('link-exam-overlay');
+  if(overlay)overlay.remove();
+}
+function useExamForEval(sid,tab,examId){
+  const exam=exams.find(e=>e.id===examId);
+  closeLinkExamChooser();
+  if(!exam){_addEvBlank(sid,tab);return;}
+  _discardEditingEvalDraft();
+  const rows=G[sid][tab];
+  const otherSum=rows.reduce((acc,r)=>acc+(nf(r.total)||0),0);
+  let totalVal='';
+  if(exam.valor){
+    let v=parseFloat(exam.valor);
+    const maxAllowed=parseFloat((10-otherSum).toFixed(2));
+    if(maxAllowed<=0)v=0;else if(v>maxAllowed)v=maxAllowed;
+    if(v>0)totalVal=String(parseFloat(v.toFixed(2)));
+  }
+  const name=exam.title||(exam.tipo==='trabalho'?'Trabalho (Atividades)':'Prova (Atividades)');
+  openAcc[sid+'_'+tab]=true;
+  rows.push({name,got:'',total:totalVal,_isNew:false,_fromExamId:examId});
+  exam.notaTrimestre=tab;
+  saveGrades();saveExams();
+  _refreshEvList(sid,tab);
+  updateCardDisplay(sid,tab);
+  const newIdx=rows.length-1;
   setTimeout(()=>toggleEditEval(sid,tab,newIdx),50);
 }
 function rmEv(sid,tab,i){
@@ -15730,6 +16234,10 @@ function rmEv(sid,tab,i){
     okLabel:'Apagar',
     danger:true,
     onOk:()=>{
+      if(r&&r._fromExamId){
+        const linkedExam=exams.find(e=>e.id===r._fromExamId);
+        if(linkedExam){delete linkedExam.notaTrimestre;saveExams();}
+      }
       G[sid][tab].splice(i,1);
       saveGrades();
       _refreshEvList(sid,tab);
@@ -15787,7 +16295,7 @@ function updF(sid,tab,i,field,val){
   const r2=rows[i];
   const gv2=nf(r2.got),tv2=nf(r2.total);
   const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
-  if(badge){badge.textContent=gv2!==null?(tv2!==null&&tv2>0?`${fmt(gv2)}/${fmt(tv2)}`:fmt(gv2)):'—';}
+  if(badge){badge.textContent=gv2!==null?(tv2!==null&&tv2>0?`${fmt(gv2)}/${fmt(tv2)}`:fmt(gv2)):'Pendente';badge.className='eval-res-val'+(gv2===null?' pending':'');}
   // Sync nome no span
   if(field==='name'){
     const txt=document.getElementById(`ent-${sid}-${tab}-${i}`);
@@ -15830,7 +16338,7 @@ function updateCardDisplay(sid,tab){
     if(ts){ts.textContent=tv!==null?fmt(tv):'—';ts.className='eval-sc-text'+(tv===null?' ph':'');}
     // result badge
     const badge=document.getElementById(`erb-${sid}-${tab}-${i}`);
-    if(badge){badge.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)}/${fmt(tv)}`:fmt(gv)):'—';}
+    if(badge){badge.textContent=gv!==null?(tv!==null&&tv>0?`${fmt(gv)}/${fmt(tv)}`:fmt(gv)):'Pendente';badge.className='eval-res-val'+(gv===null?' pending':'');}
     // cap inputs
     const ginp=document.getElementById(`ig-${sid}-${tab}-${i}`);
     if(ginp&&tv!==null)ginp.max=tv;
