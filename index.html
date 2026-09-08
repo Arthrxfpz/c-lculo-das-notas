@@ -491,7 +491,7 @@
     // Só preenche nome se o usuário ainda não configurou manualmente
     const raw = localStorage.getItem('t205_stu');
     let s = raw ? JSON.parse(raw) : null;
-    if (!s) s = {nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'gold'};
+    if (!s) s = {nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'mint'};
 
     let changed = false;
     if (!s.nome && user.displayName) {
@@ -858,7 +858,7 @@
   --t2:rgba(255,255,255,.58);
   --t3:rgba(255,255,255,.32);
   --t4:rgba(255,255,255,.17);
-  --gold:#FFD60A; --goldl:#FFE234; --goldbg:rgba(255,214,10,.12); --goldbd:rgba(255,214,10,.32);
+  --gold:#00C7BE; --goldl:#3FE3D9; --goldbg:rgba(0,199,190,.1); --goldbd:rgba(0,199,190,.28);
   --accent-text:#000000; --bg-grid-line:rgba(255,255,255,.007);
   --green:#32D74B; --greenbg:rgba(50,215,75,.12); --greenbd:rgba(50,215,75,.32);
   --red:#FF453A; --redbg:rgba(255,69,58,.12); --redbd:rgba(255,69,58,.32);
@@ -889,7 +889,7 @@
   --t2:rgba(0,0,0,.52);
   --t3:rgba(0,0,0,.28);
   --t4:rgba(0,0,0,.16);
-  --gold:#8A5C00; --goldl:#6A4400; --goldbg:rgba(138,92,0,.09); --goldbd:rgba(138,92,0,.25);
+  --gold:#007460; --goldl:#005848; --goldbg:rgba(0,116,96,.09); --goldbd:rgba(0,116,96,.26);
   --accent-text:#ffffff;
   --green:#1A7A34; --greenbg:rgba(26,122,52,.08); --greenbd:rgba(26,122,52,.24);
   --red:#D00010; --redbg:rgba(208,0,16,.07); --redbd:rgba(208,0,16,.22);
@@ -969,6 +969,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
     box-shadow:0 4px 12px -5px rgba(0,0,0,.28);
   }
   .comu-react-btn.active:hover{background:var(--goldbg);border-color:var(--goldbd);}
+
+  /* perfil: hover discreto nas linhas clicáveis/editáveis do modal */
+  .prof-field-row:hover{background:var(--bg3);}
+  .prof-stat-row:hover{background:var(--bg3);}
+  .prof-account-section:hover{border-color:var(--line3);}
 }
 
 /* toque/press mais elástico e premium em qualquer dispositivo */
@@ -2242,15 +2247,15 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .live-banner{border-radius:20px;padding:18px 20px;margin-bottom:14px;position:relative;overflow:hidden}
 .live-banner.in-class{background:var(--goldbg);border:1px solid var(--goldbd);border-left:3px solid var(--gold)}
 .live-banner.between{background:var(--bg1);border:1px solid var(--line2);border-left:3px solid var(--gold)}
-.live-banner.break-time{background:var(--bg1);border:1px solid var(--amberbd);border-left:3px solid var(--amber)}
+.live-banner.break-time{background:var(--bg1);border:1px solid var(--goldbd);border-left:3px solid var(--gold)}
 .live-banner.no-class{background:var(--bg1);border:1px solid var(--line2);border-left:3px solid var(--t4)}
-.live-banner.weekend{background:var(--bg1);border:1px solid var(--violetbd);border-left:3px solid var(--violet)}
+.live-banner.weekend{background:var(--bg1);border:1px solid var(--goldbd);border-left:3px solid var(--gold)}
 .lb-tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
 .lb-tag .dot{width:6px;height:6px;border-radius:50%;animation:blink 1.4s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .live-banner.in-class .lb-tag{color:var(--gold)} .live-banner.in-class .lb-tag .dot{background:var(--gold)}
 .live-banner.between .lb-tag{color:var(--gold)} .live-banner.between .lb-tag .dot{background:var(--gold);animation:none}
-.live-banner.break-time .lb-tag{color:var(--amber)} .live-banner.break-time .lb-tag .dot{background:var(--amber)}
+.live-banner.break-time .lb-tag{color:var(--gold)} .live-banner.break-time .lb-tag .dot{background:var(--gold)}
 .live-banner.no-class .lb-tag{color:var(--t3)} .live-banner.no-class .lb-tag .dot{background:var(--t3);animation:none}
 .lb-main{font-size:17px;font-weight:700;color:var(--t1);line-height:1.3;margin-bottom:6px}
 .lb-main span{color:var(--gold)}
@@ -2260,7 +2265,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .lb-timer-label{font-size:9px;font-weight:600;color:var(--goldl);text-align:right;text-transform:uppercase;letter-spacing:1px;margin-top:3px;position:absolute;right:18px;top:46px;opacity:.7}
 .lb-progress{margin-top:12px;height:2px;background:var(--bg4);border-radius:1px;overflow:hidden}
 .lb-progress-fill{height:100%;border-radius:1px;background:var(--gold);transition:width 1s linear}
-.live-banner.break-time .lb-progress-fill{background:var(--amber)}
+.live-banner.break-time .lb-progress-fill{background:var(--gold)}
 
 .day-selector{display:flex;gap:5px;margin-bottom:14px}
 .day-btn{
@@ -5712,80 +5717,40 @@ input, textarea, select {
 }
 .prof-hero-badge svg { width: 11px; height: 11px; flex-shrink: 0; stroke: var(--t3); }
 
-/* ── Card "Membro desde" ── */
-.prof-member-card {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 13px 15px;
-  background: var(--goldbg);
-  border: 0.5px solid var(--goldbd);
-  border-radius: 16px;
-  margin-bottom: 20px;
-}
-.prof-member-icon {
-  width: 38px; height: 38px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--gold);
-  display: flex; align-items: center; justify-content: center;
-}
-.prof-member-icon svg { width: 19px; height: 19px; stroke: var(--accent-text,#000); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.prof-member-info { flex: 1; min-width: 0; }
-.prof-member-label { font-size: 10px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
-.prof-member-date { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
-.prof-member-days { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
-[data-fb-auth="out"] .prof-member-card { display: none; }
-
-/* ── Card "Armazenamento da nuvem" ── */
-.prof-storage-card {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 13px 15px;
+/* ── Card único de status (Membro desde / Armazenamento / Offline) — redesign consolidado ── */
+.prof-stats-card {
   background: var(--bg2);
   border: 0.5px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
+  padding: 4px 15px;
   margin-bottom: 20px;
 }
-.prof-storage-icon {
-  width: 38px; height: 38px;
+.prof-stat-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 0;
+  border-bottom: 0.5px solid var(--line);
+  border-radius: 10px;
+  transition: background .16s var(--ease-ios);
+}
+.prof-stat-row:last-child { border-bottom: none; }
+.prof-stat-icon {
+  width: 34px; height: 34px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--bg3);
   display: flex; align-items: center; justify-content: center;
 }
-.prof-storage-icon svg { width: 19px; height: 19px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.prof-storage-info { flex: 1; min-width: 0; }
-.prof-storage-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
-.prof-storage-value { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
-[data-fb-auth="out"] .prof-storage-card { display: none; }
-
-/* ── Card "Cópia offline" — salva localmente no navegador (Cache Storage),
-     não tem NENHUMA relação com o Firebase/nuvem, por isso fica visível
-     mesmo com a pessoa deslogada. ── */
-.prof-offline-card {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  padding: 13px 15px;
-  background: var(--bg2);
-  border: 0.5px solid var(--line);
-  border-radius: 16px;
-  margin-bottom: 20px;
-}
-.prof-offline-icon {
-  width: 38px; height: 38px;
-  flex-shrink: 0;
-  border-radius: 12px;
-  background: var(--bg3);
-  display: flex; align-items: center; justify-content: center;
-}
-.prof-offline-icon svg { width: 19px; height: 19px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.prof-offline-info { flex: 1; min-width: 0; }
-.prof-offline-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
-.prof-offline-value { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
-.prof-offline-updated { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
+.prof-stat-icon svg { width: 17px; height: 17px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prof-stat-icon-accent { background: var(--gold); }
+.prof-stat-icon-accent svg { stroke: var(--accent-text,#000); }
+.prof-stat-body { flex: 1; min-width: 0; }
+.prof-stat-label { font-size: 10px; font-weight: 700; color: var(--t3); text-transform: uppercase; letter-spacing: .6px; opacity: .85; margin-bottom: 2px; }
+.prof-stat-value { font-size: 14px; font-weight: 700; color: var(--t1); letter-spacing: -.2px; line-height: 1.3; }
+.prof-stat-sub { font-size: 12px; font-weight: 600; color: var(--t3); letter-spacing: -.1px; margin-top: 1px; }
+[data-fb-auth="out"] #prof-member-card { display: none; }
+[data-fb-auth="out"] #prof-storage-card { display: none; }
 
 /* ── SOBRE O SITE ── */
 .about-box { max-width: 420px; }
@@ -6087,16 +6052,19 @@ input, textarea, select {
   gap: 12px;
   padding: 12px 0;
   border-bottom: 0.5px solid var(--line);
+  border-radius: 10px;
+  transition: background .16s var(--ease-ios);
 }
+.prof-field-row:focus-within { background: var(--bg3); }
 .prof-field-row:last-child { border-bottom: none; }
 .prof-field-row-icon {
-  width: 30px; height: 30px;
+  width: 34px; height: 34px;
   flex-shrink: 0;
-  border-radius: 9px;
+  border-radius: 10px;
   background: var(--bg3);
   display: flex; align-items: center; justify-content: center;
 }
-.prof-field-row-icon svg { width: 15px; height: 15px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.prof-field-row-icon svg { width: 16px; height: 16px; stroke: var(--t2); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .prof-field-row-body { flex: 1; min-width: 0; }
 .prof-field-row-label {
   font-size: 11px; font-weight: 600; color: var(--t3);
@@ -6401,8 +6369,8 @@ input, textarea, select {
 /* ── Desktop modal centered ── */
 @media (min-width:768px) {
   .profile-box {
-    border-radius: 22px;
-    max-width: 460px;
+    border-radius: 24px;
+    max-width: 500px;
     width: calc(100% - 48px);
     margin: auto;
     animation: cfPop .3s var(--ease-spring);
@@ -6410,7 +6378,16 @@ input, textarea, select {
     border: 1px solid var(--line2);
     box-shadow: 0 32px 96px rgba(0,0,0,.36);
     max-height: 88dvh;
+    padding: 26px 26px 28px;
   }
+  .profile-box .prof-hero {
+    padding: 22px 20px;
+    gap: 18px;
+  }
+  .profile-box .prof-avatar { width: 84px; height: 84px; }
+  .profile-box .prof-avatar-initials { font-size: 30px; }
+  .profile-box .prof-avatar-emoji { font-size: 42px; }
+  .profile-box .prof-hero-name { font-size: 22px; }
 }
 
 /* ── CSS accent variables injected dynamically ── */
@@ -10204,15 +10181,36 @@ html[data-expansive="1"][data-expansive-bg="1"] {
       </div>
     </div>
 
-    <!-- CARD: Membro desde -->
-    <div class="prof-member-card" id="prof-member-card">
-      <div class="prof-member-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01z"/></svg>
+    <!-- CARD: Status (Membro desde / Armazenamento / Offline) — consolidado num único card -->
+    <div class="prof-stats-card">
+      <div class="prof-stat-row" id="prof-member-card">
+        <div class="prof-stat-icon prof-stat-icon-accent">
+          <svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l7.1-1.01z"/></svg>
+        </div>
+        <div class="prof-stat-body">
+          <div class="prof-stat-label">Membro da plataforma desde</div>
+          <div class="prof-stat-value" id="prof-member-date">—</div>
+          <div class="prof-stat-sub" id="prof-member-days"></div>
+        </div>
       </div>
-      <div class="prof-member-info">
-        <div class="prof-member-label">Membro da plataforma desde</div>
-        <div class="prof-member-date" id="prof-member-date">—</div>
-        <div class="prof-member-days" id="prof-member-days"></div>
+      <div class="prof-stat-row" id="prof-storage-card">
+        <div class="prof-stat-icon">
+          <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+        </div>
+        <div class="prof-stat-body">
+          <div class="prof-stat-label">Armazenamento na nuvem</div>
+          <div class="prof-stat-value" id="prof-storage-value">—</div>
+        </div>
+      </div>
+      <div class="prof-stat-row" id="prof-offline-card">
+        <div class="prof-stat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div class="prof-stat-body">
+          <div class="prof-stat-label">Cópia offline neste navegador</div>
+          <div class="prof-stat-value" id="prof-offline-value">—</div>
+          <div class="prof-stat-sub" id="prof-offline-updated">Verificando…</div>
+        </div>
       </div>
     </div>
 
@@ -10239,29 +10237,6 @@ html[data-expansive="1"][data-expansive-bg="1"] {
           <div class="prof-field-row-label">Turma / Sala</div>
           <input class="prof-field-row-input" id="m-turma" type="text" placeholder="Ex: 205"/>
         </div>
-      </div>
-    </div>
-
-    <!-- CARD: Armazenamento da nuvem -->
-    <div class="prof-storage-card" id="prof-storage-card">
-      <div class="prof-storage-icon">
-        <svg viewBox="0 0 24 24"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
-      </div>
-      <div class="prof-storage-info">
-        <div class="prof-storage-label">Armazenamento da nuvem consumido pela conta</div>
-        <div class="prof-storage-value" id="prof-storage-value">—</div>
-      </div>
-    </div>
-
-    <!-- CARD: Cópia offline salva no navegador (local — não usa a nuvem) -->
-    <div class="prof-offline-card" id="prof-offline-card">
-      <div class="prof-offline-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      </div>
-      <div class="prof-offline-info">
-        <div class="prof-offline-label">Cópia offline neste navegador</div>
-        <div class="prof-offline-value" id="prof-offline-value">—</div>
-        <div class="prof-offline-updated" id="prof-offline-updated">Verificando…</div>
       </div>
     </div>
 
@@ -11177,7 +11152,7 @@ let curTab='1T', curPage='notas', openAcc={};
    virar /notas, /provas, etc. ao trocar de aba)
 ══════════════════════════════════════════ */
 let _routerSuppressPush=false;
-let stu={nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'gold'};
+let stu={nome:'',escola:'',turma:'',serie:'',turno:'',meta:6,avatarColor:'#FFD60A',accentKey:'mint'};
 let _isFirstVisit=false;
 const todayDow=new Date().getDay();
 let schedDay=(todayDow>=1&&todayDow<=5)?todayDow:1;
@@ -11232,7 +11207,7 @@ function applyStudent(){
   // apply avatar
   applyAvatar();
   // apply accent
-  applyAccent(stu.accentKey||'gold');
+  applyAccent(stu.accentKey||'mint');
   updateGreeting();
 }
 
@@ -11409,7 +11384,7 @@ function _accentDisplayName(key){
 }
 function _getAccentColor(){
   const theme=document.documentElement.getAttribute('data-theme')||'dark';
-  const key=stu.accentKey||'gold';
+  const key=stu.accentKey||'mint';
   const map=ACCENT_MAPS[key]||ACCENT_MAPS.gold;
   return {color:map[theme]||map.dark,key};
 }
@@ -13306,9 +13281,9 @@ function renderHorarios(el){
   // ── Banner ────────────────────────────────────────────────
   let banner='';
   if(feriadoHoje){
-    banner=`<div class="live-banner no-class" style="background:var(--amberbg);border:1px solid var(--amberbd)">
-      <div class="lb-tag"><div class="dot" style="background:var(--amber)"></div><span style="color:var(--amber)">Feriado</span></div>
-      <div class="lb-main" style="color:var(--amber)">${feriadoHoje}</div>
+    banner=`<div class="live-banner no-class" style="background:var(--goldbg);border:1px solid var(--goldbd)">
+      <div class="lb-tag"><div class="dot" style="background:var(--gold)"></div><span style="color:var(--gold)">Feriado</span></div>
+      <div class="lb-main" style="color:var(--gold)">${feriadoHoje}</div>
       <div class="lb-sub">Não há aulas hoje.</div>
     </div>`;
   } else if(s2.type==='in-class'){
@@ -13323,22 +13298,22 @@ function renderHorarios(el){
   }else if(s2.type==='after'){
     // sub: se próximo dia útil for feriado, mostrar aviso no lugar de "Até amanhã"
     const subTxt = proximoFeriadoTxt
-      ? `<span style="color:var(--amber)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
+      ? `<span style="color:var(--gold)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
       : (dow===5?'Bom fim de semana!':'Até amanhã!');
     banner=`<div class="live-banner no-class"><div class="lb-tag"><div class="dot"></div>Encerrado</div><div class="lb-main">Aulas encerradas hoje</div><div class="lb-sub">${subTxt}</div></div>`;
     proximoFeriadoTxt=null; // já exibido no banner, não duplicar
   }else if(s2.type==='weekend'){
     if(dow===6){
       const subTxt = proximoFeriadoTxt
-        ? `<span style="color:var(--amber)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
+        ? `<span style="color:var(--gold)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
         : 'As aulas voltam na segunda-feira.';
-      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--violet)"></div><span style="color:var(--violet)">Final de semana</span></div><div class="lb-main" style="font-size:16px">É sábado! <span style="color:var(--violet)">Descansa que você merece.</span></div><div class="lb-sub">${subTxt}</div></div>`;
+      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--gold)"></div><span style="color:var(--gold)">Final de semana</span></div><div class="lb-main" style="font-size:16px">É sábado! <span style="color:var(--gold)">Descansa que você merece.</span></div><div class="lb-sub">${subTxt}</div></div>`;
       proximoFeriadoTxt=null;
     }else{
       const subTxt = proximoFeriadoTxt
-        ? `<span style="color:var(--amber)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
+        ? `<span style="color:var(--gold)">⚠ ${proximoFeriadoTxt.label} é feriado — ${proximoFeriadoTxt.nome}</span>`
         : 'Aproveita as últimas horas.';
-      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--violet)"></div><span style="color:var(--violet)">Final de semana</span></div><div class="lb-main" style="font-size:16px">Hoje é domingo, <span style="color:var(--amber)">as aulas voltam amanhã.</span></div><div class="lb-sub">${subTxt}</div></div>`;
+      banner=`<div class="live-banner weekend"><div class="lb-tag"><div class="dot" style="background:var(--gold)"></div><span style="color:var(--gold)">Final de semana</span></div><div class="lb-main" style="font-size:16px">Hoje é domingo, <span style="color:var(--gold)">as aulas voltam amanhã.</span></div><div class="lb-sub">${subTxt}</div></div>`;
       proximoFeriadoTxt=null;
     }
   }
@@ -16563,7 +16538,7 @@ function openModal(){
   syncProfilePreview();
   // accent buttons
   document.querySelectorAll('.prof-accent-btn').forEach(b=>{
-    b.classList.toggle('active',b.dataset.key===(stu.accentKey||'gold'));
+    b.classList.toggle('active',b.dataset.key===(stu.accentKey||'mint'));
   });
   syncColorSummary();
 
@@ -16779,13 +16754,13 @@ function syncColorSummary(){
   if(!sw||!nm)return;
   const {color}=_getAccentColor();
   sw.style.background=color;
-  nm.textContent=_accentDisplayName(stu.accentKey||'gold');
+  nm.textContent=_accentDisplayName(stu.accentKey||'mint');
 }
 function renderColorPickerGrid(){
   const wrap=document.getElementById('cp-groups');
   if(!wrap)return;
   const theme=document.documentElement.getAttribute('data-theme')||'dark';
-  const activeKey=stu.accentKey||'gold';
+  const activeKey=stu.accentKey||'mint';
   let html='';
   ACCENT_META.forEach(g=>{
     html+=`<div class="cp-group"><div class="cp-group-label">${g.group}</div><div class="prof-accent-grid">`;
@@ -18273,7 +18248,7 @@ window.addEventListener('load',()=>{
   loadSchedHistory();
   loadSubjects();
   migrateScheduleFix2026Ago();
-  applyAccent(stu.accentKey||'gold');
+  applyAccent(stu.accentKey||'mint');
   applyAvatar();
   updateGreeting();
   loadGrades();
