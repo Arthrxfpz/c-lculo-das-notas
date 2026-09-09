@@ -10,12 +10,21 @@
     --line:#262832; --t1:#f2f2f5; --t2:#b7b9c4; --t3:#8a8d99; --t4:#5c5f6b;
     --gold:#FFD60A; --goldbg:rgba(255,214,10,.08); --goldbd:rgba(255,214,10,.25);
     --red:#ff5a5f; --redbg:rgba(255,90,95,.1); --green:#34c77b; --blue:#5aa9ff;
+    --violet:#b78bff; --violetbg:rgba(183,139,255,.1);
     --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
     --ease:cubic-bezier(.22,.8,.36,1);
+    --shadow-card:0 1px 2px rgba(0,0,0,.2), 0 8px 24px -12px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
   html{-webkit-text-size-adjust:100%}
-  body{margin:0;background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+  body{
+    margin:0;color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none;
+    background:
+      radial-gradient(900px 480px at 12% -8%, rgba(255,214,10,.09), transparent 60%),
+      radial-gradient(700px 420px at 100% 0%, rgba(90,169,255,.07), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+  }
   button,input,select,textarea{font-family:inherit}
   .wrap{max-width:960px;margin:0 auto;padding:calc(18px + var(--safe-top)) 14px 40px}
   ::-webkit-scrollbar{width:6px;height:6px}
@@ -32,9 +41,13 @@
 
   /* ── Painel ── */
   #panel{display:none;animation:fadeUp .35s var(--ease)}
-  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
-  .topbar h1{font-size:17px;margin:0;letter-spacing:-.2px}
-  .topbar-sub{font-size:11px;color:var(--t4);margin-top:2px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px}
+  .topbar-brand{display:flex;align-items:center;gap:12px}
+  .topbar-mark{width:38px;height:38px;border-radius:12px;flex-shrink:0;background:linear-gradient(155deg,var(--gold),#c99900);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px -4px rgba(255,214,10,.45)}
+  .topbar-mark svg{width:19px;height:19px}
+  .topbar h1{font-size:18px;margin:0;letter-spacing:-.3px;font-weight:800}
+  .topbar-sub{font-size:11px;color:var(--t4);margin-top:2px;display:flex;align-items:center;gap:6px}
+  .topbar-sub .dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 0 3px rgba(52,199,123,.15)}
   .topbar-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
   .icon-btn{width:36px;height:36px;border-radius:10px;background:var(--bg2);border:.5px solid var(--line);color:var(--t2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:background .15s var(--ease),border-color .15s var(--ease),transform .15s var(--ease),color .15s var(--ease)}
   .icon-btn:active{transform:scale(.94);background:var(--bg3)}
@@ -46,13 +59,20 @@
   .btn-out:active{transform:scale(.96)}
   .btn-out:hover{border-color:var(--red);color:var(--red)}
 
-  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:22px}
+  .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:24px}
   @media(min-width:560px){.stats{grid-template-columns:repeat(3,1fr)}}
-  @media(min-width:820px){.stats{grid-template-columns:repeat(6,1fr)}}
-  .stat-card{background:var(--bg2);border:.5px solid var(--line);border-radius:14px;padding:13px 14px;transition:border-color .2s var(--ease),transform .2s var(--ease)}
-  .stat-card:hover{border-color:var(--goldbd);transform:translateY(-1px)}
-  .stat-label{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-  .stat-value{font-size:19px;font-weight:800;color:var(--t1);letter-spacing:-.4px;transition:color .2s var(--ease)}
+  @media(min-width:900px){.stats{grid-template-columns:repeat(5,1fr)}}
+  .stat-card{position:relative;background:linear-gradient(155deg,var(--bg3),var(--bg2));border:.5px solid var(--line);border-radius:16px;padding:14px 15px;transition:border-color .2s var(--ease),transform .2s var(--ease),box-shadow .2s var(--ease);box-shadow:var(--shadow-card);overflow:hidden}
+  .stat-card:hover{border-color:var(--goldbd);transform:translateY(-2px)}
+  .stat-icon{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--goldbg);color:var(--gold)}
+  .stat-icon svg{width:14px;height:14px}
+  .stat-icon.blue{background:rgba(90,169,255,.12);color:var(--blue)}
+  .stat-icon.green{background:rgba(52,199,123,.12);color:var(--green)}
+  .stat-icon.violet{background:var(--violetbg);color:var(--violet)}
+  .stat-icon.red{background:var(--redbg);color:var(--red)}
+  .stat-icon.grey{background:var(--bg4);color:var(--t3)}
+  .stat-label{font-size:9.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+  .stat-value{font-size:20px;font-weight:800;color:var(--t1);letter-spacing:-.4px;transition:color .2s var(--ease)}
   .stat-value.gold{color:var(--gold)}
   .stat-value.green{color:var(--green)}
 
@@ -69,9 +89,11 @@
 
   /* ── Lista de usuários (cards) ── */
   .user-list{display:flex;flex-direction:column;gap:8px}
-  .user-card{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:12px 12px;cursor:pointer;transition:background .15s var(--ease),border-color .2s var(--ease),transform .15s var(--ease)}
+  .user-card{display:flex;align-items:center;gap:12px;background:var(--bg2);border:.5px solid var(--line);border-radius:16px;padding:12px 12px;cursor:pointer;transition:background .15s var(--ease),border-color .2s var(--ease),transform .15s var(--ease),box-shadow .2s var(--ease)}
   .user-card:active{background:var(--bg3);transform:scale(.995)}
-  .user-card:hover{border-color:var(--goldbd)}
+  .user-card:hover{border-color:var(--goldbd);box-shadow:var(--shadow-card)}
+  .user-card.authonly{border-style:dashed;opacity:.9}
+  .tag.tag-authonly{color:var(--t3);background:var(--bg4);border:.5px dashed var(--line)}
   .avatar{width:42px;height:42px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#000;overflow:hidden;background-size:cover;background-position:center}
   .avatar img{width:100%;height:100%;object-fit:cover;display:block}
   .google-dot{position:absolute;width:14px;height:14px;border-radius:50%;background:var(--bg2);border:2px solid var(--bg2);display:flex;align-items:center;justify-content:center;margin-left:30px;margin-top:30px}
@@ -293,34 +315,47 @@
     <div id="section-users">
     <div class="stats" id="stats-grid">
       <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg></div>
         <div class="stat-label">Armazenamento</div>
         <div class="stat-value gold" id="st-total">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
         <div class="stat-label">Usuários</div>
         <div class="stat-value" id="st-users">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none"><path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12s3.36-7.27 7.19-7.27c3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.19 2C6.42 2 2.03 6.8 2.03 12s4.39 10 10.16 10c5.05 0 9.81-3.7 9.81-9.09c0-1.15-.15-1.81-.15-1.81Z"/></svg></div>
         <div class="stat-label">Google vinculado</div>
         <div class="stat-value" id="st-google">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon grey"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="stat-label">Só login (sem dados)</div>
+        <div class="stat-value" id="st-onlylogin" style="color:var(--t3)">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/></svg></div>
         <div class="stat-label">Média/usuário</div>
         <div class="stat-value" id="st-avg">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></div>
         <div class="stat-label">Maior consumo</div>
         <div class="stat-value" id="st-max">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
         <div class="stat-label">Provas cadastradas</div>
         <div class="stat-value" id="st-exams">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
         <div class="stat-label">Ativos (7 dias)</div>
         <div class="stat-value green" id="st-active">—</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></div>
         <div class="stat-label">Frequência média</div>
         <div class="stat-value" id="st-freq">—</div>
       </div>
@@ -340,6 +375,8 @@
         <option value="all">Todos os usuários</option>
         <option value="google">Só com Google vinculado</option>
         <option value="nogoogle">Só sem Google vinculado</option>
+        <option value="onlylogin">Só login (sem dados salvos)</option>
+        <option value="withdata">Com dados salvos no app</option>
       </select>
     </div>
     <div id="loading"><div class="spinner"></div>Carregando dados do Firestore...</div>
@@ -851,6 +888,15 @@
   function hasGoogle(row){
     return !!(row.email || row.googlePhoto || (row.raw && row.raw.student && row.raw.student.googlePhoto));
   }
+  // "Só login": conta Google que já autenticou no site (por isso existe o
+  // documento) mas nunca chegou a salvar dados de verdade no app — o
+  // documento tem só os campos de identidade gravados no login (ver
+  // _fbEnsureUserDoc em index.html) e a flag authOnly ainda está presente.
+  // Assim que a pessoa salva qualquer coisa, o app regrava o documento
+  // inteiro (sem merge) e essa flag some sozinha.
+  function isAuthOnly(row){
+    return !!(row.raw && row.raw.authOnly === true);
+  }
 
   async function loadData(){
     const loadingEl = document.getElementById('loading');
@@ -888,6 +934,8 @@
           gradesCount: countGradeEntries(d.grades),
           notesCount: Array.isArray(d.notes) ? d.notes.length : 0,
           freqPct: freqStats.totalPct,
+          authOnly: d.authOnly === true,
+          lastLoginAt: d.lastLoginAt || null,
         });
       });
 
@@ -899,10 +947,12 @@
       const withFreq = rows.filter(r=>r.freqPct!=null);
       const avgFreq = withFreq.length ? Math.round(withFreq.reduce((a,r)=>a+r.freqPct,0)/withFreq.length) : null;
       const googleLinked = rows.filter(hasGoogle).length;
+      const onlyLoginCount = rows.filter(isAuthOnly).length;
 
       document.getElementById('st-total').textContent  = fmtBytes(total);
       document.getElementById('st-users').textContent  = rows.length;
       document.getElementById('st-google').textContent = googleLinked;
+      document.getElementById('st-onlylogin').textContent = onlyLoginCount;
       document.getElementById('st-avg').textContent    = rows.length ? fmtBytes(Math.round(total/rows.length)) : '—';
       document.getElementById('st-max').textContent    = rows.length ? fmtBytes(max) : '—';
       document.getElementById('st-exams').textContent  = totalExams;
@@ -958,6 +1008,8 @@
     );
     if (googleFilterKey === 'google') filtered = filtered.filter(hasGoogle);
     else if (googleFilterKey === 'nogoogle') filtered = filtered.filter(r => !hasGoogle(r));
+    else if (googleFilterKey === 'onlylogin') filtered = filtered.filter(isAuthOnly);
+    else if (googleFilterKey === 'withdata') filtered = filtered.filter(r => !isAuthOnly(r));
     filtered.sort((a,b) => {
       if(sortKey === 'updatedAt') return (b.updatedAt||0) - (a.updatedAt||0);
       if(sortKey === 'createdAt') return (entryDateFor(b).ts||0) - (entryDateFor(a).ts||0);
@@ -974,30 +1026,35 @@
     listEl.style.display = 'flex';
 
     listEl.innerHTML = filtered.map(r => {
+      const authOnly = isAuthOnly(r);
       const initial = (r.nome || '?').trim().charAt(0).toUpperCase() || '?';
       const color = avatarColorFor(r);
-      const subInfo = [r.escola !== '—' ? r.escola : null, r.turma || null].filter(Boolean).join(' · ') || 'Sem escola cadastrada';
+      const subInfo = [r.escola !== '—' ? r.escola : null, r.turma || null].filter(Boolean).join(' · ') || (authOnly ? 'Ainda não usou o app' : 'Sem escola cadastrada');
       const freqTag = r.freqPct!=null ? `<span class="tag" style="color:${pctColor(r.freqPct)}">${r.freqPct}% freq.</span>` : `<span class="tag" style="color:var(--t4)">sem freq.</span>`;
       const entry = entryDateFor(r);
       const emailHtml = r.email
         ? `<div class="user-email">${escapeHtml(r.email)}</div>`
         : `<div class="user-email" style="color:var(--red)">⚠️ sem e-mail sincronizado</div>`;
+      const tagsHtml = authOnly
+        ? `<span class="tag tag-authonly">🔒 só login, sem dados</span>`
+        : `<span class="tag">${r.gradesCount} notas</span><span class="tag">${r.examsCount} provas</span>${freqTag}`;
+      const timeLine = authOnly
+        ? `<div class="user-time">${r.lastLoginAt ? 'entrou ' + timeAgo(r.lastLoginAt) : ''}</div>`
+        : `<div class="user-time">${timeAgo(r.updatedAt)}</div>`;
       return `
-      <div class="user-card" data-uid="${r.uid}">
+      <div class="user-card${authOnly?' authonly':''}" data-uid="${r.uid}">
         <div class="avatar" style="background:${color}">${avatarHtmlFor(r, initial, color)}</div>
         <div class="user-info">
           <div class="user-name">${escapeHtml(r.nome)}</div>
           <div class="user-sub">${escapeHtml(subInfo)}</div>
           ${emailHtml}
           <div class="user-tags">
-            <span class="tag">${r.gradesCount} notas</span>
-            <span class="tag">${r.examsCount} provas</span>
-            ${freqTag}
+            ${tagsHtml}
           </div>
         </div>
         <div class="user-meta">
-          <div class="user-size">${fmtBytes(r.bytes)}</div>
-          <div class="user-time">${timeAgo(r.updatedAt)}</div>
+          <div class="user-size">${authOnly ? '—' : fmtBytes(r.bytes)}</div>
+          ${timeLine}
           <div class="user-time">desde ${fmtDateOnly(entry.ts)}${entry.approx?' (aprox.)':''}</div>
         </div>
         <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
@@ -1031,11 +1088,18 @@
         const batch = writeBatch(db);
         rows.slice(i, i+CHUNK).forEach(r=>{
           const kept = {
-            student: (r.raw && r.raw.student) || {},
+            uid: r.uid,
+            student: (r.raw && r.raw.student) || {}, // mantém o perfil (nome, escola, turma, foto, cor etc.)
             email: r.email || null,
             createdAt: r.createdAt || null,
             updatedAt: now,
           };
+          if (isAuthOnly(r)) {
+            // já era "só login" (sem dados) — mantém marcado assim, senão a
+            // formatação faria essa conta "virar" uma conta com dados
+            kept.authOnly = true;
+            kept.lastLoginAt = r.lastLoginAt || now;
+          }
           batch.set(doc(db, 'users', r.uid), kept); // substituição completa (sem merge)
         });
         await batch.commit();
@@ -1503,7 +1567,12 @@
       </optgroup>
     `).join('');
 
+    const authOnlyNotice = isAuthOnly(row || {raw:currentData})
+      ? `<div class="hint" style="background:var(--bg3);border-radius:11px;padding:10px 12px;margin-bottom:14px">🔒 Esta pessoa já entrou com o Google no site, mas ainda não salvou nenhum dado no app (sem notas, provas, horário etc). Os campos abaixo estão vazios porque não há nada preenchido ainda — não é um erro.</div>`
+      : '';
+
     sheetBody.innerHTML = `
+      ${authOnlyNotice}
       <div class="profile-card">
         <div class="profile-card-av" style="background:${color}">
           ${photo ? `<img src="${escapeHtml(photo)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;color:${txtColor}">${escapeHtml(initial)}</div>` : `<span style="color:${txtColor}">${escapeHtml(initial)}</span>`}
