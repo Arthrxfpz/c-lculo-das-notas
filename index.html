@@ -333,6 +333,7 @@
     if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
     if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
     if (d.ncMeta)  localStorage.setItem('t205_nc_meta', JSON.stringify(d.ncMeta));
+    if (window._ncResyncMetaBaseline) window._ncResyncMetaBaseline();
     if (d.comuNotifSeeded) localStorage.setItem('t205_comu_notif_seeded', d.comuNotifSeeded);
     if (d.freq)    localStorage.setItem('t205_freq',   JSON.stringify(d.freq));
     if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
@@ -17256,15 +17257,32 @@ let _ncToastExtra=0;
 function _ncLoadMeta(){
   try{const d=localStorage.getItem('t205_nc_meta');return d?JSON.parse(d):null;}catch(e){return null;}
 }
+// Guarda a última versão já gravada, pra só escrever (e só sincronizar com
+// a nuvem) quando o conteúdo tiver mudado de verdade. Sem isso, o "central
+// de notificações" — que roda sozinho a cada 60s (checkExamToasts/
+// setInterval) e também a cada mensagem nova da Comunidade — ficava
+// gravando no Firestore o tempo todo mesmo sem nada de novo, só porque a
+// função de salvar era chamada de novo com o mesmo conteúdo de sempre.
+let _ncLastSavedMetaStr=(function(){try{return localStorage.getItem('t205_nc_meta');}catch(e){return null;}})();
 function _ncSaveMeta(m){
-  try{localStorage.setItem('t205_nc_meta',JSON.stringify(m));}catch(e){}
-  // Manda pra nuvem também: sem isso, o "já vi essa notificação" ficava só
-  // neste aparelho/navegador, e a publicação da Comunidade que a pessoa já
-  // tinha visto voltava a aparecer como nova em outro dispositivo (ou depois
-  // do navegador limpar dados). Agora o estado de leitura viaja junto com o
-  // resto dos dados da conta.
+  let str;
+  try{str=JSON.stringify(m);}catch(e){return;}
+  if(str===_ncLastSavedMetaStr)return; // nada mudou — não grava nem sincroniza à toa
+  _ncLastSavedMetaStr=str;
+  try{localStorage.setItem('t205_nc_meta',str);}catch(e){}
+  // Só chega até aqui quando ALGO realmente mudou (uma notificação nova
+  // apareceu, foi marcada como lida, etc.) — aí sim vale a pena mandar pra
+  // nuvem, pra esse "já vi" acompanhar a conta em qualquer aparelho.
   if(window._fbSaveAll)window._fbSaveAll();
 }
+// Chamado quando dados chegam PRONTOS da nuvem (sync em tempo real / em
+// segundo plano, sem reload de página) — atualiza a "última versão salva"
+// pra esse valor recém-chegado, senão a próxima checagem acharia que
+// mudou (comparado com o que tinha antes de sincronizar) e mandaria de
+// volta pra nuvem à toa a mesmíssima informação que acabamos de receber.
+window._ncResyncMetaBaseline=function(){
+  try{_ncLastSavedMetaStr=localStorage.getItem('t205_nc_meta');}catch(e){}
+};
 
 function _ncIcon(type){
   if(type==='eac')return'<svg viewBox="0 0 24 24"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>';
