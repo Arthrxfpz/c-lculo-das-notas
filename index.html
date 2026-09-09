@@ -8290,21 +8290,18 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 @keyframes comuSpin{to{transform:rotate(360deg)}}
 
 .comu-post{
-  background:var(--bg1);border:1.5px solid var(--line2);border-radius:18px;
-  padding:14px 15px 15px;display:flex;flex-direction:column;gap:10px;
+  background:var(--bg1);border:1px solid var(--line2);border-radius:16px;
+  padding:14px 0 15px;display:flex;flex-direction:column;gap:10px;
+  overflow:hidden;
   animation:fadeIn .28s var(--ease-ios);
-  box-shadow:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 20px -14px rgba(0,0,0,.5);
   transition:border-color .2s var(--ease-ios);
 }
-.comu-post-head{display:flex;align-items:center;gap:10px}
+.comu-post-head{display:flex;align-items:center;gap:10px;padding:0 15px}
 .comu-post-avatar{
-  width:38px;height:38px;border-radius:50%;flex-shrink:0;
-  background:linear-gradient(160deg, color-mix(in srgb, var(--gold) 85%, white 15%), var(--gold));
-  border:1px solid var(--goldbd);
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 8px -2px var(--goldbg);
+  width:36px;height:36px;border-radius:9px;flex-shrink:0;
+  overflow:hidden;
 }
-.comu-post-avatar-txt{font-size:14.5px;font-weight:800;color:var(--accent-text,#000);letter-spacing:-.2px}
+.comu-post-avatar svg{width:100%;height:100%;display:block}
 .comu-post-headinfo{flex:1;min-width:0}
 .comu-post-author{font-size:13.5px;font-weight:800;color:var(--t1);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .comu-post-time{font-size:11px;font-weight:500;color:var(--t4);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -8318,13 +8315,13 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .comu-badge-novidade{background:var(--goldbg);color:var(--gold)}
 .comu-badge-dica{background:var(--amberbg);color:var(--amber)}
 .comu-badge-geral{display:none}
-.comu-post-img{border-radius:14px;overflow:hidden;background:var(--bg2);border:1px solid var(--line2)}
+.comu-post-img{overflow:hidden;background:var(--bg2);border-top:1px solid var(--line2);border-bottom:1px solid var(--line2)}
 .comu-post-img img{width:100%;max-height:340px;object-fit:cover;display:block}
-.comu-post-text{font-size:14px;font-weight:500;color:var(--t2);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.comu-post-text{font-size:14px;font-weight:500;color:var(--t2);line-height:1.55;white-space:pre-wrap;word-break:break-word;padding:0 15px}
 .comu-post-link{
   display:flex;align-items:center;gap:9px;
-  background:var(--bg2);border:1.5px solid var(--line2);border-radius:13px;
-  padding:11px 12px;text-decoration:none;transition:background .15s,transform .1s;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:13px;
+  padding:11px 12px;margin:0 15px;text-decoration:none;transition:background .15s,transform .1s;
 }
 .comu-post-link:active{background:var(--bg3);transform:scale(.99)}
 .comu-post-link svg:first-child{width:15px;height:15px;stroke:var(--gold);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
@@ -8336,7 +8333,7 @@ html[data-expansive="1"][data-expansive-bg="1"] {
    linha fina, igual o rodapé de reação do WhatsApp/Messenger. ── */
 .comu-reactions{
   display:flex;flex-wrap:wrap;gap:7px;
-  margin-top:2px;padding-top:11px;
+  padding:11px 15px 0;
   border-top:1px solid var(--line2);
 }
 .comu-react-btn{
@@ -8344,17 +8341,17 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   background:var(--bg2);border:1px solid var(--line2);border-radius:999px;
   padding:5px 11px 5px 9px;margin:0;font:inherit;line-height:1;
   cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
-  box-shadow:0 1px 2px rgba(0,0,0,.06);
   transition:background .15s var(--ease-ios),border-color .15s var(--ease-ios),
-             transform .12s var(--ease-premium),box-shadow .18s var(--ease-ios);
+             transform .12s var(--ease-premium);
 }
 .comu-react-btn:active{transform:scale(.88)}
-.comu-react-emoji{font-size:15px;line-height:1}
+.comu-react-icon{display:flex}
+.comu-react-icon svg{width:15px;height:15px;stroke:var(--t3)}
 .comu-react-count{font-size:11.5px;font-weight:800;color:var(--t3);letter-spacing:-.1px}
 .comu-react-btn.active{
   background:var(--goldbg);border-color:var(--goldbd);
-  box-shadow:0 2px 8px -2px var(--goldbg);
 }
+.comu-react-btn.active .comu-react-icon svg{stroke:var(--gold)}
 .comu-react-btn.active .comu-react-count{color:var(--gold)}
 
 /* ── Banner do horário ativo (Frequência) ── */
@@ -18633,7 +18630,17 @@ const COMU_TIPOS={
    ▸ A contagem que aparece em cada emoji é sempre a contagem GLOBAL — vem
      direto do Firestore em tempo real, então todo mundo vê o mesmo número,
      de todo mundo que reagiu, igual/sincronizado em qualquer aparelho. ── */
-const COMU_REACTION_EMOJIS=['👍','👎','🙏','💪','❤️'];
+const COMU_REACTION_EMOJIS=['👍','👎','❤️'];
+// Ícone (SVG, mesmo estilo de traço do resto do site) e rótulo de cada
+// reação — a chave continua sendo o emoji original só por baixo dos panos
+// (é como cada reação é salva no Firestore, mantendo compatibilidade com
+// reações já registradas antes da troca de emoji pra ícone).
+const COMU_REACTION_ICONS={
+  '👍':'<path d="M7 10v11"/><path d="M11 21h7a2 2 0 0 0 2-1.7l1.4-9A2 2 0 0 0 19.4 8H15V4.5a2.5 2.5 0 0 0-2.5-2.5c-.4 0-.7.2-.9.5L7 10H4a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h3Z"/>',
+  '👎':'<path d="M17 14V3"/><path d="M13 3H6a2 2 0 0 0-2 1.7L2.6 13.7A2 2 0 0 0 4.6 16H9v3.5A2.5 2.5 0 0 0 11.5 22c.4 0 .7-.2.9-.5L17 14h3a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-3Z"/>',
+  '❤️':'<path d="M12 20.5s-7-4.4-9.4-8.7C1 9 2 5.6 5.1 4.6A4.7 4.7 0 0 1 12 7 4.7 4.7 0 0 1 18.9 4.6C22 5.6 23 9 21.4 11.8 19 16.1 12 20.5 12 20.5Z"/>'
+};
+const COMU_REACTION_LABELS={'👍':'Gostei','👎':'Não gostei','❤️':'Amei'};
 const _comuReactBusy=new Set(); // ids de posts com uma escrita em andamento —
                                  // trava novos toques nesse post até terminar,
                                  // pra não duplicar/embaralhar a reação com
@@ -18671,9 +18678,10 @@ function _comuReactionsHtml(p){
   const btns=COMU_REACTION_EMOJIS.map(emo=>{
     const c=counts[emo];
     const active=mine===emo;
+    const label=COMU_REACTION_LABELS[emo]||'Reagir';
     return `<button type="button" class="comu-react-btn${active?' active':''}"
-      onclick="comuReact('${escHtml(p.id||'')}','${emo}')" aria-pressed="${active?'true':'false'}" aria-label="Reagir com ${emo}">
-      <span class="comu-react-emoji">${emo}</span>${c>0?`<span class="comu-react-count">${c}</span>`:''}
+      onclick="comuReact('${escHtml(p.id||'')}','${emo}')" aria-pressed="${active?'true':'false'}" aria-label="${label}">
+      <span class="comu-react-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${COMU_REACTION_ICONS[emo]||''}</svg></span>${c>0?`<span class="comu-react-count">${c}</span>`:''}
     </button>`;
   }).join('');
   return `<div class="comu-reactions">${btns}</div>`;
@@ -18954,12 +18962,20 @@ function _comuPostHtml(p){
   const timeAbs=_comuAbsTime(postMs);
   const timeTitle=timeAbs?` title="${escHtml(timeAbs)}"`:'';
   const authorName=(p.autor&&p.autor.trim())?p.autor.trim():'Cálculo das notas';
-  const initial=authorName.trim().charAt(0).toUpperCase()||'?';
 
   return `<div class="comu-post" data-comu-id="${escHtml(p.id||'')}">
     <div class="comu-post-head">
       <div class="comu-post-avatar">
-        <span class="comu-post-avatar-txt">${escHtml(initial)}</span>
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+          <rect width="32" height="32" rx="7" fill="#13141A"/>
+          <rect x="7" y="5" width="13" height="17" rx="2" fill="none" stroke="#FFD60A" stroke-width="1.2" opacity=".9"/>
+          <line x1="10" y1="10" x2="17" y2="10" stroke="#FFD60A" stroke-width="1" stroke-linecap="round" opacity=".65"/>
+          <line x1="10" y1="13" x2="16" y2="13" stroke="#FFD60A" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+          <line x1="10" y1="16" x2="17" y2="16" stroke="#FFD60A" stroke-width="1" stroke-linecap="round" opacity=".4"/>
+          <circle cx="21" cy="22" r="6" fill="#13141A"/>
+          <circle cx="21" cy="22" r="5" fill="#FFD60A"/>
+          <polyline points="18.5,22 20.2,23.8 23.5,20.2" fill="none" stroke="#13141A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
       </div>
       <div class="comu-post-headinfo">
         <div class="comu-post-author">${escHtml(authorName)}</div>
