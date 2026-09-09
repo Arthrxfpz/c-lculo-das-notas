@@ -303,6 +303,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
         </button>
         <button class="btn-out" id="btn-format-all" style="border-color:rgba(255,90,95,.35);color:var(--red)" title="Apaga os dados salvos de todos os usuários da plataforma">Formatar tudo</button>
+        <button class="btn-out" id="btn-apagao" style="border-color:rgba(255,90,95,.35);color:var(--red)" title="Agenda um reset total dos dados de todos os usuários pra uma data/hora futura">Programar apagão total</button>
         <button class="btn-out" id="btn-logout">Sair</button>
       </div>
     </div>
@@ -513,6 +514,27 @@
     <button class="tab-pill" data-tab="json">Avançado</button>
   </div>
   <div class="sheet-body" id="sheet-body" data-clarity-mask="True"></div>
+</div>
+
+<!-- ── Apagão total programado — agenda um reset dos dados de TODOS os usuários ── -->
+<div class="sheet-backdrop" id="apagao-backdrop"></div>
+<div class="sheet" id="apagao-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-header-top">
+      <div class="sheet-avatar" style="background:var(--redbg);color:var(--red)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div style="min-width:0">
+        <div class="sheet-name">Apagão total programado</div>
+        <div class="sheet-uid" style="font-family:inherit;text-transform:none;letter-spacing:0">Reseta os dados de todos os usuários numa data/hora futura</div>
+      </div>
+    </div>
+    <button class="icon-btn" id="btn-close-apagao-sheet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="apagao-sheet-body"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1254,6 +1276,216 @@
     }
   }
   document.getElementById('btn-format-all').addEventListener('click', formatAllUsers);
+
+  /* ══════════════════════════════════════════
+     APAGÃO TOTAL PROGRAMADO
+     Guarda o agendamento em system/apagao: { ativo, at (epoch ms),
+     criadoEm, criadoPor, executadoEm }. O app do aluno (index.html) fica
+     ouvindo esse documento pra: (1) mostrar a faixa de aviso com a
+     contagem regressiva pra TODO MUNDO, e (2) auto-formatar os próprios
+     dados assim que o horário chega, em cada aparelho que estiver aberto
+     (ou que abrir depois — o horário já vai ter passado). Como esse
+     projeto não tem Cloud Functions, não existe um "gatilho único" que
+     resete todo mundo no exato segundo agendado mesmo com o app fechado;
+     por isso este Painel também oferece "Executar agora", que aplica o
+     reset imediatamente em todos os usuários já carregados aqui (o mesmo
+     mecanismo do botão "Formatar tudo"), útil tanto pra rodar na hora
+     quanto como reforço depois que o horário programado já passou. ── */
+  const APAGAO_REF = doc(db, 'system', 'apagao');
+  let apagaoData = null;
+  let apagaoAutoTimer = null;
+  let apagaoAutoRanFor = null; // guarda o `at` já auto-executado nesta sessão do painel, pra não rodar 2x
+
+  function fmtApagaoDate(ms){
+    const d = new Date(ms);
+    const pad = n => String(n).padStart(2,'0');
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} às ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function apagaoRemainingLabel(ms){
+    if(ms<=0) return 'já passou';
+    const min = Math.ceil(ms/60000);
+    if(min<60) return `${min} min`;
+    const h = Math.floor(min/60), remMin = min%60;
+    if(h<24) return remMin>0 ? `${h}h ${remMin}min` : `${h}h`;
+    const d = Math.floor(h/24), remH = h%24;
+    return remH>0 ? `${d}d ${remH}h` : `${d}d`;
+  }
+
+  function renderApagaoBody(){
+    const body = document.getElementById('apagao-sheet-body');
+    const btn = document.getElementById('btn-apagao');
+    if(!body) return;
+
+    if(apagaoData && apagaoData.ativo && apagaoData.at){
+      const remaining = apagaoData.at - Date.now();
+      const passou = remaining<=0;
+      btn.textContent = passou ? 'Apagão pendente ⏰' : `Apagão em ${apagaoRemainingLabel(remaining)}`;
+      body.innerHTML = `
+        <div class="hint" style="margin-bottom:16px">Há um apagão total <strong style="color:var(--red)">programado</strong> nesta plataforma. Quando a hora chegar, cada usuário que abrir o app (ou já estiver com ele aberto) tem os próprios dados salvos apagados — os perfis (nome, escola, e-mail, foto) são mantidos, igual ao "Formatar usuário".</div>
+        <div class="field-group">
+          <span class="field-label">Programado para</span>
+          <div style="font-size:15px;font-weight:800;color:var(--t1)">${fmtApagaoDate(apagaoData.at)}</div>
+          <div style="font-size:12px;color:${passou?'var(--red)':'var(--t3)'};margin-top:4px;font-weight:${passou?700:400}">${passou ? 'O horário já passou — os usuários serão resetados conforme forem abrindo o app.' : `Faltam ${apagaoRemainingLabel(remaining)}.`}</div>
+        </div>
+        <button class="btn-warn" id="apagao-run-now">Executar agora em todos os usuários carregados</button>
+        <div class="danger-zone">
+          <div class="danger-title">Zona de risco</div>
+          <button class="btn-danger" id="apagao-cancel">Cancelar apagão programado</button>
+        </div>
+        <div class="save-status" id="apagao-status"></div>
+      `;
+      document.getElementById('apagao-cancel').addEventListener('click', cancelApagao);
+      document.getElementById('apagao-run-now').addEventListener('click', ()=>runApagaoNow(false));
+    } else {
+      btn.textContent = 'Programar apagão total';
+      const now = new Date(Date.now()+15*60000); // sugestão: daqui 15min
+      const pad = n=>String(n).padStart(2,'0');
+      const defaultVal = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+      body.innerHTML = `
+        <div class="hint" style="margin-bottom:16px">Agende uma data e hora. Quando chegar esse momento, os dados salvos (notas, provas, anotações, frequência, horário) de <strong style="color:var(--red)">TODOS</strong> os usuários da plataforma são apagados — os perfis continuam existindo. Uma faixa de aviso com a contagem regressiva aparece pra todo mundo no site enquanto o horário não chega.</div>
+        <div class="field-group">
+          <span class="field-label">Data e hora do apagão</span>
+          <input class="input" type="datetime-local" id="apagao-datetime" value="${defaultVal}">
+        </div>
+        <button class="btn-danger" id="apagao-schedule">Programar apagão total</button>
+        <div class="save-status" id="apagao-status"></div>
+      `;
+      document.getElementById('apagao-schedule').addEventListener('click', scheduleApagao);
+    }
+  }
+
+  async function scheduleApagao(){
+    const input = document.getElementById('apagao-datetime');
+    const statusEl = document.getElementById('apagao-status');
+    const val = input.value;
+    if(!val){ statusEl.textContent='Escolha uma data e hora.'; statusEl.className='save-status err'; return; }
+    const at = new Date(val).getTime();
+    if(isNaN(at)){ statusEl.textContent='Data inválida.'; statusEl.className='save-status err'; return; }
+    if(at <= Date.now()){ statusEl.textContent='Escolha um horário no futuro.'; statusEl.className='save-status err'; return; }
+
+    if(!confirm(`Programar o apagão total pra ${fmtApagaoDate(at)}? Isso vai apagar os dados salvos de TODOS os usuários da plataforma nesse momento. Os perfis são mantidos. Essa ação não pode ser desfeita depois de executada.`)) return;
+    const typed = prompt('Para confirmar, digite exatamente: APAGAO TOTAL');
+    if(typed !== 'APAGAO TOTAL'){ statusEl.textContent='Confirmação incorreta. Nada foi programado.'; statusEl.className='save-status err'; return; }
+
+    try{
+      await setDoc(APAGAO_REF, {
+        ativo: true,
+        at,
+        criadoEm: Date.now(),
+        criadoPor: (auth.currentUser && auth.currentUser.email) || null,
+        executadoEm: null,
+      });
+      toast('Apagão total programado.', 'ok');
+      closeApagaoSheet();
+    }catch(e){
+      statusEl.textContent = 'Erro ao programar: ' + e.message;
+      statusEl.className = 'save-status err';
+    }
+  }
+
+  async function cancelApagao(){
+    if(!confirm('Cancelar o apagão total programado? Nada será apagado.')) return;
+    try{
+      await setDoc(APAGAO_REF, { ativo:false }, { merge:true });
+      toast('Apagão cancelado.', 'ok');
+      closeApagaoSheet();
+    }catch(e){
+      const statusEl = document.getElementById('apagao-status');
+      if(statusEl){ statusEl.textContent='Erro ao cancelar: '+e.message; statusEl.className='save-status err'; }
+    }
+  }
+
+  // Aplica o reset imediatamente em todos os usuários já carregados no
+  // Painel (mesmo mecanismo de "Formatar tudo") — usado tanto pelo botão
+  // manual "Executar agora" quanto pelo disparo automático quando o
+  // horário programado passa enquanto este Painel está aberto.
+  async function runApagaoNow(silent){
+    if(!rows.length){
+      if(!silent) toast('Nenhum usuário carregado pra aplicar o apagão.', 'err');
+      return;
+    }
+    if(!silent){
+      if(!confirm(`Executar o apagão agora em ${rows.length} usuário(s)? Essa ação não pode ser desfeita.`)) return;
+    }
+    try{
+      const now = Date.now();
+      const CHUNK = 450;
+      for(let i=0;i<rows.length;i+=CHUNK){
+        const batch = writeBatch(db);
+        rows.slice(i, i+CHUNK).forEach(r=>{
+          const kept = {
+            uid: r.uid,
+            student: (r.raw && r.raw.student) || {},
+            email: r.email || null,
+            createdAt: r.createdAt || null,
+            updatedAt: now,
+          };
+          if (isAuthOnly(r)) { kept.authOnly = true; kept.lastLoginAt = r.lastLoginAt || now; }
+          batch.set(doc(db, 'users', r.uid), kept);
+        });
+        await batch.commit();
+      }
+      await setDoc(APAGAO_REF, { ativo:false, executadoEm: now }, { merge:true });
+      if(currentUid) closeDetail();
+      toast(`Apagão executado: ${rows.length} usuário(s) resetado(s).`, 'ok');
+      await loadData();
+      closeApagaoSheet();
+    }catch(e){
+      toast('Erro ao executar o apagão: ' + e.message, 'err');
+    }
+  }
+
+  function openApagaoSheet(){
+    renderApagaoBody();
+    document.getElementById('apagao-backdrop').classList.add('show');
+    document.getElementById('apagao-sheet').classList.add('show');
+  }
+  function closeApagaoSheet(){
+    document.getElementById('apagao-backdrop').classList.remove('show');
+    document.getElementById('apagao-sheet').classList.remove('show');
+  }
+  document.getElementById('btn-apagao').addEventListener('click', openApagaoSheet);
+  document.getElementById('btn-close-apagao-sheet').addEventListener('click', closeApagaoSheet);
+  document.getElementById('apagao-backdrop').addEventListener('click', closeApagaoSheet);
+
+  // Ouve o agendamento em tempo real pra manter o rótulo do botão e o
+  // conteúdo do sheet sempre atualizados, e pra disparar "Executar agora"
+  // sozinho quando o horário chega com o Painel aberto (reforço — a
+  // garantia principal continua sendo o auto-reset no app do aluno).
+  onSnapshot(APAGAO_REF, (snap)=>{
+    apagaoData = snap.exists() ? snap.data() : null;
+    const sheetOpen = document.getElementById('apagao-sheet').classList.contains('show');
+    if(sheetOpen) renderApagaoBody();
+    const btn = document.getElementById('btn-apagao');
+    if(btn && !sheetOpen){
+      if(apagaoData && apagaoData.ativo && apagaoData.at){
+        const remaining = apagaoData.at - Date.now();
+        btn.textContent = remaining<=0 ? 'Apagão pendente ⏰' : `Apagão em ${apagaoRemainingLabel(remaining)}`;
+      } else {
+        btn.textContent = 'Programar apagão total';
+      }
+    }
+  }, (err)=>console.error('[Apagão] erro ao ouvir agendamento:', err));
+
+  clearInterval(apagaoAutoTimer);
+  apagaoAutoTimer = setInterval(()=>{
+    if(!apagaoData || !apagaoData.ativo || !apagaoData.at) return;
+    // Mantém o rótulo do botão fresco mesmo sem o sheet aberto
+    const sheetOpen = document.getElementById('apagao-sheet').classList.contains('show');
+    if(sheetOpen) renderApagaoBody();
+    else{
+      const btn = document.getElementById('btn-apagao');
+      const remaining = apagaoData.at - Date.now();
+      if(btn) btn.textContent = remaining<=0 ? 'Apagão pendente ⏰' : `Apagão em ${apagaoRemainingLabel(remaining)}`;
+      // Disparo automático: se o horário chegou, o Painel está aberto e
+      // ainda não tentamos rodar nesta sessão pra este mesmo agendamento,
+      // executa sozinho (sem confirmação, já foi confirmado no agendamento).
+      if(remaining<=0 && apagaoAutoRanFor!==apagaoData.at && rows.length){
+        apagaoAutoRanFor = apagaoData.at;
+        runApagaoNow(true);
+      }
+    }
+  }, 20000);
 
   document.getElementById('btn-refresh').addEventListener('click', (e)=>{
     e.currentTarget.classList.add('spin');
