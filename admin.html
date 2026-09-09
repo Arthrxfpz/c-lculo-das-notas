@@ -309,6 +309,7 @@
 
     <div class="section-tabs" id="section-tabs">
       <button class="section-tab-pill active" data-section="users">Usuários</button>
+      <button class="section-tab-pill" data-section="auth">Autenticação</button>
       <button class="section-tab-pill" data-section="comunidade">Comunidade</button>
     </div>
 
@@ -382,6 +383,47 @@
     <div id="loading"><div class="spinner"></div>Carregando dados do Firestore...</div>
     <div id="list" class="user-list" style="display:none" data-clarity-mask="True"></div>
     <div id="empty-state" class="empty" style="display:none">Nenhum usuário encontrado.</div>
+    </div>
+
+    <div id="section-auth" style="display:none">
+      <div class="hint" style="background:var(--bg2);border:.5px solid var(--line);border-radius:13px;padding:12px 14px;margin-bottom:18px">
+        ℹ️ O Firebase não deixa o site ler a lista de contas direto do Authentication (isso só é possível com um servidor). O que você vê aqui é o espelho fiel disso: <b>toda</b> conta Google que já entrou no site grava automaticamente um registro aqui no momento do login — inclusive quem nunca chegou a usar o app de verdade.
+      </div>
+      <div class="stats" id="auth-stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <div class="stat-label">Contas com login</div>
+          <div class="stat-value" id="auth-st-total">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div class="stat-label">Logaram nas últimas 24h</div>
+          <div class="stat-value green" id="auth-st-24h">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+          <div class="stat-label">Logaram nos últimos 7 dias</div>
+          <div class="stat-value gold" id="auth-st-7d">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon grey"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          <div class="stat-label">Só logaram, sem dados</div>
+          <div class="stat-value" id="auth-st-onlylogin" style="color:var(--t3)">—</div>
+        </div>
+      </div>
+
+      <div class="section-label">Contas (Authentication)</div>
+      <div class="toolbar">
+        <input id="auth-search" placeholder="Buscar por nome, e-mail ou UID...">
+        <select id="auth-sort-select">
+          <option value="lastLogin">Login mais recente</option>
+          <option value="createdAt">Conta criada (mais recente)</option>
+          <option value="nome">Nome</option>
+          <option value="email">E-mail</option>
+        </select>
+      </div>
+      <div id="auth-list" class="user-list" data-clarity-mask="True"></div>
+      <div id="auth-empty-state" class="empty" style="display:none">Nenhuma conta encontrada.</div>
     </div>
 
     <div id="section-comunidade" style="display:none">
@@ -962,6 +1004,7 @@
       document.getElementById('last-refresh').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
 
       renderList();
+      renderAuthList();
     }catch(e){
       loadingEl.innerHTML = 'Erro ao carregar: ' + escapeHtml(e.message) + ' (verifique as regras do Firestore)';
       return;
@@ -1069,6 +1112,102 @@
   document.getElementById('search').addEventListener('input', renderList);
   document.getElementById('sort-select').addEventListener('change', (e)=>{ sortKey = e.target.value; renderList(); });
   document.getElementById('google-filter').addEventListener('change', (e)=>{ googleFilterKey = e.target.value; renderList(); });
+
+  // ─────────────────────────────────────────────────────────────
+  // ABA "AUTENTICAÇÃO" — espelho do que existiria no Firebase Authentication
+  // (o SDK do navegador não consegue listar contas do Authentication de
+  // verdade — isso só é possível com um servidor/Admin SDK. Este painel usa
+  // como fonte o que já sincronizamos no Firestore: TODA conta Google que
+  // já fez login no site grava um registro aqui mesmo, mesmo sem usar o
+  // app — ver _fbEnsureUserDoc no index.html).
+  // ─────────────────────────────────────────────────────────────
+  let authSortKey = 'lastLogin';
+
+  function authProviderBadge(){
+    return `<span class="tag" style="color:var(--t2)">
+      <svg style="width:9px;height:9px;vertical-align:-1px;margin-right:3px" viewBox="0 0 24 24" fill="none"><path fill="currentColor" d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12s3.36-7.27 7.19-7.27c3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.19 2C6.42 2 2.03 6.8 2.03 12s4.39 10 10.16 10c5.05 0 9.81-3.7 9.81-9.09c0-1.15-.15-1.81-.15-1.81Z"/></svg>Google</span>`;
+  }
+
+  function renderAuthList(){
+    const listEl = document.getElementById('auth-list');
+    const emptyEl = document.getElementById('auth-empty-state');
+    if(!listEl) return; // seção ainda não existe no DOM (não deveria acontecer, mas por segurança)
+
+    // Só entram aqui contas que realmente têm login Google vinculado —
+    // é exatamente o universo que o Authentication de verdade teria.
+    const accounts = rows.filter(hasGoogle);
+
+    const now = Date.now();
+    const last24h = accounts.filter(r => r.lastLoginAt && (now - r.lastLoginAt) < 24*3600*1000).length;
+    const last7d  = accounts.filter(r => r.lastLoginAt && (now - r.lastLoginAt) < 7*24*3600*1000).length;
+    const onlyLogin = accounts.filter(isAuthOnly).length;
+    document.getElementById('auth-st-total').textContent = accounts.length;
+    document.getElementById('auth-st-24h').textContent   = last24h;
+    document.getElementById('auth-st-7d').textContent    = last7d;
+    document.getElementById('auth-st-onlylogin').textContent = onlyLogin;
+
+    const q = (document.getElementById('auth-search').value || '').toLowerCase();
+    let filtered = accounts.filter(r =>
+      r.nome.toLowerCase().includes(q) ||
+      (r.email||'').toLowerCase().includes(q) ||
+      r.uid.toLowerCase().includes(q)
+    );
+    filtered.sort((a,b)=>{
+      if(authSortKey === 'createdAt') return (entryDateFor(b).ts||0) - (entryDateFor(a).ts||0);
+      if(authSortKey === 'nome') return String(a.nome).localeCompare(String(b.nome));
+      if(authSortKey === 'email') return String(a.email||'').localeCompare(String(b.email||''));
+      // lastLogin (padrão): quem logou mais recente primeiro. Contas sem
+      // lastLoginAt registrado (logaram antes dessa sincronização existir)
+      // caem pro fim, usando updatedAt como melhor aproximação disponível.
+      const la = a.lastLoginAt || a.updatedAt || 0;
+      const lb = b.lastLoginAt || b.updatedAt || 0;
+      return lb - la;
+    });
+
+    if(!filtered.length){
+      listEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'flex';
+
+    listEl.innerHTML = filtered.map(r=>{
+      const authOnly = isAuthOnly(r);
+      const initial = (r.nome || '?').trim().charAt(0).toUpperCase() || '?';
+      const color = avatarColorFor(r);
+      const entry = entryDateFor(r);
+      const lastLogin = r.lastLoginAt || null;
+      const statusTag = authOnly
+        ? `<span class="tag tag-authonly">🔒 nunca usou o app</span>`
+        : `<span class="tag" style="color:var(--green)">✓ com dados salvos</span>`;
+      return `
+      <div class="user-card${authOnly?' authonly':''}" data-uid="${r.uid}">
+        <div class="avatar" style="background:${color}">${avatarHtmlFor(r, initial, color)}</div>
+        <div class="user-info">
+          <div class="user-name">${escapeHtml(r.nome)}</div>
+          <div class="user-email" style="margin-top:2px">${r.email?escapeHtml(r.email):'⚠️ sem e-mail sincronizado'}</div>
+          <div class="user-tags">
+            ${authProviderBadge()}
+            ${statusTag}
+          </div>
+        </div>
+        <div class="user-meta">
+          <div class="user-time" style="font-weight:700;color:var(--t2)">${lastLogin ? timeAgo(lastLogin) : (authOnly?'—':'sem registro')}</div>
+          <div class="user-time">último login</div>
+          <div class="user-time">desde ${fmtDateOnly(entry.ts)}${entry.approx?' (aprox.)':''}</div>
+        </div>
+        <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></div>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('.user-card').forEach(card=>{
+      card.addEventListener('click', () => openDetail(card.dataset.uid));
+    });
+  }
+
+  document.getElementById('auth-search').addEventListener('input', renderAuthList);
+  document.getElementById('auth-sort-select').addEventListener('change', (e)=>{ authSortKey = e.target.value; renderAuthList(); });
   // ── Formata a plataforma inteira: apaga os dados salvos de TODOS os usuários ──
   async function formatAllUsers(){
     if(!rows.length){ toast('Nenhum usuário carregado para formatar.', 'err'); return; }
@@ -1122,14 +1261,16 @@
   });
 
   // ─────────────────────────────────────────────────────────────
-  // ALTERNADOR DE SEÇÃO — Usuários / Comunidade
+  // ALTERNADOR DE SEÇÃO — Usuários / Autenticação / Comunidade
   // ─────────────────────────────────────────────────────────────
   document.querySelectorAll('.section-tab-pill').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.section-tab-pill').forEach(b=>b.classList.toggle('active', b===btn));
-      const isUsers = btn.dataset.section === 'users';
-      document.getElementById('section-users').style.display = isUsers ? '' : 'none';
-      document.getElementById('section-comunidade').style.display = isUsers ? 'none' : '';
+      const sec = btn.dataset.section;
+      document.getElementById('section-users').style.display      = sec === 'users' ? '' : 'none';
+      document.getElementById('section-auth').style.display       = sec === 'auth' ? '' : 'none';
+      document.getElementById('section-comunidade').style.display = sec === 'comunidade' ? '' : 'none';
+      if(sec === 'auth') renderAuthList();
     });
   });
 
