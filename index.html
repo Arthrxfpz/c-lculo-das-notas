@@ -323,37 +323,23 @@
     }, 800);
   };
 
-  /* ── Aplica dados do Firestore na UI ──
-     IMPORTANTE: quando um campo não vem no documento remoto (ex.: depois que
-     o Admin "formata" o usuário — o documento é regravado sem grades/exams/
-     notes/freq/schedule/etc.), o campo aqui vem undefined. Antes, esse caso
-     era simplesmente ignorado (só setItem quando truthy), então o que já
-     estava salvo no localStorage deste aparelho NUNCA era apagado — a tela
-     continuava mostrando notas/provas/frequência antigas, e pior: na
-     próxima sincronização automática (_fbSaveAll lê tudo do localStorage),
-     esses dados "fantasmas" eram gravados de volta no Firestore, desfazendo
-     a formatação feita pelo Admin. Por isso cada campo agora tem um `else`
-     que remove a chave local quando o Firestore não tem mais esse dado. ── */
+  /* ── Aplica dados do Firestore na UI ── */
   function _applyCloudData(d) {
-    if (d.grades) localStorage.setItem('t205_grades', JSON.stringify(d.grades)); else localStorage.removeItem('t205_grades');
-    if (d.exams)  localStorage.setItem('t205_exams',  JSON.stringify(d.exams));  else localStorage.removeItem('t205_exams');
-    if (d.student) localStorage.setItem('t205_stu',   JSON.stringify(d.student));
-    if (d.notes)  localStorage.setItem('t205_notes',  JSON.stringify(d.notes));  else localStorage.removeItem('t205_notes');
-    if (d.notifs) localStorage.setItem('t205_notifs', JSON.stringify(d.notifs)); else localStorage.removeItem('t205_notifs');
-    if (d.freq)   localStorage.setItem('t205_freq',   JSON.stringify(d.freq));   else localStorage.removeItem('t205_freq');
-    if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass)); else localStorage.removeItem('t205_freq_noclass');
-    if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods)); else localStorage.removeItem('t205_freqp');
-    if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride)); else localStorage.removeItem('t205_freq_override');
+    if (d.grades)  localStorage.setItem('t205_grades', JSON.stringify(d.grades));
+    if (d.exams)   localStorage.setItem('t205_exams',  JSON.stringify(d.exams));
+    if (d.student) localStorage.setItem('t205_stu',    JSON.stringify(d.student));
+    if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
+    if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
+    if (d.freq)    localStorage.setItem('t205_freq',   JSON.stringify(d.freq));
+    if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
+    if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
+    if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride));
     if (d.schedule) {
-      if (d.schedule.periods) localStorage.setItem('t205_periods', JSON.stringify(d.schedule.periods)); else localStorage.removeItem('t205_periods');
-      if (d.schedule.sched)   localStorage.setItem('t205_sched',   JSON.stringify(d.schedule.sched));   else localStorage.removeItem('t205_sched');
-      if (d.schedule.history) localStorage.setItem('t205_sched_history', JSON.stringify(d.schedule.history)); else localStorage.removeItem('t205_sched_history');
-    } else {
-      localStorage.removeItem('t205_periods');
-      localStorage.removeItem('t205_sched');
-      localStorage.removeItem('t205_sched_history');
+      if (d.schedule.periods) localStorage.setItem('t205_periods', JSON.stringify(d.schedule.periods));
+      if (d.schedule.sched)   localStorage.setItem('t205_sched',   JSON.stringify(d.schedule.sched));
+      if (d.schedule.history) localStorage.setItem('t205_sched_history', JSON.stringify(d.schedule.history));
     }
-    if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects)); else localStorage.removeItem('t205_subjects');
+    if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects));
     if (typeof loadGrades       === 'function') loadGrades();
     if (typeof loadExams        === 'function') loadExams();
     if (typeof loadFreq         === 'function') loadFreq();
@@ -431,28 +417,21 @@
         const remoteTs = d.updatedAt || 0;
         if (remoteTs > localTs) {
           _setSplashProgress(65, 'Sincronizando dados…');
-          // Mesmo cuidado do _applyCloudData: campo ausente no Firestore
-          // precisa APAGAR a chave local correspondente, não só deixar como
-          // estava — senão dados formatados pelo Admin "voltam do nada".
-          if (d.grades) localStorage.setItem('t205_grades', JSON.stringify(d.grades)); else localStorage.removeItem('t205_grades');
-          if (d.exams)  localStorage.setItem('t205_exams',  JSON.stringify(d.exams));  else localStorage.removeItem('t205_exams');
+          if (d.grades)    localStorage.setItem('t205_grades',    JSON.stringify(d.grades));
+          if (d.exams)     localStorage.setItem('t205_exams',     JSON.stringify(d.exams));
           if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
-          if (d.notes)  localStorage.setItem('t205_notes',  JSON.stringify(d.notes));  else localStorage.removeItem('t205_notes');
-          if (d.notifs) localStorage.setItem('t205_notifs', JSON.stringify(d.notifs)); else localStorage.removeItem('t205_notifs');
-          if (d.freq)   localStorage.setItem('t205_freq',   JSON.stringify(d.freq));   else localStorage.removeItem('t205_freq');
-          if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass)); else localStorage.removeItem('t205_freq_noclass');
-          if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods)); else localStorage.removeItem('t205_freqp');
-          if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride)); else localStorage.removeItem('t205_freq_override');
+          if (d.notes)     localStorage.setItem('t205_notes',     JSON.stringify(d.notes));
+          if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
+          if (d.freq)      localStorage.setItem('t205_freq',      JSON.stringify(d.freq));
+          if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
+          if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
+          if (d.freqOverride) localStorage.setItem('t205_freq_override', JSON.stringify(d.freqOverride));
           if (d.schedule) {
-            if (d.schedule.periods) localStorage.setItem('t205_periods', JSON.stringify(d.schedule.periods)); else localStorage.removeItem('t205_periods');
-            if (d.schedule.sched)   localStorage.setItem('t205_sched',   JSON.stringify(d.schedule.sched));   else localStorage.removeItem('t205_sched');
-            if (d.schedule.history) localStorage.setItem('t205_sched_history', JSON.stringify(d.schedule.history)); else localStorage.removeItem('t205_sched_history');
-          } else {
-            localStorage.removeItem('t205_periods');
-            localStorage.removeItem('t205_sched');
-            localStorage.removeItem('t205_sched_history');
+            if (d.schedule.periods) localStorage.setItem('t205_periods', JSON.stringify(d.schedule.periods));
+            if (d.schedule.sched)   localStorage.setItem('t205_sched',   JSON.stringify(d.schedule.sched));
+            if (d.schedule.history) localStorage.setItem('t205_sched_history', JSON.stringify(d.schedule.history));
           }
-          if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects)); else localStorage.removeItem('t205_subjects');
+          if (d.subjects) localStorage.setItem('t205_subjects', JSON.stringify(d.subjects));
           localStorage.setItem('t205_updatedAt', String(remoteTs));
           _setSplashProgress(90, 'Aplicando atualizações…');
           setTimeout(() => location.reload(), 200);
@@ -538,37 +517,6 @@
     }
   }
 
-  /* ── Garante um registro mínimo no Firestore assim que a pessoa faz
-     login com o Google, mesmo que ela nunca chegue a salvar nada no app.
-     Sem isso, o documento em `users/{uid}` só é criado na primeira vez
-     que _fbSaveAll roda (ex.: preencher o perfil, lançar uma nota) — então
-     o Painel Admin não tinha como saber que aquela conta Google existe.
-     Usa merge:true e só grava campos de IDENTIDADE (nunca dados do app),
-     então não atrapalha em nada o fluxo normal de salvar/sincronizar:
-       • Se a pessoa nunca salvar nada, o doc fica só com esses campos e
-         `authOnly:true` (o Painel usa essa flag pra mostrar "só logou,
-         nunca usou o app").
-       • Assim que a pessoa salvar qualquer coisa de verdade, _fbSaveAll
-         grava o documento inteiro (setDoc SEM merge) e `authOnly` some
-         sozinho — sem precisar de nenhuma lógica extra aqui. */
-  async function _fbEnsureUserDoc(user) {
-    try {
-      await setDoc(doc(db, 'users', user.uid), {
-        uid: user.uid,
-        email: user.email || null,
-        authOnly: true,
-        lastLoginAt: Date.now(),
-        student: {
-          googlePhoto: user.photoURL || null,
-          memberSince: (user.metadata && user.metadata.creationTime) || null,
-        }
-      }, { merge: true });
-    } catch (e) {
-      // Falha aqui nunca deve travar o login nem o carregamento do app.
-      console.error('Firebase ensure user doc error:', e);
-    }
-  }
-
   /* ── Sincronização em tempo real entre dispositivos ──
      Sem isso, um segundo aparelho (ou aba) só via os dados mais novos no
      próximo login/reload. Agora, qualquer alteração salva por QUALQUER
@@ -627,13 +575,8 @@
       // Aviso de conexão lenta só quando há tentativa de sync com servidor
       _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
       _applyGoogleProfile(user);
-      _fbEnsureUserDoc(user); // não travar o carregamento — roda em paralelo
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
       _startUserDocListener(user.uid);
-      // Agora que já sabemos quem é o usuário, reavalia o apagão agendado:
-      // se o horário já tiver passado enquanto ninguém estava logado neste
-      // aparelho, o auto-reset roda assim que a sessão fica disponível.
-      if(typeof _updateApagaoBanner==='function') _updateApagaoBanner();
     } else {
       _stopUserDocListener();
       // Sem login — pula direto pra 100% sem animação
@@ -690,18 +633,9 @@
         window._intentionalLogout = false;
         try {
           const theme = localStorage.getItem('t205_theme'); // mantém só o tema
-          // Lista incompleta antes: faltavam frequência, horário e matérias,
-          // então esses dados "sobreviviam" ao logout e continuavam
-          // aparecendo (às vezes até indo parar na conta seguinte que
-          // logasse nesse mesmo aparelho, antes do primeiro sync). Agora a
-          // limpeza cobre TODAS as chaves de dados do app.
           ['t205_fb_user','t205_grades','t205_exams','t205_stu',
            't205_notes','t205_notifs','t205_updatedAt','t205_skip_login_prompt',
-           't205_dismissed_toasts',
-           't205_freq','t205_freq_noclass','t205_freqp','t205_freq_override',
-           't205_periods','t205_sched','t205_sched_history','t205_subjects',
-           't205_nc_meta','t205_comu_notif_seeded','t205_apagao_applied'
-          ].forEach(k => localStorage.removeItem(k));
+           't205_dismissed_toasts'].forEach(k => localStorage.removeItem(k));
           if (theme) localStorage.setItem('t205_theme', theme);
         } catch(e) {}
         location.reload();
@@ -2451,24 +2385,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .offline-mode-banner-icon{flex-shrink:0;color:var(--amber)}
 .offline-mode-banner-txt{
   font-size:11.5px;font-weight:700;color:var(--amber);letter-spacing:.15px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-
-/* ── apagao-banner — faixa fixa avisando reset total agendado pelo Admin ── */
-.apagao-banner{
-  display:none; /* controlado via JS, ligado quando há agendamento ativo e futuro */
-  align-items:center;justify-content:center;gap:7px;
-  padding:7px 16px;
-  background:rgba(255,90,95,.14);
-  border-bottom:0.5px solid rgba(255,90,95,.32);
-}
-[data-theme="light"] .apagao-banner{
-  background:rgba(255,90,95,.1);
-  border-bottom-color:rgba(255,90,95,.24);
-}
-.apagao-banner-icon{flex-shrink:0;color:var(--red)}
-.apagao-banner-txt{
-  font-size:11.5px;font-weight:700;color:var(--red);letter-spacing:.15px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 
@@ -9741,15 +9657,6 @@ html[data-expansive="1"][data-expansive-bg="1"] {
         <rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
       </svg>
       <span class="offline-mode-banner-txt" id="offline-mode-banner-txt">Modo offline ativo — somente visualização</span>
-    </div>
-
-    <!-- ── Faixa: apagão total programado pelo Admin — só aparece quando há um
-         agendamento ativo no Firestore (system/apagao) e ainda não chegou a hora ── -->
-    <div id="apagao-banner" class="apagao-banner" role="status" aria-live="polite">
-      <svg class="apagao-banner-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>
-      <span class="apagao-banner-txt" id="apagao-banner-txt">Os dados da plataforma vão ser resetados em —</span>
     </div>
 
     <div class="topbar">
@@ -17530,24 +17437,7 @@ function updateNotifCenter(){
     }
   });
   // limpa metadados de notificações que já não existem mais (problema resolvido)
-  //
-  // CUIDADO com as notificações do tipo "comu-*": elas só entram na lista
-  // quando _comuPosts já carregou (ver bloco 6 de computeNotifications).
-  // Essa função roda várias vezes antes disso acontecer (ex.: o timeout de
-  // 1.5s no boot, o setInterval de 60s, e toda vez que uma nota/prova é
-  // salva) — em qualquer uma dessas chamadas, se a Comunidade ainda não
-  // tiver respondido do Firestore, seenIds fica SEM nenhum id "comu-*", e
-  // o código abaixo apagava (sem querer) a marcação de "já lida" de TODAS
-  // as publicações que a pessoa já tinha visto antes. Na próxima vez que a
-  // lista de posts chegasse, elas voltavam a contar como novas de novo —
-  // esse era o bug do aviso de Comunidade reaparecendo do nada. A correção:
-  // só mexe nos metadados "comu-*" quando já temos uma lista de fato
-  // carregada (_comuPosts !== null) pra comparar.
-  Object.keys(meta).forEach(id=>{
-    if(seenIds.has(id)) return;
-    if(id.indexOf('comu-')===0 && _comuPosts===null) return;
-    delete meta[id];
-  });
+  Object.keys(meta).forEach(id=>{if(!seenIds.has(id))delete meta[id];});
   _ncSaveMeta(meta);
 
   const unreadCount=list.filter(n=>meta[n.id]&&!meta[n.id].read).length;
@@ -18381,10 +18271,6 @@ window.addEventListener('load',()=>{
   // entrado lá ainda — é isso que alimenta o popup, a central de
   // notificações e o pontinho na barra de navegação.
   if(typeof _startComuListener==='function') _startComuListener();
-  // Faixa de "apagão total" e auto-reset: precisa rodar mesmo sem login
-  // (pra avisar todo mundo que visita o site), por isso fica aqui no boot
-  // geral, e não dentro do fluxo de login do Firebase.
-  if(typeof _startApagaoListener==='function') _startApagaoListener();
   document.addEventListener('click',e=>{
     const wrap=document.querySelector('.subj-picker-wrap');
     if(wrap&&!wrap.contains(e.target)){
@@ -18998,151 +18884,6 @@ function _startComuListener(){
     }
   };
   tryAttach();
-}
-
-/* ══════════════════════════════════════════
-   APAGÃO TOTAL PROGRAMADO — feature do Painel Admin
-   O Admin agenda uma data/hora em `system/apagao` (Firestore). Esse
-   documento é lido por TODOS os aparelhos (logados ou não), então:
-     1) mostramos a faixa de aviso "Os dados vão ser resetados em ___"
-        pra todo mundo enquanto o horário não chega;
-     2) quando o horário chega, CADA aparelho que estiver com o app aberto
-        (ou que abrir depois) apaga os próprios dados salvos — o mesmo que
-        o botão "Formatar usuário" do Admin faria, só que disparado pelo
-        próprio cliente. Não existe backend/Cloud Function nesse projeto
-        pra fazer isso de uma vez só só; por isso a garantia de "todos os
-        usuários" é: quem estiver com o app aberto na hora apaga na hora,
-        e quem abrir depois apaga assim que loga, porque o horário já
-        passou. O Painel Admin também tem um botão "Executar agora" como
-        atalho pra forçar isso imediatamente em todo mundo de uma vez
-        (usando os dados já carregados no próprio Painel).
-   Nenhuma escrita é feita em `system/apagao` a partir do app do aluno —
-   só o Admin tem permissão de escrever ali (isso deve ser garantido pelas
-   regras de segurança do Firestore).
-══════════════════════════════════════════ */
-let _apagaoUnsub=null;
-let _apagaoBannerTimer=null;
-let _apagaoData=null; // último snapshot lido de system/apagao
-
-function _startApagaoListener(){
-  if(_apagaoUnsub) return;
-  const tryAttach=(attempts)=>{
-    attempts=attempts||0;
-    if(!window._fbDb||!window._fbDoc||!window._fbOnSnapshot){
-      if(attempts>=90) return; // ~45s tentando — desiste silenciosamente
-      setTimeout(()=>tryAttach(attempts+1),500);
-      return;
-    }
-    try{
-      const ref=window._fbDoc(window._fbDb,'system','apagao');
-      _apagaoUnsub=window._fbOnSnapshot(ref,(snap)=>{
-        _apagaoData=snap.exists()?snap.data():null;
-        _updateApagaoBanner();
-      },(err)=>{
-        console.error('[Apagão] erro ao ouvir agendamento:',err);
-      });
-    }catch(e){
-      console.error('[Apagão] falha ao iniciar listener:',e);
-    }
-  };
-  tryAttach();
-}
-
-function _apagaoFormatRemaining(ms){
-  if(ms<=0) return 'menos de 1 minuto';
-  const min=Math.ceil(ms/60000);
-  if(min<60) return `${min} minuto${min===1?'':'s'}`;
-  const h=Math.floor(min/60), remMin=min%60;
-  if(h<24){
-    return remMin>0 ? `${h}h ${remMin}min` : `${h} hora${h===1?'':'s'}`;
-  }
-  const d=Math.floor(h/24), remH=h%24;
-  return remH>0 ? `${d} dia${d===1?'':'s'} e ${remH}h` : `${d} dia${d===1?'':'s'}`;
-}
-
-function _updateApagaoBanner(){
-  const banner=document.getElementById('apagao-banner');
-  const txt=document.getElementById('apagao-banner-txt');
-  clearInterval(_apagaoBannerTimer);
-  if(!banner||!txt) return;
-
-  const d=_apagaoData;
-  if(!d||!d.ativo||!d.at){
-    banner.style.display='none';
-    if(typeof syncLayout==='function') syncLayout();
-    return;
-  }
-
-  // Já apagou os dados deste aparelho pra este agendamento específico
-  // (guardamos o `at` já processado) — não faz sentido continuar mostrando
-  // a faixa pra quem já foi resetado.
-  const alreadyApplied=localStorage.getItem('t205_apagao_applied');
-  if(alreadyApplied && Number(alreadyApplied)===d.at){
-    banner.style.display='none';
-    if(typeof syncLayout==='function') syncLayout();
-    return;
-  }
-
-  const remaining=d.at-Date.now();
-  if(remaining<=0){
-    _apagaoTryRunSelfWipe(d);
-    return;
-  }
-
-  banner.style.display='flex';
-  txt.textContent=`Os dados da plataforma vão ser resetados em ${_apagaoFormatRemaining(remaining)}`;
-  if(typeof syncLayout==='function') syncLayout();
-
-  // Atualiza o texto a cada 30s, igual à faixa de modo offline
-  _apagaoBannerTimer=setInterval(()=>{
-    if(!_apagaoData||!_apagaoData.ativo){ clearInterval(_apagaoBannerTimer); return; }
-    const rem=_apagaoData.at-Date.now();
-    if(rem<=0){ clearInterval(_apagaoBannerTimer); _apagaoTryRunSelfWipe(_apagaoData); return; }
-    const t=document.getElementById('apagao-banner-txt');
-    if(t) t.textContent=`Os dados da plataforma vão ser resetados em ${_apagaoFormatRemaining(rem)}`;
-  },30000);
-}
-
-// Executa o "auto-formatar" deste usuário quando o horário agendado chega.
-// Só faz sentido pra quem está logado (é o próprio uid que grava o
-// documento formatado) — sem login, só a faixa de aviso já cumpre o papel
-// de informar. Protegido por um flag local pra não repetir a cada render.
-async function _apagaoTryRunSelfWipe(d){
-  const banner=document.getElementById('apagao-banner');
-  if(banner) banner.style.display='none';
-
-  const already=localStorage.getItem('t205_apagao_applied');
-  if(already && Number(already)===d.at) return; // já processado pra este agendamento
-
-  const user=window._fbAuth && window._fbAuth.currentUser;
-  if(!user){
-    // Sem sessão: não tem o que apagar ainda neste aparelho. Não marca como
-    // aplicado — se a pessoa logar depois com o horário já passado, o
-    // check roda de novo (via _fbLoadAll/onAuthStateChanged) e apaga então.
-    return;
-  }
-  if(window._isOfflineModeActive && window._isOfflineModeActive()) return; // tenta de novo quando voltar a conexão
-
-  try{
-    const uid=user.uid;
-    let student={};
-    try{ student=JSON.parse(localStorage.getItem('t205_stu')||'null')||{}; }catch(e){}
-    const kept={
-      student,
-      email: user.email||null,
-      createdAt: (typeof _docCreatedAt!=='undefined'&&_docCreatedAt)||Date.now(),
-      updatedAt: Date.now(),
-    };
-    await window._fbSetDoc(window._fbDoc(window._fbDb,'users',uid), kept);
-    localStorage.setItem('t205_updatedAt', String(kept.updatedAt));
-    localStorage.setItem('t205_apagao_applied', String(d.at));
-    if(typeof _applyCloudData==='function') _applyCloudData(kept);
-    if(typeof window._showNotifToast==='function'){
-      window._showNotifToast('🗑️ Seus dados foram resetados — apagão total programado pela administração.');
-    }
-  }catch(e){
-    console.error('[Apagão] falha ao autoformatar este usuário:',e);
-  }
 }
 
 function _renderComuFeed(){
