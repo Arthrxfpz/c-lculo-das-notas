@@ -297,6 +297,8 @@
           student: JSON.parse(localStorage.getItem('t205_stu')     || 'null'),
           notes:   JSON.parse(localStorage.getItem('t205_notes')   || '[]'),
           notifs:  JSON.parse(localStorage.getItem('t205_notifs')  || '[]'),
+          ncMeta:  JSON.parse(localStorage.getItem('t205_nc_meta') || 'null'),
+          comuNotifSeeded: localStorage.getItem('t205_comu_notif_seeded') || null,
           freq:    JSON.parse(localStorage.getItem('t205_freq')    || 'null'),
           freqNoClass: JSON.parse(localStorage.getItem('t205_freq_noclass') || 'null'),
           freqPeriods: JSON.parse(localStorage.getItem('t205_freqp') || 'null'),
@@ -330,6 +332,8 @@
     if (d.student) localStorage.setItem('t205_stu',    JSON.stringify(d.student));
     if (d.notes)   localStorage.setItem('t205_notes',  JSON.stringify(d.notes));
     if (d.notifs)  localStorage.setItem('t205_notifs', JSON.stringify(d.notifs));
+    if (d.ncMeta)  localStorage.setItem('t205_nc_meta', JSON.stringify(d.ncMeta));
+    if (d.comuNotifSeeded) localStorage.setItem('t205_comu_notif_seeded', d.comuNotifSeeded);
     if (d.freq)    localStorage.setItem('t205_freq',   JSON.stringify(d.freq));
     if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
     if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
@@ -422,6 +426,8 @@
           if (d.student)   localStorage.setItem('t205_stu',       JSON.stringify(d.student));
           if (d.notes)     localStorage.setItem('t205_notes',     JSON.stringify(d.notes));
           if (d.notifs)    localStorage.setItem('t205_notifs',    JSON.stringify(d.notifs));
+          if (d.ncMeta)    localStorage.setItem('t205_nc_meta',   JSON.stringify(d.ncMeta));
+          if (d.comuNotifSeeded) localStorage.setItem('t205_comu_notif_seeded', d.comuNotifSeeded);
           if (d.freq)      localStorage.setItem('t205_freq',      JSON.stringify(d.freq));
           if (d.freqNoClass) localStorage.setItem('t205_freq_noclass', JSON.stringify(d.freqNoClass));
           if (d.freqPeriods) localStorage.setItem('t205_freqp', JSON.stringify(d.freqPeriods));
@@ -17252,6 +17258,12 @@ function _ncLoadMeta(){
 }
 function _ncSaveMeta(m){
   try{localStorage.setItem('t205_nc_meta',JSON.stringify(m));}catch(e){}
+  // Manda pra nuvem também: sem isso, o "já vi essa notificação" ficava só
+  // neste aparelho/navegador, e a publicação da Comunidade que a pessoa já
+  // tinha visto voltava a aparecer como nova em outro dispositivo (ou depois
+  // do navegador limpar dados). Agora o estado de leitura viaja junto com o
+  // resto dos dados da conta.
+  if(window._fbSaveAll)window._fbSaveAll();
 }
 
 function _ncIcon(type){
