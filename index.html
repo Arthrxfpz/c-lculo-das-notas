@@ -517,6 +517,37 @@
     }
   }
 
+  /* ── Garante um registro mínimo no Firestore assim que a pessoa faz
+     login com o Google, mesmo que ela nunca chegue a salvar nada no app.
+     Sem isso, o documento em `users/{uid}` só é criado na primeira vez
+     que _fbSaveAll roda (ex.: preencher o perfil, lançar uma nota) — então
+     o Painel Admin não tinha como saber que aquela conta Google existe.
+     Usa merge:true e só grava campos de IDENTIDADE (nunca dados do app),
+     então não atrapalha em nada o fluxo normal de salvar/sincronizar:
+       • Se a pessoa nunca salvar nada, o doc fica só com esses campos e
+         `authOnly:true` (o Painel usa essa flag pra mostrar "só logou,
+         nunca usou o app").
+       • Assim que a pessoa salvar qualquer coisa de verdade, _fbSaveAll
+         grava o documento inteiro (setDoc SEM merge) e `authOnly` some
+         sozinho — sem precisar de nenhuma lógica extra aqui. */
+  async function _fbEnsureUserDoc(user) {
+    try {
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: user.email || null,
+        authOnly: true,
+        lastLoginAt: Date.now(),
+        student: {
+          googlePhoto: user.photoURL || null,
+          memberSince: (user.metadata && user.metadata.creationTime) || null,
+        }
+      }, { merge: true });
+    } catch (e) {
+      // Falha aqui nunca deve travar o login nem o carregamento do app.
+      console.error('Firebase ensure user doc error:', e);
+    }
+  }
+
   /* ── Sincronização em tempo real entre dispositivos ──
      Sem isso, um segundo aparelho (ou aba) só via os dados mais novos no
      próximo login/reload. Agora, qualquer alteração salva por QUALQUER
@@ -575,6 +606,7 @@
       // Aviso de conexão lenta só quando há tentativa de sync com servidor
       _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
       _applyGoogleProfile(user);
+      _fbEnsureUserDoc(user); // não travar o carregamento — roda em paralelo
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
       _startUserDocListener(user.uid);
     } else {
