@@ -1299,7 +1299,17 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   padding:10px 16px 10px;
   gap:10px;
   position:relative;
+  /* Antes, quando o conteúdo (ex.: botão "Faça login com o Google" +
+     avatar + botões de ação) não cabia na largura da tela, o .shell
+     (que envolve tudo) cortava esse excesso de forma invisível — dava
+     pra perder pedaço de botão sem nenhum jeito de ver ou tocar nele.
+     Agora a própria topbar vira uma faixa arrastável: se algo não
+     couber, dá pra arrastar de lado pra ver e usar normalmente. */
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
 }
+.topbar::-webkit-scrollbar{display:none}
 .topbar-avatar{
   width:36px;height:36px;background:var(--bg3);border-radius:50%;
   display:none;align-items:center;justify-content:center;flex-shrink:0;
@@ -17466,8 +17476,16 @@ function updateNotifCenter(){
       m.variant=n.variant;m.read=false;m.toasted=false;
     }
   });
-  // limpa metadados de notificações que já não existem mais (problema resolvido)
-  Object.keys(meta).forEach(id=>{if(!seenIds.has(id))delete meta[id];});
+  // limpa metadados de notificações que já não existem mais (problema resolvido).
+  // Publicações da Comunidade (comu-*) ficam de fora dessa limpeza de propósito:
+  // se a conexão oscilar bem na hora em que o Firestore está reconectando, às
+  // vezes chega um resultado momentâneo com menos publicações do que o normal
+  // (sem ninguém ter apagado nada de verdade) — daí o "já vi" delas seria
+  // apagado aqui, e quando a lista completa voltasse segundos depois, elas
+  // reapareceriam do zero como se fossem novas. Manter esse metadado nunca
+  // atrapalha (uma publicação realmente excluída simplesmente não entra mais
+  // na lista, então o registro velho dela fica só parado, sem efeito).
+  Object.keys(meta).forEach(id=>{if(id.indexOf('comu-')!==0 && !seenIds.has(id))delete meta[id];});
   _ncSaveMeta(meta);
 
   const unreadCount=list.filter(n=>meta[n.id]&&!meta[n.id].read).length;
