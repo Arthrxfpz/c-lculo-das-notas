@@ -636,15 +636,21 @@
       if (loginLabel) loginLabel.style.display = 'none';
     } else {
       if (window._intentionalLogout) {
-        // Logout intencional: apaga todos os dados do app e recarrega do zero
+        // Logout intencional: apaga TODOS os dados do app salvos no navegador
+        // (localStorage inteiro + sessionStorage) e recarrega do zero.
+        // Mantém só o tema (t205_theme) pra não mudar a aparência do site
+        // sem querer. Varre as chaves dinamicamente (em vez de uma lista
+        // fixa) pra nunca esquecer nenhuma, mesmo que novos dados sejam
+        // salvos no futuro sob o prefixo t205_.
         window._intentionalLogout = false;
         try {
-          const theme = localStorage.getItem('t205_theme'); // mantém só o tema
-          ['t205_fb_user','t205_grades','t205_exams','t205_stu',
-           't205_notes','t205_notifs','t205_updatedAt','t205_skip_login_prompt',
-           't205_dismissed_toasts'].forEach(k => localStorage.removeItem(k));
+          const theme = localStorage.getItem('t205_theme');
+          Object.keys(localStorage)
+            .filter(k => k.startsWith('t205_') && k !== 't205_theme')
+            .forEach(k => localStorage.removeItem(k));
           if (theme) localStorage.setItem('t205_theme', theme);
         } catch(e) {}
+        try { sessionStorage.clear(); } catch(e) {}
         location.reload();
         return; // não continua
       }
