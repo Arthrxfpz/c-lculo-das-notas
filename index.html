@@ -8463,51 +8463,79 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   display:flex;align-items:center;gap:7px;width:100%;
   background:none;border:none;padding:10px 15px;margin:0;font:inherit;
   cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;
+  transition:opacity .12s var(--ease-ios);
 }
+.comu-comments-toggle:active{opacity:.6}
 .comu-comments-toggle svg:first-child{width:15px;height:15px;stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 .comu-comments-toggle span{flex:1;font-size:12.5px;font-weight:700;color:var(--t3)}
-.comu-comments-chevron{width:14px!important;height:14px!important;stroke:var(--t4)!important;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s var(--ease-ios)}
-.comu-comments-toggle.open .comu-comments-chevron{transform:rotate(180deg)}
-.comu-comments-toggle.open span{color:var(--t2)}
+.comu-comments-chevron{width:14px!important;height:14px!important;stroke:var(--t4)!important;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-.comu-comments-panel{padding:0 15px 13px;animation:fadeIn .2s var(--ease-ios)}
-.comu-comments-list{display:flex;flex-direction:column;gap:14px;margin-bottom:12px}
+.comu-comments-list{display:flex;flex-direction:column;gap:20px}
 .comu-comments-empty{font-size:12px;font-weight:500;color:var(--t4);padding:10px 2px}
 .comu-comments-loading{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--t4);padding:10px 2px}
 .comu-comments-loading .comu-spinner{width:14px;height:14px;border-width:2px}
 
-.comu-comment{display:flex;gap:9px;align-items:flex-start;animation:fadeIn .25s var(--ease-ios)}
+/* ── MODAL de comentários (bottom-sheet moderno, "estilo YouTube"):
+   header fixo com título+contagem e X, lista rolável no meio, composer
+   fixo embaixo — só o corpo da lista rola, o resto fica parado. Assim
+   resolve também o bug de ficar "carregando" pra sempre: antes o painel
+   vivia dentro do card do post e era recriado do zero (voltando pro
+   spinner) toda vez que o feed principal redesenhava por qualquer
+   motivo (ex.: o contador de comentários mudando). Agora o modal é um
+   elemento fixo, separado do feed, então nada o reseta por baixo dos
+   panos — só o listener de comentários dele mesmo atualiza a lista. ── */
+.comu-modal-box{
+  display:flex;flex-direction:column;
+  height:min(82vh,720px);max-height:82vh;
+  padding:14px 0 calc(14px + env(safe-area-inset-bottom));
+}
+.comu-modal-box .cp-header{padding:0 20px 14px;flex-shrink:0}
+.comu-modal-list{
+  flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:4px 20px 10px;
+}
+.comu-modal-composer{
+  flex-shrink:0;padding:12px 20px 0;border-top:1px solid var(--line2);
+}
+@media (min-width:600px){
+  .comu-modal-box{height:min(78vh,640px)}
+}
+
+.comu-comment{display:flex;gap:12px;align-items:flex-start;animation:fadeIn .25s var(--ease-ios)}
 .comu-comment-avatar{
-  width:28px;height:28px;border-radius:50%;flex-shrink:0;overflow:hidden;
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;overflow:hidden;
   background:var(--bg3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;
-  font-size:10.5px;font-weight:800;color:var(--t3);
+  font-size:12.5px;font-weight:800;color:var(--t3);
 }
 .comu-comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
-.comu-comment-body{flex:1;min-width:0}
-.comu-comment-bubble{
-  background:var(--bg2);border:1px solid var(--line2);border-radius:15px 15px 15px 4px;
-  padding:8px 12px;display:inline-block;max-width:100%;
+.comu-comment-reply .comu-comment-avatar{width:26px;height:26px;font-size:10px}
+.comu-comment-body{flex:1;min-width:0;padding-top:1px}
+.comu-comment-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.comu-comment-author{font-size:12.5px;font-weight:800;color:var(--t1);letter-spacing:-.1px}
+.comu-comment-mine .comu-comment-author{color:var(--gold)}
+.comu-comment-admin-badge{
+  font-size:9.5px;font-weight:800;color:var(--gold);background:var(--goldbg);
+  border:1px solid var(--goldbd);border-radius:5px;padding:1.5px 6px;letter-spacing:.2px;
+  line-height:1.4;
 }
-.comu-comment-mine .comu-comment-bubble{background:var(--goldbg);border-color:var(--goldbd)}
-.comu-comment-head{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
-.comu-comment-author{font-size:12px;font-weight:800;color:var(--t1);letter-spacing:-.1px}
-.comu-comment-text{font-size:13px;font-weight:500;color:var(--t2);line-height:1.45;white-space:pre-wrap;word-break:break-word;margin-top:1px}
+.comu-comment-mine-tag{font-size:10.5px;font-weight:600;color:var(--t4)}
+.comu-comment-time{font-size:11px;font-weight:500;color:var(--t4)}
+.comu-comment-text{font-size:13.5px;font-weight:500;color:var(--t2);line-height:1.5;white-space:pre-wrap;word-break:break-word;margin-top:3px}
 .comu-comment-replytag{color:var(--gold);font-weight:700}
-.comu-comment-actions{margin-top:5px;padding-left:2px;display:flex;align-items:center;gap:11px}
-.comu-comment-time{font-size:10.5px;font-weight:500;color:var(--t4)}
+.comu-comment-actions{margin-top:7px;display:flex;align-items:center;gap:16px}
 .comu-comment-reply-btn,.comu-comment-del-btn{
   background:none;border:none;padding:0;margin:0;font:inherit;
-  font-size:11px;font-weight:700;color:var(--t4);cursor:pointer;-webkit-tap-highlight-color:transparent;
-  display:flex;align-items:center;
+  font-size:11.5px;font-weight:700;color:var(--t3);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;transition:color .12s var(--ease-ios);
 }
 .comu-comment-reply-btn:active{color:var(--gold)}
 .comu-comment-del-btn{color:var(--t4)}
 .comu-comment-del-btn:active{color:var(--red)}
-.comu-comment-del-btn svg{width:12.5px;height:12.5px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.comu-comment-del-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .comu-comment-replies{
-  display:flex;flex-direction:column;gap:12px;margin-top:12px;
-  padding-left:16px;margin-left:14px;border-left:2px solid var(--line2);
+  display:flex;flex-direction:column;gap:16px;margin-top:14px;
 }
+
 
 .comu-comment-login-cta{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -10625,6 +10653,21 @@ html[data-expansive="1"][data-expansive-bg="1"] {
       <button class="se-reset-btn" onclick="confirmResetMaterias()">Resetar para o padrão</button>
       <button class="modal-save-btn" onclick="closeSubjectsEditor()">Concluído</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL — Comentários da Comunidade -->
+<div class="modal-overlay" id="comu-comments-overlay" onclick="comuCommentsOvClick(event)">
+  <div class="modal-box comu-modal-box">
+    <div class="modal-handle"></div>
+    <div class="cp-header">
+      <div class="cp-title" id="comu-modal-title">Comentários</div>
+      <button class="cp-close-btn" onclick="closeComuComments()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="comu-comments-list comu-modal-list" id="comu-modal-list"></div>
+    <div class="comu-modal-composer" id="comu-modal-composer"></div>
   </div>
 </div>
 
@@ -17945,16 +17988,10 @@ function handleNCClick(id){
   if(n.type==='resposta'){
     if(typeof setPage==='function')setPage('comunidade');
     if(n.postId){
+      // abre direto o modal de comentários daquele post — não precisa mais
+      // rolar até o card, já que os comentários não vivem mais dentro dele
       setTimeout(()=>{
-        const panel=document.getElementById('comu-comments-panel-'+n.postId);
-        const toggleBtn=document.querySelector('.comu-comments-toggle[data-post-id="'+n.postId+'"]');
-        if(panel&&panel.style.display==='none'&&toggleBtn){
-          toggleComuComments(n.postId,toggleBtn);
-        }
-        setTimeout(()=>{
-          const postEl=document.querySelector('.comu-post[data-comu-id="'+n.postId+'"]');
-          if(postEl)postEl.scrollIntoView({behavior:'smooth',block:'center'});
-        },260);
+        if(typeof openComuComments==='function')openComuComments(n.postId);
       },340);
     }
     return;
@@ -19456,18 +19493,49 @@ function _comuCommentMs(c){
 
 const COMU_COMMENT_MAXLEN=100;
 
+// E-mail que recebe a tag "Admin" nos comentários da Comunidade — é só um
+// selo visual (mostra pra todo mundo quem é a equipe respondendo), não muda
+// nenhuma permissão: continua sendo um comentário normal, só com o rótulo.
+const COMU_ADMIN_EMAIL='zarthur063@gmail.com';
+function _comuIsAdminUser(user){
+  return !!(user&&user.email&&user.email.toLowerCase()===COMU_ADMIN_EMAIL);
+}
+
 function _comuCommentsSectionHtml(p){
   const postId=p.id||'';
-  const isOpen=_comuCommentsOpen.has(postId);
   const count=p.comentariosCount||0;
   const countLabel=count>0?`${count} coment${count===1?'ário':'ários'}`:'Comentar';
+  // O painel de comentários agora vive num modal próprio (#comu-comments-overlay),
+  // fora do card do post — esse botão só abre o modal. Isso também é o que
+  // resolve o bug de ficar "carregando" pra sempre ao apagar um comentário:
+  // antes a lista vivia dentro do card e era recriada do zero (voltando pro
+  // spinner) toda vez que o feed inteiro redesenhava por qualquer mudança no
+  // post (ex.: o contador de comentários decrementando). Agora que a lista
+  // fica num elemento fixo fora do feed, nada por baixo dos panos a reseta.
+  return `<div class="comu-comments-section">
+    <button type="button" class="comu-comments-toggle" data-post-id="${escHtml(postId)}">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <span>${countLabel}</span>
+      <svg class="comu-comments-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>`;
+}
+
+// Monta o composer (caixa de digitar/responder) pro postId indicado — usado
+// só dentro do modal de comentários, montado de novo cada vez que ele abre.
+function _comuComposerHtml(postId){
   const draft=_comuDraftText.get(postId)||'';
   const target=_comuReplyTarget.get(postId)||null;
   const canComment=!!_comuMyUid();
   const charLen=draft.length;
 
-  const composerHtml=canComment?`
-    <div class="comu-comment-composer" id="comu-composer-${escHtml(postId)}">
+  if(!canComment){
+    return `<div class="comu-comment-login-cta">
+      <span>Entre com sua conta Google para comentar</span>
+      <button type="button" class="comu-comment-login-btn" onclick="if(typeof window._fbLoginClick==='function')window._fbLoginClick()">Entrar</button>
+    </div>`;
+  }
+  return `<div class="comu-comment-composer" id="comu-composer-${escHtml(postId)}">
       <div class="comu-reply-chip" id="comu-reply-chip-${escHtml(postId)}" style="display:${target?'flex':'none'}">
         <span>Respondendo a <b id="comu-reply-chip-name-${escHtml(postId)}">${target?escHtml(target.nome):''}</b></span>
         <button type="button" class="comu-comment-cancel-reply" data-post-id="${escHtml(postId)}" aria-label="Cancelar resposta">
@@ -19485,25 +19553,7 @@ function _comuCommentsSectionHtml(p){
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
       </div>
-    </div>`:`
-    <div class="comu-comment-login-cta">
-      <span>Entre com sua conta Google para comentar</span>
-      <button type="button" class="comu-comment-login-btn" onclick="if(typeof window._fbLoginClick==='function')window._fbLoginClick()">Entrar</button>
     </div>`;
-
-  return `<div class="comu-comments-section">
-    <button type="button" class="comu-comments-toggle${isOpen?' open':''}" data-post-id="${escHtml(postId)}">
-      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
-      <span>${countLabel}</span>
-      <svg class="comu-comments-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </button>
-    <div class="comu-comments-panel" id="comu-comments-panel-${escHtml(postId)}" style="display:${isOpen?'block':'none'}">
-      <div class="comu-comments-list" id="comu-comments-list-${escHtml(postId)}">
-        ${isOpen?'<div class="comu-comments-loading"><div class="comu-spinner"></div>Carregando comentários...</div>':''}
-      </div>
-      ${composerHtml}
-    </div>
-  </div>`;
 }
 
 function _comuMyAvatarHtml(){
@@ -19532,14 +19582,14 @@ function _comuCommentItemHtml(c,postId,isReply){
   return `<div class="comu-comment${isReply?' comu-comment-reply':''}${mine?' comu-comment-mine':''}">
     <div class="comu-comment-avatar">${_comuCommentAvatarHtml(c)}</div>
     <div class="comu-comment-body">
-      <div class="comu-comment-bubble">
-        <div class="comu-comment-head">
-          <span class="comu-comment-author">${escHtml(c.autorNome||'Usuário')}</span>
-        </div>
-        <div class="comu-comment-text">${replyTagHtml}${_comuLinebreaks(escHtml(c.texto||''))}</div>
-      </div>
-      <div class="comu-comment-actions">
+      <div class="comu-comment-head">
+        <span class="comu-comment-author">${escHtml(c.autorNome||'Usuário')}</span>
+        ${c.autorIsAdmin?'<span class="comu-comment-admin-badge">Administrador</span>':''}
+        ${mine?'<span class="comu-comment-mine-tag">você</span>':''}
         <span class="comu-comment-time">${timeAgo}</span>
+      </div>
+      <div class="comu-comment-text">${replyTagHtml}${_comuLinebreaks(escHtml(c.texto||''))}</div>
+      <div class="comu-comment-actions">
         <button type="button" class="comu-comment-reply-btn"
           data-post-id="${escHtml(postId)}" data-comment-id="${escHtml(c.id)}" data-root-id="${escHtml(rootId)}"
           data-author-name="${escHtml(c.autorNome||'Usuário')}" data-author-uid="${escHtml(c.autorUid||'')}">Responder</button>
@@ -19550,11 +19600,18 @@ function _comuCommentItemHtml(c,postId,isReply){
 }
 
 function _renderComuComments(postId){
-  const listEl=document.getElementById('comu-comments-list-'+postId);
-  if(!listEl) return; // painel fechado (ou post não está mais na tela) — nada a fazer
+  if(postId!==_comuActiveModalPostId) return; // modal fechado, ou aberto pra outro post — nada a fazer
+  const listEl=document.getElementById('comu-modal-list');
+  if(!listEl) return;
   const data=_comuCommentsCache.get(postId)||[];
+
+  // Contagem real (a partir dos dados que chegaram), mais confiável que o
+  // campo comentariosCount salvo no post — mantém o título do modal certinho.
+  const titleEl=document.getElementById('comu-modal-title');
+  if(titleEl)titleEl.textContent=data.length>0?`${data.length} coment${data.length===1?'ário':'ários'}`:'Comentários';
+
   if(!data.length){
-    listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+    listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda.</div>';
     return;
   }
   const byId={};
@@ -19572,7 +19629,7 @@ function _renderComuComments(postId){
   Object.keys(repliesByRoot).forEach(k=>repliesByRoot[k].sort((a,b)=>_comuCommentMs(a)-_comuCommentMs(b)));
 
   if(!roots.length){
-    listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+    listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda.</div>';
     return;
   }
 
@@ -19585,25 +19642,58 @@ function _renderComuComments(postId){
   }).join('');
 }
 
-function toggleComuComments(postId,btnEl){
-  const panel=document.getElementById('comu-comments-panel-'+postId);
-  if(!panel) return;
-  const willOpen=panel.style.display==='none'||!panel.style.display;
-  if(willOpen){
-    _comuCommentsOpen.add(postId);
-    panel.style.display='block';
-    if(btnEl)btnEl.classList.add('open');
-    const listEl=document.getElementById('comu-comments-list-'+postId);
-    if(listEl&&!_comuCommentsCache.has(postId)){
-      listEl.innerHTML='<div class="comu-comments-loading"><div class="comu-spinner"></div>Carregando comentários...</div>';
-    }
-    _startCommentsListener(postId);
+// postId do post cujo modal de comentários está aberto agora (só um por vez).
+let _comuActiveModalPostId=null;
+
+function _comuFindPost(postId){
+  return (_comuPosts||[]).find(pp=>pp.id===postId)||null;
+}
+
+// Abre o modal de comentários (bottom-sheet, estilo moderno) pro post
+// indicado. O modal é um elemento fixo fora do feed — não é recriado
+// quando o feed principal redesenha, então a lista nunca fica presa no
+// spinner de "carregando" por causa de um redesenho alheio (ex.: o
+// contador de comentários do post mudando depois de apagar um comentário).
+function openComuComments(postId){
+  if(!postId) return;
+  const overlay=document.getElementById('comu-comments-overlay');
+  const titleEl=document.getElementById('comu-modal-title');
+  const listEl=document.getElementById('comu-modal-list');
+  const composerWrap=document.getElementById('comu-modal-composer');
+  if(!overlay||!listEl||!composerWrap) return;
+
+  _comuActiveModalPostId=postId;
+  _comuCommentsOpen.clear();
+  _comuCommentsOpen.add(postId);
+
+  const p=_comuFindPost(postId);
+  const count=(p&&p.comentariosCount)||0;
+  titleEl.textContent=count>0?`${count} coment${count===1?'ário':'ários'}`:'Comentários';
+
+  composerWrap.innerHTML=_comuComposerHtml(postId);
+
+  if(_comuCommentsCache.has(postId)){
+    _renderComuComments(postId); // já tem dados em cache (ex.: reabrindo) — mostra na hora
   }else{
-    _comuCommentsOpen.delete(postId);
-    panel.style.display='none';
-    if(btnEl)btnEl.classList.remove('open');
-    _stopCommentsListener(postId);
+    listEl.innerHTML='<div class="comu-comments-loading"><div class="comu-spinner"></div>Carregando comentários...</div>';
   }
+
+  overlay.classList.add('open');
+  _startCommentsListener(postId);
+}
+
+function closeComuComments(){
+  const overlay=document.getElementById('comu-comments-overlay');
+  if(overlay)overlay.classList.remove('open');
+  if(_comuActiveModalPostId){
+    _stopCommentsListener(_comuActiveModalPostId);
+    _comuCommentsOpen.delete(_comuActiveModalPostId);
+  }
+  _comuActiveModalPostId=null;
+}
+
+function comuCommentsOvClick(e){
+  if(e.target===document.getElementById('comu-comments-overlay'))closeComuComments();
 }
 
 function _startCommentsListener(postId){
@@ -19616,7 +19706,8 @@ function _startCommentsListener(postId){
       _renderComuComments(postId);
     },(err)=>{
       console.error('[Comunidade] erro ao carregar comentários:',err);
-      const listEl=document.getElementById('comu-comments-list-'+postId);
+      if(postId!==_comuActiveModalPostId) return;
+      const listEl=document.getElementById('comu-modal-list');
       const cached=_comuCommentsCache.get(postId);
       if(listEl&&(!cached||!cached.length)){
         listEl.innerHTML='<div class="comu-comments-empty">Não foi possível carregar os comentários agora.</div>';
@@ -19640,6 +19731,9 @@ function _stopAllCommentListeners(){
   _comuCommentsCache.clear();
   _comuDraftText.clear();
   _comuReplyTarget.clear();
+  _comuActiveModalPostId=null;
+  const overlay=document.getElementById('comu-comments-overlay');
+  if(overlay)overlay.classList.remove('open');
 }
 
 function comuSetReplyTarget(postId,commentId,rootId,authorName,authorUid){
@@ -19698,6 +19792,7 @@ async function comuSendComment(postId){
     autorNome:nome,
     autorUid:uid,
     autorFoto:(user&&user.photoURL)||null,
+    autorIsAdmin:_comuIsAdminUser(user),
     criadoEm:window._fbServerTimestamp(),
     parentId:target?target.rootId:null,
     respondendoNome:isReplyToReply?target.nome:null,
@@ -19784,7 +19879,7 @@ async function _comuDoDeleteOwnComment(postId,commentId){
 //    que a lista atualizou" quanto "listener duplicado disparando 2x". ──
 document.addEventListener('click',function(e){
   const toggleBtn=e.target.closest('.comu-comments-toggle');
-  if(toggleBtn){toggleComuComments(toggleBtn.dataset.postId,toggleBtn);return;}
+  if(toggleBtn){openComuComments(toggleBtn.dataset.postId);return;}
   const replyBtn=e.target.closest('.comu-comment-reply-btn');
   if(replyBtn){
     comuSetReplyTarget(replyBtn.dataset.postId,replyBtn.dataset.commentId,replyBtn.dataset.rootId,replyBtn.dataset.authorName,replyBtn.dataset.authorUid);
