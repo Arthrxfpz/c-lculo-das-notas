@@ -1943,6 +1943,25 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .res-search-clear svg{width:13px;height:13px;stroke:currentColor;fill:none}
 .res-search-clear:hover{background:var(--bg3);color:var(--t2)}
 .res-search-clear:active{transform:scale(.92)}
+/* linha da busca + botão de mostrar/ocultar avisos de soma de nota (aba Resultado) */
+.res-search-row{display:flex;align-items:center;gap:8px;margin:0 0 12px}
+.res-search-row .res-search-wrap{flex:1;margin:0}
+.res-eac-toggle{
+  position:relative;flex:0 0 auto;width:42px;height:42px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--bg1);border:1.5px solid var(--line2);color:var(--t4);cursor:pointer;
+  box-shadow:0 1px 5px rgba(0,0,0,.04);
+  transition:background .15s var(--ease-ios),border-color .15s var(--ease-ios),color .15s var(--ease-ios),transform .12s var(--ease-ios);
+}
+[data-theme="dark"] .res-eac-toggle{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.res-eac-toggle svg{width:18px;height:18px;stroke:currentColor;fill:none}
+.res-eac-toggle:active{transform:scale(.92)}
+.res-eac-toggle.on{background:var(--gold);border-color:var(--gold);color:#1a1a1a}
+.res-eac-toggle-dot{
+  position:absolute;top:-2px;right:-2px;width:9px;height:9px;border-radius:50%;
+  background:var(--t4);border:2px solid var(--bg0);transition:background .15s var(--ease-ios);
+}
+.res-eac-toggle.on .res-eac-toggle-dot{background:var(--green)}
 /* subject result rows */
 .res-rows-wrap{display:flex;flex-direction:column;gap:9px}
 .res-row{
@@ -2116,16 +2135,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 .resumo-recovery-alert.impossible,
 .resumo-recovery-alert.eac-pending{border-left-color:var(--red)}
 .resumo-recovery-alert.success{border-left-color:var(--green)}
-
-.rr-icon{
-  width:28px;height:28px;border-radius:9px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  background:var(--goldbg);color:var(--gold);
-}
-.rr-icon svg{width:15px;height:15px}
-.resumo-recovery-alert.impossible .rr-icon,
-.resumo-recovery-alert.eac-pending .rr-icon{background:var(--redbg);color:var(--red)}
-.resumo-recovery-alert.success .rr-icon{background:var(--greenbg);color:var(--green)}
 
 .rr-body{flex:1;min-width:0}
 .rr-title{
@@ -11818,10 +11827,15 @@ function render(dir){
 
   // ── Sem direção OU desktop → troca instantânea ──
   if(!dir || !out || !isMobile){
+    // Guarda o scroll do slide atual antes de trocar o DOM — cada slide é
+    // um elemento novo (scrollTop=0 por padrão), então sem isso qualquer
+    // render(null) (toggles, filtros, edições) jogava a tela pro topo.
+    const _scrollBefore = out ? out.scrollTop : 0;
     if(out){ out.remove(); }
     const inn = _buildSlide();
     ct.appendChild(inn);
     _activeSlide = inn;
+    inn.scrollTop = _scrollBefore;
     return;
   }
 
@@ -12305,18 +12319,19 @@ function _eacSt(base,eac){
 
 /**
  * Ícone (miolo do <svg>) usado no avisinho, de acordo com o tipo/urgência.
- * impossible    → triângulo de alerta (crítico, sem saída)
- * eac-pending   → seta circular de "refazer" — a EAC é literalmente uma
- *                 reavaliação, então um ícone de recuperação/retry diz
- *                 mais do que um alerta genérico
+ * impossible    → círculo com "!" (alert-circle) — crítico, sem saída,
+ *                 mais limpo e legível em tamanho pequeno que um triângulo
+ * eac-pending   → relógio — comunica "ainda dá tempo", a EAC como uma
+ *                 janela de recuperação que ainda está aberta
  * success       → círculo de check (boa notícia)
- * '' (neutro)   → alvo (informativo — "nota necessária" é uma meta a bater)
+ * '' (neutro)   → alvo simplificado (informativo — "nota necessária" é
+ *                 uma meta a bater), um anel + centro em vez de 3 aneis
  */
 function _rrIcon(cls){
-  if(cls==='impossible')return'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>';
-  if(cls==='eac-pending')return'<path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/>';
+  if(cls==='impossible')return'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12.5"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+  if(cls==='eac-pending')return'<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 13.5"/>';
   if(cls==='success')return'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
-  return'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/>';
+  return'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/>';
 }
 
 /**
@@ -12329,7 +12344,6 @@ function _rrIcon(cls){
  */
 function _recAlert(cls,title,inputs,result){
   return '<div class="resumo-recovery-alert'+(cls?' '+cls:'')+'">'+
-    '<div class="rr-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+_rrIcon(cls)+'</svg></div>'+
     '<div class="rr-body">'+
       '<div class="rr-title">'+title+'</div>'+
       '<div class="rr-inputs">'+inputs+'</div>'+
@@ -12649,10 +12663,19 @@ function renderResumo(el){
 
   const _normTxtRes=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const resSearchQ=_normTxtRes(resultadoSearch.trim());
-  const resSearchHtml=`<div class="res-search-wrap">
-    <input id="resultado-search-input" class="res-search-input" type="text" placeholder="Buscar matéria..." value="${escHtml(resultadoSearch)}" oninput="setResultadoSearch(this.value)">
-    <svg class="res-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    ${resultadoSearch?`<button class="res-search-clear" onclick="clearResultadoSearch()" title="Limpar busca" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
+  const eacToggleHtml=`<button type="button" class="res-eac-toggle${showEacAlerts?' on':''}" onclick="toggleEacAlerts()" title="${showEacAlerts?'Ocultar avisos de soma de nota':'Mostrar avisos de soma de nota'}" aria-pressed="${showEacAlerts}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${showEacAlerts
+      ?'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'
+      :'<path d="M8.7 3A6 6 0 0 1 18 8c0 2.1.8 3.7 1.6 5.3"/><path d="M17 17H3s3-2 3-9c0-.4 0-.8.1-1.2"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><line x1="2" y1="2" x2="22" y2="22"/>'}</svg>
+    <span class="res-eac-toggle-dot"></span>
+  </button>`;
+  const resSearchHtml=`<div class="res-search-row">
+    <div class="res-search-wrap">
+      <input id="resultado-search-input" class="res-search-input" type="text" placeholder="Buscar matéria..." value="${escHtml(resultadoSearch)}" oninput="setResultadoSearch(this.value)">
+      <svg class="res-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      ${resultadoSearch?`<button class="res-search-clear" onclick="clearResultadoSearch()" title="Limpar busca" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`:''}
+    </div>
+    ${eacToggleHtml}
   </div>`;
   const resSubjList=resSearchQ?SUBJECTS.filter(s=>_normTxtRes(s.name).includes(resSearchQ)):SUBJECTS;
 
@@ -12718,11 +12741,19 @@ function renderResumo(el){
     const started2T=tabScore(s.id,'2T')!==null||tabScore(s.id,'2T-EAC')!==null;
     const started3T=tabScore(s.id,'3T')!==null||tabScore(s.id,'3T-EAC')!==null;
 
-    if(ss!=='pass'){
-    if(full1T){ if(!started2T) recHtml+=_eacBlock(b1,e1,'1° Trimestre',full2T?t2:null); }
+    // Flags: true só quando o alerta "Recuperação no EAC — Xº Trimestre:"
+    // (o eac-pending "simples", sem compensação nem impossibilidade) foi
+    // de fato exibido acima. Servem pra decidir se o aviso "Nota
+    // necessária" do trimestre seguinte ganha a ressalva ", caso não
+    // faça o EAC" — só faz sentido quando o outro avisinho realmente
+    // está na tela ao mesmo tempo (senão a ressalva fica órfã/confusa).
+    let eacPendingT1=false, eacPendingT2=false;
+
+    if(ss!=='pass'&&showEacAlerts){
+    if(full1T){ if(!started2T){ const h1=_eacBlock(b1,e1,'1° Trimestre',full2T?t2:null); recHtml+=h1; eacPendingT1=h1.indexOf('Recuperação no EAC —')!==-1; } }
     else if(_trGuaranteedFail(s.id,'1T')) recHtml+=_eacBlockEarly(s.id,'1T','1° Trimestre');
 
-    if(full2T){ if(!started3T) recHtml+=_eacBlock(b2,e2,'2° Trimestre',full1T?t1:null); }
+    if(full2T){ if(!started3T){ const h2=_eacBlock(b2,e2,'2° Trimestre',full1T?t1:null); recHtml+=h2; eacPendingT2=h2.indexOf('Recuperação no EAC —')!==-1; } }
     else if(_trGuaranteedFail(s.id,'2T')) recHtml+=_eacBlockEarly(s.id,'2T','2° Trimestre');
 
     // 3°T: usa fórmula final completa para calcular mínimo real e detectar impossibilidade
@@ -12751,11 +12782,12 @@ function renderResumo(el){
             recHtml+=_recAlert('impossible','Atenção no 2° Trimestre:',
               '1°T '+fmt(rec.t1),'Impossível');
           }else{
-            // Antes, esse aviso podia ganhar a ressalva ", caso não faça
-            // o EAC" quando o EAC do 1°T ainda não tinha nota lançada.
-            // Removido a pedido: o aviso agora é sempre direto, sem
-            // condicionais — só o mínimo necessário no 2° Trimestre.
-            recHtml+=_recAlert('','Nota necessária no 2° Trimestre:',
+            // Ressalva ", caso não faça o EAC" só entra quando o
+            // avisinho "Recuperação no EAC — 1° Trimestre:" também está
+            // sendo exibido nesse momento (eacPendingT1) — é ele quem
+            // representa a chance de o 1°T ainda mudar, o que mudaria
+            // essa conta do 2°T.
+            recHtml+=_recAlert('','Nota necessária no 2° Trimestre'+(eacPendingT1?', caso não faça o EAC':'')+':',
               '1°T '+fmt(rec.t1),rec.minNeeded.toFixed(1));
           }
         }else{
@@ -12766,8 +12798,10 @@ function renderResumo(el){
             recHtml+=_recAlert('impossible','Aprovação impossível:',
               '1°T '+fmt(rec.t1)+' · 2°T '+fmt(rec.t2),'Impossível');
           }else{
-            // Mesma remoção da ressalva condicional — aviso sempre direto.
-            recHtml+=_recAlert('','Nota necessária no 3° Trimestre:',
+            // Mesma lógica: ressalva só entra quando "Recuperação no EAC
+            // — 2° Trimestre:" (eacPendingT2) também está na tela — o
+            // 1°T já fechou de vez, só o 2°T ainda pode mudar essa conta.
+            recHtml+=_recAlert('','Nota necessária no 3° Trimestre'+(eacPendingT2?', caso não faça o EAC':'')+':',
               '1°T '+fmt(rec.t1)+' · 2°T '+fmt(rec.t2),rec.minNeeded.toFixed(1));
           }
         }
@@ -14187,6 +14221,15 @@ function clearProvasSearch(){provasSearch='';render(null);}
 
 /* busca por matéria na aba Resultado — mesmo padrão de preservar foco/cursor */
 let resultadoSearch='';
+/* mostrar/ocultar os avisinhos de "soma de nota" (Nota necessária/Recuperação
+   no EAC) na aba Resultado — ligado por padrão, preferência persistida */
+let showEacAlerts=localStorage.getItem('t205_show_eac_alerts')!=='0';
+function toggleEacAlerts(){
+  showEacAlerts=!showEacAlerts;
+  localStorage.setItem('t205_show_eac_alerts',showEacAlerts?'1':'0');
+  render(null);
+  _showNotifToast(showEacAlerts?'Mostrar aviso de notas ativado':'Mostrar aviso de notas desativado');
+}
 function setResultadoSearch(val){
   resultadoSearch=val;
   const active=document.activeElement;
