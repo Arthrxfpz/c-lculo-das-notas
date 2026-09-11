@@ -26,7 +26,7 @@
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, collection, query, orderBy, limit }
+  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, collection, query, orderBy, limit, addDoc, deleteDoc, increment, serverTimestamp, where }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -55,6 +55,11 @@
   window._fbQuery      = query;
   window._fbOrderBy    = orderBy;
   window._fbLimit      = limit;
+  window._fbAddDoc     = addDoc;
+  window._fbDeleteDoc  = deleteDoc;
+  window._fbIncrement  = increment;
+  window._fbServerTimestamp = serverTimestamp;
+  window._fbWhere      = where;
 
   /* ── Login com Google — robusto contra os "bugs" intermitentes ──
      Motivos mais comuns do login "às vezes não funcionar":
@@ -655,8 +660,10 @@
       _applyGoogleProfile(user);
       await _fbLoadAll(user.uid); // _hideSplash() é chamado dentro
       _startUserDocListener(user.uid);
+      if (typeof window._startReplyNotifListener === 'function') window._startReplyNotifListener(user.uid);
     } else {
       _stopUserDocListener();
+      if (typeof window._stopReplyNotifListener === 'function') window._stopReplyNotifListener();
       // Sem login — pula direto pra 100% sem animação
       const bar = document.getElementById('splash-bar');
       const pctEl = document.getElementById('splash-pct');
@@ -739,27 +746,41 @@
   }
 
   function _showSyncBadge(state) {
-    const chip = document.getElementById('fb-user-chip');
-    if (!chip) return;
+    const dot   = document.getElementById('fb-sync-dot');
+    const chip  = document.getElementById('fb-user-chip');
+    const label = document.getElementById('fb-sync-label');
+
+    // dot state
+    if (dot) {
+      const dotState = state === 'saving' ? 'checking' : state === 'ok' ? 'ok' : state === 'err' ? 'err' : state;
+      dot.className = 'fb-sync-dot fb-sync-' + dotState;
+      clearTimeout(dot._t);
+      if (state !== 'live' && state !== 'saving') {
+        dot._t = setTimeout(() => { dot.className = 'fb-sync-dot fb-sync-idle'; }, 2200);
+      }
+    }
+
+    // inline chip label
+    if (!chip || !label) return;
     clearTimeout(chip._syncT);
     chip.classList.remove('sync-active', 'sync-ok', 'sync-err');
 
-    if (state === 'saving' || state === 'checking') {
-      // aro girando ao redor da fotinha enquanto salva/verifica
+    if (state === 'saving') {
+      label.textContent = 'Salvando...';
       chip.classList.add('sync-active');
     } else if (state === 'ok') {
-      // aro fica verde por 1s e volta ao normal
+      label.textContent = 'Salvo';
       chip.classList.add('sync-ok');
       chip._syncT = setTimeout(() => {
         chip.classList.remove('sync-ok');
-      }, 1000);
+      }, 1800);
     } else if (state === 'err') {
+      label.textContent = 'Erro';
       chip.classList.add('sync-err');
       chip._syncT = setTimeout(() => {
         chip.classList.remove('sync-err');
-      }, 1800);
+      }, 2800);
     }
-    // 'idle' (ou qualquer outro estado): nenhuma classe extra → aro some
   }
 
   window._fbLoginClick = () => {
@@ -1126,10 +1147,6 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
 .fb-user-chip:hover{background:var(--bg3);border-color:var(--line)}
 .fb-user-chip:active{transform:scale(.93)}
 .fb-user-chip.visible{display:flex}
-.fb-chip-avatar{
-  position:relative;width:28px;height:28px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-}
 .fb-chip-photo{
   width:28px;height:28px;border-radius:50%;
   object-fit:cover;border:1.5px solid var(--line2);
@@ -1142,33 +1159,44 @@ button:active:not(:disabled){transition:transform .1s var(--ease-premium)!import
   display:none; /* o nome já aparece na saudação da topbar — evita repetir */
   margin-right:6px;
 }
-/* ── Anel de status de sincronização ao redor da fotinha ──
-   Enquanto salva/verifica: aro fino girando. Ao concluir: aro fica
-   verde (ou vermelho, se erro) por 1s e some, voltando ao normal. */
-.fb-chip-avatar::before{
-  content:'';
-  position:absolute;inset:-3px;border-radius:50%;
-  border:2px solid transparent;
-  opacity:0;pointer-events:none;
-  transition:opacity .25s var(--ease-ios), border-color .25s;
+.fb-sync-dot{
+  width:0;height:7px;border-radius:50%;flex-shrink:0;
+  margin-left:0;opacity:0;overflow:hidden;
+  transition:width .3s var(--ease-ios),margin-left .3s var(--ease-ios),background .3s,box-shadow .3s,opacity .3s;
 }
-.fb-user-chip.sync-active .fb-chip-avatar::before{
-  opacity:1;
-  border-color:var(--line2);
-  border-top-color:var(--gold);
+.fb-sync-idle    {width:0;margin-left:0;background:var(--green);opacity:0}
+.fb-sync-ok      {width:7px;margin-left:6px;background:var(--green);box-shadow:0 0 6px var(--green);opacity:1}
+.fb-sync-live    {width:7px;margin-left:6px;background:var(--blue);box-shadow:0 0 6px var(--blue);opacity:1}
+.fb-sync-err     {width:7px;margin-left:6px;background:var(--red);box-shadow:0 0 6px var(--red);opacity:1}
+.fb-sync-checking{
+  background:transparent;opacity:1;
+  border:2px solid var(--blue);border-top-color:transparent;
+  width:9px;height:9px;margin-left:6px;
   animation:fb-spin .7s linear infinite;
 }
-.fb-user-chip.sync-ok .fb-chip-avatar::before{
-  opacity:1;
-  border-color:var(--green);
-  animation:none;
-}
-.fb-user-chip.sync-err .fb-chip-avatar::before{
-  opacity:1;
-  border-color:var(--red);
-  animation:none;
-}
 @keyframes fb-spin{to{transform:rotate(360deg)}}
+
+/* ── SYNC LABEL inline no chip ── */
+#fb-sync-label {
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: -.1px;
+  color: var(--t2);
+  white-space: nowrap;
+  max-width: 0;
+  margin-right: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-width .3s var(--ease-ios),
+    margin-right .3s var(--ease-ios),
+    opacity   .2s var(--ease-ios),
+    color     .2s;
+  pointer-events: none;
+}
+.fb-user-chip.sync-active  #fb-sync-label { max-width: 90px; margin-right:6px; opacity: 1; }
+.fb-user-chip.sync-ok      #fb-sync-label { color: var(--green); max-width: 90px; margin-right:6px; opacity: 1; }
+.fb-user-chip.sync-err     #fb-sync-label { color: var(--red);   max-width: 90px; margin-right:6px; opacity: 1; }
 
 /* ── POPUP DE LOGOUT ── */
 .fb-logout-overlay{
@@ -8424,6 +8452,96 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .comu-react-btn.active .comu-react-icon svg{stroke:var(--gold)}
 .comu-react-btn.active .comu-react-count{color:var(--gold)}
 
+/* ── Comentários nas publicações da Comunidade ──────────────────
+   ▸ Botão "Comentar" abre/fecha um painel com a lista (comentários
+     de nível 1 + respostas indentadas de nível 2, achatadas — igual
+     Instagram/Facebook, pra nunca dar bug de aninhamento infinito).
+   ▸ Só quem está logado com Google pode comentar (mesma regra das
+     reações). ── */
+.comu-comments-section{border-top:1px solid var(--line2);margin-top:1px}
+.comu-comments-toggle{
+  display:flex;align-items:center;gap:7px;width:100%;
+  background:none;border:none;padding:10px 15px;margin:0;font:inherit;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;text-align:left;
+}
+.comu-comments-toggle svg:first-child{width:15px;height:15px;stroke:var(--t3);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.comu-comments-toggle span{flex:1;font-size:12.5px;font-weight:700;color:var(--t3)}
+.comu-comments-chevron{width:14px!important;height:14px!important;stroke:var(--t4)!important;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s var(--ease-ios)}
+.comu-comments-toggle.open .comu-comments-chevron{transform:rotate(180deg)}
+.comu-comments-toggle.open span{color:var(--t2)}
+
+.comu-comments-panel{padding:0 15px 13px;animation:fadeIn .2s var(--ease-ios)}
+.comu-comments-list{display:flex;flex-direction:column;gap:12px;margin-bottom:10px}
+.comu-comments-empty{font-size:12px;font-weight:500;color:var(--t4);padding:6px 2px}
+.comu-comments-loading{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--t4);padding:6px 2px}
+.comu-comments-loading .comu-spinner{width:14px;height:14px;border-width:2px}
+
+.comu-comment{display:flex;gap:9px;align-items:flex-start}
+.comu-comment-avatar{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;overflow:hidden;
+  background:var(--bg3);display:flex;align-items:center;justify-content:center;
+  font-size:10.5px;font-weight:800;color:var(--t3);
+}
+.comu-comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.comu-comment-body{flex:1;min-width:0}
+.comu-comment-head{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.comu-comment-author{font-size:12.5px;font-weight:800;color:var(--t1);letter-spacing:-.1px}
+.comu-comment-time{font-size:10.5px;font-weight:500;color:var(--t4)}
+.comu-comment-text{font-size:13px;font-weight:500;color:var(--t2);line-height:1.45;white-space:pre-wrap;word-break:break-word;margin-top:1px}
+.comu-comment-replytag{color:var(--gold);font-weight:700}
+.comu-comment-actions{margin-top:3px}
+.comu-comment-reply-btn{
+  background:none;border:none;padding:0;margin:0;font:inherit;
+  font-size:11px;font-weight:700;color:var(--t4);cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.comu-comment-reply-btn:active{color:var(--gold)}
+.comu-comment-replies{
+  display:flex;flex-direction:column;gap:10px;margin-top:10px;
+  padding-left:16px;margin-left:14px;border-left:2px solid var(--line2);
+}
+
+.comu-comment-login-cta{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:12px;
+  padding:9px 12px;
+}
+.comu-comment-login-cta span{font-size:12px;font-weight:600;color:var(--t3)}
+.comu-comment-login-btn{
+  flex-shrink:0;background:var(--gold);color:var(--accent-text);border:none;border-radius:9px;
+  padding:6px 12px;font-size:11.5px;font-weight:800;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+
+.comu-reply-chip{
+  display:flex;align-items:center;gap:8px;
+  background:var(--goldbg);border:1px solid var(--goldbd);border-radius:10px;
+  padding:6px 8px 6px 11px;margin-bottom:7px;
+}
+.comu-reply-chip span{flex:1;font-size:11.5px;font-weight:600;color:var(--t2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.comu-reply-chip b{color:var(--gold);font-weight:800}
+.comu-comment-cancel-reply{
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;width:20px;height:20px;
+  background:none;border:none;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.comu-comment-cancel-reply svg{width:13px;height:13px;stroke:var(--t3);fill:none;stroke-width:2.2;stroke-linecap:round}
+
+.comu-comment-input-row{display:flex;align-items:flex-end;gap:8px}
+.comu-comment-input{
+  flex:1;min-width:0;resize:none;max-height:120px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
+  padding:9px 13px;font:inherit;font-size:13px;font-weight:500;color:var(--t1);
+  line-height:1.4;transition:border-color .15s;
+}
+.comu-comment-input:focus{outline:none;border-color:var(--goldbd)}
+.comu-comment-input::placeholder{color:var(--t4);font-weight:500}
+.comu-comment-send-btn{
+  flex-shrink:0;width:34px;height:34px;border-radius:50%;
+  background:var(--gold);border:none;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s var(--ease-premium),opacity .15s;
+}
+.comu-comment-send-btn:active{transform:scale(.9)}
+.comu-comment-send-btn:disabled{opacity:.5;pointer-events:none}
+.comu-comment-send-btn svg{width:15px;height:15px;stroke:var(--accent-text);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;margin-left:-1px}
+
 /* ── Banner do horário ativo (Frequência) ── */
 .freq-sched-banner{
   display:flex;align-items:center;gap:8px;
@@ -9770,10 +9888,10 @@ html[data-expansive="1"][data-expansive-bg="1"] {
           <span class="fb-login-btn-label">Faça login com o Google</span>
         </button>
         <div class="fb-user-chip" id="fb-user-chip" onclick="openModal()">
-          <span class="fb-chip-avatar">
-            <img class="fb-chip-photo" id="fb-chip-photo" src="" alt="">
-          </span>
+          <img class="fb-chip-photo" id="fb-chip-photo" src="" alt="">
           <span class="fb-chip-name" id="fb-chip-name"></span>
+          <span id="fb-sync-label"></span>
+          <div class="fb-sync-dot fb-sync-idle" id="fb-sync-dot"></div>
         </div>
       </div>
 
@@ -17456,6 +17574,7 @@ function _ncIcon(type){
   if(type==='freq')return'<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/></svg>';
   if(type==='approved')return'<svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
   if(type==='comunidade')return'<svg viewBox="0 0 24 24"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>';
+  if(type==='resposta')return'<svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
   if(type==='sync')return'<svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>';
   return'<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
 }
@@ -17590,6 +17709,21 @@ function computeNotifications(){
     });
   }
 
+  // 7) Respostas aos seus comentários na Comunidade ("Fulano respondeu seu comentário")
+  if(_replyNotifs&&_replyNotifs.length){
+    const sortedReplies=[..._replyNotifs].sort((a,b)=>_replyNotifMs(b)-_replyNotifMs(a));
+    sortedReplies.forEach((n,idx)=>{
+      const nome=(n.autorNome&&n.autorNome.trim())?n.autorNome.trim():'Alguém';
+      list.push({
+        id:`resp-${n.id}`,type:'resposta',
+        postId:n.postId,comentarioRaizId:n.comentarioRaizId,
+        title:`${nome} respondeu seu comentário`,
+        body:n.textoPreview||'Toque para ver a resposta na Comunidade.',
+        severity:'info',priority:2.5+(idx*0.0001),variant:null
+      });
+    });
+  }
+
   list.sort((a,b)=>a.priority-b.priority||a.id.localeCompare(b.id));
   return list;
 }
@@ -17620,11 +17754,23 @@ function updateNotifCenter(){
     }catch(e){}
   }
 
+  // Mesma lógica acima, só que pras respostas de comentário: sem isso, na
+  // primeira vez que a pessoa loga num aparelho (ou no dia em que esse
+  // recurso foi lançado), TODAS as respostas antigas apareceriam de
+  // repente como não lidas.
+  let replyFirstRun=false;
+  if(_replyNotifs!==null){
+    try{
+      replyFirstRun = localStorage.getItem('t205_resp_notif_seeded')!=='1';
+      if(replyFirstRun) localStorage.setItem('t205_resp_notif_seeded','1');
+    }catch(e){}
+  }
+
   list.forEach(n=>{
     seenIds.add(n.id);
     const m=meta[n.id];
     if(!m){
-      const baselineRead = n.type==='comunidade' ? comuFirstRun : firstRun;
+      const baselineRead = n.type==='comunidade' ? comuFirstRun : (n.type==='resposta' ? replyFirstRun : firstRun);
       meta[n.id]={read:baselineRead,firstSeenAt:now,variant:n.variant,toasted:baselineRead};
     }else if(n.type==='exam' && m.variant!==n.variant){
       // reabre como não lida quando a urgência muda (ex.: faltavam 2 dias, agora falta 1)
@@ -17640,7 +17786,7 @@ function updateNotifCenter(){
   // reapareceriam do zero como se fossem novas. Manter esse metadado nunca
   // atrapalha (uma publicação realmente excluída simplesmente não entra mais
   // na lista, então o registro velho dela fica só parado, sem efeito).
-  Object.keys(meta).forEach(id=>{if(id.indexOf('comu-')!==0 && !seenIds.has(id))delete meta[id];});
+  Object.keys(meta).forEach(id=>{if(id.indexOf('comu-')!==0 && id.indexOf('resp-')!==0 && !seenIds.has(id))delete meta[id];});
   _ncSaveMeta(meta);
 
   const unreadCount=list.filter(n=>meta[n.id]&&!meta[n.id].read).length;
@@ -17777,6 +17923,23 @@ function handleNCClick(id){
   }
   if(n.type==='comunidade'){
     if(typeof setPage==='function')setPage('comunidade');
+    return;
+  }
+  if(n.type==='resposta'){
+    if(typeof setPage==='function')setPage('comunidade');
+    if(n.postId){
+      setTimeout(()=>{
+        const panel=document.getElementById('comu-comments-panel-'+n.postId);
+        const toggleBtn=document.querySelector('.comu-comments-toggle[data-post-id="'+n.postId+'"]');
+        if(panel&&panel.style.display==='none'&&toggleBtn){
+          toggleComuComments(n.postId,toggleBtn);
+        }
+        setTimeout(()=>{
+          const postEl=document.querySelector('.comu-post[data-comu-id="'+n.postId+'"]');
+          if(postEl)postEl.scrollIntoView({behavior:'smooth',block:'center'});
+        },260);
+      },340);
+    }
     return;
   }
   if(n.type==='approved'){
@@ -18959,6 +19122,9 @@ function _comuRefreshOnAuth(){
 window._comuRefreshOnAuth=_comuRefreshOnAuth;
 
 function renderComunidade(el){
+  _stopAllCommentListeners(); // troca/remontagem da aba: começa limpo (sem
+                               // listeners de comentários de posts que já
+                               // não estão mais visíveis)
   el.innerHTML=`<div class="comu-wrap">
     <div id="comu-feed" class="comu-feed"></div>
   </div>`;
@@ -19139,6 +19305,7 @@ function _comuFeedSig(posts){
     reacoes:p.reactions||{}, // conta as reações globais na assinatura, senão
                               // uma reação nova (minha ou de outra pessoa)
                               // não disparava o redesenho do feed
+    comentariosCount:p.comentariosCount||0, // idem, pro contador do botão de comentários
     euUid:uid // login/logout muda qual reação fica destacada como "minha"
   })));
 }
@@ -19190,6 +19357,7 @@ function _comuPostHtml(p){
     ${textoHtml}
     ${linkHtml}
     ${_comuReactionsHtml(p)}
+    ${_comuCommentsSectionHtml(p)}
   </div>`;
 }
 
@@ -19233,6 +19401,380 @@ function _comuTimeAgo(ms){
   if(d<30) return `há ${d} dia${d===1?'':'s'}`;
   const mo=Math.floor(d/30);
   return `há ${mo} ${mo===1?'mês':'meses'}`;
+}
+
+/* ══════════════════════════════════════════
+   COMENTÁRIOS nas publicações da Comunidade
+   ▸ Guardados em comunidade_posts/{postId}/comentarios/{id}
+   ▸ Modelo "achatado" de 2 níveis (igual Instagram/Facebook): um
+     comentário raiz (parentId=null) e suas respostas (parentId=id do
+     comentário raiz). Responder a UMA RESPOSTA também vira uma resposta
+     do mesmo comentário raiz (não cria um 3º nível — isso é o que evita
+     bug de aninhamento infinito), só que guarda quem exatamente está
+     sendo respondido (respondendoNome/respondendoUid) pra mostrar a
+     tag "@Fulano" e pra saber quem notificar.
+   ▸ O contador (comentariosCount) fica salvo no próprio post, then
+     atualizado com increment() — assim ele já chega pronto no feed
+     principal (mesmo listener que traz os posts), sem precisar de um
+     listener extra por post só pra saber "quantos comentários tem".
+   ▸ A LISTA de comentários em si só é buscada (onSnapshot) quando a
+     pessoa abre o painel daquele post — fecha o listener ao recolher,
+     pra não acumular conexões abertas à toa.
+══════════════════════════════════════════ */
+const _comuCommentsOpen=new Set();      // ids de posts com o painel aberto
+const _comuCommentsCache=new Map();     // postId -> array de comentários (últimos dados vindos do Firestore)
+const _comuCommentsUnsub=new Map();     // postId -> função de cancelar o listener
+const _comuDraftText=new Map();         // postId -> texto ainda não enviado (sobrevive a re-renders do feed)
+const _comuReplyTarget=new Map();       // postId -> {commentId,rootId,nome,uid} de quem está sendo respondido agora
+const _comuSendBusy=new Set();          // ids de posts com um envio de comentário em andamento
+
+function _comuCommentMs(c){
+  const t=c&&c.criadoEm;
+  if(!t) return Date.now(); // comentário recém-enviado (otimista, ainda sem timestamp do servidor) — vai pro fim da lista
+  if(typeof t==='number') return t;
+  if(typeof t.toMillis==='function') return t.toMillis();
+  if(typeof t.seconds==='number') return t.seconds*1000;
+  return Date.now();
+}
+
+function _comuCommentsSectionHtml(p){
+  const postId=p.id||'';
+  const isOpen=_comuCommentsOpen.has(postId);
+  const count=p.comentariosCount||0;
+  const countLabel=count>0?`${count} coment${count===1?'ário':'ários'}`:'Comentar';
+  const draft=_comuDraftText.get(postId)||'';
+  const target=_comuReplyTarget.get(postId)||null;
+  const canComment=!!_comuMyUid();
+
+  const composerHtml=canComment?`
+    <div class="comu-comment-composer" id="comu-composer-${escHtml(postId)}">
+      <div class="comu-reply-chip" id="comu-reply-chip-${escHtml(postId)}" style="display:${target?'flex':'none'}">
+        <span>Respondendo a <b id="comu-reply-chip-name-${escHtml(postId)}">${target?escHtml(target.nome):''}</b></span>
+        <button type="button" class="comu-comment-cancel-reply" data-post-id="${escHtml(postId)}" aria-label="Cancelar resposta">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="comu-comment-input-row">
+        <textarea class="comu-comment-input" id="comu-comment-input-${escHtml(postId)}" data-post-id="${escHtml(postId)}"
+          placeholder="${target?`Responder a ${escHtml(target.nome)}…`:'Escreva um comentário...'}" rows="1" maxlength="500">${escHtml(draft)}</textarea>
+        <button type="button" class="comu-comment-send-btn" id="comu-comment-send-${escHtml(postId)}" data-post-id="${escHtml(postId)}" aria-label="Enviar comentário">
+          <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>`:`
+    <div class="comu-comment-login-cta">
+      <span>Entre com sua conta Google para comentar</span>
+      <button type="button" class="comu-comment-login-btn" onclick="if(typeof window._fbLoginClick==='function')window._fbLoginClick()">Entrar</button>
+    </div>`;
+
+  return `<div class="comu-comments-section">
+    <button type="button" class="comu-comments-toggle${isOpen?' open':''}" data-post-id="${escHtml(postId)}">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <span>${countLabel}</span>
+      <svg class="comu-comments-chevron" viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div class="comu-comments-panel" id="comu-comments-panel-${escHtml(postId)}" style="display:${isOpen?'block':'none'}">
+      <div class="comu-comments-list" id="comu-comments-list-${escHtml(postId)}">
+        ${isOpen?'<div class="comu-comments-loading"><div class="comu-spinner"></div>Carregando comentários...</div>':''}
+      </div>
+      ${composerHtml}
+    </div>
+  </div>`;
+}
+
+function _comuCommentAvatarHtml(c){
+  if(c.autorFoto) return `<img src="${escHtml(c.autorFoto)}" alt="">`;
+  return `<span>${escHtml(getInitials(c.autorNome||'?'))}</span>`;
+}
+
+function _comuCommentItemHtml(c,postId,isReply){
+  const timeAgo=_comuTimeAgo(_comuCommentMs(c));
+  const replyTagHtml=(isReply&&c.respondendoNome)?`<span class="comu-comment-replytag">@${escHtml(c.respondendoNome)}</span> `:'';
+  // pra responder uma RESPOSTA, o alvo continua sendo a raiz (data-root-id) —
+  // é isso que mantém tudo achatado em 2 níveis só, sem bug de ninho dentro de ninho
+  const rootId=isReply?(c.parentId||c.id):c.id;
+  return `<div class="comu-comment${isReply?' comu-comment-reply':''}">
+    <div class="comu-comment-avatar">${_comuCommentAvatarHtml(c)}</div>
+    <div class="comu-comment-body">
+      <div class="comu-comment-head">
+        <span class="comu-comment-author">${escHtml(c.autorNome||'Usuário')}</span>
+        <span class="comu-comment-time">${timeAgo}</span>
+      </div>
+      <div class="comu-comment-text">${replyTagHtml}${_comuLinebreaks(escHtml(c.texto||''))}</div>
+      <div class="comu-comment-actions">
+        <button type="button" class="comu-comment-reply-btn"
+          data-post-id="${escHtml(postId)}" data-comment-id="${escHtml(c.id)}" data-root-id="${escHtml(rootId)}"
+          data-author-name="${escHtml(c.autorNome||'Usuário')}" data-author-uid="${escHtml(c.autorUid||'')}">Responder</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function _renderComuComments(postId){
+  const listEl=document.getElementById('comu-comments-list-'+postId);
+  if(!listEl) return; // painel fechado (ou post não está mais na tela) — nada a fazer
+  const data=_comuCommentsCache.get(postId)||[];
+  if(!data.length){
+    listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+    return;
+  }
+  const roots=data.filter(c=>!c.parentId).sort((a,b)=>_comuCommentMs(a)-_comuCommentMs(b));
+  const repliesByRoot={};
+  data.filter(c=>c.parentId).forEach(c=>{
+    (repliesByRoot[c.parentId]=repliesByRoot[c.parentId]||[]).push(c);
+  });
+  Object.keys(repliesByRoot).forEach(k=>repliesByRoot[k].sort((a,b)=>_comuCommentMs(a)-_comuCommentMs(b)));
+
+  if(!roots.length){
+    // só existem respostas "órfãs" (raiz apagada pelo admin, mas por algum
+    // motivo a resposta ainda não sumiu) — evita a lista ficar em branco
+    listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
+    return;
+  }
+
+  listEl.innerHTML=roots.map(r=>{
+    const replies=repliesByRoot[r.id]||[];
+    const repliesHtml=replies.length
+      ?`<div class="comu-comment-replies">${replies.map(rp=>_comuCommentItemHtml(rp,postId,true)).join('')}</div>`
+      :'';
+    return _comuCommentItemHtml(r,postId,false)+repliesHtml;
+  }).join('');
+}
+
+function toggleComuComments(postId,btnEl){
+  const panel=document.getElementById('comu-comments-panel-'+postId);
+  if(!panel) return;
+  const willOpen=panel.style.display==='none'||!panel.style.display;
+  if(willOpen){
+    _comuCommentsOpen.add(postId);
+    panel.style.display='block';
+    if(btnEl)btnEl.classList.add('open');
+    const listEl=document.getElementById('comu-comments-list-'+postId);
+    if(listEl&&!_comuCommentsCache.has(postId)){
+      listEl.innerHTML='<div class="comu-comments-loading"><div class="comu-spinner"></div>Carregando comentários...</div>';
+    }
+    _startCommentsListener(postId);
+  }else{
+    _comuCommentsOpen.delete(postId);
+    panel.style.display='none';
+    if(btnEl)btnEl.classList.remove('open');
+    _stopCommentsListener(postId);
+  }
+}
+
+function _startCommentsListener(postId){
+  if(_comuCommentsUnsub.has(postId)) return; // já tem um listener ativo pra esse post
+  if(!window._fbDb||!window._fbCollection||!window._fbQuery||!window._fbOnSnapshot) return;
+  try{
+    const q=window._fbQuery(window._fbCollection(window._fbDb,'comunidade_posts',postId,'comentarios'));
+    const unsub=window._fbOnSnapshot(q,(snap)=>{
+      _comuCommentsCache.set(postId,snap.docs.map(d=>({id:d.id,...d.data()})));
+      _renderComuComments(postId);
+    },(err)=>{
+      console.error('[Comunidade] erro ao carregar comentários:',err);
+      const listEl=document.getElementById('comu-comments-list-'+postId);
+      const cached=_comuCommentsCache.get(postId);
+      if(listEl&&(!cached||!cached.length)){
+        listEl.innerHTML='<div class="comu-comments-empty">Não foi possível carregar os comentários agora.</div>';
+      }
+    });
+    _comuCommentsUnsub.set(postId,unsub);
+  }catch(e){
+    console.error('[Comunidade] falha ao iniciar listener de comentários:',e);
+  }
+}
+
+function _stopCommentsListener(postId){
+  const unsub=_comuCommentsUnsub.get(postId);
+  if(unsub){unsub();_comuCommentsUnsub.delete(postId);}
+}
+
+function _stopAllCommentListeners(){
+  _comuCommentsUnsub.forEach(unsub=>{try{unsub();}catch(e){}});
+  _comuCommentsUnsub.clear();
+  _comuCommentsOpen.clear();
+  _comuCommentsCache.clear();
+  _comuDraftText.clear();
+  _comuReplyTarget.clear();
+}
+
+function comuSetReplyTarget(postId,commentId,rootId,authorName,authorUid){
+  _comuReplyTarget.set(postId,{commentId,rootId,nome:authorName,uid:authorUid||null});
+  const chip=document.getElementById('comu-reply-chip-'+postId);
+  const nameEl=document.getElementById('comu-reply-chip-name-'+postId);
+  if(chip)chip.style.display='flex';
+  if(nameEl)nameEl.textContent=authorName;
+  const input=document.getElementById('comu-comment-input-'+postId);
+  if(input){
+    input.placeholder='Responder a '+authorName+'…';
+    input.focus();
+  }
+}
+
+function comuClearReplyTarget(postId){
+  _comuReplyTarget.delete(postId);
+  const chip=document.getElementById('comu-reply-chip-'+postId);
+  if(chip)chip.style.display='none';
+  const input=document.getElementById('comu-comment-input-'+postId);
+  if(input)input.placeholder='Escreva um comentário...';
+}
+
+async function comuSendComment(postId){
+  if(window._isOfflineModeActive&&window._isOfflineModeActive()){
+    if(typeof _showNotifToast==='function')_showNotifToast('🔒 Comentários indisponíveis no modo offline');
+    return;
+  }
+  const uid=_comuMyUid();
+  if(!uid){
+    if(typeof _showNotifToast==='function')_showNotifToast('🔒 Entre com sua conta Google pra comentar');
+    if(typeof window._fbLoginClick==='function')window._fbLoginClick();
+    return;
+  }
+  const input=document.getElementById('comu-comment-input-'+postId);
+  if(!input) return;
+  const texto=input.value.trim();
+  if(!texto) return;
+  if(texto.length>500){
+    if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Comentário muito longo (máx. 500 caracteres)');
+    return;
+  }
+  if(!window._fbDb||!window._fbCollection||!window._fbAddDoc||!window._fbServerTimestamp) return;
+  if(_comuSendBusy.has(postId)) return; // já tem um envio em andamento — evita duplo-toque duplicar o comentário
+  _comuSendBusy.add(postId);
+  const sendBtn=document.getElementById('comu-comment-send-'+postId);
+  if(sendBtn)sendBtn.disabled=true;
+
+  const user=window._fbCurrentUser&&window._fbCurrentUser();
+  const nome=(typeof s!=='undefined'&&s&&s.nome)?s.nome:((user&&user.displayName)||'Você');
+  const target=_comuReplyTarget.get(postId)||null;
+  const isReplyToReply=!!(target&&target.commentId!==target.rootId);
+
+  const payload={
+    texto,
+    autorNome:nome,
+    autorUid:uid,
+    autorFoto:(user&&user.photoURL)||null,
+    criadoEm:window._fbServerTimestamp(),
+    parentId:target?target.rootId:null,
+    respondendoNome:isReplyToReply?target.nome:null,
+    respondendoUid:isReplyToReply?(target.uid||null):null,
+  };
+
+  try{
+    const ref=await window._fbAddDoc(window._fbCollection(window._fbDb,'comunidade_posts',postId,'comentarios'),payload);
+    window._fbUpdateDoc(window._fbDoc(window._fbDb,'comunidade_posts',postId),{comentariosCount:window._fbIncrement(1)})
+      .catch(e=>console.warn('[Comunidade] não foi possível atualizar a contagem de comentários:',e));
+
+    // Notifica quem está sendo respondido — só se for outra pessoa (nunca
+    // notifica a si mesmo) e só se essa pessoa tiver conta vinculada (uid).
+    if(target&&target.uid&&target.uid!==uid){
+      window._fbAddDoc(window._fbCollection(window._fbDb,'comunidade_respostas_notif'),{
+        destinatarioUid:target.uid,
+        autorNome:nome,
+        autorUid:uid,
+        autorFoto:(user&&user.photoURL)||null,
+        postId,
+        comentarioId:ref.id,
+        comentarioRaizId:target.rootId,
+        textoPreview:texto.length>90?texto.slice(0,90)+'…':texto,
+        criadoEm:window._fbServerTimestamp(),
+      }).catch(e=>console.error('[Comunidade] erro ao criar notificação de resposta:',e));
+    }
+
+    input.value='';
+    input.style.height='auto';
+    _comuDraftText.delete(postId);
+    comuClearReplyTarget(postId);
+  }catch(e){
+    console.error('[Comunidade] erro ao comentar:',e);
+    if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Não foi possível enviar seu comentário. Tente de novo.');
+  }finally{
+    _comuSendBusy.delete(postId);
+    if(sendBtn)sendBtn.disabled=false;
+  }
+}
+
+// ── Delegação de eventos: um listener só, registrado uma vez, cobre
+//    todos os posts (atuais e futuros) sem precisar religar nada a
+//    cada re-render do feed — evita tanto "botão não responde depois
+//    que a lista atualizou" quanto "listener duplicado disparando 2x". ──
+document.addEventListener('click',function(e){
+  const toggleBtn=e.target.closest('.comu-comments-toggle');
+  if(toggleBtn){toggleComuComments(toggleBtn.dataset.postId,toggleBtn);return;}
+  const replyBtn=e.target.closest('.comu-comment-reply-btn');
+  if(replyBtn){
+    comuSetReplyTarget(replyBtn.dataset.postId,replyBtn.dataset.commentId,replyBtn.dataset.rootId,replyBtn.dataset.authorName,replyBtn.dataset.authorUid);
+    return;
+  }
+  const cancelBtn=e.target.closest('.comu-comment-cancel-reply');
+  if(cancelBtn){comuClearReplyTarget(cancelBtn.dataset.postId);return;}
+  const sendBtn=e.target.closest('.comu-comment-send-btn');
+  if(sendBtn){comuSendComment(sendBtn.dataset.postId);return;}
+});
+document.addEventListener('input',function(e){
+  const ta=e.target.closest&&e.target.closest('.comu-comment-input');
+  if(!ta) return;
+  _comuDraftText.set(ta.dataset.postId,ta.value);
+  ta.style.height='auto';
+  ta.style.height=Math.min(ta.scrollHeight,120)+'px';
+});
+document.addEventListener('keydown',function(e){
+  const ta=e.target.closest&&e.target.closest('.comu-comment-input');
+  if(!ta) return;
+  if(e.key==='Enter'&&!e.shiftKey){
+    e.preventDefault();
+    comuSendComment(ta.dataset.postId);
+  }
+});
+
+/* ══════════════════════════════════════════
+   NOTIFICAÇÕES DE RESPOSTA — "Fulano respondeu seu comentário"
+   ▸ Coleção separada (comunidade_respostas_notif) com um doc por
+     resposta recebida, filtrado por destinatarioUid == meu uid.
+   ▸ Sem orderBy no Firestore (só where) de propósito — assim não
+     precisa criar nenhum índice composto no console do Firebase pra
+     essa função funcionar; a ordenação por data é feita aqui mesmo.
+   ▸ O "já vi"/"não lida" usa o MESMO mecanismo local (_ncLoadMeta) já
+     usado pra todas as outras notificações do app — sem precisar
+     gravar nada de volta no Firestore só pra marcar como lida.
+══════════════════════════════════════════ */
+let _replyNotifs=null;
+let _replyNotifUnsub=null;
+
+function _startReplyNotifListener(uid){
+  if(_replyNotifUnsub) return;
+  if(!window._fbDb||!window._fbCollection||!window._fbQuery||!window._fbWhere||!window._fbOnSnapshot) return;
+  try{
+    const q=window._fbQuery(
+      window._fbCollection(window._fbDb,'comunidade_respostas_notif'),
+      window._fbWhere('destinatarioUid','==',uid),
+      window._fbLimit?window._fbLimit(200):undefined
+    );
+    _replyNotifUnsub=window._fbOnSnapshot(q,(snap)=>{
+      _replyNotifs=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(typeof updateNotifCenter==='function')updateNotifCenter();
+    },(err)=>{
+      console.error('[Comunidade] erro ao ouvir notificações de resposta:',err);
+    });
+  }catch(e){
+    console.error('[Comunidade] falha ao iniciar listener de notificações de resposta:',e);
+  }
+}
+window._startReplyNotifListener=_startReplyNotifListener;
+
+function _stopReplyNotifListener(){
+  if(_replyNotifUnsub){_replyNotifUnsub();_replyNotifUnsub=null;}
+  _replyNotifs=null;
+}
+window._stopReplyNotifListener=_stopReplyNotifListener;
+
+function _replyNotifMs(n){
+  const c=n&&n.criadoEm;
+  if(!c) return 0;
+  if(typeof c==='number') return c;
+  if(typeof c.toMillis==='function') return c.toMillis();
+  if(typeof c.seconds==='number') return c.seconds*1000;
+  return 0;
 }
 
 /* ══════════════════════════════════════════
@@ -20415,7 +20957,3 @@ window.addEventListener('online',async()=>{
     </div>
   </div>
 </div>
-
-
-
-
