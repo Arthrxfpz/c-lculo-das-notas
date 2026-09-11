@@ -125,6 +125,72 @@
     window._intentionalLogout = true; return signOut(auth);
   };
 
+  /* ── Detecta sessão "morta" (ex.: a conta Google foi removida/desconectada
+     do aparelho, sessão expirada, conta desativada) ──
+     Sem isso, o app fica num estado esquisito: a interface ainda mostra o
+     usuário "logado" (chip com nome/foto, avatar, etc.) só que nada mais
+     sincroniza de verdade — toda gravação cai em erro silencioso, o
+     carregamento inicial pode ficar preso tentando repetidamente, e a
+     pessoa não entende por que "sumiu" a sincronização.
+     Os códigos abaixo cobrem tanto erros do Auth (token/usuário inválido)
+     quanto do Firestore (permission-denied/unauthenticated), que é o que
+     aparece quando o token de autenticação não consegue mais se renovar. */
+  function _isAuthDeadError(err) {
+    const code = (err && err.code) || '';
+    const deadCodes = [
+      'auth/user-token-expired',
+      'auth/invalid-user-token',
+      'auth/user-disabled',
+      'auth/user-not-found',
+      'auth/invalid-credential',
+      'auth/user-mismatch',
+      'auth/internal-error',
+      'permission-denied',
+      'unauthenticated'
+    ];
+    if (deadCodes.includes(code)) return true;
+    const msg = (err && err.message) || '';
+    return /permission-denied|unauthenticated/i.test(msg);
+  }
+  window._isAuthDeadError = _isAuthDeadError;
+
+  // Evita disparar o toast/logout várias vezes seguidas quando vários
+  // pedidos falham quase ao mesmo tempo (save + load + listener, etc.) —
+  // só a primeira detecção age; a flag é resetada assim que a pessoa
+  // logar de novo (ver onAuthStateChanged mais abaixo).
+  let _authRecoveryHandled = false;
+  async function _handleAuthSessionLost(context) {
+    if (_authRecoveryHandled) return;
+    if (!auth.currentUser) return; // já não há sessão pra "perder"
+    _authRecoveryHandled = true;
+    console.warn('[Auth] Sessão do Google inválida detectada (' + context + ') — provavelmente a conta foi desconectada deste aparelho.');
+    _stopUserDocListener();
+    if (typeof window._showNotifToast === 'function') {
+      window._showNotifToast('🔒 Sua conta Google foi desconectada deste aparelho. Entre novamente para continuar sincronizando.');
+    }
+    // Mesma lógica do logout normal: quando a conta sai, o conteúdo salvo
+    // neste navegador sai junto (zera tudo, exceto o tema). O observer de
+    // auth (onAuthStateChanged) já faz essa limpeza sozinho quando vê essa
+    // flag ligada.
+    window._intentionalLogout = true;
+    try { await signOut(auth); } catch(e) { /* já era */ }
+  }
+  window._handleAuthSessionLost = _handleAuthSessionLost;
+
+  // Checagem proativa: sempre que a aba volta a ficar visível (ex.: a
+  // pessoa trocou de app e voltou), força a renovação do token em vez de
+  // esperar a próxima gravação falhar. Assim, se a conta foi desconectada
+  // enquanto o app estava em segundo plano, a gente percebe e reage na
+  // hora — em vez de só descobrir isso quando uma nota se perder pra não
+  // salvar.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && auth.currentUser) {
+      auth.currentUser.getIdToken(true).catch((e) => {
+        if (_isAuthDeadError(e)) _handleAuthSessionLost('token-refresh');
+      });
+    }
+  });
+
   // Trata o retorno do fluxo de redirect (quando o popup foi bloqueado e
   // caímos pro fallback acima). Precisa rodar sempre no carregamento da
   // página: se não checarmos, um erro de redirect (ex.: domínio não
@@ -319,6 +385,7 @@
       } catch(e) {
         _showSyncBadge('err');
         console.error('Firebase save error:', e);
+        if (_isAuthDeadError(e)) _handleAuthSessionLost('save');
       } finally {
         _pendingLocalSave = false;
       }
@@ -461,6 +528,7 @@
       _setSplashProgress(85, 'Erro de conexão');
       _showSyncBadge('err');
       console.error('Firebase load error:', e);
+      if (_isAuthDeadError(e)) _handleAuthSessionLost('load');
     }
     _setSplashProgress(95, 'Carregando interface…');
     setTimeout(_hideSplash, 150);
@@ -490,6 +558,7 @@
     } catch(e) {
       _showSyncBadge('err');
       console.error('Firebase background sync error:', e);
+      if (_isAuthDeadError(e)) _handleAuthSessionLost('background-sync');
     }
   }
 
@@ -559,6 +628,7 @@
         }
       }, (err) => {
         console.error('[Sync] erro no listener em tempo real:', err);
+        if (_isAuthDeadError(err)) _handleAuthSessionLost('listener');
       });
     } catch(e) {
       console.error('[Sync] falha ao iniciar listener em tempo real:', e);
@@ -578,6 +648,7 @@
     // Comunidade — força a aba a redesenhar pra destacar/desmarcar certinho.
     if (typeof window._comuRefreshOnAuth === 'function') window._comuRefreshOnAuth();
     if (user) {
+      _authRecoveryHandled = false; // sessão nova e válida — reabilita a detecção pra próxima vez
       _setSplashProgress(10, 'Verificando sessão…');
       // Aviso de conexão lenta só quando há tentativa de sync com servidor
       _splashSlowTimer = setTimeout(_showSplashSlow, 3000);
@@ -9165,7 +9236,6 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 
 <!-- ── Splash de carregamento ── -->
 <style>
-@keyframes splash-spin { to { transform: rotate(360deg); } }
 #app-splash {
   position:fixed;inset:0;z-index:99999;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
@@ -9180,6 +9250,7 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   background:radial-gradient(circle at 50% 38%, var(--goldbg) 0%, transparent 62%);
   opacity:.55;
 }
+/* ── Identidade: ícone do app com anel de progresso girando ao redor ── */
 #splash-logo-wrap{
   position:relative;width:88px;height:88px;
   display:flex;align-items:center;justify-content:center;
@@ -9217,6 +9288,7 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   border-right-color:var(--goldbd);
   animation:splash-spin .9s cubic-bezier(.5,.15,.5,.85) infinite;
 }
+@keyframes splash-spin { to { transform: rotate(360deg); } }
 #splash-appname{
   font-size:15px;font-weight:650;color:var(--t1);
   letter-spacing:-.2px;margin-bottom:5px;
@@ -9251,23 +9323,27 @@ html[data-expansive="1"][data-expansive-bg="1"] {
   color:var(--goldbd);
   letter-spacing:.06em;
 }
+/* ── Aviso de conexão lenta — reaproveita o mesmo par de tons âmbar
+   (var(--amber)/--amberbg/--amberbd) usado nos avisos do resto do app,
+   em vez de uma cor fixa só pro splash (que também não se adaptava ao
+   tema claro). ── */
 #splash-slow {
   position:absolute;bottom:44px;left:50%;transform:translateX(-50%);
   display:none;white-space:nowrap;
   flex-direction:column;align-items:center;gap:10px;
-  background:rgba(255,159,10,.08);
-  border:1px solid rgba(255,159,10,.22);
+  background:var(--amberbg);
+  border:1px solid var(--amberbd);
   border-radius:16px;padding:10px 14px;
 }
 #splash-slow-txt{
   display:flex;align-items:center;gap:6px;
   font-size:11px;font-weight:600;
-  color:rgba(255,159,10,.8);
+  color:var(--amber);
 }
 #splash-slow-btn{
-  border:1px solid rgba(255,159,10,.4);
-  background:rgba(255,159,10,.14);
-  color:rgba(255,159,10,.95);
+  border:1px solid var(--amberbd);
+  background:var(--amberbg);
+  color:var(--amber);
   font-size:11px;font-weight:700;letter-spacing:-.1px;
   padding:6px 12px;border-radius:12px;cursor:pointer;
   font-family:inherit;
