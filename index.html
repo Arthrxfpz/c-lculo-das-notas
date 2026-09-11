@@ -8471,32 +8471,41 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .comu-comments-toggle.open span{color:var(--t2)}
 
 .comu-comments-panel{padding:0 15px 13px;animation:fadeIn .2s var(--ease-ios)}
-.comu-comments-list{display:flex;flex-direction:column;gap:12px;margin-bottom:10px}
-.comu-comments-empty{font-size:12px;font-weight:500;color:var(--t4);padding:6px 2px}
-.comu-comments-loading{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--t4);padding:6px 2px}
+.comu-comments-list{display:flex;flex-direction:column;gap:14px;margin-bottom:12px}
+.comu-comments-empty{font-size:12px;font-weight:500;color:var(--t4);padding:10px 2px}
+.comu-comments-loading{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--t4);padding:10px 2px}
 .comu-comments-loading .comu-spinner{width:14px;height:14px;border-width:2px}
 
-.comu-comment{display:flex;gap:9px;align-items:flex-start}
+.comu-comment{display:flex;gap:9px;align-items:flex-start;animation:fadeIn .25s var(--ease-ios)}
 .comu-comment-avatar{
   width:28px;height:28px;border-radius:50%;flex-shrink:0;overflow:hidden;
-  background:var(--bg3);display:flex;align-items:center;justify-content:center;
+  background:var(--bg3);border:1px solid var(--line2);display:flex;align-items:center;justify-content:center;
   font-size:10.5px;font-weight:800;color:var(--t3);
 }
 .comu-comment-avatar img{width:100%;height:100%;object-fit:cover;display:block}
 .comu-comment-body{flex:1;min-width:0}
+.comu-comment-bubble{
+  background:var(--bg2);border:1px solid var(--line2);border-radius:15px 15px 15px 4px;
+  padding:8px 12px;display:inline-block;max-width:100%;
+}
+.comu-comment-mine .comu-comment-bubble{background:var(--goldbg);border-color:var(--goldbd)}
 .comu-comment-head{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
-.comu-comment-author{font-size:12.5px;font-weight:800;color:var(--t1);letter-spacing:-.1px}
-.comu-comment-time{font-size:10.5px;font-weight:500;color:var(--t4)}
+.comu-comment-author{font-size:12px;font-weight:800;color:var(--t1);letter-spacing:-.1px}
 .comu-comment-text{font-size:13px;font-weight:500;color:var(--t2);line-height:1.45;white-space:pre-wrap;word-break:break-word;margin-top:1px}
 .comu-comment-replytag{color:var(--gold);font-weight:700}
-.comu-comment-actions{margin-top:3px}
-.comu-comment-reply-btn{
+.comu-comment-actions{margin-top:5px;padding-left:2px;display:flex;align-items:center;gap:11px}
+.comu-comment-time{font-size:10.5px;font-weight:500;color:var(--t4)}
+.comu-comment-reply-btn,.comu-comment-del-btn{
   background:none;border:none;padding:0;margin:0;font:inherit;
   font-size:11px;font-weight:700;color:var(--t4);cursor:pointer;-webkit-tap-highlight-color:transparent;
+  display:flex;align-items:center;
 }
 .comu-comment-reply-btn:active{color:var(--gold)}
+.comu-comment-del-btn{color:var(--t4)}
+.comu-comment-del-btn:active{color:var(--red)}
+.comu-comment-del-btn svg{width:12.5px;height:12.5px;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .comu-comment-replies{
-  display:flex;flex-direction:column;gap:10px;margin-top:10px;
+  display:flex;flex-direction:column;gap:12px;margin-top:12px;
   padding-left:16px;margin-left:14px;border-left:2px solid var(--line2);
 }
 
@@ -8514,7 +8523,7 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .comu-reply-chip{
   display:flex;align-items:center;gap:8px;
   background:var(--goldbg);border:1px solid var(--goldbd);border-radius:10px;
-  padding:6px 8px 6px 11px;margin-bottom:7px;
+  padding:6px 8px 6px 11px;margin:0 0 7px 37px;
 }
 .comu-reply-chip span{flex:1;font-size:11.5px;font-weight:600;color:var(--t2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .comu-reply-chip b{color:var(--gold);font-weight:800}
@@ -8525,14 +8534,22 @@ html[data-expansive="1"][data-expansive-bg="1"] {
 .comu-comment-cancel-reply svg{width:13px;height:13px;stroke:var(--t3);fill:none;stroke-width:2.2;stroke-linecap:round}
 
 .comu-comment-input-row{display:flex;align-items:flex-end;gap:8px}
+.comu-comment-avatar-me{margin-bottom:1px}
+.comu-comment-input-wrap{flex:1;min-width:0;position:relative}
 .comu-comment-input{
-  flex:1;min-width:0;resize:none;max-height:120px;
-  background:var(--bg2);border:1px solid var(--line2);border-radius:14px;
-  padding:9px 13px;font:inherit;font-size:13px;font-weight:500;color:var(--t1);
+  width:100%;box-sizing:border-box;resize:none;max-height:120px;
+  background:var(--bg2);border:1px solid var(--line2);border-radius:16px;
+  padding:9px 46px 9px 14px;font:inherit;font-size:13px;font-weight:500;color:var(--t1);
   line-height:1.4;transition:border-color .15s;
 }
 .comu-comment-input:focus{outline:none;border-color:var(--goldbd)}
 .comu-comment-input::placeholder{color:var(--t4);font-weight:500}
+.comu-comment-charcount{
+  position:absolute;right:12px;bottom:9px;font-size:9.5px;font-weight:700;color:var(--t4);
+  pointer-events:none;letter-spacing:-.2px;
+}
+.comu-comment-charcount.warn{color:var(--amber)}
+.comu-comment-charcount.max{color:var(--red)}
 .comu-comment-send-btn{
   flex-shrink:0;width:34px;height:34px;border-radius:50%;
   background:var(--gold);border:none;display:flex;align-items:center;justify-content:center;
@@ -19437,6 +19454,8 @@ function _comuCommentMs(c){
   return Date.now();
 }
 
+const COMU_COMMENT_MAXLEN=100;
+
 function _comuCommentsSectionHtml(p){
   const postId=p.id||'';
   const isOpen=_comuCommentsOpen.has(postId);
@@ -19445,6 +19464,7 @@ function _comuCommentsSectionHtml(p){
   const draft=_comuDraftText.get(postId)||'';
   const target=_comuReplyTarget.get(postId)||null;
   const canComment=!!_comuMyUid();
+  const charLen=draft.length;
 
   const composerHtml=canComment?`
     <div class="comu-comment-composer" id="comu-composer-${escHtml(postId)}">
@@ -19455,8 +19475,12 @@ function _comuCommentsSectionHtml(p){
         </button>
       </div>
       <div class="comu-comment-input-row">
-        <textarea class="comu-comment-input" id="comu-comment-input-${escHtml(postId)}" data-post-id="${escHtml(postId)}"
-          placeholder="${target?`Responder a ${escHtml(target.nome)}…`:'Escreva um comentário...'}" rows="1" maxlength="500">${escHtml(draft)}</textarea>
+        <div class="comu-comment-avatar comu-comment-avatar-me">${_comuMyAvatarHtml()}</div>
+        <div class="comu-comment-input-wrap">
+          <textarea class="comu-comment-input" id="comu-comment-input-${escHtml(postId)}" data-post-id="${escHtml(postId)}"
+            placeholder="${target?`Responder a ${escHtml(target.nome)}…`:'Escreva um comentário...'}" rows="1" maxlength="${COMU_COMMENT_MAXLEN}">${escHtml(draft)}</textarea>
+          <span class="comu-comment-charcount${charLen>=COMU_COMMENT_MAXLEN?' max':charLen>=COMU_COMMENT_MAXLEN-20?' warn':''}" id="comu-comment-charcount-${escHtml(postId)}">${charLen}/${COMU_COMMENT_MAXLEN}</span>
+        </div>
         <button type="button" class="comu-comment-send-btn" id="comu-comment-send-${escHtml(postId)}" data-post-id="${escHtml(postId)}" aria-label="Enviar comentário">
           <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
@@ -19482,6 +19506,13 @@ function _comuCommentsSectionHtml(p){
   </div>`;
 }
 
+function _comuMyAvatarHtml(){
+  const user=window._fbCurrentUser&&window._fbCurrentUser();
+  const nome=(typeof s!=='undefined'&&s&&s.nome)?s.nome:((user&&user.displayName)||'?');
+  if(user&&user.photoURL) return `<img src="${escHtml(user.photoURL)}" alt="">`;
+  return `<span>${escHtml(getInitials(nome))}</span>`;
+}
+
 function _comuCommentAvatarHtml(c){
   if(c.autorFoto) return `<img src="${escHtml(c.autorFoto)}" alt="">`;
   return `<span>${escHtml(getInitials(c.autorNome||'?'))}</span>`;
@@ -19493,18 +19524,26 @@ function _comuCommentItemHtml(c,postId,isReply){
   // pra responder uma RESPOSTA, o alvo continua sendo a raiz (data-root-id) —
   // é isso que mantém tudo achatado em 2 níveis só, sem bug de ninho dentro de ninho
   const rootId=isReply?(c.parentId||c.id):c.id;
-  return `<div class="comu-comment${isReply?' comu-comment-reply':''}">
+  const mine=_comuMyUid()&&c.autorUid===_comuMyUid();
+  const delBtnHtml=mine?`<button type="button" class="comu-comment-del-btn"
+      data-post-id="${escHtml(postId)}" data-comment-id="${escHtml(c.id)}" aria-label="Apagar comentário">
+      <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </button>`:'';
+  return `<div class="comu-comment${isReply?' comu-comment-reply':''}${mine?' comu-comment-mine':''}">
     <div class="comu-comment-avatar">${_comuCommentAvatarHtml(c)}</div>
     <div class="comu-comment-body">
-      <div class="comu-comment-head">
-        <span class="comu-comment-author">${escHtml(c.autorNome||'Usuário')}</span>
-        <span class="comu-comment-time">${timeAgo}</span>
+      <div class="comu-comment-bubble">
+        <div class="comu-comment-head">
+          <span class="comu-comment-author">${escHtml(c.autorNome||'Usuário')}</span>
+        </div>
+        <div class="comu-comment-text">${replyTagHtml}${_comuLinebreaks(escHtml(c.texto||''))}</div>
       </div>
-      <div class="comu-comment-text">${replyTagHtml}${_comuLinebreaks(escHtml(c.texto||''))}</div>
       <div class="comu-comment-actions">
+        <span class="comu-comment-time">${timeAgo}</span>
         <button type="button" class="comu-comment-reply-btn"
           data-post-id="${escHtml(postId)}" data-comment-id="${escHtml(c.id)}" data-root-id="${escHtml(rootId)}"
           data-author-name="${escHtml(c.autorNome||'Usuário')}" data-author-uid="${escHtml(c.autorUid||'')}">Responder</button>
+        ${delBtnHtml}
       </div>
     </div>
   </div>`;
@@ -19518,16 +19557,21 @@ function _renderComuComments(postId){
     listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
     return;
   }
-  const roots=data.filter(c=>!c.parentId).sort((a,b)=>_comuCommentMs(a)-_comuCommentMs(b));
+  const byId={};
+  data.forEach(c=>{byId[c.id]=c;});
+  // Uma resposta cujo comentário-raiz não existe mais (foi apagado) é
+  // promovida a "raiz" na exibição — assim ela nunca fica invisível/perdida,
+  // mesmo quando a raiz some sem cascata (ex.: dono apagando só o dele).
+  const roots=data.filter(c=>!c.parentId||!byId[c.parentId]).sort((a,b)=>_comuCommentMs(a)-_comuCommentMs(b));
   const repliesByRoot={};
-  data.filter(c=>c.parentId).forEach(c=>{
-    (repliesByRoot[c.parentId]=repliesByRoot[c.parentId]||[]).push(c);
+  data.forEach(c=>{
+    if(c.parentId&&byId[c.parentId]){
+      (repliesByRoot[c.parentId]=repliesByRoot[c.parentId]||[]).push(c);
+    }
   });
   Object.keys(repliesByRoot).forEach(k=>repliesByRoot[k].sort((a,b)=>_comuCommentMs(a)-_comuCommentMs(b)));
 
   if(!roots.length){
-    // só existem respostas "órfãs" (raiz apagada pelo admin, mas por algum
-    // motivo a resposta ainda não sumiu) — evita a lista ficar em branco
     listEl.innerHTML='<div class="comu-comments-empty">Nenhum comentário ainda. Seja o primeiro a comentar!</div>';
     return;
   }
@@ -19634,8 +19678,8 @@ async function comuSendComment(postId){
   if(!input) return;
   const texto=input.value.trim();
   if(!texto) return;
-  if(texto.length>500){
-    if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Comentário muito longo (máx. 500 caracteres)');
+  if(texto.length>COMU_COMMENT_MAXLEN){
+    if(typeof _showNotifToast==='function')_showNotifToast(`⚠️ Comentário muito longo (máx. ${COMU_COMMENT_MAXLEN} caracteres)`);
     return;
   }
   if(!window._fbDb||!window._fbCollection||!window._fbAddDoc||!window._fbServerTimestamp) return;
@@ -19694,6 +19738,46 @@ async function comuSendComment(postId){
   }
 }
 
+const _comuDeleteBusy=new Set(); // trava contra duplo-toque no botão de apagar
+
+// Apagar o PRÓPRIO comentário/resposta. Só remove esse documento — se for
+// um comentário raiz que já tem respostas de outras pessoas, elas não são
+// apagadas junto (a pessoa só tem permissão sobre o que é dela mesma); em
+// vez de sumir, essas respostas passam a aparecer como "raiz" própria na
+// tela (ver _renderComuComments), então nada fica perdido ou invisível.
+function comuDeleteOwnComment(postId,commentId){
+  const uid=_comuMyUid();
+  if(!uid) return;
+  if(_comuDeleteBusy.has(commentId)) return;
+  if(typeof showConfirm!=='function'){
+    _comuDoDeleteOwnComment(postId,commentId);
+    return;
+  }
+  showConfirm({
+    title:'Apagar comentário',
+    msg:'Tem certeza que quer apagar esse comentário? Essa ação não pode ser desfeita.',
+    okLabel:'Apagar',
+    danger:true,
+    onOk:()=>_comuDoDeleteOwnComment(postId,commentId)
+  });
+}
+
+async function _comuDoDeleteOwnComment(postId,commentId){
+  if(!window._fbDb||!window._fbDoc||!window._fbDeleteDoc) return;
+  _comuDeleteBusy.add(commentId);
+  try{
+    await window._fbDeleteDoc(window._fbDoc(window._fbDb,'comunidade_posts',postId,'comentarios',commentId));
+    window._fbUpdateDoc(window._fbDoc(window._fbDb,'comunidade_posts',postId),{comentariosCount:window._fbIncrement(-1)})
+      .catch(e=>console.warn('[Comunidade] não foi possível atualizar a contagem de comentários:',e));
+    if(typeof _showNotifToast==='function')_showNotifToast('🗑️ Comentário apagado');
+  }catch(e){
+    console.error('[Comunidade] erro ao apagar comentário:',e);
+    if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Não foi possível apagar o comentário agora. Tente de novo.');
+  }finally{
+    _comuDeleteBusy.delete(commentId);
+  }
+}
+
 // ── Delegação de eventos: um listener só, registrado uma vez, cobre
 //    todos os posts (atuais e futuros) sem precisar religar nada a
 //    cada re-render do feed — evita tanto "botão não responde depois
@@ -19708,6 +19792,8 @@ document.addEventListener('click',function(e){
   }
   const cancelBtn=e.target.closest('.comu-comment-cancel-reply');
   if(cancelBtn){comuClearReplyTarget(cancelBtn.dataset.postId);return;}
+  const delBtn=e.target.closest('.comu-comment-del-btn');
+  if(delBtn){comuDeleteOwnComment(delBtn.dataset.postId,delBtn.dataset.commentId);return;}
   const sendBtn=e.target.closest('.comu-comment-send-btn');
   if(sendBtn){comuSendComment(sendBtn.dataset.postId);return;}
 });
@@ -19717,6 +19803,13 @@ document.addEventListener('input',function(e){
   _comuDraftText.set(ta.dataset.postId,ta.value);
   ta.style.height='auto';
   ta.style.height=Math.min(ta.scrollHeight,120)+'px';
+  const counter=document.getElementById('comu-comment-charcount-'+ta.dataset.postId);
+  if(counter){
+    const len=ta.value.length;
+    counter.textContent=len+'/'+COMU_COMMENT_MAXLEN;
+    counter.classList.toggle('max',len>=COMU_COMMENT_MAXLEN);
+    counter.classList.toggle('warn',len>=COMU_COMMENT_MAXLEN-20&&len<COMU_COMMENT_MAXLEN);
+  }
 });
 document.addEventListener('keydown',function(e){
   const ta=e.target.closest&&e.target.closest('.comu-comment-input');
@@ -20957,3 +21050,7 @@ window.addEventListener('online',async()=>{
     </div>
   </div>
 </div>
+
+
+
+
