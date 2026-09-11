@@ -1913,10 +1913,16 @@
       body.innerHTML = `<div class="cm-empty">Nenhum comentário nesta publicação ainda.</div>`;
       return;
     }
-    const roots = cmComments.filter(c=>!c.parentId);
+    const byId = {};
+    cmComments.forEach(c=>{ byId[c.id] = c; });
+    // Resposta cuja raiz não existe mais (ex.: dono da raiz apagou só o
+    // dele) é tratada como "raiz" aqui também, pra nunca ficar escondida.
+    const roots = cmComments.filter(c=>!c.parentId || !byId[c.parentId]);
     const repliesByRoot = {};
-    cmComments.filter(c=>c.parentId).forEach(c=>{
-      (repliesByRoot[c.parentId] = repliesByRoot[c.parentId] || []).push(c);
+    cmComments.forEach(c=>{
+      if(c.parentId && byId[c.parentId]){
+        (repliesByRoot[c.parentId] = repliesByRoot[c.parentId] || []).push(c);
+      }
     });
     if(!roots.length){
       body.innerHTML = `<div class="cm-empty">Nenhum comentário nesta publicação ainda.</div>`;
