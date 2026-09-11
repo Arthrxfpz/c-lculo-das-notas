@@ -2126,15 +2126,16 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   padding:11px 12px 11px 13px;
   background:var(--bg2);
   border:1px solid var(--line3);
-  border-left:3px solid var(--gold);
   border-radius:13px;
   display:flex;align-items:center;gap:11px;
   animation:fadeIn .25s var(--ease-ios) both;
 }
 [data-theme="light"] .resumo-recovery-alert{background:var(--bg3)}
+/* Risco (EAC pendente / aprovação impossível) — uma tira vermelha bem
+   leve só em cima do card (nada de contorno na volta toda) + número
+   em vermelho. */
 .resumo-recovery-alert.impossible,
-.resumo-recovery-alert.eac-pending{border-left-color:var(--red)}
-.resumo-recovery-alert.success{border-left-color:var(--green)}
+.resumo-recovery-alert.eac-pending{border-top:2px solid var(--redbd)}
 
 .rr-body{flex:1;min-width:0}
 .rr-title{
@@ -2152,7 +2153,6 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .resumo-recovery-alert.impossible .rr-result,
 .resumo-recovery-alert.eac-pending .rr-result{color:var(--red)}
-.resumo-recovery-alert.success .rr-result{color:var(--green)}
 
 
 
