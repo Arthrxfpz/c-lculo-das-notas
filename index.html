@@ -12529,7 +12529,11 @@ function renderResultado(el){
  */
 /** Retorna true se o peso somado das avaliações salvas do tab chegou a 10
  *  — mesma lógica do botão "Peso máximo atingido" no tab de notas. */
-function _tabFull(sid,tab){
+/* Só olha o PESO (campo "total") já lançado — usada apenas pra saber se
+   ainda cabe mais peso no trimestre (ex.: desabilitar trimestre no
+   seletor de "Lançar já nas Notas" das Atividades). Não diz nada sobre
+   se as avaliações já têm nota — pra isso, ver _tabFull abaixo. */
+function _tabWeightFull(sid,tab){
   if(!G[sid]||!G[sid][tab])return false;
   const rows=G[sid][tab].filter(r=>!r._isNew);
   if(!rows.length)return false;
@@ -12537,6 +12541,23 @@ function _tabFull(sid,tab){
   rows.forEach(r=>{const t=nf(r.total);if(t!==null)sum+=t;});
   // usa >=9.99 para absorver qualquer imprecisão de ponto flutuante
   return sum>=9.99;
+}
+function _tabFull(sid,tab){
+  if(!G[sid]||!G[sid][tab])return false;
+  const rows=G[sid][tab].filter(r=>!r._isNew);
+  if(!rows.length)return false;
+  // Só considera o trimestre "fechado" (pra fins de CÁLCULO/CONCLUSÃO —
+  // nota final, EAC, etc.) quando TODAS as avaliações já lançadas também
+  // já têm nota (got) preenchida — não só o peso somando 10. Sem isso,
+  // uma avaliação vinda de Atividades (peso já reservado, mas ainda sem
+  // nota — ver linkExamToNotas/useExamForEval) fazia o trimestre
+  // "fechar" assim que o peso batia 10, e a falta dela virava um 0
+  // silencioso na soma de tabScore (que só soma o que tem nota) —
+  // mostrando uma nota "final" (às vezes 0,0) em vez de continuar
+  // "Pendente" até a última nota ser lançada.
+  const allGraded=rows.every(r=>nf(r.got)!==null);
+  if(!allGraded)return false;
+  return _tabWeightFull(sid,tab);
 }
 
 /* Soma do peso (campo "total") já lançado num tab, mesmo que ainda não
@@ -15335,7 +15356,7 @@ function _updateExTriFullState(){
   let clearedCur=false;
   seg.querySelectorAll('.tri-seg-btn').forEach(b=>{
     const tri=b.dataset.tri;
-    const full=!!subj&&_tabFull(subj.id,tri);
+    const full=!!subj&&_tabWeightFull(subj.id,tri);
     b.classList.toggle('full',full);
     b.disabled=full;
     b.title=full?'Peso máximo (10,0 pontos) já lançado em Notas nesse trimestre':'';
@@ -15352,7 +15373,7 @@ function setExTrimestre(tri){
   // Trimestre já com peso máximo (10 pts) lançado em Notas: não deixa
   // selecionar — o próprio botão já aparece desabilitado, isso é só
   // uma proteção extra.
-  if(subj&&_tabFull(subj.id,tri))return;
+  if(subj&&_tabWeightFull(subj.id,tri))return;
   const inp=document.getElementById('ex-trimestre');
   if(inp)inp.value=tri;
   document.querySelectorAll('#ex-tri-seg .tri-seg-btn').forEach(b=>{
@@ -15452,7 +15473,7 @@ function addExam(){
   // (cobre também quem tenta enviar com o formulário num estado antigo).
   if(sendNotas&&notasTrimestre){
     const subjObjChk=SUBJECTS.find(s=>s.name===subj);
-    if(subjObjChk&&_tabFull(subjObjChk.id,notasTrimestre)){
+    if(subjObjChk&&_tabWeightFull(subjObjChk.id,notasTrimestre)){
       const triLbl=notasTrimestre==='1T'?'1° trimestre':notasTrimestre==='2T'?'2° trimestre':'3° trimestre';
       showDup(`O peso do ${triLbl} de ${subj} já atingiu o máximo (10,0 pontos) em Notas. Escolha outro trimestre ou desative "Lançar já nas Notas".`);
       return;
@@ -16671,23 +16692,19 @@ function updF(sid,tab,i,field,val){
   }
   // NÃO chama updateCardDisplay aqui — a nota do card só muda ao confirmar (OK)
 
-  // ── Auto-confirma rascunho assim que os dois campos ficam válidos ──
-  // Antes, um item novo (_isNew=true) só passava a contar em tabScore/
-  // cálculos (e sumir de avisos como "caso não faça o EAC") quando o
-  // usuário tocava explicitamente no ✓ (doneEditEval). Se a pessoa
-  // digitasse a nota e o peso e saísse da tela sem tocar no ✓, o
-  // lançamento continuava sendo tratado como "não feito" pelo sistema
-  // inteiro — causando avisos desatualizados (ex.: o EAC parecendo não
-  // feito mesmo com a nota já lançada). Agora, assim que ambos os
-  // campos (nota obtida e peso) têm um valor numérico válido, o item é
-  // promovido de rascunho para lançamento confirmado automaticamente —
-  // o botão ✓ continua funcionando normalmente (só fecha o modo edição),
-  // mas deixa de ser a ÚNICA forma de a nota contar de verdade.
-  if(r2._isNew && gv2!==null && tv2!==null){
-    delete r2._isNew;
-    saveGrades();
-    updateCardDisplay(sid,tab);
-  }
+  // ⚠️ Propositalmente NÃO promove o rascunho (_isNew) nem chama saveGrades()/
+  // updateCardDisplay() aqui, mesmo que nota e peso já estejam válidos.
+  // Já existiu uma versão que fazia isso ("auto-confirma assim que os dois
+  // campos ficam válidos"), mas ela causava exatamente o bug reportado: a
+  // pessoa ainda digitando/ajustando os valores (sem ter terminado nem
+  // tocado no ✓) já via o resultado sendo aplicado — nota do card, alertas
+  // de EAC, notificações etc. mudando "sozinhos" no meio da edição. A
+  // aplicação de verdade (persistir e recalcular o resto do app) só deve
+  // acontecer quando a pessoa confirma explicitamente no ✓ (doneEditEval),
+  // que já cuida de validar, salvar e atualizar o card. Enquanto isso, o
+  // item permanece como rascunho (_isNew=true) — se a pessoa sair da tela
+  // sem confirmar, o lançamento simplesmente não conta ainda, o que é o
+  // comportamento esperado aqui.
 }
 
 function updateCardDisplay(sid,tab){
@@ -16699,13 +16716,19 @@ function updateCardDisplay(sid,tab){
   else{disp=score;stat=st(score);}
   const card=document.getElementById('si-'+sid);if(!card)return;
 
-  // Atualiza pill de nota na header — só sai de "Pendente" quando o peso
-  // máximo (10 pts) do trimestre (ou do EAC) for atingido.
+  // Atualiza pill de nota na header — mesma regra usada no redesenho
+  // completo (renderNotasTab/pesoDependente): no tab normal (1T/2T/3T),
+  // enquanto o peso lançado não fechar em 10 pts, a pill fica "Pendente"
+  // mesmo que já exista nota parcial (ou até um EAC já lançado) — sem
+  // isso, essa atualização "ao vivo" podia mostrar um valor diferente do
+  // que aparece ao reabrir/trocar de aba, como se a nota tivesse
+  // "sobrado" sozinha em vez de continuar Pendente.
   const trBase=isEAC?base:tab;
-  const closedVal=trimGradeClosed(sid,trBase);
-  const pillStat=st(closedVal);
+  const liveVal=isEAC?trimGrade(sid,trBase):score;
+  const pesoDependente=!isEAC&&score!==null&&!_tabFull(sid,tab);
+  const pillStat=pesoDependente?'pending':st(liveVal);
   const pill=card.querySelector('.grade-tag');
-  if(pill){pill.className='grade-tag '+pillStat;pill.textContent=pillStat==='pending'?'Pendente':fmt(closedVal);}
+  if(pill){pill.className='grade-tag '+pillStat;pill.textContent=pillStat==='pending'?'Pendente':fmt(liveVal);}
 
   // Atualiza footer
   const fvn=card.querySelector('.sfv-num');
@@ -17973,6 +17996,10 @@ function closeNCPopover(){
   const bk=document.getElementById('nc-popover-backdrop');
   if(pop)pop.classList.remove('open');
   if(bk)setTimeout(()=>{bk.style.display='none';},180);
+  // limpa no Firestore as notificações de resposta que acabaram de ser
+  // vistas (economia de armazenamento) — feito ao FECHAR, não ao abrir,
+  // pra lista não "sumir" da tela enquanto a pessoa ainda está olhando
+  if(typeof _comuPruneReadReplyNotifs==='function')_comuPruneReadReplyNotifs();
 }
 
 function handleNCClick(id){
@@ -19939,6 +19966,38 @@ async function _comuDeleteReplyNotifsFor(commentId){
     console.warn('[Comunidade] erro ao buscar notificações de resposta do comentário apagado:',e);
   }
 }
+
+// Economia de armazenamento no Firestore: cada resposta a um comentário
+// cria um documento em `comunidade_respostas_notif` que, até aqui, nunca
+// era apagado depois de lido — só ficava marcado como "lido" localmente
+// (_ncLoadMeta), então a coleção só CRESCIA pra sempre, mesmo pra avisos
+// que ninguém mais precisa. Isso limpa, do lado de quem RECEBEU o aviso,
+// só os que a própria pessoa já abriu e viu (meta[...].read=true) — nunca
+// mexe em notificação de outra pessoa, então é seguro mesmo sem backend
+// próprio. Chamado ao fechar o centro de notificações (closeNCPopover),
+// depois que a lista já foi mostrada, pra ninguém "perder" um aviso antes
+// de vê-lo.
+// ⚠️ Precisa da regra de segurança do Firestore liberando `delete` em
+// `comunidade_respostas_notif` para quem é destinatarioUid OU autorUid
+// do documento (a segunda parte já era necessária antes, pra apagar a
+// notificação órfã quando o comentário que a gerou é excluído — ver
+// _comuDeleteReplyNotifsFor acima). Sem essa regra, o Firestore recusa o
+// apagamento e ele falha silenciosamente (nada quebra, só não economiza).
+async function _comuPruneReadReplyNotifs(){
+  if(!_replyNotifs||!_replyNotifs.length) return;
+  if(!window._fbDb||!window._fbDoc||!window._fbDeleteDoc) return;
+  const meta=_ncLoadMeta()||{};
+  const toDelete=_replyNotifs.filter(n=>{
+    const m=meta['resp-'+n.id];
+    return m&&m.read; // só o que a própria pessoa já abriu e viu
+  });
+  if(!toDelete.length) return;
+  await Promise.all(toDelete.map(n=>
+    window._fbDeleteDoc(window._fbDoc(window._fbDb,'comunidade_respostas_notif',n.id))
+      .catch(e=>console.warn('[Comunidade] não foi possível limpar notificação de resposta já lida:',e))
+  ));
+}
+window._comuPruneReadReplyNotifs=_comuPruneReadReplyNotifs;
 
 // ── Delegação de eventos: um listener só, registrado uma vez, cobre
 //    todos os posts (atuais e futuros) sem precisar religar nada a
