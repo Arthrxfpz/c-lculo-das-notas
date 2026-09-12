@@ -26,7 +26,7 @@
   import { initializeApp }   from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteField, onSnapshot, collection, query, orderBy, limit, addDoc, deleteDoc, increment, serverTimestamp, where }
+  import { getFirestore, doc, setDoc, getDoc, getDocs, updateDoc, deleteField, onSnapshot, collection, query, orderBy, limit, addDoc, deleteDoc, increment, serverTimestamp, where }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -48,6 +48,7 @@
   window._fbDoc     = doc;
   window._fbSetDoc  = setDoc;
   window._fbGetDoc  = getDoc;
+  window._fbGetDocs = getDocs;
   window._fbUpdateDoc   = updateDoc;
   window._fbDeleteField = deleteField;
   window._fbOnSnapshot = onSnapshot;
@@ -19908,12 +19909,34 @@ async function _comuDoDeleteOwnComment(postId,commentId){
     await window._fbDeleteDoc(window._fbDoc(window._fbDb,'comunidade_posts',postId,'comentarios',commentId));
     window._fbUpdateDoc(window._fbDoc(window._fbDb,'comunidade_posts',postId),{comentariosCount:window._fbIncrement(-1)})
       .catch(e=>console.warn('[Comunidade] não foi possível atualizar a contagem de comentários:',e));
+    _comuDeleteReplyNotifsFor(commentId);
     if(typeof _showNotifToast==='function')_showNotifToast('🗑️ Comentário apagado');
   }catch(e){
     console.error('[Comunidade] erro ao apagar comentário:',e);
     if(typeof _showNotifToast==='function')_showNotifToast('⚠️ Não foi possível apagar o comentário agora. Tente de novo.');
   }finally{
     _comuDeleteBusy.delete(commentId);
+  }
+}
+
+// Quando um comentário que era resposta a outra pessoa é apagado, a
+// notificação "Fulano respondeu seu comentário" (criada na hora do envio,
+// numa coleção à parte — comunidade_respostas_notif) ficava pra sempre,
+// mesmo com o comentário já não existindo mais. Busca e apaga junto
+// qualquer notificação desse tipo gerada por esse comentário específico.
+async function _comuDeleteReplyNotifsFor(commentId){
+  if(!window._fbDb||!window._fbCollection||!window._fbQuery||!window._fbWhere||!window._fbGetDocs||!window._fbDeleteDoc) return;
+  try{
+    const q=window._fbQuery(
+      window._fbCollection(window._fbDb,'comunidade_respostas_notif'),
+      window._fbWhere('comentarioId','==',commentId)
+    );
+    const snap=await window._fbGetDocs(q);
+    await Promise.all(snap.docs.map(d=>
+      window._fbDeleteDoc(d.ref).catch(e=>console.warn('[Comunidade] não foi possível apagar notificação de resposta órfã:',e))
+    ));
+  }catch(e){
+    console.warn('[Comunidade] erro ao buscar notificações de resposta do comentário apagado:',e);
   }
 }
 
