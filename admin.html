@@ -300,6 +300,24 @@
   .cm-item-del:hover{background:rgba(255,90,95,.16)}
   .cm-item-del svg{width:13px;height:13px}
   .cm-replies-count{font-size:10.5px;color:var(--t4);margin-top:4px;font-weight:600}
+
+  /* ── Responsivo: topbar e abas de seção no celular ── */
+  @media(max-width:640px){
+    .topbar{flex-direction:column;align-items:stretch;gap:12px;margin-bottom:16px}
+    .topbar-actions{width:100%;justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none;-ms-overflow-style:none}
+    .topbar-actions::-webkit-scrollbar{display:none}
+    .topbar-actions .icon-btn,.topbar-actions .btn-out{flex-shrink:0}
+    .topbar-actions .btn-out{padding:9px 12px;font-size:11.5px}
+  }
+  @media(max-width:520px){
+    .section-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none;flex-wrap:nowrap}
+    .section-tabs::-webkit-scrollbar{display:none}
+    .section-tab-pill{flex:0 0 auto;white-space:nowrap;padding:10px 14px}
+  }
+  @media(max-width:380px){
+    .topbar h1{font-size:16px}
+    .topbar-sub{font-size:10px}
+  }
 </style>
 
 <!-- Microsoft Clarity — análise de sessão / heatmaps / gravação deste painel admin -->
