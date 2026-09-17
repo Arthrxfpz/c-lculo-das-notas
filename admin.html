@@ -350,6 +350,7 @@
       <button class="section-tab-pill active" data-section="users">Usuários</button>
       <button class="section-tab-pill" data-section="auth">Autenticação</button>
       <button class="section-tab-pill" data-section="comunidade">Comunidade</button>
+      <button class="section-tab-pill" data-section="popup">Aviso Popup</button>
     </div>
 
     <div id="section-users">
@@ -524,6 +525,60 @@
       <div id="comu-admin-loading"><div class="spinner"></div>Carregando publicações...</div>
       <div id="comu-admin-list" class="comu-admin-list" style="display:none"></div>
       <div id="comu-admin-empty" class="empty" style="display:none">Nenhuma publicação ainda. Use o formulário acima para criar a primeira.</div>
+    </div>
+
+    <div id="section-popup" style="display:none">
+      <div class="section-label">Aviso ativo</div>
+      <div id="popup-status-none" class="empty">Nenhum aviso popup ativo no momento.</div>
+      <div id="popup-status-active" class="comu-compose" style="display:none">
+        <div class="field-group">
+          <span class="field-label">Texto</span>
+          <div id="popup-active-texto" style="font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap"></div>
+        </div>
+        <div id="popup-active-img-wrap" style="display:none">
+          <img id="popup-active-img" src="" alt="" style="width:100%;border-radius:12px;display:block">
+        </div>
+        <div id="popup-active-link-wrap" style="display:none;font-size:12.5px;color:var(--gold)">
+          🔗 <span id="popup-active-link"></span>
+        </div>
+        <div id="popup-active-meta" style="font-size:11.5px;color:var(--t3)"></div>
+        <button class="btn-danger" id="popup-delete-btn">Apagar aviso</button>
+      </div>
+
+      <div class="section-label">Enviar novo aviso</div>
+      <div class="comu-compose">
+        <div class="field-group">
+          <span class="field-label">Texto</span>
+          <textarea class="input comu-textarea" id="popup-texto" placeholder="Escreva o aviso que vai aparecer em um banner pra todo mundo, logo que abrir o app..." maxlength="600"></textarea>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Imagem (opcional)</span>
+          <div class="comu-img-picker" id="popup-img-picker">
+            <input type="file" id="popup-img-input" accept="image/*" style="display:none">
+            <div class="comu-img-empty" id="popup-img-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+              <span>Toque para escolher uma foto</span>
+            </div>
+            <div class="comu-img-preview" id="popup-img-preview" style="display:none">
+              <img id="popup-img-preview-el" src="" alt="">
+              <button type="button" class="comu-img-remove" id="popup-img-remove" title="Remover imagem">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Link (opcional)</span>
+          <input class="input" id="popup-link" placeholder="https://...">
+        </div>
+        <div class="field-group" id="popup-linklabel-group" style="display:none">
+          <span class="field-label">Texto do botão do link</span>
+          <input class="input" id="popup-linklabel" placeholder="Ex.: Ver mais, Acessar formulário...">
+        </div>
+        <button class="btn-primary" id="popup-publish-btn">Enviar aviso popup</button>
+        <div class="save-status" id="popup-compose-status"></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.5">Ao enviar, o aviso aparece como banner pra todo mundo assim que abrir o app — inclusive pra quem já tinha fechado um aviso anterior. Cada pessoa que fechar no X não vê mais esse mesmo aviso (fica salvo na nuvem). Apagando aqui em cima, o aviso some pra todo mundo na hora, mesmo quem ainda não tinha visto.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -837,6 +892,7 @@
       }
       loadData();
       initComunidade();
+      initPopupAnnounce();
     } else {
       if (user) signOut(auth); // conta errada: encerra a sessão local deste painel
       panel.style.display = 'none';
@@ -1552,6 +1608,7 @@
       document.getElementById('section-users').style.display      = sec === 'users' ? '' : 'none';
       document.getElementById('section-auth').style.display       = sec === 'auth' ? '' : 'none';
       document.getElementById('section-comunidade').style.display = sec === 'comunidade' ? '' : 'none';
+      document.getElementById('section-popup').style.display      = sec === 'popup' ? '' : 'none';
       if(sec === 'auth') renderAuthList();
     });
   });
@@ -1988,6 +2045,204 @@
   document.getElementById('cm-overlay').addEventListener('click', (e)=>{
     if(e.target.id === 'cm-overlay') closeCommentsModal();
   });
+
+  // ─────────────────────────────────────────────────────────────
+  // AVISO POPUP — banner global exibido no app do aluno logo após
+  // a tela de carregamento (doc único Firestore: app_config/popup)
+  // ─────────────────────────────────────────────────────────────
+  let popupUnsub = null;
+  let popupCurrent = null;       // dado do aviso ativo (ou null)
+  let popupSelectedFile = null;
+  let popupRemovedImage = false;
+
+  const popupTexto        = document.getElementById('popup-texto');
+  const popupLink         = document.getElementById('popup-link');
+  const popupLinkLabel    = document.getElementById('popup-linklabel');
+  const popupLinkLabelGrp = document.getElementById('popup-linklabel-group');
+  const popupImgInput     = document.getElementById('popup-img-input');
+  const popupImgEmpty     = document.getElementById('popup-img-empty');
+  const popupImgPreview   = document.getElementById('popup-img-preview');
+  const popupImgPreviewEl = document.getElementById('popup-img-preview-el');
+  const popupPublishBtn   = document.getElementById('popup-publish-btn');
+  const popupStatusEl     = document.getElementById('popup-compose-status');
+
+  function initPopupAnnounce(){
+    if(popupUnsub) return; // já iniciado (evita duplicar listener em re-logins)
+
+    popupLink.addEventListener('input', ()=>{
+      popupLinkLabelGrp.style.display = popupLink.value.trim() ? '' : 'none';
+    });
+
+    popupImgEmpty.addEventListener('click', ()=> popupImgInput.click());
+    popupImgInput.addEventListener('change', ()=>{
+      const file = popupImgInput.files && popupImgInput.files[0];
+      if(!file) return;
+      if(file.size > 5*1024*1024){
+        toast('Imagem muito grande. Escolha uma de até 5 MB.', 'err');
+        popupImgInput.value = '';
+        return;
+      }
+      popupSelectedFile = file;
+      popupRemovedImage = false;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        popupImgPreviewEl.src = reader.result;
+        popupImgEmpty.style.display = 'none';
+        popupImgPreview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    });
+    document.getElementById('popup-img-remove').addEventListener('click', ()=>{
+      popupSelectedFile = null;
+      popupRemovedImage = true;
+      popupImgInput.value = '';
+      popupImgPreviewEl.src = '';
+      popupImgPreview.style.display = 'none';
+      popupImgEmpty.style.display = 'flex';
+    });
+
+    popupPublishBtn.addEventListener('click', publishPopupAnnounce);
+    document.getElementById('popup-delete-btn').addEventListener('click', deletePopupAnnounce);
+
+    popupUnsub = onSnapshot(doc(db, 'app_config', 'popup'), (snap)=>{
+      popupCurrent = snap.exists() ? snap.data() : null;
+      renderPopupStatus();
+    }, (err)=>{
+      console.error('[Aviso popup] erro ao carregar:', err);
+      toast('Erro ao carregar o aviso popup: ' + err.message, 'err');
+    });
+  }
+
+  function renderPopupStatus(){
+    const noneEl   = document.getElementById('popup-status-none');
+    const activeEl = document.getElementById('popup-status-active');
+    if(!popupCurrent){
+      noneEl.style.display = 'block';
+      activeEl.style.display = 'none';
+      return;
+    }
+    noneEl.style.display = 'none';
+    activeEl.style.display = 'block';
+    document.getElementById('popup-active-texto').textContent = popupCurrent.texto || '';
+    const imgWrap = document.getElementById('popup-active-img-wrap');
+    if(popupCurrent.imagemUrl){
+      document.getElementById('popup-active-img').src = popupCurrent.imagemUrl;
+      imgWrap.style.display = 'block';
+    }else{
+      imgWrap.style.display = 'none';
+    }
+    const linkWrap = document.getElementById('popup-active-link-wrap');
+    if(popupCurrent.link){
+      document.getElementById('popup-active-link').textContent = popupCurrent.linkLabel || popupCurrent.link;
+      linkWrap.style.display = 'block';
+    }else{
+      linkWrap.style.display = 'none';
+    }
+    document.getElementById('popup-active-meta').textContent = 'Enviado ' + popupTimeAgo(popupCurrent);
+  }
+
+  function popupTimeAgo(p){
+    const c = p.criadoEm;
+    let ms = null;
+    if(c && typeof c.toMillis === 'function') ms = c.toMillis();
+    else if(c && typeof c.seconds === 'number') ms = c.seconds*1000;
+    if(!ms) return 'agora mesmo';
+    return timeAgo(ms);
+  }
+
+  function resetPopupForm(){
+    popupSelectedFile = null;
+    popupRemovedImage = false;
+    popupTexto.value = '';
+    popupLink.value = '';
+    popupLinkLabel.value = '';
+    popupLinkLabelGrp.style.display = 'none';
+    popupImgInput.value = '';
+    popupImgPreviewEl.src = '';
+    popupImgPreview.style.display = 'none';
+    popupImgEmpty.style.display = 'flex';
+    popupStatusEl.textContent = '';
+    popupStatusEl.className = 'save-status';
+  }
+
+  async function publishPopupAnnounce(){
+    const texto = popupTexto.value.trim();
+    const link  = popupLink.value.trim();
+    const linkLabel = popupLinkLabel.value.trim();
+    if(!texto && !popupSelectedFile && !link){
+      toast('Escreva um texto, adicione um link ou uma imagem antes de enviar.', 'err');
+      return;
+    }
+    if(link && !/^https?:\/\//i.test(link)){
+      toast('O link precisa começar com http:// ou https://', 'err');
+      return;
+    }
+
+    popupPublishBtn.disabled = true;
+    const originalLabel = popupPublishBtn.textContent;
+    popupPublishBtn.textContent = 'Enviando...';
+    popupStatusEl.textContent = '';
+    popupStatusEl.className = 'save-status';
+
+    try{
+      // um novo envio sempre substitui o aviso anterior por completo —
+      // inclusive a imagem antiga no Storage, se houver uma nova ou se
+      // a pessoa removeu a imagem manualmente no formulário
+      if(popupCurrent && popupCurrent.imagemPath && (popupSelectedFile || popupRemovedImage || !popupCurrent.imagemUrl)){
+        try{ await deleteObject(ref(storage, popupCurrent.imagemPath)); }catch(e){ console.warn('Não foi possível remover imagem antiga:', e); }
+      }
+
+      let imagemUrl = null, imagemPath = null;
+      if(popupSelectedFile){
+        popupPublishBtn.textContent = 'Enviando imagem...';
+        const safeName = popupSelectedFile.name.replace(/[^\w.\-]+/g,'_');
+        imagemPath = `avisos_popup/${Date.now()}_${safeName}`;
+        const storageRef = ref(storage, imagemPath);
+        await uploadBytes(storageRef, popupSelectedFile);
+        imagemUrl = await getDownloadURL(storageRef);
+        popupPublishBtn.textContent = 'Enviando...';
+      }else if(!popupRemovedImage && popupCurrent && popupCurrent.imagemUrl){
+        // manteve a imagem já existente sem trocar nem remover
+        imagemUrl = popupCurrent.imagemUrl;
+        imagemPath = popupCurrent.imagemPath || null;
+      }
+
+      const payload = {
+        id: String(Date.now()),  // novo id → o aviso volta a aparecer pra TODO MUNDO, mesmo quem já tinha fechado um anterior
+        texto: texto || null,
+        link: link || null,
+        linkLabel: link ? (linkLabel || null) : null,
+        imagemUrl: imagemUrl || null,
+        imagemPath: imagemPath || null,
+        criadoEm: serverTimestamp(),
+      };
+      await setDoc(doc(db, 'app_config', 'popup'), payload);
+      toast('Aviso popup enviado!', 'ok');
+      resetPopupForm();
+    }catch(e){
+      console.error('[Aviso popup] erro ao enviar:', e);
+      popupStatusEl.textContent = 'Erro ao enviar: ' + e.message;
+      popupStatusEl.className = 'save-status err';
+    }finally{
+      popupPublishBtn.disabled = false;
+      if(popupPublishBtn.textContent!=='Enviar aviso popup') popupPublishBtn.textContent = originalLabel;
+    }
+  }
+
+  async function deletePopupAnnounce(){
+    if(!popupCurrent) return;
+    if(!confirm('Apagar o aviso popup? Ele some pra todo mundo na hora, mesmo quem ainda não tinha visto. Essa ação não pode ser desfeita.')) return;
+    try{
+      if(popupCurrent.imagemPath){
+        try{ await deleteObject(ref(storage, popupCurrent.imagemPath)); }catch(e){ console.warn('Não foi possível remover a imagem do Storage:', e); }
+      }
+      await deleteDoc(doc(db, 'app_config', 'popup'));
+      toast('Aviso popup apagado.', 'ok');
+    }catch(e){
+      console.error('[Aviso popup] erro ao apagar:', e);
+      toast('Erro ao apagar: ' + e.message, 'err');
+    }
+  }
 
   // ─────────────────────────────────────────────────────────────
   // SHEET DE DETALHES
