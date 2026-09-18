@@ -20,7 +20,10 @@
 
 // Suba esse número sempre que quiser forçar uma limpeza total do
 // cache antigo (ex.: depois de uma mudança grande no site).
-const SW_VERSION = 'v2';
+// v3: corrige o bug que impedia o app de funcionar offline (o SDK do
+// Firebase, essencial até pra esconder a tela de carregamento, nunca
+// era cacheado — ver BYPASS_HOSTS abaixo).
+const SW_VERSION = 'v3';
 const CACHE_NAME = 'calculodasnotas-offline-' + SW_VERSION;
 
 // Chave única e fixa pro documento principal. Usar sempre a mesma
@@ -40,10 +43,18 @@ const BYPASS_HOSTS = [
   'google.com',
   'googletagmanager.com',
   'google-analytics.com',
-  'gstatic.com',
   'goatcounter.com',
   'gc.zgo.at'
 ];
+// IMPORTANTE: "gstatic.com" foi removido de propósito da lista acima.
+// É de lá que vem o SDK do Firebase (www.gstatic.com/firebasejs/...),
+// que o próprio app precisa pra rodar (inclusive pra esconder a tela
+// de carregamento). Com "gstatic.com" bloqueado do cache, esses
+// arquivos nunca ficavam salvos e o app trava no "Carregando..." pra
+// sempre assim que a internet cai. Deixando passar pelo cache normal
+// (staleWhileRevalidate, mais abaixo), esses arquivos ficam salvos
+// depois do primeiro carregamento com internet e o app volta a abrir
+// offline normalmente.
 
 function shouldBypass(url) {
   return BYPASS_HOSTS.some((h) => url.hostname === h || url.hostname.endsWith('.' + h));
@@ -89,18 +100,30 @@ async function notifyClients(type, payload) {
 // o que pode ser apagado do cache com segurança.
 function extractReferencedUrls(html, baseUrl) {
   const urls = new Set();
-  const re = /\b(?:src|href)\s*=\s*["']([^"']+)["']/gi;
-  let m;
-  while ((m = re.exec(html))) {
-    const raw = m[1];
-    if (!raw || raw.startsWith('data:') || raw.startsWith('#') || raw.startsWith('javascript:') || raw.startsWith('mailto:')) continue;
-    try {
-      const u = new URL(raw, baseUrl);
-      if (u.protocol === 'http:' || u.protocol === 'https:') urls.add(u.href);
-    } catch (e) {
-      // link inválido/relativo estranho — ignora, não é motivo pra falhar a atualização
+  // Três padrões: tags normais (src=/href=), specifiers de import de
+  // módulo ES (o SDK do Firebase é carregado assim, não com src=) e,
+  // por segurança, qualquer URL http(s) solta entre aspas no HTML.
+  // Sem os dois últimos, o SDK do Firebase parecia "não referenciado"
+  // e acabava sendo apagado do cache na próxima atualização do site.
+  const patterns = [
+    /\b(?:src|href)\s*=\s*["']([^"']+)["']/gi,
+    /\bfrom\s*["']([^"']+)["']/gi,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/gi,
+    /["'](https?:\/\/[^"'\s]+)["']/gi
+  ];
+  patterns.forEach((re) => {
+    let m;
+    while ((m = re.exec(html))) {
+      const raw = m[1];
+      if (!raw || raw.startsWith('data:') || raw.startsWith('#') || raw.startsWith('javascript:') || raw.startsWith('mailto:')) continue;
+      try {
+        const u = new URL(raw, baseUrl);
+        if (u.protocol === 'http:' || u.protocol === 'https:') urls.add(u.href);
+      } catch (e) {
+        // link inválido/relativo estranho — ignora, não é motivo pra falhar a atualização
+      }
     }
-  }
+  });
   return urls;
 }
 
@@ -131,6 +154,15 @@ async function networkFirstHTML(req) {
   const cache = await caches.open(CACHE_NAME);
   try {
     const fresh = await fetch(req, { cache: 'no-store' });
+
+    // Resposta ruim do servidor (404/500/etc.) — nunca grava isso no
+    // cache no lugar de uma cópia boa; devolve a cópia salva se houver.
+    if (!fresh || !fresh.ok) {
+      const cachedOnError = await cache.match(HTML_CACHE_KEY);
+      if (cachedOnError) return cachedOnError;
+      return fresh;
+    }
+
     const old = await cache.match(HTML_CACHE_KEY);
     let changed = true;
     let freshText = null;
@@ -144,9 +176,9 @@ async function networkFirstHTML(req) {
       // Não deu pra comparar (ex.: resposta opaca) — assume que mudou.
     }
 
-    // Apaga a versão antiga e grava a nova no lugar, sempre sob a
-    // mesma chave — não importa qual URL exata foi requisitada.
-    await cache.delete(HTML_CACHE_KEY);
+    // Grava a nova versão sob a mesma chave fixa — put() já substitui
+    // sozinho a entrada anterior, então nunca existe um instante em
+    // que o cache fica sem nenhuma cópia de fallback salva.
     await cache.put(HTML_CACHE_KEY, fresh.clone());
 
     if (changed) {
