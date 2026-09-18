@@ -369,6 +369,7 @@
       <button class="section-tab-pill" data-section="auth">Autenticação</button>
       <button class="section-tab-pill" data-section="comunidade">Comunidade</button>
       <button class="section-tab-pill" data-section="popup">Aviso Popup</button>
+      <button class="section-tab-pill" data-section="relatos">Relatos de Erro</button>
     </div>
 
     <div id="section-users">
@@ -585,6 +586,13 @@
         <div class="save-status" id="popup-compose-status"></div>
         <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.5">Ao enviar, o aviso é adicionado à pilha e aparece como um novo banner pra todo mundo, no topo dos demais — inclusive pra quem já tinha fechado avisos anteriores.</div>
       </div>
+    </div>
+
+    <div id="section-relatos" style="display:none">
+      <div class="section-label">Relatos recebidos <span id="relatos-count" style="color:var(--t3);font-weight:500"></span></div>
+      <div id="relatos-loading"><div class="spinner"></div>Carregando relatos...</div>
+      <div id="relatos-empty" class="empty" style="display:none">Nenhum relato de erro enviado até agora.</div>
+      <div id="relatos-list" style="display:none;flex-direction:column;gap:10px"></div>
     </div>
   </div>
 </div>
@@ -899,6 +907,7 @@
       loadData();
       initComunidade();
       initPopupAnnounce();
+      initRelatos();
     } else {
       if (user) signOut(auth); // conta errada: encerra a sessão local deste painel
       panel.style.display = 'none';
@@ -1615,6 +1624,7 @@
       document.getElementById('section-auth').style.display       = sec === 'auth' ? '' : 'none';
       document.getElementById('section-comunidade').style.display = sec === 'comunidade' ? '' : 'none';
       document.getElementById('section-popup').style.display      = sec === 'popup' ? '' : 'none';
+      document.getElementById('section-relatos').style.display    = sec === 'relatos' ? '' : 'none';
       if(sec === 'auth') renderAuthList();
     });
   });
@@ -2244,6 +2254,86 @@
       toast('Aviso popup apagado.', 'ok');
     }catch(e){
       console.error('[Avisos popup] erro ao apagar:', e);
+      toast('Erro ao apagar: ' + e.message, 'err');
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // RELATOS DE ERRO — enviados pelos alunos pela tela "Sobre o site"
+  // (coleção Firestore: relatos_erro). Somente leitura/exclusão pelo
+  // admin; a criação é feita pelo app principal.
+  // ─────────────────────────────────────────────────────────────
+  let relatosUnsub = null;
+  let relatosList = [];
+
+  function initRelatos(){
+    if(relatosUnsub) return; // já iniciado (evita duplicar listener em re-logins)
+    const relatosQuery = query(collection(db, 'relatos_erro'), orderBy('criadoEm', 'desc'));
+    relatosUnsub = onSnapshot(relatosQuery, (snap)=>{
+      relatosList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderRelatosList();
+    }, (err)=>{
+      console.error('[Relatos de erro] erro ao carregar:', err);
+      document.getElementById('relatos-loading').style.display = 'none';
+      toast('Erro ao carregar os relatos de erro: ' + err.message, 'err');
+    });
+  }
+
+  function relatoTimeAgo(r){
+    const c = r.criadoEm;
+    let ms = null;
+    if(c && typeof c.toMillis === 'function') ms = c.toMillis();
+    else if(c && typeof c.seconds === 'number') ms = c.seconds*1000;
+    if(!ms) return 'agora mesmo';
+    return timeAgo(ms);
+  }
+
+  function renderRelatosList(){
+    const loadingEl = document.getElementById('relatos-loading');
+    const emptyEl   = document.getElementById('relatos-empty');
+    const listEl    = document.getElementById('relatos-list');
+    const countEl   = document.getElementById('relatos-count');
+    loadingEl.style.display = 'none';
+    countEl.textContent = relatosList.length ? `(${relatosList.length})` : '';
+    if(!relatosList.length){
+      emptyEl.style.display = 'block';
+      listEl.style.display = 'none';
+      listEl.innerHTML = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    listEl.style.display = 'flex';
+    listEl.innerHTML = relatosList.map(r => {
+      const quem = r.nome ? escapeHtml(r.nome) : (r.email ? escapeHtml(r.email) : 'Usuário não identificado');
+      const emailLine = r.email ? `<div style="font-size:12px;color:var(--t3)">${escapeHtml(r.email)}</div>` : '';
+      const uidLine = r.uid ? `<div style="font-size:11px;color:var(--t4);word-break:break-all">UID: ${escapeHtml(r.uid)}</div>` : `<div style="font-size:11px;color:var(--t4)">Sem login (visitante)</div>`;
+      return `<div class="comu-compose" style="gap:8px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+            <div style="min-width:0">
+              <div style="font-size:13.5px;font-weight:700;color:var(--t1)">${quem}</div>
+              ${emailLine}
+              ${uidLine}
+            </div>
+            <span style="font-size:11.5px;color:var(--t3);white-space:nowrap;flex-shrink:0">${relatoTimeAgo(r)}</span>
+          </div>
+          <div style="font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap;background:var(--bg2);border:.5px solid var(--line);border-radius:12px;padding:10px 12px">${escapeHtml(r.mensagem || '')}</div>
+          <button class="btn-danger" data-relato-del="${escapeHtml(r.id)}">Apagar este relato</button>
+        </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-relato-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteRelato(btn.getAttribute('data-relato-del')));
+    });
+  }
+
+  async function deleteRelato(id){
+    const item = relatosList.find(r => r.id === id);
+    if(!item) return;
+    if(!confirm('Apagar este relato de erro? Essa ação não pode ser desfeita.')) return;
+    try{
+      await deleteDoc(doc(db, 'relatos_erro', id));
+      toast('Relato apagado.', 'ok');
+    }catch(e){
+      console.error('[Relatos de erro] erro ao apagar:', e);
       toast('Erro ao apagar: ' + e.message, 'err');
     }
   }
