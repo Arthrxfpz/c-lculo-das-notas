@@ -2775,6 +2775,7 @@
         <div class="info-box"><div class="info-box-label">Conta Google criada em</div><div class="info-box-value">${fmtDateOnly(googleSince)}</div></div>
         <div class="info-box"><div class="info-box-label">Armazenamento</div><div class="info-box-value">${fmtBytes(row?row.bytes:0)}</div></div>
         <div class="info-box"><div class="info-box-label">Atualizado em</div><div class="info-box-value">${fmtDate(currentData.updatedAt)}</div></div>
+        <div class="info-box"><div class="info-box-label">Último login</div><div class="info-box-value">${currentData.lastLoginAt ? fmtDate(currentData.lastLoginAt) : '—'}</div></div>
         <div class="info-box"><div class="info-box-label">Notas lançadas</div><div class="info-box-value">${countGradeEntries(currentData.grades)}</div></div>
         <div class="info-box"><div class="info-box-label">Provas cadastradas</div><div class="info-box-value">${(currentData.exams||[]).length}</div></div>
         <div class="info-box"><div class="info-box-label">Anotações</div><div class="info-box-value">${(currentData.notes||[]).length}</div></div>
