@@ -179,6 +179,30 @@
   .save-status.ok{color:var(--green)}
   .save-status.err{color:var(--red)}
 
+  /* ── Editor de Horários globais (admin) ── */
+  .hor-hint{font-size:11.5px;color:var(--t3);line-height:1.55;margin-bottom:18px}
+  .hor-hint strong{color:var(--t2)}
+  .hor-daytabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+  .hor-daytab{padding:8px 14px;border-radius:10px;background:var(--bg2);border:.5px solid var(--line);font-size:12.5px;font-weight:700;color:var(--t3);cursor:pointer;transition:background .15s var(--ease),color .15s var(--ease),border-color .15s var(--ease)}
+  .hor-daytab.active{background:var(--gold);color:#000;border-color:transparent}
+  .hor-daytab:active{transform:scale(.96)}
+  .hor-period-row{display:flex;align-items:center;gap:8px;background:var(--bg2);border:.5px solid var(--line);border-radius:13px;padding:10px;margin-bottom:8px}
+  .hor-period-row.is-break{background:var(--goldbg);border-color:var(--goldbd)}
+  .hor-period-name{flex:1.1;min-width:0;padding:9px 10px;background:var(--bg3);border:.5px solid var(--line);border-radius:10px;font-size:12.5px;font-weight:600;color:var(--t1)}
+  .hor-period-time{width:78px;flex-shrink:0;padding:9px 8px;background:var(--bg3);border:.5px solid var(--line);border-radius:10px;font-size:13px;font-weight:600;color:var(--t1)}
+  .hor-period-dash{color:var(--t4);font-size:12px;flex-shrink:0}
+  .hor-period-del{width:30px;height:30px;flex-shrink:0;border-radius:9px;background:var(--redbg);border:1px solid rgba(255,90,95,.3);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--red)}
+  .hor-period-del svg{width:14px;height:14px}
+  .hor-period-del:active{opacity:.6}
+  .hor-add-row{display:flex;gap:8px;margin:2px 0 20px}
+  .hor-add-btn{flex:1;padding:10px;border-radius:12px;background:var(--bg2);border:1.5px dashed var(--line);color:var(--t2);font-size:12.5px;font-weight:700;cursor:pointer}
+  .hor-add-btn:active{opacity:.6}
+  .hor-add-btn.hor-add-break{color:var(--gold);border-color:var(--goldbd)}
+  .hor-subj-row{display:flex;align-items:center;gap:8px;background:var(--bg2);border:.5px solid var(--line);border-radius:13px;padding:10px;margin-bottom:8px}
+  .hor-subj-label{width:64px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--t3);line-height:1.25}
+  .hor-subj-select{flex:1;min-width:0;padding:9px 10px;background:var(--bg3);border:.5px solid var(--line);border-radius:10px;font-size:13px;font-weight:500;color:var(--t1);appearance:none;-webkit-appearance:none;cursor:pointer}
+  .hor-empty-hint{text-align:center;padding:16px;color:var(--t3);font-size:12.5px;font-weight:600}
+
   .danger-zone{margin-top:26px;padding-top:16px;border-top:1px dashed var(--line)}
   .danger-title{font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 
@@ -370,6 +394,7 @@
       <button class="section-tab-pill" data-section="comunidade">Comunidade</button>
       <button class="section-tab-pill" data-section="popup">Aviso Popup</button>
       <button class="section-tab-pill" data-section="relatos">Relatos de Erro</button>
+      <button class="section-tab-pill" data-section="horarios">Mudar Horários</button>
     </div>
 
     <div id="section-users">
@@ -594,6 +619,33 @@
       <div id="relatos-empty" class="empty" style="display:none">Nenhum relato de erro enviado até agora.</div>
       <div id="relatos-list" style="display:none;flex-direction:column;gap:10px"></div>
     </div>
+
+    <div id="section-horarios" style="display:none">
+      <div class="section-label">Horário padrão global</div>
+      <div class="hor-hint">
+        Esse é o horário que vale pra <strong>todo mundo</strong> a partir de agora. Quando um aluno personaliza os horários pelo próprio app, isso não muda aqui. Mas quando alguém aperta <strong>"Resetar horários"</strong> no app, é pra este horário aqui que ele volta — em vez do horário que estava fixo no código.
+        <div id="hor-last-update" style="margin-top:8px;color:var(--t4)"></div>
+      </div>
+
+      <div id="hor-loading"><div class="spinner"></div>Carregando horário padrão...</div>
+
+      <div id="hor-editor" style="display:none">
+        <div class="section-label" style="margin-top:0">Aulas e recreios</div>
+        <div id="hor-periods-list"></div>
+        <div class="hor-add-row">
+          <button type="button" class="hor-add-btn" id="hor-add-period-btn">+ Aula</button>
+          <button type="button" class="hor-add-btn hor-add-break" id="hor-add-break-btn">+ Recreio</button>
+        </div>
+
+        <div class="section-label">Matérias por dia</div>
+        <div class="hor-daytabs" id="hor-daytabs"></div>
+        <div id="hor-subjects-list"></div>
+
+        <button class="btn-primary" id="hor-save-btn">Salvar horário padrão global</button>
+        <button class="btn-warn" id="hor-reload-btn" style="margin-top:8px">Descartar alterações e recarregar</button>
+        <div class="save-status" id="hor-save-status"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -662,7 +714,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
   import { getAuth, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch,
+  import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, writeBatch,
             addDoc, updateDoc, query, orderBy, onSnapshot, serverTimestamp, increment }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
@@ -908,6 +960,7 @@
       initComunidade();
       initPopupAnnounce();
       initRelatos();
+      initHorariosEditor();
     } else {
       if (user) signOut(auth); // conta errada: encerra a sessão local deste painel
       panel.style.display = 'none';
@@ -1625,6 +1678,7 @@
       document.getElementById('section-comunidade').style.display = sec === 'comunidade' ? '' : 'none';
       document.getElementById('section-popup').style.display      = sec === 'popup' ? '' : 'none';
       document.getElementById('section-relatos').style.display    = sec === 'relatos' ? '' : 'none';
+      document.getElementById('section-horarios').style.display   = sec === 'horarios' ? '' : 'none';
       if(sec === 'auth') renderAuthList();
     });
   });
@@ -2082,6 +2136,219 @@
   const popupImgPreviewEl = document.getElementById('popup-img-preview-el');
   const popupPublishBtn   = document.getElementById('popup-publish-btn');
   const popupStatusEl     = document.getElementById('popup-compose-status');
+
+  /* ═══════════ Horário padrão global (config/horarios_padrao) ═══════════
+     Este é o novo editor de "Mudar Horários" do painel admin. Ele lê e
+     grava no documento global config/horarios_padrao do Firestore. O app
+     principal (index.html) passa a usar esse documento como base sempre
+     que o aluno reseta os horários dele — em vez do horário fixo no código. */
+  const HOR_DAY_NAMES = {1:'Segunda',2:'Terça',3:'Quarta',4:'Quinta',5:'Sexta'};
+  // Ponto de partida (mesmos valores hoje fixos no código do app) — só é
+  // usado enquanto o documento global ainda não existir no Firestore.
+  const HOR_FALLBACK_PERIODS = [
+    {n:'1ª aula', s:[13,30], e:[14,20]},
+    {n:'2ª aula', s:[14,20], e:[15,10]},
+    {n:'3ª aula', s:[15,10], e:[15,50]},
+    {n:'recreio', s:[15,50], e:[16,5], break:true},
+    {n:'4ª aula', s:[16,5],  e:[16,50]},
+    {n:'5ª aula', s:[16,50], e:[17,40]},
+    {n:'6ª aula', s:[17,40], e:[18,30]},
+  ];
+  const HOR_FALLBACK_SCHED = {
+    1:['ed_fis','mat','fis','mat','fis','esp'],
+    2:['proj','port','proj','port','edu_fin','bio'],
+    3:['qui','geo','rel','qui','proj','ed_fis'],
+    4:['proj','ing','proj','esc_cri','proj','artes'],
+    5:['port','hist','bio','lit','mat','soc'],
+  };
+  let HOR_PERIODS = [];
+  let HOR_SCHED   = {1:[],2:[],3:[],4:[],5:[]};
+  let horCurrentDay = 1;
+  let horInited = false;
+
+  function horPad2(n){ return String(n).padStart(2,'0'); }
+  function horTimeStr(t){ return horPad2(t[0]) + ':' + horPad2(t[1]); }
+  function horParseTime(str){
+    const m = String(str||'').match(/^(\d{1,2}):(\d{2})$/);
+    if(!m) return null;
+    const h = parseInt(m[1],10), min = parseInt(m[2],10);
+    if(h<0||h>23||min<0||min>59) return null;
+    return [h,min];
+  }
+  // Garante que cada dia tenha exatamente um subject por aula (não-recreio),
+  // preservando o que já tinha quando possível.
+  function horSyncSchedToPeriods(){
+    const nonBreakCount = HOR_PERIODS.filter(p=>!p.break).length;
+    [1,2,3,4,5].forEach(day=>{
+      const cur = Array.isArray(HOR_SCHED[day]) ? HOR_SCHED[day] : [];
+      const next = [];
+      for(let i=0;i<nonBreakCount;i++) next.push(cur[i] || (DEFAULT_SUBJECTS[0] && DEFAULT_SUBJECTS[0].id) || '');
+      HOR_SCHED[day] = next;
+    });
+  }
+
+  function initHorariosEditor(){
+    if(horInited) return;
+    horInited = true;
+    document.getElementById('hor-add-period-btn').addEventListener('click', ()=>{
+      HOR_PERIODS.push({n:'Nova aula', s:[12,0], e:[12,50]});
+      horSyncSchedToPeriods();
+      renderHorPeriods(); renderHorSubjects();
+    });
+    document.getElementById('hor-add-break-btn').addEventListener('click', ()=>{
+      HOR_PERIODS.push({n:'recreio', s:[12,0], e:[12,15], break:true});
+      horSyncSchedToPeriods();
+      renderHorPeriods(); renderHorSubjects();
+    });
+    document.getElementById('hor-save-btn').addEventListener('click', saveHorariosPadrao);
+    document.getElementById('hor-reload-btn').addEventListener('click', ()=>{
+      loadHorariosPadrao(true);
+    });
+    loadHorariosPadrao(false);
+  }
+
+  async function loadHorariosPadrao(isReload){
+    const loadingEl = document.getElementById('hor-loading');
+    const editorEl  = document.getElementById('hor-editor');
+    if(isReload){ editorEl.style.display = 'none'; loadingEl.style.display = 'block'; }
+    const statusEl = document.getElementById('hor-save-status');
+    statusEl.textContent = ''; statusEl.className = 'save-status';
+    try{
+      const snap = await getDoc(doc(db, 'config', 'horarios_padrao'));
+      if(snap.exists() && snap.data() && Array.isArray(snap.data().periods)){
+        const data = snap.data();
+        HOR_PERIODS = JSON.parse(JSON.stringify(data.periods));
+        HOR_SCHED   = JSON.parse(JSON.stringify(data.sched || HOR_FALLBACK_SCHED));
+        const lastEl = document.getElementById('hor-last-update');
+        const who = data.updatedByEmail ? ' por ' + data.updatedByEmail : '';
+        const when = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate() : (data.updatedAtMs ? new Date(data.updatedAtMs) : null);
+        lastEl.textContent = when ? ('Última atualização: ' + when.toLocaleString('pt-BR') + who) : '';
+      } else {
+        // Ainda não existe: parte do que hoje está fixo no código, pra o
+        // admin já ver algo preenchido e poder ajustar a partir daí.
+        HOR_PERIODS = JSON.parse(JSON.stringify(HOR_FALLBACK_PERIODS));
+        HOR_SCHED   = JSON.parse(JSON.stringify(HOR_FALLBACK_SCHED));
+        document.getElementById('hor-last-update').textContent = 'Ainda não configurado — isto é o horário atualmente fixo no código, como ponto de partida.';
+      }
+    }catch(err){
+      console.error('[Horários padrão] erro ao carregar:', err);
+      toast('Erro ao carregar horário padrão: ' + err.message, 'err');
+      HOR_PERIODS = JSON.parse(JSON.stringify(HOR_FALLBACK_PERIODS));
+      HOR_SCHED   = JSON.parse(JSON.stringify(HOR_FALLBACK_SCHED));
+    }
+    horSyncSchedToPeriods();
+    horCurrentDay = 1;
+    renderHorPeriods();
+    renderHorDayTabs();
+    renderHorSubjects();
+    loadingEl.style.display = 'none';
+    editorEl.style.display = 'block';
+  }
+
+  function renderHorPeriods(){
+    const list = document.getElementById('hor-periods-list');
+    list.innerHTML = '';
+    HOR_PERIODS.forEach((p, idx)=>{
+      const row = document.createElement('div');
+      row.className = 'hor-period-row' + (p.break ? ' is-break' : '');
+      row.innerHTML = `
+        <input class="hor-period-name" value="${escapeHtml(p.n||'')}" data-idx="${idx}" data-field="n">
+        <input class="hor-period-time" value="${horTimeStr(p.s)}" data-idx="${idx}" data-field="s" placeholder="hh:mm">
+        <span class="hor-period-dash">–</span>
+        <input class="hor-period-time" value="${horTimeStr(p.e)}" data-idx="${idx}" data-field="e" placeholder="hh:mm">
+        <button type="button" class="hor-period-del" data-idx="${idx}" title="Remover">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll('input[data-field="n"]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{ HOR_PERIODS[+inp.dataset.idx].n = inp.value; });
+    });
+    list.querySelectorAll('input[data-field="s"],input[data-field="e"]').forEach(inp=>{
+      inp.addEventListener('change', ()=>{
+        const t = horParseTime(inp.value);
+        if(!t){ toast('Horário inválido, use o formato hh:mm', 'err'); inp.value = horTimeStr(HOR_PERIODS[+inp.dataset.idx][inp.dataset.field]); return; }
+        HOR_PERIODS[+inp.dataset.idx][inp.dataset.field] = t;
+      });
+    });
+    list.querySelectorAll('.hor-period-del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        HOR_PERIODS.splice(+btn.dataset.idx, 1);
+        horSyncSchedToPeriods();
+        renderHorPeriods(); renderHorSubjects();
+      });
+    });
+  }
+
+  function renderHorDayTabs(){
+    const wrap = document.getElementById('hor-daytabs');
+    wrap.innerHTML = '';
+    [1,2,3,4,5].forEach(day=>{
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hor-daytab' + (day===horCurrentDay ? ' active' : '');
+      btn.textContent = HOR_DAY_NAMES[day];
+      btn.addEventListener('click', ()=>{ horCurrentDay = day; renderHorDayTabs(); renderHorSubjects(); });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderHorSubjects(){
+    const list = document.getElementById('hor-subjects-list');
+    list.innerHTML = '';
+    const nonBreak = HOR_PERIODS.map((p,idx)=>({p,idx})).filter(x=>!x.p.break);
+    if(!nonBreak.length){
+      list.innerHTML = '<div class="hor-empty-hint">Nenhuma aula cadastrada ainda — adicione aulas acima.</div>';
+      return;
+    }
+    const options = DEFAULT_SUBJECTS.map(s=>`<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
+    nonBreak.forEach((item, slotIdx)=>{
+      const current = (HOR_SCHED[horCurrentDay] && HOR_SCHED[horCurrentDay][slotIdx]) || '';
+      const row = document.createElement('div');
+      row.className = 'hor-subj-row';
+      row.innerHTML = `
+        <div class="hor-subj-label">${escapeHtml(item.p.n||'Aula')}</div>
+        <select class="hor-subj-select" data-slot="${slotIdx}">${options}</select>`;
+      const sel = row.querySelector('select');
+      sel.value = current;
+      sel.addEventListener('change', ()=>{
+        if(!HOR_SCHED[horCurrentDay]) HOR_SCHED[horCurrentDay] = [];
+        HOR_SCHED[horCurrentDay][slotIdx] = sel.value;
+      });
+      list.appendChild(row);
+    });
+  }
+
+  async function saveHorariosPadrao(){
+    const statusEl = document.getElementById('hor-save-status');
+    const saveBtn  = document.getElementById('hor-save-btn');
+    for(const p of HOR_PERIODS){
+      if(!p.n || !p.n.trim()){ statusEl.textContent = 'Dê um nome pra cada aula/recreio antes de salvar.'; statusEl.className = 'save-status err'; return; }
+    }
+    horSyncSchedToPeriods();
+    saveBtn.disabled = true;
+    statusEl.textContent = 'Salvando...'; statusEl.className = 'save-status';
+    try{
+      await setDoc(doc(db, 'config', 'horarios_padrao'), {
+        periods: HOR_PERIODS,
+        sched: HOR_SCHED,
+        updatedAt: serverTimestamp(),
+        updatedByEmail: auth.currentUser ? auth.currentUser.email : null,
+      });
+      statusEl.textContent = 'Horário padrão global salvo! Já vale pra quem resetar os horários agora.';
+      statusEl.className = 'save-status ok';
+      toast('Horário padrão global salvo!', 'ok');
+      const lastEl = document.getElementById('hor-last-update');
+      lastEl.textContent = 'Última atualização: ' + new Date().toLocaleString('pt-BR') + (auth.currentUser ? ' por ' + auth.currentUser.email : '');
+    }catch(err){
+      console.error('[Horários padrão] erro ao salvar:', err);
+      statusEl.textContent = 'Erro ao salvar: ' + err.message;
+      statusEl.className = 'save-status err';
+      toast('Erro ao salvar horário padrão: ' + err.message, 'err');
+    }finally{
+      saveBtn.disabled = false;
+    }
+  }
 
   function initPopupAnnounce(){
     if(popupUnsub) return; // já iniciado (evita duplicar listener em re-logins)
