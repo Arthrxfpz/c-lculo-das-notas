@@ -737,7 +737,7 @@
   import { getAuth, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, writeBatch,
-            addDoc, updateDoc, query, orderBy, onSnapshot, serverTimestamp, increment }
+            addDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp, increment }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-storage.js";
@@ -1681,7 +1681,7 @@
         btn.textContent = 'Programar apagão total';
       }
     }
-  }, (err)=>console.error('[Apagão] erro ao ouvir agendamento:', err));
+  }, (err)=>{ console.error('[Apagão] erro ao ouvir agendamento:', err); toast('Apagão: sem permissão/erro ao ler o agendamento (' + (err.code||err.message) + '). Confira as regras do Firestore (system/apagao).', 'err'); });
 
   clearInterval(apagaoAutoTimer);
   apagaoAutoTimer = setInterval(()=>{
@@ -2147,6 +2147,16 @@
       }
       batch.update(doc(db, 'comunidade_posts', cmPostId), { comentariosCount: increment(-removedCount) });
       await batch.commit();
+      // limpa as notificações "fulano respondeu seu comentário" ligadas aos comentários apagados
+      // (best-effort: se falhar, o comentário já foi apagado e não atrapalha)
+      try{
+        const gone = [commentId];
+        if(isRoot) cmComments.filter(c=>c.parentId===commentId).forEach(rp=>gone.push(rp.id));
+        for(const cid of gone){
+          const ns = await getDocs(query(collection(db, 'comunidade_respostas_notif'), where('comentarioId','==',cid)));
+          await Promise.all(ns.docs.map(d=>deleteDoc(d.ref).catch(()=>{})));
+        }
+      }catch(e){ console.warn('[Comentários] não foi possível limpar notificações órfãs:', e); }
       toast(isRoot && removedCount>1 ? 'Comentário e respostas excluídos.' : 'Comentário excluído.', 'ok');
     }catch(e){
       console.error('[Comentários] erro ao excluir:', e);
