@@ -393,6 +393,7 @@
       <button class="section-tab-pill" data-section="auth">Autenticação</button>
       <button class="section-tab-pill" data-section="comunidade">Comunidade</button>
       <button class="section-tab-pill" data-section="popup">Aviso Popup</button>
+      <button class="section-tab-pill" data-section="notificacoes">Notificações</button>
       <button class="section-tab-pill" data-section="relatos">Relatos de Erro</button>
       <button class="section-tab-pill" data-section="horarios">Mudar Horários</button>
     </div>
@@ -610,6 +611,27 @@
         <button class="btn-primary" id="popup-publish-btn">Enviar aviso popup</button>
         <div class="save-status" id="popup-compose-status"></div>
         <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.5">Ao enviar, o aviso é adicionado à pilha e aparece como um novo banner pra todo mundo, no topo dos demais — inclusive pra quem já tinha fechado avisos anteriores.</div>
+      </div>
+    </div>
+
+    <div id="section-notificacoes" style="display:none">
+      <div class="section-label">Notificações ativas <span id="notif-active-count" style="color:var(--t3);font-weight:500"></span></div>
+      <div id="notif-status-none" class="empty">Nenhuma notificação enviada até agora.</div>
+      <div id="notif-active-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:6px"></div>
+
+      <div class="section-label">Enviar nova notificação</div>
+      <div class="comu-compose">
+        <div class="field-group">
+          <span class="field-label">Título</span>
+          <input class="input" id="notif-titulo" placeholder="Ex.: Manutenção programada" maxlength="80">
+        </div>
+        <div class="field-group">
+          <span class="field-label">Mensagem</span>
+          <textarea class="input comu-textarea" id="notif-corpo" placeholder="Escreva a mensagem da notificação..." maxlength="400"></textarea>
+        </div>
+        <button class="btn-primary" id="notif-publish-btn">Enviar notificação</button>
+        <div class="save-status" id="notif-compose-status"></div>
+        <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.5">A notificação aparece pro sininho de notificações de todo mundo, com a data de envio. Apagar aqui remove na hora pra todo mundo, inclusive quem já tinha visto. Notificações com mais de 7 dias deixam de disparar o alerta pop-up de novidade — só continuam disponíveis na lista do sininho.</div>
       </div>
     </div>
 
@@ -959,6 +981,7 @@
       loadData();
       initComunidade();
       initPopupAnnounce();
+      initNotifCenter();
       initRelatos();
       initHorariosEditor();
     } else {
@@ -1009,6 +1032,25 @@
     if(h < 24) return 'há ' + h + 'h';
     const d = Math.floor(h/24);
     if(d < 30) return 'há ' + d + 'd';
+    const mo = Math.floor(d/30);
+    return 'há ' + mo + (mo===1?' mês':' meses');
+  }
+  // Versão por extenso do "há quanto tempo", usada no card principal de
+  // Usuários para o "Último login" (ex.: "Agora mesmo", "há 1 minuto",
+  // "há 1 dia") — mais legível que o timeAgo() compacto usado alhures.
+  function lastLoginRelative(ts){
+    if(!ts) return null;
+    const diff = Date.now() - ts;
+    const min = Math.floor(diff/60000);
+    if(min < 1) return 'Agora mesmo';
+    if(min === 1) return 'há 1 minuto';
+    if(min < 60) return 'há ' + min + ' minutos';
+    const h = Math.floor(min/60);
+    if(h === 1) return 'há 1 hora';
+    if(h < 24) return 'há ' + h + ' horas';
+    const d = Math.floor(h/24);
+    if(d === 1) return 'há 1 dia';
+    if(d < 30) return 'há ' + d + ' dias';
     const mo = Math.floor(d/30);
     return 'há ' + mo + (mo===1?' mês':' meses');
   }
@@ -1277,9 +1319,9 @@
       const tagsHtml = authOnly
         ? `<span class="tag tag-authonly">🔒 só login, sem dados</span>`
         : `<span class="tag">${r.gradesCount} notas</span><span class="tag">${r.examsCount} provas</span>${freqTag}`;
-      const timeLine = authOnly
-        ? `<div class="user-time">${r.lastLoginAt ? 'entrou ' + timeAgo(r.lastLoginAt) : ''}</div>`
-        : `<div class="user-time">${timeAgo(r.updatedAt)}</div>`;
+      const timeLine = r.lastLoginAt
+        ? `<div class="user-time">Último login: ${lastLoginRelative(r.lastLoginAt)}</div>`
+        : `<div class="user-time" style="color:var(--t4)">Nunca logou</div>`;
       return `
       <div class="user-card${authOnly?' authonly':''}" data-uid="${r.uid}">
         <div class="avatar" style="background:${color}">${avatarHtmlFor(r, initial, color)}</div>
@@ -1677,6 +1719,7 @@
       document.getElementById('section-auth').style.display       = sec === 'auth' ? '' : 'none';
       document.getElementById('section-comunidade').style.display = sec === 'comunidade' ? '' : 'none';
       document.getElementById('section-popup').style.display      = sec === 'popup' ? '' : 'none';
+      document.getElementById('section-notificacoes').style.display = sec === 'notificacoes' ? '' : 'none';
       document.getElementById('section-relatos').style.display    = sec === 'relatos' ? '' : 'none';
       document.getElementById('section-horarios').style.display   = sec === 'horarios' ? '' : 'none';
       if(sec === 'auth') renderAuthList();
@@ -2524,6 +2567,128 @@
       toast('Erro ao apagar: ' + e.message, 'err');
     }
   }
+
+  // ─────────────────────────────────────────────────────────────
+  // NOTIFICAÇÕES ADMIN — avisos personalizados que aparecem no centro de
+  // notificações (sininho) do app do aluno, junto das notificações
+  // automáticas (provas, EAC etc). Apagar aqui remove na hora pra todo
+  // mundo, inclusive quem já tinha visto. Notificações com mais de 7 dias
+  // (a partir do envio) deixam de disparar o alerta pop-up de novidade no
+  // app — essa regra é aplicada do lado do app do aluno, com base na data
+  // de criação salva aqui.
+  // (coleção Firestore: notificacoes_admin)
+  // ─────────────────────────────────────────────────────────────
+  let notifUnsub = null;
+  let notifList = [];
+
+  const notifTituloEl = document.getElementById('notif-titulo');
+  const notifCorpoEl  = document.getElementById('notif-corpo');
+  const notifPublishBtn = document.getElementById('notif-publish-btn');
+  const notifStatusEl   = document.getElementById('notif-compose-status');
+
+  function initNotifCenter(){
+    if(notifUnsub) return; // já iniciado (evita duplicar listener em re-logins)
+    const notifQuery = query(collection(db, 'notificacoes_admin'), orderBy('criadoEm', 'desc'));
+    notifUnsub = onSnapshot(notifQuery, (snap)=>{
+      notifList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderNotifList();
+    }, (err)=>{
+      console.error('[Notificações] erro ao carregar:', err);
+      toast('Erro ao carregar as notificações: ' + err.message, 'err');
+    });
+  }
+
+  function notifMs(item){
+    const c = item.criadoEm;
+    if(!c) return null;
+    if(typeof c.toMillis === 'function') return c.toMillis();
+    if(typeof c.seconds === 'number') return c.seconds * 1000;
+    if(typeof c === 'number') return c;
+    return null;
+  }
+
+  function renderNotifList(){
+    const noneEl  = document.getElementById('notif-status-none');
+    const listEl  = document.getElementById('notif-active-list');
+    const countEl = document.getElementById('notif-active-count');
+    countEl.textContent = notifList.length ? `(${notifList.length})` : '';
+    if(!notifList.length){
+      noneEl.style.display = '';
+      listEl.innerHTML = '';
+      return;
+    }
+    noneEl.style.display = 'none';
+    listEl.innerHTML = notifList.map(n => {
+      const ms = notifMs(n);
+      const isOld = ms && (Date.now() - ms >= 7*24*60*60*1000);
+      const oldTag = isOld
+        ? `<span style="font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--t3);background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:2px 8px;white-space:nowrap">Sem alerta pop-up (+7 dias)</span>`
+        : '';
+      return `<div class="comu-compose" style="gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          ${oldTag}
+          <span style="font-size:11.5px;color:var(--t3);margin-left:auto;white-space:nowrap">Enviado ${ms ? timeAgo(ms) : 'agora mesmo'}</span>
+        </div>
+        <div style="font-size:13.5px;color:var(--t1);font-weight:700">${escapeHtml(n.titulo || 'Aviso')}</div>
+        ${n.corpo ? `<div style="font-size:13px;color:var(--t2);line-height:1.5;white-space:pre-wrap">${escapeHtml(n.corpo)}</div>` : ''}
+        <button class="btn-danger" data-notif-del="${n.id}">Apagar esta notificação</button>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('[data-notif-del]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteAdminNotif(btn.getAttribute('data-notif-del')));
+    });
+  }
+
+  function resetNotifForm(){
+    notifTituloEl.value = '';
+    notifCorpoEl.value = '';
+    notifStatusEl.textContent = '';
+    notifStatusEl.className = 'save-status';
+  }
+
+  async function publishAdminNotif(){
+    const titulo = notifTituloEl.value.trim();
+    const corpo  = notifCorpoEl.value.trim();
+    if(!titulo && !corpo){
+      notifStatusEl.textContent = 'Escreva um título ou uma mensagem antes de enviar.';
+      notifStatusEl.className = 'save-status err';
+      return;
+    }
+    notifPublishBtn.disabled = true;
+    const originalLabel = notifPublishBtn.textContent;
+    notifPublishBtn.textContent = 'Enviando...';
+    notifStatusEl.textContent = '';
+    notifStatusEl.className = 'save-status';
+    try{
+      await addDoc(collection(db, 'notificacoes_admin'), {
+        titulo: titulo || 'Aviso',
+        corpo: corpo || null,
+        criadoEm: serverTimestamp(),
+      });
+      toast('Notificação enviada! Ela já aparece no sininho de todo mundo.', 'ok');
+      resetNotifForm();
+    }catch(e){
+      console.error('[Notificações] erro ao enviar:', e);
+      notifStatusEl.textContent = 'Erro ao enviar: ' + e.message;
+      notifStatusEl.className = 'save-status err';
+    }finally{
+      notifPublishBtn.disabled = false;
+      notifPublishBtn.textContent = originalLabel;
+    }
+  }
+
+  async function deleteAdminNotif(id){
+    if(!confirm('Apagar esta notificação? Ela some pra todo mundo na hora, mesmo quem já tinha visto. Essa ação não pode ser desfeita.')) return;
+    try{
+      await deleteDoc(doc(db, 'notificacoes_admin', id));
+      toast('Notificação apagada.', 'ok');
+    }catch(e){
+      console.error('[Notificações] erro ao apagar:', e);
+      toast('Erro ao apagar: ' + e.message, 'err');
+    }
+  }
+
+  notifPublishBtn.addEventListener('click', publishAdminNotif);
 
   // ─────────────────────────────────────────────────────────────
   // RELATOS DE ERRO — enviados pelos alunos pela tela "Sobre o site"
