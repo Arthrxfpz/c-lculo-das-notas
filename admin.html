@@ -608,9 +608,22 @@
           <span class="field-label">Texto do botão do link</span>
           <input class="input" id="popup-linklabel" placeholder="Ex.: Ver mais, Acessar formulário...">
         </div>
+        <div class="field-group">
+          <span class="field-label">Apagar automaticamente</span>
+          <select class="select" id="popup-expire-select">
+            <option value="never">Nunca (só apago manualmente)</option>
+            <option value="1h">Daqui a 1 hora</option>
+            <option value="6h">Daqui a 6 horas</option>
+            <option value="24h">Daqui a 24 horas</option>
+            <option value="3d">Daqui a 3 dias</option>
+            <option value="7d">Daqui a 7 dias</option>
+            <option value="custom">Escolher data e hora...</option>
+          </select>
+          <input class="input" type="datetime-local" id="popup-expire-custom" style="display:none;margin-top:8px">
+        </div>
         <button class="btn-primary" id="popup-publish-btn">Enviar aviso popup</button>
         <div class="save-status" id="popup-compose-status"></div>
-        <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.5">Ao enviar, o aviso é adicionado à pilha e aparece como um novo banner pra todo mundo, no topo dos demais — inclusive pra quem já tinha fechado avisos anteriores.</div>
+        <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.5">Ao enviar, o aviso é adicionado à pilha e aparece como um novo banner pra todo mundo, no topo dos demais — inclusive pra quem já tinha fechado avisos anteriores. Se você programar o apagamento, o aviso é removido sozinho quando chegar o horário (o painel admin precisa estar aberto pra fazer a limpeza).</div>
       </div>
     </div>
 
@@ -737,7 +750,7 @@
   import { getAuth, signOut, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
   import { getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, writeBatch,
-            addDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp, increment }
+            addDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp, increment, Timestamp }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject }
     from "https://www.gstatic.com/firebasejs/12.10.0/firebase-storage.js";
@@ -2189,6 +2202,10 @@
   const popupImgPreviewEl = document.getElementById('popup-img-preview-el');
   const popupPublishBtn   = document.getElementById('popup-publish-btn');
   const popupStatusEl     = document.getElementById('popup-compose-status');
+  const popupExpireSel    = document.getElementById('popup-expire-select');
+  const popupExpireCustom = document.getElementById('popup-expire-custom');
+  let popupExpireTimer    = null;
+  const popupExpiring     = new Set(); // ids já sendo apagados (evita apagar duas vezes)
 
   /* ═══════════ Horário padrão global (config/horarios_padrao) ═══════════
      Este é o novo editor de "Mudar Horários" do painel admin. Ele lê e
@@ -2438,10 +2455,30 @@
 
     popupPublishBtn.addEventListener('click', publishPopupAnnounce);
 
+    popupExpireSel.addEventListener('change', ()=>{
+      const custom = popupExpireSel.value === 'custom';
+      popupExpireCustom.style.display = custom ? '' : 'none';
+      if(custom && !popupExpireCustom.value){
+        // sugestão: daqui a 1 hora, no fuso local
+        const d = new Date(Date.now() + 3600*1000);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        popupExpireCustom.value = d.toISOString().slice(0,16);
+      }
+    });
+
+    // Confere a cada 15s se algum aviso venceu (enquanto o admin estiver aberto)
+    if(!popupExpireTimer){
+      popupExpireTimer = setInterval(()=>{
+        purgeExpiredPopups();
+        if(popupList.some(p => popupExpiresMs(p))) renderPopupStatus();
+      }, 15000);
+    }
+
     const popupQuery = query(collection(db, 'avisos_popup'), orderBy('criadoEm', 'desc'));
     popupUnsub = onSnapshot(popupQuery, (snap)=>{
       popupList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       renderPopupStatus();
+      purgeExpiredPopups();
     }, (err)=>{
       console.error('[Avisos popup] erro ao carregar:', err);
       toast('Erro ao carregar os avisos popup: ' + err.message, 'err');
@@ -2474,6 +2511,7 @@
             ${topoTag}
             <span style="font-size:11.5px;color:var(--t3);margin-left:auto">Enviado ${popupTimeAgo(p)}</span>
           </div>
+          ${popupExpiryHtml(p)}
           ${imgHtml}
           <div style="font-size:13.5px;color:var(--t1);line-height:1.5;white-space:pre-wrap">${escapeHtml(p.texto || '')}</div>
           ${linkHtml}
@@ -2483,6 +2521,51 @@
     listEl.querySelectorAll('[data-popup-del]').forEach(btn=>{
       btn.addEventListener('click', ()=> deletePopupAnnounce(btn.getAttribute('data-popup-del')));
     });
+  }
+
+  function popupExpiresMs(p){
+    const e = p.expiraEm;
+    if(e && typeof e.toMillis === 'function') return e.toMillis();
+    if(e && typeof e.seconds === 'number') return e.seconds*1000;
+    return null;
+  }
+
+  function popupExpiryHtml(p){
+    const ms = popupExpiresMs(p);
+    if(!ms) return '';
+    const left = ms - Date.now();
+    const when = new Date(ms).toLocaleString('pt-BR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+    let txt;
+    if(left <= 0) txt = 'Expirado — apagando...';
+    else {
+      const min = Math.ceil(left/60000);
+      if(min < 60) txt = `some em ${min} min`;
+      else if(min < 60*48) txt = `some em ${Math.floor(min/60)}h${String(min%60).padStart(2,'0')}`;
+      else txt = `some em ${Math.floor(min/1440)} dias`;
+      txt += ` (${when})`;
+    }
+    return `<div style="font-size:11.5px;color:var(--gold);font-weight:600">⏱ Apagamento automático: ${txt}</div>`;
+  }
+
+  async function purgeExpiredPopups(){
+    const now = Date.now();
+    const vencidos = popupList.filter(p => {
+      const ms = popupExpiresMs(p);
+      return ms && ms <= now && !popupExpiring.has(p.id);
+    });
+    for(const p of vencidos){
+      popupExpiring.add(p.id);
+      try{
+        if(p.imagemPath){
+          try{ await deleteObject(ref(storage, p.imagemPath)); }catch(e){ console.warn('Não foi possível remover a imagem do Storage:', e); }
+        }
+        await deleteDoc(doc(db, 'avisos_popup', p.id));
+        toast('Aviso popup expirou e foi apagado.', 'ok');
+      }catch(e){
+        console.error('[Avisos popup] erro ao apagar aviso expirado:', e);
+        popupExpiring.delete(p.id); // tenta de novo no próximo ciclo
+      }
+    }
   }
 
   function popupTimeAgo(p){
@@ -2506,6 +2589,9 @@
     popupImgEmpty.style.display = 'flex';
     popupStatusEl.textContent = '';
     popupStatusEl.className = 'save-status';
+    popupExpireSel.value = 'never';
+    popupExpireCustom.value = '';
+    popupExpireCustom.style.display = 'none';
   }
 
   async function publishPopupAnnounce(){
@@ -2519,6 +2605,24 @@
     if(link && !/^https?:\/\//i.test(link)){
       toast('O link precisa começar com http:// ou https://', 'err');
       return;
+    }
+
+    // Programação de apagamento automático
+    let expiraMs = null;
+    const opt = popupExpireSel.value;
+    const HORAS = {'1h':1, '6h':6, '24h':24, '3d':72, '7d':168};
+    if(HORAS[opt]){
+      expiraMs = Date.now() + HORAS[opt]*3600*1000;
+    }else if(opt === 'custom'){
+      if(!popupExpireCustom.value){
+        toast('Escolha a data e a hora em que o aviso deve sumir.', 'err');
+        return;
+      }
+      expiraMs = new Date(popupExpireCustom.value).getTime();
+      if(!expiraMs || expiraMs <= Date.now() + 30*1000){
+        toast('A data de apagamento precisa estar no futuro.', 'err');
+        return;
+      }
     }
 
     popupPublishBtn.disabled = true;
@@ -2548,6 +2652,7 @@
         imagemUrl: imagemUrl || null,
         imagemPath: imagemPath || null,
         criadoEm: serverTimestamp(),
+        expiraEm: expiraMs ? Timestamp.fromMillis(expiraMs) : null,
       };
       await addDoc(collection(db, 'avisos_popup'), payload);
       toast('Aviso popup enviado! Ele foi para o topo da pilha.', 'ok');
@@ -2946,8 +3051,7 @@
       <div class="info-grid">
         <div class="info-box copyable" id="pf-copy-email"><div class="info-box-label">E-mail (Google)</div><div class="info-box-value mono">${email ? escapeHtml(email) : '⚠️ não sincronizado'}</div></div>
         <div class="info-box copyable" id="pf-copy-uid"><div class="info-box-label">UID</div><div class="info-box-value mono">${escapeHtml(currentUid||'—')}</div></div>
-        <div class="info-box"><div class="info-box-label">Entrou na plataforma</div><div class="info-box-value">${fmtDateOnly(joined)}${daysOnPlatform!=null?` <span style="color:var(--t4);font-weight:600">(há ${daysOnPlatform}d)</span>`:''}${joinedApprox?` <span style="color:var(--gold);font-weight:600">· aprox.</span>`:''}</div></div>
-        <div class="info-box"><div class="info-box-label">Conta Google criada em</div><div class="info-box-value">${fmtDateOnly(googleSince)}</div></div>
+        <div class="info-box"><div class="info-box-label">Entrou na plataforma</div><div class="info-box-value">${fmtDateOnly(googleSince)}</div></div>
         <div class="info-box"><div class="info-box-label">Armazenamento</div><div class="info-box-value">${fmtBytes(row?row.bytes:0)}</div></div>
         <div class="info-box"><div class="info-box-label">Atualizado em</div><div class="info-box-value">${fmtDate(currentData.updatedAt)}</div></div>
         <div class="info-box"><div class="info-box-label">Último login</div><div class="info-box-value">${currentData.lastLoginAt ? fmtDate(currentData.lastLoginAt) : '—'}</div></div>
