@@ -1483,6 +1483,13 @@
             email: r.email || null,
             createdAt: r.createdAt || null,
             updatedAt: now,
+            grades: {},
+            exams: [],
+            notes: [],
+            notifs: [],
+            ncMeta: null,
+            schedule: { periods: null, sched: null, history: null, custom: false },
+            subjects: null,
           };
           if (isAuthOnly(r)) {
             // já era "só login" (sem dados) — mantém marcado assim, senão a
@@ -1648,6 +1655,13 @@
             email: r.email || null,
             createdAt: r.createdAt || null,
             updatedAt: now,
+            grades: {},
+            exams: [],
+            notes: [],
+            notifs: [],
+            ncMeta: null,
+            schedule: { periods: null, sched: null, history: null, custom: false },
+            subjects: null,
           };
           if (isAuthOnly(r)) { kept.authOnly = true; kept.lastLoginAt = r.lastLoginAt || now; }
           batch.set(doc(db, 'users', r.uid), kept);
@@ -3157,6 +3171,13 @@
           email: currentData.email || null,
           createdAt: currentData.createdAt || null,
           updatedAt: Date.now(),
+          grades: {},
+          exams: [],
+          notes: [],
+          notifs: [],
+          ncMeta: null,
+          schedule: { periods: null, sched: null, history: null, custom: false },
+          subjects: null,
         };
         // substituição completa do documento (sem merge) — garante que notas, provas,
         // anotações, frequência, horário e qualquer outro campo salvo sejam apagados de fato
