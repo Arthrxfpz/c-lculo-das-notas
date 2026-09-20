@@ -2,6 +2,31 @@
 <html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
+<script>
+/*
+  GitHub Pages só serve arquivos que existem. Quando alguém abre /horarios,
+  /atividades etc. direto, cai aqui. Se o endereço for uma aba do app, manda
+  para o index.html guardando o caminho em ?__route=... (o index.html devolve
+  a URL bonita com history.replaceState). Qualquer outro endereço mostra
+  esta página 404 normalmente.
+*/
+(function () {
+  var REPO_BASE = "/c-lculo-das-notas/";
+  var ROUTES = ["notas", "horarios", "atividades", "resultado", "calendario", "comunidade"];
+  var l = location;
+
+  if (/(^|[?&])__route=/.test(l.search)) return;   // evita loop
+
+  var base = l.pathname.indexOf(REPO_BASE) === 0 ? REPO_BASE : "/";
+  var seg = l.pathname.slice(base.length).replace(/^\/+|\/+$/g, "").toLowerCase();
+  if (ROUTES.indexOf(seg) === -1) return;          // não é aba do app → mostra o 404
+
+  document.documentElement.style.visibility = "hidden";   // evita piscar a tela de 404
+  var q = new URLSearchParams(l.search);
+  q.set("__route", seg);
+  l.replace(base + "?" + q.toString() + l.hash);
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>404 — Cálculo das notas</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
