@@ -347,14 +347,20 @@ function _startPopupAnnounceListener(){if(!_popupAnnounceUnsub)try{const e=query
 <script>
 /* ============================================================
    ROTEADOR DE URLs  (History API + GitHub Pages)
-   /notas  /horarios  /provas  /resumo  /calendario  /comunidade
+   /notas  /horarios  /atividades  /resultado  /calendario  /comunidade
    Raiz (/) abre a aba de notas.
    ============================================================ */
 (function () {
   "use strict";
 
   var REPO_BASE = "/c-lculo-das-notas/";           // nome do repositório no GitHub
-  var PAGES = ["notas", "horarios", "provas", "resumo", "calendario", "comunidade"];
+  // página interna do app  →  nome na URL
+  var SLUGS = { notas: "notas", horarios: "horarios", provas: "atividades", resumo: "resultado", calendario: "calendario", comunidade: "comunidade" };
+  function hasPage(page) { return Object.prototype.hasOwnProperty.call(SLUGS, page); }
+  function pageFromSlug(slug) {
+    for (var k in SLUGS) if (SLUGS[k] === slug) return k;
+    return null;
+  }
   var BASE = location.pathname.indexOf(REPO_BASE) === 0 ? REPO_BASE : "/";   // "/" em localhost ou domínio próprio
 
   function segment() {
@@ -362,20 +368,20 @@ function _startPopupAnnounceListener(){if(!_popupAnnounceUnsub)try{const e=query
   }
   function pageFromLocation() {
     var s = segment();
-    return PAGES.indexOf(s) !== -1 ? s : "notas";
+    return pageFromSlug(s) || "notas";
   }
   function isKnownPath() {                          // "" (raiz) ou uma das abas
     var s = segment();
-    return s === "" || PAGES.indexOf(s) !== -1;
+    return s === "" || pageFromSlug(s) !== null;
   }
-  function urlFor(page) { return BASE + page; }
+  function urlFor(page) { return BASE + SLUGS[page]; }
   function tryHistory(method, url, page) {
     try { history[method]({ page: page }, "", url); } catch (e) { /* file://, iframe sandbox… */ }
   }
 
   /* Chamado por setPage / switchTab / goToNotaEval quando a aba muda */
   window._routerPush = function (page) {
-    if (_routerSuppressPush || PAGES.indexOf(page) === -1) return;
+    if (_routerSuppressPush || !hasPage(page)) return;
     if (isKnownPath() && pageFromLocation() === page) return;   // já está na URL certa (inclui raiz = notas)
     tryHistory("pushState", urlFor(page), page);
   };
