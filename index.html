@@ -734,17 +734,52 @@ function _startCommentsListener(e){if(!_comuCommentsUnsub.has(e)&&window._fbDb&&
     }
     if (!isKnownPath()) tryHistory("replaceState", BASE, curPage);                     // /abc → raiz
     else if (curPage !== target) tryHistory("replaceState", urlFor(curPage), curPage); // não conseguiu abrir a aba
+    else if (target !== "notas") {
+      /* Link direto para uma aba que não é a inicial (ex.: /comunidade compartilhado).
+         Insere a raiz ANTES dessa aba no histórico: assim o botão "voltar" do
+         celular primeiro leva para a aba inicial (dentro do app) em vez de sair
+         do site de cara — e a URL visível continua sendo a da aba acessada. */
+      tryHistory("replaceState", BASE, "notas");
+      tryHistory("pushState", urlFor(target) + location.search + location.hash, target);
+    }
     else if (segment() !== "" && location.pathname !== urlFor(target))                 // /Horarios → /horarios
       tryHistory("replaceState", urlFor(target) + location.search + location.hash, target);
   }
   if (document.readyState === "complete") init();
   else window.addEventListener("load", init);
+
+  /* Restauração pelo cache do navegador (bfcache): comum ao usar o botão
+     "voltar" do celular para retornar ao site depois de ter saído dele.
+     Nesse caso os scripts não rodam de novo, então o conteúdo pode ficar
+     desatualizado (ex.: a aba Comunidade parada no que tinha antes de sair).
+     Aqui a gente resincroniza a aba com a URL atual e força os dados a
+     atualizar de novo. */
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    var target = pageFromLocation();
+    if (target !== curPage) {
+      _routerSuppressPush = true;
+      try { setPage(target); } catch (err) { console.error("[router]", err); }
+      finally { _routerSuppressPush = false; }
+    } else {
+      try { render(null); } catch (err) { /* noop */ }
+    }
+    if ("comunidade" === curPage) {
+      try {
+        if (typeof _comuUnsub !== "undefined" && !_comuUnsub && typeof _startComuListener === "function") {
+          _startComuListener();
+        } else if (typeof _renderComuFeed === "function") {
+          _renderComuFeed();
+        }
+      } catch (err) { /* noop */ }
+    }
+  });
 })();
 </script>
 </body><style>
 /* ===== Resultado: Nota necessária ===== */
 .nn-count{margin-left:6px;font-size:11px;font-weight:700;background:var(--bg3);color:var(--t4);padding:1px 7px;border-radius:10px}
-.nn-scroll{max-height:492px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:contain;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 2px 4px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;will-change:scroll-position}
+.nn-scroll{max-height:492px;overflow-y:auto;overflow-x:hidden;overscroll-behavior-y:auto;overscroll-behavior-x:none;-webkit-overflow-scrolling:touch;touch-action:pan-y;padding:2px 2px 4px;margin-bottom:14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin;scrollbar-color:var(--line) transparent;will-change:scroll-position}
 .nn-scroll::-webkit-scrollbar{width:4px}
 .nn-scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
 .nn-scroll.fade-b{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 30px),transparent)}
